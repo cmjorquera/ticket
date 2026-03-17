@@ -1,0 +1,10 @@
+Array
+(
+    [nombre] => Cristian
+    [id] => 8
+    [apellido_paterno] => jorquera
+    [apellido_materno] => Gonzalez
+    [email] => cjorquera@seduc.cl
+    [id_area_trabajo] => 1
+    [primera_vez] => 1
+)

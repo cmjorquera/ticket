@@ -1,0 +1,154 @@
+        /* Estilos generales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-image: url('../img/login_prueba.jpg');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Contenedor principal */
+        .login-container {
+            display: flex;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 800px;
+            max-width: 90%;
+            height: auto;
+        }
+
+        /* Panel izquierdo */
+        .login-left {
+            background-image: url('../img/login.jpg');
+            background-size: cover;
+            background-position: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+
+        .login-left h1 {
+            font-size: 2rem;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .login-left p {
+            font-size: 1rem;
+            margin-top: auto;
+            color: white;
+        }
+
+        .company-logo {
+            width: 100px;
+            height: auto;
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 20px;
+        }
+
+        /* Panel derecho */
+        .login-right {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 1rem;
+        }
+
+        .login-btn {
+            background-color: #004080;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        .login-btn:hover {
+            background-color: #003060;
+        }
+
+        .links {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+
+        .links a {
+            color: #004080;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                width: 100%;
+                max-width: 90%;
+                margin: 20px;
+            }
+
+            .login-left {
+                padding: 20px;
+                order: 2; /* Mover a la parte inferior */
+                text-align: center;
+            }
+
+            .login-right {
+                padding: 30px;
+                order: 1; /* Mover a la parte superior */
+            }
+        }
+
+/* Estilizar la alerta de error */
+.alert {
+    margin-top: 10px;
+    margin-bottom: 10px; 
+    padding: 8px 12px;  /* Reducir el padding interno */
+    font-size: 15px;    /* Reducir el tamaño de la fuente */
+    border-radius: 6px; /* Bordes redondeados suaves */
+    max-width: 350px;   /* Limitar el ancho */
+    text-align: center; /* Centrar el texto */
+    display: inline-block; /* Evitar que ocupe todo el ancho */
+}

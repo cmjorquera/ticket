@@ -1,0 +1,83 @@
+
+#bi {
+    font-size: 3rem;
+    position: fixed;
+    bottom: 300px;
+    right: 20px;
+    z-index: 1050;
+    border: none;
+    padding: 0px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out;
+}
+
+.introjs-tooltip {
+    background-color: #fff;
+    color: #333;
+    border-radius: 5px;
+}
+
+.introjs-tooltiptext {
+    font-size: 16px;
+    width: 100%;
+
+}
+.introjs-floating{
+        width: 610%;
+
+
+}
+
+.introjs-helperLayer {
+    background-color: rgba(0, 0, 0, 0.5);             /* fondo cuandos e hace un zoom  */
+
+    
+}
+
+/* .btn { */
+    .www{
+    position: relative;
+    display: inline-block;
+    padding: 0.5em 1em;
+    margin: 0.5em;
+    border-radius: 0.5em;
+    text-decoration: none;
+    font-family: 'Arial', sans-serif;
+    font-size: 1em;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-primary .badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    padding: 0.5em;
+    border-radius: 0.5em;
+    background-color: red;
+    color: white;
+}
+
+
+#shortcuts-section {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 40px auto;
+}
+
+p {
+    margin: 15px 0;
+}

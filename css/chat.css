@@ -1,0 +1,114 @@
+.chat-module {
+    display: flex;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.chat-users {
+    max-width: 350px; /* Ajustar el ancho del contenedor */
+    overflow-y: auto;
+    overflow-x: hidden; /* Ocultar la barra de desplazamiento horizontal */
+    height: 100%;
+}
+
+.chat_estados{
+
+    position: absolute;
+    top: -90px;
+    right: -60px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 10px;
+} 
+
+.chat-messages {
+    background-color: #e2e6ea;
+    flex: 1;
+    overflow-y: auto;
+    height: calc(100vh - 200px);
+}
+
+.chat-header {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.message {
+    display: flex;
+    align-items: flex-start;
+}
+
+.message-content {
+    max-width: 75%;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.attachments {
+    display: flex;
+    gap: 10px;
+}
+
+.attachment-link {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e2e6ea;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.chat-footer {
+    display: flex;
+    gap: 10px;
+    background-color: #ffffff;
+    border-top: 1px solid #ddd;
+    padding: 10px;
+}
+
+/* Estilo para el cuerpo del chat con color plano */
+.chat-body {
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: #bcccdd; /* Color plano para el fondo */
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* Estilos para los mensajes */
+.sender .message-content {
+    background-color: #f1f1f1;
+    color: #333;
+}
+
+.receiver .message-content {
+    background-color: #6c5ce7;
+    color: white;
+}
+
+.message-content {
+    border-radius: 15px;
+    padding: 10px 15px;
+    max-width: 60%;
+}
+
+
+
+/* button del chat  */
+
+.chat-footer button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.chat-footer button .fa {
+    color: #6c757d;
+}
+
+.chat-footer button:hover .fa {
+    color: #000;
+}
+

@@ -1,0 +1,25 @@
+LOGICA DEL MODULO INVENTARIO_ASEO
+
+- La portada del modulo es `inventario_aseo/index.php`.
+- El modulo controla productos de aseo, ingresos, salidas, stock actual y alertas de stock minimo.
+- La clase principal es `inventario_aseo/class/Inventario.php`.
+- Las tablas base esperadas son:
+  - `aseo_productos`
+  - `aseo_movimientos`
+  - `aseo_historial`
+  - `aseo_categoria_catalogo`
+  - `aseo_unidad_catalogo`
+- El stock NO se guarda como numero fijo principal.
+  Se calcula desde los movimientos:
+  - `ingreso` suma stock
+  - `salida` resta stock
+- Las vistas principales del modulo son:
+  - `registrar_producto.php`
+  - `editar_producto.php`
+  - `ver_producto.php`
+- Los endpoints AJAX principales son:
+  - `ajax/listar_productos.php`
+  - `ajax/obtener_detalle_producto.php`
+- El SQL sugerido inicial esta en:
+  - `inventario_aseo/views/sql_sugerido_inventario_aseo.sql`
+- Si faltan tablas, el index muestra una alerta de instalacion en vez de romper la vista.

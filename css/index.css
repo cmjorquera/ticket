@@ -1,0 +1,224 @@
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        display: flex;
+        flex-wrap: wrap;
+        min-height: 100vh;
+        background-color: #f1f3f5;
+    }
+
+    .left-section,
+    .right-section {
+        width: 50%;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .left-section {
+        background-color: #f8f9fa;
+    }
+
+    .login-container {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .login-container input {
+        background-color: #ffffff;
+    }
+
+    .btn-login {
+        background-color: #007bff;
+        border: none;
+    }
+
+    .btn-login:hover {
+        background-color: #0056b3;
+    }
+
+    .right-section {
+        background-image: url('../img/login_prueba.jpg');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+    }
+
+    .right-section::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+        z-index: 1;
+    }
+
+    .right-section .content {
+        z-index: 2;
+        text-align: left;
+        width: 100%;
+        padding: 20px;
+        color: white;
+    }
+
+    .carousel-item {
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 20px;
+        padding: 30px;
+        color: white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .carousel-item h5 {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .carousel-item p {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+
+    .carousel-inner .bi {
+        font-size: 2rem;
+        color: #00bfff;
+        margin-bottom: 15px;
+    }
+
+    .img-gallery {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .img-gallery img {
+        height: 130px;
+        border-radius: 10px;
+        object-fit: cover;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-nav {
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 3;
+        transition: all 0.3s ease;
+    }
+
+    .btn-nav:hover {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-nav.prev {
+        left: 20px;
+    }
+
+    .btn-nav.next {
+        right: 20px;
+    }
+
+    .custom-indicators {
+        z-index: 2;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .custom-indicators .bar {
+        width: 50px;
+        height: 4px;
+        background-color: #ffffff50;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .custom-indicators .bar.active {
+        background-color: #00bfff;
+        width: 60px;
+    }
+
+    @media (max-width: 768px) {
+
+        .left-section,
+        .right-section {
+            width: 100%;
+            padding: 20px;
+        }
+
+        .right-section {
+            min-height: 300px;
+        }
+
+        .login-container {
+            box-shadow: none;
+        }
+
+        .img-gallery {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .carousel-item {
+            text-align: center;
+        }
+    }
+
+    .alert {
+        animation: fadeInDown 0.5s ease-in-out;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Asegura que el aviso esté por encima y reciba clics */
+    .first-time-hint {
+        position: relative;
+        z-index: 10;
+        /* evita solapes raros */
+    }
+
+    /* Mejora la zona clickeable del botón */
+    .first-time-hint .btn-close {
+        cursor: pointer;
+        width: 0.9rem;
+        /* un pelín más grande */
+        height: 0.9rem;
+        opacity: .85;
+        pointer-events: auto;
+        /* por si algún estilo global lo anuló */
+    }
+
+    .first-time-hint .btn-close:hover {
+        opacity: 111;
+    }

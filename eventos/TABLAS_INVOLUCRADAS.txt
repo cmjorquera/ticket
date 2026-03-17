@@ -1,0 +1,98 @@
+Tablas involucradas en el modulo eventos
+========================================
+
+Fecha:
+- 2026-03-15
+
+Tablas reales observadas en phpMyAdmin
+--------------------------------------
+1. `eventos`
+2. `eventos_historial`
+3. `usuarios`
+
+1. Tabla `eventos`
+------------------
+Campos observados segun tu captura:
+- `id`
+- `titulo`
+- `descripcion`
+- `fecha_inicio`
+- `fecha_fin`
+- `hora_inicio`
+- `hora_fin`
+- `hora_evento`
+- `con_audio`
+- `solo_presentacion`
+- `musica_ambiental`
+- `cantidad_personas`
+- `ubicacion`
+- `tipo_evento`
+- `estado`
+- `color_evento`
+- `observaciones_logisticas`
+- `correo_enviado`
+- `creado_en`
+- `actualizado_en`
+- `responsable_id`
+- `eliminado`
+
+Llaves observadas:
+- PK: `id`
+- Relacion con usuarios: `responsable_id`
+
+Uso:
+- Guarda el evento principal.
+- Alimenta dashboard, calendario y reportes.
+- Maneja eliminacion logica con `eliminado`.
+
+2. Tabla `eventos_historial`
+----------------------------
+Campos observados segun tu captura:
+- `id`
+- `id_evento`
+- `accion`
+- `descripcion`
+- `id_usuario`
+- `creado_en`
+
+Llaves observadas:
+- PK: `id`
+- Relacion al evento: `id_evento`
+- Relacion al usuario: `id_usuario`
+
+Uso:
+- Registrar creacion
+- Registrar edicion
+- Registrar cancelacion
+- Registrar eliminacion logica
+
+3. Tabla `usuarios`
+-------------------
+Campos usados por el modulo desde el codigo:
+- `id`
+- `nombre`
+- `apellido_paterno`
+- `apellido_materno`
+- `email`
+
+Relacion principal:
+- `eventos.responsable_id` -> `usuarios.id`
+
+Relaciones del modulo
+---------------------
+1. `eventos.responsable_id` se vincula con `usuarios.id`
+2. `eventos_historial.id_evento` se vincula con `eventos.id`
+3. `eventos_historial.id_usuario` se vincula con `usuarios.id`
+
+Notas importantes
+-----------------
+1. El codigo del modulo ya considera las columnas reales de historial:
+   - `id_evento`
+   - `accion`
+   - `descripcion`
+   - `id_usuario`
+   - `creado_en`
+2. Si aparece otro error al guardar, el endpoint activo del frontend es:
+   - `ajax/guardar_evento_api.php`
+3. Se uso ese nombre porque `guardar_evento.php` presento un bloqueo local en
+   este entorno al intentar restaurarlo con escritura directa.

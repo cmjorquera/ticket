@@ -1,0 +1,176 @@
+LOGICA DEL MODULO INVENTARIO
+============================
+
+1. Objetivo general
+- La carpeta `inventario` funciona como modulo independiente dentro del sistema principal `SISTEMA_TICKET`.
+- El modulo reutiliza la sesion, la conexion y varias funciones visuales del sistema general.
+- La portada del modulo es `inventario/index.php`.
+
+2. Conexion a base de datos
+- La conexion oficial del sistema esta en `class/conexion.php`.
+- El modulo inventario NO debe usar una conexion propia dentro de `inventario/class/conexion.php`.
+- La clase principal del modulo es `inventario/class/Inventario.php`.
+- Dentro de `Inventario.php` la conexion se crea siguiendo el patron del sistema:
+  `$bdato = new MySQL("", "", "");`
+- Desde esa clase se obtiene la conexion activa para las consultas necesarias del modulo.
+
+3. Regla importante de assets
+- Los CSS y JS globales del sistema NO estan dentro de la carpeta `inventario`.
+- Estan fuera, en carpetas como:
+  - `../css/...`
+  - `../js/...`
+  - `../vendor/...`
+  - `../imagenes/...`
+- Por eso, cualquier archivo dentro de `inventario` que cargue assets del sistema general debe usar rutas relativas hacia afuera de la carpeta.
+- Si se usan rutas como `css/...`, `js/...`, `vendor/...` o `imagenes/...` para recursos globales del sistema, la pagina se rompe visualmente al navegar dentro del modulo.
+
+4. Layout del modulo
+- `inventario/componentes/boot.php`
+  - inicia sesion si hace falta
+  - carga `class/conexion.php`
+  - carga `class/funciones.php`
+  - carga `inventario/class/Inventario.php`
+  - define helpers como:
+    - `inventario_url()`
+    - `inventario_sistema_url()`
+    - `inventario_h()`
+
+- `inventario/componentes/head.php`
+  - carga el HTML base del modulo
+  - carga los CSS del sistema general con rutas `../...`
+  - carga `inventario/css/inventario.css`
+
+- `inventario/componentes/layout_top.php`
+  - arma wrapper, menu lateral, topbar y contenedor principal
+
+- `inventario/componentes/layout_bottom.php`
+  - carga JS del modulo
+  - carga JS globales del sistema usando rutas `../...`
+  - agrega versionado por `filemtime` a CSS y JS propios del modulo para evitar caché vieja del navegador
+
+5. Regla para nuevas paginas dentro de inventario
+- Cualquier nueva vista dentro de `inventario` debe seguir esta estructura:
+  1. `require_once __DIR__ . '/componentes/boot.php';`
+  2. preparar datos desde `$inventario`
+  3. `require __DIR__ . '/componentes/layout_top.php';`
+  4. renderizar contenido
+  5. `require __DIR__ . '/componentes/layout_bottom.php';`
+
+- Esto asegura que todas las paginas mantengan:
+  - el mismo menu lateral
+  - el mismo topbar
+  - el mismo CSS
+  - el mismo JS
+  - la misma sesion del sistema
+
+6. Portada del modulo
+- `inventario/index.php` usa el layout comun del modulo.
+- Muestra:
+  - titulo del modulo
+  - boton "Agregar equipo"
+  - resumen KPI
+  - resumen por colegio
+  - filtros
+  - tabla DataTable
+
+7. Formularios y vistas internas
+- `inventario/registrar_equipo.php`
+  - usa el layout comun
+  - muestra el formulario de creacion
+
+- `inventario/editar_equipo.php`
+  - usa el layout comun
+  - muestra el formulario de edicion
+
+- `inventario/ver_equipo.php`
+  - usa el layout comun
+  - muestra la ficha del equipo
+
+8. JS principal del modulo
+- `inventario/js/inventario.js`
+  - inicializa DataTable
+  - carga datos via AJAX
+  - aplica filtros
+  - maneja eliminacion logica
+  - maneja botones de accion
+  - abre modal de galeria para ver imagenes del equipo
+  - maneja previews de fotos
+
+9. Criterio actual de UI
+- Los botones de acciones de la tabla deben verse como botones Bootstrap reales.
+- La tabla, formularios y tarjetas del modulo usan estilos propios en:
+  - `inventario/css/inventario.css`
+- Como el sistema general mezcla varios CSS globales, los botones de accion del inventario necesitan overrides propios para conservar apariencia Bootstrap dentro de la tabla.
+- El listado principal usa DataTables con paginacion visible.
+- La paginacion debe verse integrada al estilo Bootstrap del modulo.
+- Los botones de acciones del listado se presentan como botones Bootstrap solidos:
+  - ver: gris
+  - editar: azul
+  - fotos: gris
+  - eliminar: rojo
+- El boton de fotos del listado no redirige a otra pagina.
+- Debe abrir un modal Bootstrap con la galeria del equipo.
+- La galeria del modal usa una imagen principal grande, controles laterales y una franja de miniaturas para navegar entre fotos.
+
+10. Logica para imagenes adjuntas
+- Las imagenes del equipo se reciben desde el formulario en `fotos_equipo[]`.
+- El guardado actual usa la tabla `equipo_fotos`.
+- Estructura considerada:
+  - `id_foto`
+  - `id_equipo`
+  - `ruta_foto`
+  - `tipo_foto`
+  - `principal`
+  - `orden_foto`
+  - `fecha_subida`
+- La idea correcta de guardado es:
+  1. Crear primero el equipo.
+  2. Obtener `id_equipo`.
+  3. Crear carpeta fisica:
+     `inventario/uploads/equipos/{id_equipo}/`
+  4. Guardar cada archivo con nombre unico.
+  5. Registrar en `equipo_fotos` la ruta relativa y el orden.
+  6. Marcar una foto como principal.
+- Tipos recomendados:
+  - `normal` para galeria
+  - a futuro se puede agregar otro tipo si se necesita otra clase de evidencia
+
+11. Validaciones recomendadas para imagenes
+- Validar MIME real del archivo, no solo extension.
+- Permitir solo jpg, jpeg, png y webp.
+- Limitar tamano maximo por archivo.
+- Rechazar archivos vacios o con error de subida.
+- Si falla una foto dentro de una transaccion, decidir si:
+  - falla todo el guardado del equipo
+  - o se guarda el equipo y se informa que falto una evidencia
+- Para este modulo conviene mantener el guardado atomico: si fallan imagenes, falla toda la operacion.
+
+12. Flujo recomendado para guardar imagenes
+- El formulario envia `fotos_equipo[]`.
+- PHP guarda primero el equipo en la tabla `equipos`.
+- Con el `id_equipo` creado, PHP genera la carpeta:
+  `inventario/uploads/equipos/{id_equipo}/`
+- Cada archivo se mueve a esa carpeta.
+- Luego cada imagen se registra en la tabla `equipo_fotos`.
+- El modulo ya esta preparado para guardar varias imagenes por equipo, porque `fotos_equipo[]` es multiple y `equipo_fotos` guarda una fila por imagen.
+- La carpeta guarda el archivo fisico.
+- La tabla `equipo_fotos` guarda la relacion logica entre el archivo y el equipo.
+- No basta solo con guardar archivos en carpeta, porque la base de datos debe saber:
+  - a que equipo pertenece cada imagen
+  - cual es la principal
+  - en que orden se muestran
+  - cual borrar al editar
+
+13. Tabla recomendada para fotos
+- Tabla: `equipo_fotos`
+- Campos recomendados:
+  - `id_foto`
+  - `id_equipo`
+  - `ruta_foto`
+  - `principal`
+  - `orden_foto`
+  - `fecha_subida`
+- `tipo_foto` se puede mantener solo si a futuro se volveran a manejar tipos distintos de imagen.
+
+14. Regla de trabajo acordada
+- Toda nueva decision de estructura o logica del modulo inventario debe quedar documentada en este archivo `inventario/logica.txt`.

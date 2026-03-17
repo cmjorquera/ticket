@@ -1,0 +1,97 @@
+        .card-metric {
+      background-color: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: 0.3s;
+      height: 100%;
+    }
+
+    .card-metric:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .icon-circle {
+      background-color: #eaeef4;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 20px;
+      color: #6c757d;
+    }
+
+    .progress-bar-title {
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    .progress-value {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .card-options {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #adb5bd;
+      cursor: pointer;
+    }
+
+    .card-grafico {
+      background-color: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .grafico-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .box-resumen {
+      background-color: #fff;
+      border: 1px dashed #d1d3e2;
+      border-radius: 12px;
+      flex: 1;
+      padding: 1rem 1.5rem;
+      min-width: 200px;
+    }
+
+    .barra-resumen {
+      height: 5px;
+      border-radius: 5px;
+      margin-top: 0.5rem;
+    }
+
+    .card-total-sales {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    .sales-header {
+      background: #4e73df;
+      padding: 1.5rem;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+    }
+
+    .sales-list img {
+      border-radius: 5px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 20px;
+    }

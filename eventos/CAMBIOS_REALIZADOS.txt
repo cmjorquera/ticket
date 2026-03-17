@@ -1,0 +1,123 @@
+Resumen de cambios realizados en el modulo eventos
+==================================================
+
+Fecha:
+- 2026-03-15
+
+Contexto del cambio
+-------------------
+Se detecto que el modulo de eventos estaba usando como base la pagina
+general `pagEnBlanco.php`. La idea correcta era dejar las paginas del
+modulo eventos independientes, de la misma forma en que se hizo en
+`inventario/index.php`.
+
+Problemas detectados
+--------------------
+1. `eventos/index.php` dependia de `../pagEnBlanco.php`.
+2. `eventos/calendario.php` dependia de `../pagEnBlanco.php`.
+3. `eventos/reporte.php` dependia de `../pagEnBlanco.php`.
+4. Esa dependencia provocaba que se cargaran mal los CSS y JS de la
+   plantilla principal.
+5. En servidor aparecia el aviso:
+   `session_start(): Ignoring session_start() because a session is already active`
+   porque `eventos/bootstrap.php` ya iniciaba sesion y luego
+   `pagEnBlanco.php` intentaba iniciarla otra vez.
+6. Visualmente las paginas se veian desarmadas y sin la plantilla
+   correcta de `sb-admin-2`.
+
+Objetivo aplicado
+-----------------
+Dejar las paginas del modulo eventos con estructura propia, cargando
+directamente los estilos y scripts de la plantilla, sin depender de
+`/home/acceso/public_html/pagEnBlanco.php`.
+
+Archivos modificados
+--------------------
+1. `eventos/bootstrap.php`
+2. `eventos/index.php`
+3. `eventos/calendario.php`
+4. `eventos/reporte.php`
+
+Detalle de los cambios
+----------------------
+
+1. Cambios en `eventos/bootstrap.php`
+- Se agrego la funcion `eventos_h()` para escapar texto HTML.
+- Se agrego la funcion `eventos_url()` para manejar rutas del modulo.
+- Se agrego la funcion `eventos_sistema_url()` para referenciar assets
+  globales del sistema usando `../`.
+- Se agrego la funcion `eventos_asset_version()` para versionar archivos
+  CSS y JS propios del modulo usando `filemtime()`.
+
+2. Cambios en `eventos/index.php`
+- Se elimino la inclusion de `../pagEnBlanco.php`.
+- Se creo una estructura HTML propia para la pagina.
+- Se cargo directamente la plantilla visual correcta:
+  - `../vendor/fontawesome-free/css/all.min.css`
+  - `../css/sb-admin-2.min.css`
+  - `../css/modalesTicket.css`
+  - `../css/estilo.css`
+  - `../css/bitacora.css`
+  - `../css/contenedor.css`
+  - `../css/principal.css`
+- Se mantuvo el CSS propio del modulo:
+  - `eventos/css/eventos.css`
+- Se cargaron los JS globales del sistema:
+  - `../vendor/bootstrap/js/bootstrap.bundle.min.js`
+  - `../vendor/jquery-easing/jquery.easing.min.js`
+  - `../js/sb-admin-2.min.js`
+  - `../vendor/chart.js/Chart.min.js`
+  - `../js/funciones.js`
+  - `../js/mensajes.js`
+  - `../js/ticket.js`
+  - `../js/buscadores.js`
+  - `../js/validacionTicket.js`
+  - `../js/toast.js`
+- Se cargaron los JS propios del modulo:
+  - `eventos/js/eventos.js`
+  - `eventos/js/calendario.js`
+- Se mantuvieron los modales:
+  - `modals/modal_evento.php`
+  - `modals/modal_detalle_evento.php`
+
+3. Cambios en `eventos/calendario.php`
+- Se elimino la inclusion de `../pagEnBlanco.php`.
+- Se construyo una pagina propia con la misma base visual usada en
+  `eventos/index.php`.
+- Se dejaron bien referenciados los CSS y JS de la plantilla principal.
+- Se mantuvo la logica del calendario y sus modales.
+- Se configuro `window.EventosConfig` para la vista `calendar`.
+
+4. Cambios en `eventos/reporte.php`
+- Se elimino la inclusion de `../pagEnBlanco.php`.
+- Se construyo una pagina propia con la misma base visual usada en
+  `eventos/index.php`.
+- Se dejaron bien referenciados los CSS y JS de la plantilla principal.
+- Se mantuvo la logica del reporte y la carga de `reporte_eventos.js`.
+- Se configuro `window.EventosConfig` para la vista `reports`.
+
+Resultado final
+---------------
+1. El modulo eventos ya no depende de `pagEnBlanco.php`.
+2. `index.php`, `calendario.php` y `reporte.php` cargan su propia base.
+3. Las referencias a CSS y JS de la plantilla quedaron alineadas con la
+   forma en que trabaja `inventario/index.php`.
+4. Se evita el aviso por doble `session_start()`.
+5. La base visual del modulo deberia mostrarse igual que el resto del
+   sistema.
+
+Validaciones realizadas
+-----------------------
+Se reviso sintaxis PHP con `php -l` en:
+- `eventos/bootstrap.php`
+- `eventos/index.php`
+- `eventos/calendario.php`
+- `eventos/reporte.php`
+
+Resultado:
+- Sin errores de sintaxis en los archivos validados.
+
+Nota
+----
+Si mas adelante se crean nuevas paginas dentro de `eventos/`, lo ideal
+es seguir este mismo patron y no volver a incluir `../pagEnBlanco.php`.

@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" ng-app="BCH">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- compiled CSS -->
+    <script type="text/javascript" src="/ruxitagentjs_ICA7NVfghqrtux_10315250519065025.js" data-dtconfig="rid=RID_-76296224|rpid=1114963112|domain=bancochile.cl|reportUrl=https://bf23391znv.bf.dynatrace.com/bf|app=b746ecbbe4b792c4|cors=1|owasp=1|featureHash=ICA7NVfghqrtux|doNotDetect=kyu,scr,tcs,dcl,kyd,tce|xb=(.*pingrest.*^p.*obrar.cgi.*^p.*obrareq.cgi.*^p.*doubleclick.*^p.*google-analytics.*)|nsfnv=1|rdnt=1|uxrgce=1|bp=3|cuc=kvhu7g9y|mel=100000|expw=1|md=mdcc6=a.user-name .text-bold,mdcc15=adiv.col-12.header-operation-id.ng-star-inserted,mdcc16=a.bch-alert.mb-5.alert-success .text-content,mdcc20=afenix-segmento:nth-of-type(1) div:nth-of-type(4) .body-data,mdcc22=afenix-segmento:nth-of-type(2) div:nth-of-type(3) .body-data,mdcc23=afenix-segmento:nth-of-type(2) div:nth-of-type(4) .body-data,mdcc24=afenix-segmento:nth-of-type(2) .comprobante-body__body-segmento ^rb .row ^rb div:nth-of-type(2) .body-data,mdcc25=ah2.number.ng-star-inserted,mdcc27=a.header-operation-id ^rb p,mdcc28=adiv.col-9.col-lg-4.header-monto,mdcc30=afenix-segmento:nth-of-type(1) .comprobante-body__body-segmento ^rb .row ^rb div:nth-of-type(2) .body-data,mdcc32=afenix-segmento:nth-of-type(2) div:nth-of-type(3) .body-data,mdcc35=abody ^rb div.ng-scope.mat-bch ^rb ui-view-ng-upgrade ^rb ui-view ^rb fenix-main ^rb section ^rb ui-view ^rb fenix-tef-mis-cuentas ^rb fenix-comprobante-tef-mis-cuentas ^rb fenix-comprobante ^rb div.row.ng-star-inserted ^rb div ^rb bch-alert ^rb div ^rb div.text-content ^rb p ^rb span,mdcc36=adiv.alert-success div.text-content p,mdcc37=bwindow.PUID|ssv=4|lastModification=1751661461706|mdp=mdcc6,mdcc15,mdcc16,mdcc20,mdcc22,mdcc23,mdcc24,mdcc25,mdcc27,mdcc28,mdcc30,mdcc32,mdcc35,mdcc36|tp=500,50,0|tal=3|agentUri=/ruxitagentjs_ICA7NVfghqrtux_10315250519065025.js"></script><link rel="stylesheet" type="text/css" href="assets/cl.bancochile.canales.web-0.0.1.css" />
+    <link rel="stylesheet" type="text/css" href="assets/headerfooter.css" />
+
+<title>Error de Sistema</title>
+</head>
+<body>
+
+<header class="bch-empresa-header-publico">
+    <div class="container container-contingencia">
+        <a href="http://www.bancochile.cl/"class="pull-left"><img src="assets/images/bancochile.png" alt=""></a>  
+        <a href="http://www.bancochile.cl/" class="pull-right"><img src="assets/images/edwards.png" alt=""></a>    
+    </div>
+</header> 
+
+    <section class="container container-contingencia">       
+        <div class="row">  
+        <section class="error-landing error">
+          <section>
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <h3>Estimado Cliente,</h3>
+                <h4><b>En estos momentos esta página no se encuentra disponible.</b> <br />
+                Por favor, intenta más tarde o comunícate con nuestros ejecutivos Fonobank. Gracias.
+                </h4>
+            </div>
+          </section>
+          
+          <section class="col-xs-6 col-sm-6 col-md-6 col-lg-6 mesa-ayuda">
+            <article class="row">
+              <h5 class="col-xs-6 col-sm-6 col-md-6 col-lg-6">Banco de Chile</h5>
+
+              <article class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                Desde Teléfonos Fijos <br />
+                <h3>(600) 637 37 37</h3>
+
+                Desde  Celulares <br />
+                <h3>+56 2 2637 37 37</h3>
+              </article>
+            </article>
+          </section>
+
+          <section class="col-xs-12 col-sm-12 col-md-6 col-lg-6 mesa-ayuda no-border">
+            <article class="row">
+              <h5 class="col-xs-12 col-sm-12 col-md-6 col-lg-6 ed">Banco Edwards Citi</h5>
+
+              <article class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                Desde Teléfonos Fijos <br />
+                <h3>(600) 231 9999</h3>
+
+                Desde Celulares<br />
+                <h3>+56 2 2520 54 00</h3>
+              </article>
+            </article>
+          </section>
+
+          <a class="success btn btn-sm pull-right" href="/persona">Volver</a>
+        </section>
+            
+        </div>
+    </section>
+    <footer class="bch-empresa-footer-publico ng-scope">
+    <div class="container bch-footer-contenedor">
+        <div class="row">
+            <div class="col-xs-12 col-sm-4 col-md-3 col-lg-3 bch-img-logo-footer">
+                <a tabindex=-1 href="http://www.bancochile.cl/"><img src="assets/images/logo-banco-footer.png" alt=""></a>
+            </div>
+
+            <div class="col-xs-12 col-sm-5 col-md-5 col-lg-5 bch-liniealateral">
+                <ul class="list-unstyled">
+                    <li>Casa Matriz: Ahumada 251, Santiago de Chile </li>
+                    <li>Mesa Central: +56 2 265 311 11</li>
+                </ul>
+            </div>
+
+            <div class="col-xs-12 col-sm-3 col-md-4 col-lg-4 bch-liniealateral">
+                <ul class="list-unstyled">
+                    <li>Infórmese sobre la garantía estatal de los depósitos en su banco o en www.sbif.cl</li>
+                    <li><strong>&copy; 2015, Banco de Chile. Todos los Derechos Reservados </strong></li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+</body>
+
+</html>

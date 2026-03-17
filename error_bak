@@ -1,0 +1,225 @@
+[24-Jul-2024 14:07:10 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::funcionw_tecnico() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:200
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 200
+[24-Jul-2024 18:11:38 UTC] PHP Parse error:  syntax error, unexpected ';', expecting ')' in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 1862
+[24-Jul-2024 18:56:36 UTC] PHP Parse error:  syntax error, unexpected end of file, expecting function (T_FUNCTION) or const (T_CONST) in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 2082
+[24-Jul-2024 15:35:28 America/Santiago] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Funciones::menuLateral(), 0 passed in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_manuel.php on line 40 and exactly 2 expected in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php:389
+Stack trace:
+#0 /home/qaseduc/public_html/sistema/sistema_ticket/ticket_manuel.php(40): Funciones->menuLateral()
+#1 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 389
+[24-Jul-2024 15:35:37 America/Santiago] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Funciones::menuLateral(), 0 passed in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_manuel.php on line 40 and exactly 2 expected in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php:389
+Stack trace:
+#0 /home/qaseduc/public_html/sistema/sistema_ticket/ticket_manuel.php(40): Funciones->menuLateral()
+#1 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 389
+[25-Jul-2024 11:56:40 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::heaader() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:36
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 36
+[25-Jul-2024 11:57:57 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::header() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:36
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 36
+[25-Jul-2024 12:02:23 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::header() in /home/qaseduc/public_html/sistema/sistema_ticket/colaboradores.php:20
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/colaboradores.php on line 20
+[25-Jul-2024 12:06:05 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::script() in /home/qaseduc/public_html/sistema/sistema_ticket/mensaje_enviados.php:96
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/mensaje_enviados.php on line 96
+[25-Jul-2024 12:06:21 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::script() in /home/qaseduc/public_html/sistema/sistema_ticket/mensaje_enviados.php:96
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/mensaje_enviados.php on line 96
+[25-Jul-2024 12:06:33 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::script() in /home/qaseduc/public_html/sistema/sistema_ticket/mensaje.php:114
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/mensaje.php on line 114
+[25-Jul-2024 12:06:43 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::script() in /home/qaseduc/public_html/sistema/sistema_ticket/colaboradores.php:76
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/colaboradores.php on line 76
+[25-Jul-2024 12:07:03 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::script() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:148
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 148
+[26-Jul-2024 14:12:35 UTC] PHP Warning:  require_once(vendor/autoload.php): failed to open stream: No such file or directory in /home/qaseduc/public_html/sistema/sistema_ticket/twilo.php on line 2
+[26-Jul-2024 14:12:35 UTC] PHP Fatal error:  require_once(): Failed opening required 'vendor/autoload.php' (include_path='.:/opt/cpanel/ea-php74/root/usr/share/pear') in /home/qaseduc/public_html/sistema/sistema_ticket/twilo.php on line 2
+[26-Jul-2024 18:16:12 UTC] PHP Warning:  session_start(): Cannot start session when headers already sent in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 2
+[26-Jul-2024 18:16:19 UTC] PHP Warning:  session_start(): Cannot start session when headers already sent in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 2
+[26-Jul-2024 15:21:27 America/Santiago] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Funciones::menuLateral(), 1 passed in /home/qaseduc/public_html/sistema/sistema_ticket/principal.php on line 39 and exactly 2 expected in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php:385
+Stack trace:
+#0 /home/qaseduc/public_html/sistema/sistema_ticket/principal.php(39): Funciones->menuLateral('8')
+#1 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 385
+[29-Jul-2024 12:27:30 America/Santiago] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Funciones::menuLateral(), 1 passed in /home/qaseduc/public_html/sistema/sistema_ticket/perfil.php on line 32 and exactly 2 expected in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php:385
+Stack trace:
+#0 /home/qaseduc/public_html/sistema/sistema_ticket/perfil.php(32): Funciones->menuLateral('8')
+#1 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 385
+[30-Jul-2024 12:33:50 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::contenedorTicketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:121
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 121
+[21-Aug-2024 15:05:10 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined function obtenerColorEstado() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:203
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 203
+[21-Aug-2024 15:07:31 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined function obtenerColorEstado() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:192
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 192
+[21-Aug-2024 16:16:47 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:212
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 212
+[21-Aug-2024 16:35:02 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:213
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 213
+[21-Aug-2024 16:35:50 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:213
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 213
+[21-Aug-2024 16:35:52 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:213
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 213
+[21-Aug-2024 16:36:57 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:213
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 213
+[21-Aug-2024 16:40:00 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:216
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 216
+[21-Aug-2024 16:41:51 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:251
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 251
+[21-Aug-2024 16:42:01 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function consulta() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php:231
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_administador.php on line 231
+[22-Aug-2024 08:33:57 America/Santiago] PHP Fatal error:  Uncaught ArgumentCountError: Too few arguments to function Funciones::menuLateral(), 1 passed in /home/qaseduc/public_html/sistema/sistema_ticket/perfil.php on line 32 and exactly 2 expected in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php:389
+Stack trace:
+#0 /home/qaseduc/public_html/sistema/sistema_ticket/perfil.php(32): Funciones->menuLateral('8')
+#1 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 389
+[26-Aug-2024 10:52:21 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function num_rows() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:271
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 271
+[26-Aug-2024 10:54:11 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function fetch_array() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:272
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 272
+[27-Aug-2024 16:57:39 America/Santiago] PHP Fatal error:  Uncaught Error: Call to a member function num_rows() on null in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:211
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 211
+[28-Aug-2024 15:09:02 UTC] PHP Warning:  file_get_contents(class/cuerpo_correo.php): failed to open stream: No such file or directory in /home/qaseduc/public_html/sistema/sistema_ticket/validacion_recuperar_clave.php on line 57
+[28-Aug-2024 15:09:02 UTC] Mailer Error: Message body empty
+[28-Aug-2024 15:09:02 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/qaseduc/public_html/sistema/sistema_ticket/validacion_recuperar_clave.php:57) in /home/qaseduc/public_html/sistema/sistema_ticket/validacion_recuperar_clave.php on line 66
+[29-Aug-2024 12:12:31 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::contenedorTicketCerrados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:172
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 172
+[04-Sep-2024 09:30:04 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 17
+[04-Sep-2024 09:30:05 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 17
+[04-Sep-2024 09:30:05 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 17
+[04-Sep-2024 09:30:05 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 17
+[04-Sep-2024 09:30:09 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 17
+[04-Sep-2024 09:32:11 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 21
+[04-Sep-2024 09:32:12 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 21
+[04-Sep-2024 09:33:14 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 21
+[04-Sep-2024 09:33:14 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 21
+[04-Sep-2024 09:33:15 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 21
+[04-Sep-2024 09:33:16 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 21
+[04-Sep-2024 09:33:17 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 17
+[04-Sep-2024 09:33:17 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:17
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 17
+[04-Sep-2024 09:43:02 America/Santiago] PHP Fatal error:  Uncaught Error: Object of class mysqli_result could not be converted to string in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php:21
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket.php on line 21
+[05-Sep-2024 15:31:23 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 19
+[05-Sep-2024 15:31:24 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 19
+[05-Sep-2024 16:12:13 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 24
+[05-Sep-2024 16:12:14 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 24
+[05-Sep-2024 16:12:14 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 24
+[05-Sep-2024 16:12:14 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 24
+[05-Sep-2024 16:12:15 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 24
+[05-Sep-2024 16:12:16 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 24
+[05-Sep-2024 20:15:50 UTC] PHP Parse error:  syntax error, unexpected '$archivoPHP' (T_VARIABLE), expecting ';' or ',' in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 1400
+[05-Sep-2024 20:16:01 UTC] PHP Parse error:  syntax error, unexpected '$archivoPHP' (T_VARIABLE), expecting ';' or ',' in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 1400
+[05-Sep-2024 20:16:11 UTC] PHP Parse error:  syntax error, unexpected '$archivoPHP' (T_VARIABLE), expecting ';' or ',' in /home/qaseduc/public_html/sistema/sistema_ticket/class/funciones.php on line 1400
+[05-Sep-2024 16:18:06 America/Santiago] PHP Fatal error:  Uncaught Error: Call to undefined method Funciones::ticketAsignados() in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php:24
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/ticket_asignados.php on line 24

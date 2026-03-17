@@ -1,0 +1,92 @@
+.badge-counter {
+    position: absolute;
+    top: 22px;
+    /* Ajusta este valor según sea necesario */
+    right: 0px;
+    /* Ajusta este valor según sea necesario */
+    transform: translate(50%, -50%);
+    z-index: 10;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    background-color: #e74a3b;
+    border-radius: 10rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Asegura que los íconos de ordenación estén alineados a la derecha */
+th i.bi {
+    float: right;
+}
+
+
+
+.active-menu-item {
+    background-color: #d1e7fd;
+    /* Fondo más claro para el menú activo */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    /* Sombra para el efecto 3D */
+    transform: translateY(-2px);
+    /* Levantar ligeramente */
+    border-radius: 5px;
+}
+
+.blinking {
+    animation: blinkingText 1.2s infinite;
+}
+
+@keyframes blinkingText {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.status-icon {
+    font-size: 1.2em;
+    margin-right: 5px;
+}
+
+.resolved {
+    color: green;
+}
+
+.assigned {
+    color: blue;
+}
+
+.in-process {
+    color: rgb(81, 255, 0);
+    animation: blinkingText 1.2s infinite;
+}
+
+.not-started {
+    color: rgb(60, 255, 0);
+}
+
+/* imagen adjunta del chat */
+/* ************************** */
+
+.adjunto-img-mediano {
+    max-width: 200px;
+    max-height: 200px;
+    display: block;
+    margin: 10px 0;
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.file-preview i {
+    margin-right: 5px;
+}

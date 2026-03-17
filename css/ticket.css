@@ -1,0 +1,146 @@
+.odd {
+    background-color: #f9f9f9;
+}
+
+.even {
+    background-color: #ffffff;
+}
+
+.img-profile.rounded-circle {
+    width: 50px; /* Controla el tamaño de la imagen */
+    height: 50px; /* Mantiene la imagen como un círculo */
+    object-fit: cover; /*Asegura que la imagen se recorte para ajustarse al tamaño sin deformarse*/
+    margin: 20px;
+}
+
+.chat-container {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.chat-message {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 20px;
+    margin-bottom: 5px;
+    max-width: 80%;
+}
+
+.chat-message.received {
+    background-color: #ececec;
+    justify-content: start;
+    text-align: left;
+}
+
+.chat-message.sent {
+    background-color: #dcf8c6;
+    justify-content: end;
+    text-align: right;
+    margin-left: auto;
+    /* Push the 'sent' message to the right */
+}
+
+.img-profile {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    margin-right: 10px;
+    /* Space between image and text */
+}
+
+.campo-invalido {
+    border: 1px solid red !important; /* Cambia el color del borde a rojo */
+}
+
+
+.atencion {
+    border: 3px solid red;
+    border-radius: 8px;
+    background-color: white;
+    text-align: center;
+    font-weight: bold;
+    animation: parpadeo 1s infinite alternate;
+}
+
+/* Animación para el parpadeo */
+@keyframes parpadeo {
+    0% {
+        border-color: red;
+        box-shadow: 0 0 10px red;
+    }
+
+    100% {
+        border-color: transparent;
+        box-shadow: 0 0 10px transparent;
+    }
+}
+
+
+   .input-error {
+        border: 2px solid #dc3545 !important;  /* rojo Bootstrap */
+        box-shadow: none;
+        }
+        
+        
+        
+        /* Estilo base para todas las tarjetas */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efecto hover suave */
+.tarjeta-hover:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Aparece con animación */
+.fade-in {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Icono redondo dentro de las tarjetas */
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Color de fondo con degradado para cada tipo de estado */
+.fondo-ticket-recibido {
+    background: linear-gradient(145deg, #E6E6FA, #ffffff);
+}
+
+.fondo-ticket-asignado {
+    background: linear-gradient(145deg, #FFF4C1, #ffffff);
+}
+
+.fondo-ticket-proceso {
+    background: linear-gradient(145deg, #FFE0E0, #ffffff);
+}
+
+.fondo-ticket-terminado {
+    background: linear-gradient(145deg, #C8F7C5, #ffffff);
+}
+
+.fondo-ticket-cerrado {
+    background: linear-gradient(145deg, #E0E0E0, #ffffff);
+}

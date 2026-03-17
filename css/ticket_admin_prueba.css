@@ -1,0 +1,545 @@
+    :root {
+        --tap-primary: #0f4c81;
+        --tap-surface: rgba(255, 255, 255, 0.94);
+        --tap-border: #d8e4ef;
+        --tap-bg: #f4f7fb;
+        --tap-text: #17324d;
+        --tap-soft: #eef5fb;
+        --tap-shadow: 0 18px 45px rgba(15, 76, 129, 0.08);
+    }
+
+    body.ticket-admin-prueba-body {
+        background: linear-gradient(180deg, #eef4fb 0%, #f9fbfd 38%, #f3f7fb 100%);
+        color: var(--tap-text);
+    }
+
+    .ticket-admin-prueba-body #content-wrapper,
+    .ticket-admin-prueba-body #content {
+        background: transparent;
+    }
+
+    .ticket-admin-prueba-shell {
+        padding: 0 0.35rem 1rem;
+    }
+
+    .tap-panel {
+        border: 0;
+        border-radius: 22px;
+        background: var(--tap-surface);
+        box-shadow: var(--tap-shadow);
+        overflow: hidden;
+    }
+
+    .tap-panel .card-body {
+        padding: 1.6rem;
+    }
+
+    .tap-hero {
+        background: radial-gradient(circle at top right, rgba(20, 184, 166, 0.18), transparent 32%), linear-gradient(135deg, #ffffff, #eff6ff 48%, #f8fafc);
+        border: 1px solid var(--tap-border);
+        border-radius: 24px;
+        box-shadow: var(--tap-shadow);
+        padding: 2rem;
+    }
+
+    .tap-kicker {
+        display: inline-block;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: rgba(15, 76, 129, 0.08);
+        color: var(--tap-primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .tap-title {
+        color: var(--tap-text);
+        font-size: clamp(1.9rem, 2.8vw, 2.8rem);
+        font-weight: 800;
+        margin-bottom: 0.65rem;
+    }
+
+    .tap-subtitle {
+        color: #5f7388;
+        max-width: 62rem;
+        margin-bottom: 0;
+        font-size: 1.02rem;
+    }
+
+    .tap-status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0 1.75rem;
+    }
+
+.tap-status-grid .tarjeta-ticket-estado {
+    border-radius: 10px;
+    box-shadow: var(--tap-shadow);
+    border: 1px solid rgba(15, 76, 129, 0.08);
+    overflow: hidden;
+    min-height: 155px;
+    color: #fff;
+}
+
+.tap-status-grid .card-body {
+    padding: 1.2rem 1.2rem 0.9rem;
+}
+
+    .tap-status-grid .card-footer {
+        background: transparent;
+        border-top: 0;
+        padding: 0 1.2rem 1rem;
+    }
+
+.tap-status-grid .fw-bold {
+    color: #ffffff !important;
+}
+
+.tap-status-grid .icon-circle {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.17) !important;
+    box-shadow: none;
+}
+
+.tap-status-grid .icon-circle i {
+    font-size: 1.25rem;
+    color: #ffffff;
+}
+
+.tap-status-grid .progress {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.24);
+    overflow: hidden;
+}
+
+.tap-status-grid .progress-bar {
+    border-radius: 999px;
+}
+
+.tap-status-grid .bi-search {
+    font-size: 2.25rem !important;
+    color: #ffffff !important;
+}
+
+.tap-status-grid .tarjeta-ticket-estado:nth-child(1) {
+    background: linear-gradient(135deg, #3949ab, #5c6bc0) !important;
+}
+
+.tap-status-grid .tarjeta-ticket-estado:nth-child(2) {
+    background: linear-gradient(135deg, #b7791f, #d69e2e) !important;
+}
+
+.tap-status-grid .tarjeta-ticket-estado:nth-child(3) {
+    background: linear-gradient(135deg, #0f9bd7, #38bdf8) !important;
+}
+
+.tap-status-grid .tarjeta-ticket-estado:nth-child(4) {
+    background: linear-gradient(135deg, #198754, #20b26b) !important;
+}
+
+.tap-status-grid .tarjeta-ticket-estado:nth-child(5) {
+    background: linear-gradient(135deg, #c62828, #ef4444) !important;
+}
+
+.tap-status-grid .tarjeta-ticket-estado .progress-bar.bg-warning,
+.tap-status-grid .tarjeta-ticket-estado .progress-bar.bg-info,
+.tap-status-grid .tarjeta-ticket-estado .progress-bar.bg-success {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+    .tap-table-card {
+        border-radius: 22px;
+        background: var(--tap-surface);
+        box-shadow: var(--tap-shadow);
+        border: 0;
+    }
+
+    .tap-table-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    .tap-section-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--tap-text);
+        margin-bottom: 0.2rem;
+    }
+
+    .tap-section-subtitle {
+        color: #5f7388;
+        margin-bottom: 0;
+    }
+
+    .tap-badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 999px;
+        background: rgba(15, 76, 129, 0.08);
+        color: var(--tap-primary);
+        font-weight: 700;
+        padding: 0.6rem 0.95rem;
+    }
+
+    .tap-table-card .card-body {
+        padding: 1.45rem 1.5rem 1.6rem;
+    }
+
+    .tap-table-card .table-responsive {
+        border-radius: 18px;
+    }
+
+    #dataTableAdministrador {
+        margin-top: 0 !important;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    #dataTableAdministrador thead th {
+        background: linear-gradient(180deg, #eaf2fb 0%, #d8e6f4 100%) !important;
+        color: #0f3d68;
+        border-top: 0 !important;
+        border-bottom: 2px solid #b7cde3 !important;
+        font-size: 0.98rem;
+        font-weight: 800;
+    }
+
+#dataTableAdministrador tbody td {
+    vertical-align: middle;
+    border-color: #dce8f3 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#D7DBDD"] td,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#d7dbdd"] td {
+    background-color: #eef2ff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FFF4C1"] td,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#fff4c1"] td,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FFFFE0"] td,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#ffffe0"] td {
+    background-color: #fff7e8 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FADBD8"] td,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#fadbd8"] td {
+    background-color: #eef9ff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#D5F5E3"] td,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#d5f5e3"] td {
+    background-color: #eefbf3 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#F5B7B1"] td,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#f5b7b1"] td {
+    background-color: #fff1f1 !important;
+}
+
+    .tap-table-card .dataTables_length select,
+    .tap-table-card .dataTables_filter input {
+        border-radius: 12px;
+        border: 1px solid #cfdbe7;
+        min-height: 42px;
+        padding: 0.45rem 0.8rem;
+        box-shadow: none;
+    }
+
+    .tap-table-card .dataTables_wrapper .dataTables_info,
+    .tap-table-card .dataTables_wrapper .dataTables_paginate {
+        padding-top: 1rem;
+    }
+
+.tap-table-card .paginate_button {
+    border-radius: 12px !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .bi-info-circle-fill {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #1f6df0;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .bi-info-circle-fill:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-primary.btn-sm {
+    border: 1px solid #bfd6f8;
+    border-radius: 10px;
+    min-height: 44px;
+    padding: 0.58rem 0.95rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    background: #eef5ff;
+    color: #1454a3;
+    box-shadow: none;
+    transition: transform 0.16s ease, filter 0.16s ease, background-color 0.16s ease;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-primary.btn-icon-split,
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-secondary.btn-icon-split,
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.position-relative {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-primary.btn-icon-split,
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.position-relative {
+    background: #eef3f7;
+    color: #526273;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-secondary.btn-icon-split {
+    background: #eef3f7;
+    color: #fff;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td #idVerTicket {
+    background: #7d8792 !important;
+    color: #fff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.position-relative {
+    background: #1f6df0 !important;
+    color: #fff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td #idverConversacion {
+    background: #e63946 !important;
+    color: #fff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td #idverConversacion .fa-star {
+    color: #fff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-primary.btn-icon-split i,
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-secondary.btn-icon-split i,
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.position-relative i {
+    font-size: 1.05rem;
+    margin: 0 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.position-relative .badge {
+    font-size: 0.62rem;
+    min-width: 18px;
+    min-height: 18px;
+    padding: 0.2rem 0.32rem;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .estado-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 10px;
+    padding: 0.52rem 0.8rem !important;
+    font-weight: 700;
+    font-size: 0.92rem;
+    line-height: 1.2;
+    box-shadow: none;
+    border-width: 1px;
+    border-style: solid;
+    background-image: none;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .estado-badge {
+    min-width: 110px;
+    justify-content: center;
+    text-align: center;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .estado-azul {
+    background: #f5f8fc;
+    border-color: #d4e0ec;
+    color: #51677f;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .estado-rojo {
+    background: #fff4f4;
+    border-color: #f0a1a1;
+    color: #c62828;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .estado-gris {
+    background: #f5f7fa;
+    border-color: #aab7c4;
+    color: #526273;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#D7DBDD"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#d7dbdd"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#D7DBDD"] .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#d7dbdd"] .btn.btn-primary.btn-sm {
+    background: #eef2ff;
+    border-color: #b9c2ff;
+    color: #3949ab;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FFF4C1"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#fff4c1"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FFFFE0"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#ffffe0"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FFF4C1"] .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#fff4c1"] .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FFFFE0"] .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#ffffe0"] .btn.btn-primary.btn-sm {
+    background: #fff7e8;
+    border-color: #f0c36d;
+    color: #9a6700;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FADBD8"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#fadbd8"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#FADBD8"] .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#fadbd8"] .btn.btn-primary.btn-sm {
+    background: #eef9ff;
+    border-color: #7ed3fc;
+    color: #0369a1;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#D5F5E3"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#d5f5e3"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#D5F5E3"] .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#d5f5e3"] .btn.btn-primary.btn-sm {
+    background: #eefbf3;
+    border-color: #7bd8a2;
+    color: #198754;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#F5B7B1"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#f5b7b1"] .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#F5B7B1"] .btn.btn-primary.btn-sm,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr[style*="#f5b7b1"] .btn.btn-primary.btn-sm {
+    background: #fff1f1;
+    border-color: #f29c9c;
+    color: #c62828;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .d-flex.flex-nowrap.align-items-center.justify-content-start.gap-1 {
+    gap: 0.55rem !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .btn.btn-primary.btn-sm i,
+.ticket-admin-prueba-body #dataTableAdministrador tbody td .estado-badge i {
+    font-size: 0.9rem;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-1 td {
+    background-color: #eef2ff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-2 td {
+    background-color: #fff7e8 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-3 td {
+    background-color: #eef9ff !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-5 td {
+    background-color: #eefbf3 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-6 td {
+    background-color: #f2f5f7 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-7 td {
+    background-color: #fff1f1 !important;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-1 .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-1 .btn.btn-primary.btn-sm {
+    background: #eef2ff;
+    border-color: #b9c2ff;
+    color: #3949ab;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-2 .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-2 .btn.btn-primary.btn-sm {
+    background: #fff7e8;
+    border-color: #f0c36d;
+    color: #9a6700;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-3 .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-3 .btn.btn-primary.btn-sm {
+    background: #eef9ff;
+    border-color: #7ed3fc;
+    color: #0369a1;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-5 .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-5 .btn.btn-primary.btn-sm {
+    background: #eefbf3;
+    border-color: #7bd8a2;
+    color: #198754;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-6 .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-6 .btn.btn-primary.btn-sm {
+    background: #f2f5f7;
+    border-color: #b7c3cd;
+    color: #5f6f7f;
+}
+
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-7 .estado-badge,
+.ticket-admin-prueba-body #dataTableAdministrador tbody tr.estado-ticket-7 .btn.btn-primary.btn-sm {
+    background: #fff1f1;
+    border-color: #f29c9c;
+    color: #c62828;
+}
+
+.ticket-admin-prueba-body .topbar {
+    border-radius: 18px;
+    margin: 0.75rem 1rem 1.5rem;
+}
+
+    @media (max-width: 991.98px) {
+        .tap-hero {
+            padding: 1.35rem;
+        }
+
+        .tap-table-card .card-body {
+            padding: 1rem;
+        }
+
+        .tap-status-grid {
+            grid-template-columns: 1fr;
+        }
+    }

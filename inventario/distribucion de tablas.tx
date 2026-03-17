@@ -1,0 +1,70 @@
+Distribucion de tablas de inventario
+
+1. Tabla principal: equipos
+- id_equipo
+- id_usuario
+- id_colegio
+- id_usuario_asignado
+- nombre_equipo
+- fabricante
+- producto
+- numero_serie
+- tipo_pc
+- qr_code
+- id_estado
+
+2. Tabla relacionada: equipos_compra
+- id_equipo
+- valor_equipo
+- proveedor
+- numero_factura
+- fecha_compra
+- observacion
+
+3. Tabla relacionada: equipo_almacenamiento
+- id_equipo
+- equipo_modelo
+- equipo_capacidad
+- equipo_tamano
+
+4. Tabla relacionada: equipo_memoria
+- id_memoria
+- id_equipo
+- designacion_memoria
+- formato_memoria
+- tipo_memoria
+- tamano_memoria
+- frecuencia_memoria
+- marca_memoria
+- orden_memoria
+
+5. Tabla relacionada: equipo_monitor
+- id_monitor
+- id_equipo
+- modelo_monitor
+- codigo_monitor
+- serie_monitor
+- tamano_monitor
+- resolucion_monitor
+- orden_monitor
+
+6. Tabla relacionada: equipo_procesador
+- id_equipo
+- equipo_fabricante
+- equipo_modelo
+- equipo_velocidad
+
+7. Tabla relacionada: equipo_software
+- id_equipo
+- windows
+- office
+- antivirus
+
+Relaciones
+- equipos es la tabla principal.
+- equipos_compra se relaciona por id_equipo.
+- equipo_almacenamiento se relaciona por id_equipo.
+- equipo_memoria se relaciona por id_equipo.
+- equipo_monitor se relaciona por id_equipo.
+- equipo_procesador se relaciona por id_equipo.
+- equipo_software se relaciona por id_equipo.

@@ -1,0 +1,428 @@
+.contenedor-avances {
+    background-color: rgb(23, 67, 112);
+    padding: 15px;
+    border-radius: 8px;
+
+}
+
+.bloque-avance {
+    background-color: #e9ecef;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+
+
+.titulo-avance {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.linea-roja {
+    width: 80%;
+    height: 4px;
+    background: red;
+    margin: 0 auto 20px;
+    border-radius: 2px;
+}
+
+.lista-avances {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+}
+
+.item-avance {
+    background-color: #e9ecef;
+    padding: 15px;
+    width: 90%;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.etiqueta-avance {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #343a40;
+}
+
+.contenido-avance {
+    font-size: 15px;
+    color: #212529;
+}
+
+.punto-rojo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 10px;
+    height: 10px;
+    background: red;
+    border-radius: 50%;
+}
+
+
+
+
+
+.cuerpo_modal_guardar {
+    /* width: 100%; */
+    font-family: 'Helvetica', sans-serif;
+    /* Fuente sencilla y legible */
+    background-color: #f0f0f0;
+    /* Fondo suave */
+    color: #333;
+    /* Texto oscuro y neutro */
+    border-radius: 15px;
+    /* Bordes redondeados */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    /* Sombra sutil */
+    padding: 12px;
+    /* Espacio en blanco alrededor del contenido */
+    transition: all .3s ease-out;
+    /* Transici贸n suave */
+    border: 2px solid rgb(31, 30, 30);
+    max-height: 95vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.insignia_ticket {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    font-size: 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    gap: 5px;
+}
+
+/* ******************************************************************** */
+/* ************************************LINEA DE TIEMPO**************** */
+/* ******************************************************************** */
+
+.progress {
+  height: 20px;
+  background-color: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+
+.titulo_swal_custom {
+  font-size: 18px !important;   /* achica el tamaño */
+  font-weight: 600;             /* un poco más grueso */
+  color: #333;                  /* color más suave */
+  text-transform: uppercase;    /* opcional, para estilo */
+}
+
+
+
+
+
+.form-control.custom-small {
+  font-size: 14px;   /* letra más chica */
+  padding: 4px 8px;  /* menos espacio interno */
+  height: auto;      /* que se ajuste al contenido */
+}
+
+
+
+.titulo_swal_custom { font-size: 17px !important; font-weight: 600; }
+.cuerpo_modal_guardar .modal-header { padding: .6rem .85rem !important; }
+.cuerpo_modal_guardar .container-fluid.py-3 { padding-top: .45rem !important; padding-bottom: .45rem !important; }
+.cuerpo_modal_guardar .row.g-3 { --bs-gutter-x: .75rem; --bs-gutter-y: .75rem; }
+.cuerpo_modal_guardar .row.g-2 { --bs-gutter-x: .6rem; --bs-gutter-y: .45rem; }
+.cuerpo_modal_guardar .mb-2 { margin-bottom: .45rem !important; }
+.cuerpo_modal_guardar .mt-3 { margin-top: .45rem !important; }
+.cuerpo_modal_guardar .form-label { font-size: 13px; margin-bottom: .2rem; }
+.cuerpo_modal_guardar .form-control,
+.cuerpo_modal_guardar .form-select { font-size: 13px; padding: 5px 9px; }
+.cuerpo_modal_guardar textarea.form-control { resize: vertical; }
+.cuerpo_modal_guardar .ticket-admin-descripcion { min-height: 150px; max-height: 180px; }
+.cuerpo_modal_guardar .ticket-admin-avance-input { min-height: 72px; }
+.scroll-avances { max-height: 22vh; overflow: auto; background: #fff; }
+.cuerpo_modal_guardar .swal2-close { width: 2.2rem; height: 2.2rem; font-size: 1.75rem; }
+.cuerpo_modal_guardar .progress { height: 15px; margin-bottom: .35rem !important; }
+.cuerpo_modal_guardar .progress-bar { font-size: 12px; }
+.cuerpo_modal_guardar #lineaTiempoDinamica { margin-top: 0 !important; }
+.cuerpo_modal_guardar .linea-tiempo-ticket { margin-top: 4px !important; margin-bottom: 0 !important; }
+.cuerpo_modal_guardar .linea-tiempo-ticket .texto { font-size: 12px; line-height: 1.15; }
+.cuerpo_modal_guardar .icono-linea-estado { width: 28px; height: 28px; font-size: 14px; }
+.cuerpo_modal_guardar .swal2-actions { margin-top: .55rem !important; padding-top: 0 !important; }
+.cuerpo_modal_guardar .bt_crear { padding: .65rem 1.75rem !important; }
+
+.ticket-admin-input-destacado,
+.ticket-admin-input-destacado[readonly] {
+    border: 1px solid #ced4da !important;
+    background-color: #fff !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    font-weight: 400 !important;
+}
+
+
+
+
+
+
+
+
+
+/* Contenedor principal */
+.linea-tiempo-ticket {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+    padding: 0 10px;
+}
+
+/* Línea gris de fondo */
+.linea-tiempo-ticket::before {
+    content: '';
+    position: absolute;
+    top: 25px; /* ajusta según el tamaño del ícono */
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #ccc;
+    z-index: 0;
+}
+
+/* Cada paso */
+.linea-tiempo-ticket .estado {
+    text-align: center;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+/* Ícono dentro del paso */
+.icono-linea-estado {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 5px auto;
+    border-radius: 50%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+/* Pasos inactivos: color gris */
+.linea-tiempo-ticket .estado:not(.activo) .icono-linea-estado {
+    background-color: #ccc;
+    color: #666;
+}
+
+/* Texto del paso */
+.linea-tiempo-ticket .texto {
+    font-size: 14px;
+}
+
+
+
+
+
+#toggleColumnaDerecha {
+  z-index: 1051; /* más que el contenido */
+}
+
+
+/* *************************************************** */
+/* *************************************************** */
+/* *************************************************** */
+/* Estilo para el contenedor de badges en el modal Ticket Usuario */
+.contenedor-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end; /* 👈 alineados a la derecha */
+  margin-bottom: .75rem;
+}
+.insignia_ticket {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 20px;
+    font-weight: 500;
+    gap: 5px;
+}
+
+/* *************************************************** */
+/* *************************************************** */
+/* *************************************************** */
+
+
+
+
+
+
+
+
+
+
+
+
+
+.linea-tiempo-ticket {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    gap: 10px;
+    position: relative;
+    padding: 0 10px;
+}
+
+.linea-tiempo-ticket::before {
+    content: '';
+    position: absolute;
+    top: 25px; /* ajusta si tus íconos están más arriba/abajo */
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #ccc;
+    z-index: 0;
+}
+
+.linea-tiempo-ticket .estado {
+    text-align: center;
+    flex: 1;
+    position: relative;
+    z-index: 1; /* para estar por encima de la línea gris */
+}
+
+
+/* ✅ Círculo con ícono centrado usando Flex */
+.icono-linea-estado {
+    background: #eee;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    z-index: 1;
+    position: relative;
+}
+
+.estado.activo .icono-linea-estado {
+    background: #3498db;
+    color: white;
+}
+
+.linea-tiempo-ticket .texto small {
+    font-size: 12px;
+    color: #555;
+}
+
+.badge-counter {
+    position: absolute;
+    top: 22px;
+    /* Ajusta este valor según sea necesario */
+    right: 0px;
+    /* Ajusta este valor según sea necesario */
+    transform: translate(50%, -50%);
+    z-index: 10;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fff;
+    background-color: #e74a3b;
+    border-radius: 10rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Asegura que los íconos de ordenación estén alineados a la derecha */
+th i.bi {
+    float: right;
+}
+
+
+
+.active-menu-item {
+    background-color: #d1e7fd;
+    /* Fondo más claro para el menú activo */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    /* Sombra para el efecto 3D */
+    transform: translateY(-2px);
+    /* Levantar ligeramente */
+    border-radius: 5px;
+}
+
+.blinking {
+    animation: blinkingText 1.2s infinite;
+}
+
+@keyframes blinkingText {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.status-icon {
+    font-size: 1.2em;
+    margin-right: 5px;
+}
+
+.resolved {
+    color: green;
+}
+
+.assigned {
+    color: blue;
+}
+
+.in-process {
+    color: red;
+    animation: blinkingText 1.2s infinite;
+}
+
+.not-started {
+    color: red;
+}
+
+/* imagen adjunta del chat */
+/* ************************** */
+
+.adjunto-img-mediano {
+    max-width: 200px;
+    max-height: 200px;
+    display: block;
+    margin: 10px 0;
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.file-preview i {
+    margin-right: 5px;
+}

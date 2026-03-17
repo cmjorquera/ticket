@@ -1,0 +1,53 @@
+    /* Nuevo estilo para el div de notificación en el modal */
+    .notification-alert {
+        background-color: #f8d7da;
+        /* Fondo rojo claro */
+        color: #721c24;
+        /* Color de texto */
+        border-radius: 15px;
+        /* Bordes redondeados */
+        padding: 10px;
+        /* Espaciado interno */
+        margin-top: 20px;
+        /* Margen superior */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+            0 2px 4px rgba(0, 0, 0, 0.06),
+            0 0 0 4px rgba(248, 215, 218, 0.5);
+        /* Sombra múltiple para mayor profundidad */
+        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        /* Transición suave para transformación y sombra */
+    }
+
+    .notification-alert:hover {
+        transform: translateY(-5px);
+        /* Transformación para "subir" el div al pasar el mouse */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        /* Sombra más intensa al pasar el mouse */
+    }
+
+    .footer {
+    position: relative; /* Cambia a 'relative' si 'absolute' está causando problemas */
+    bottom: 0; /* Ajusta según sea necesario*/
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%; /* Asegúrate de que esto no sobrepase los límites del modal */
+    text-align: center;
+    font-size: 14px;
+    color: #888;
+    padding: 10px 20px;
+    }
+        /* Estilo personalizado para los contenedores de imágenes */
+    .contenedor-imagen {
+        width: 100%; /* La imagen ocupa todo el ancho del contenedor */
+        height: 100px; /* Altura fija para mantener la proporción de la imagen
+        /* overflow: hidden; Oculta cualquier parte de la imagen que se desborde */
+    }
+
+    /* Estilo para las imágenes dentro de los contenedores */
+    .contenedor-imagen img {
+        width: 40%; /* La imagen ocupa todo el ancho del contenedor */
+        height: auto; /* La altura se ajusta automáticamente para mantener la proporción */
+        display: block; /* Asegura que la imagen se muestre como un bloque */
+    }
+
+    

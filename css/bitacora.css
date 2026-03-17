@@ -1,0 +1,128 @@
+    /* Clase para el efecto 3D */
+    .efecto-3d {
+        transform: scale(1.005);
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-style: solid;
+        border-color: red;
+    }
+
+    #botonesAccion {
+        position: fixed;
+        top: 85%;
+        right: 20px;
+        transform: translateY(-50%);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #botonesDescargar {
+
+        position: fixed;
+        top: 20%;
+        right: 20px;
+        transform: translateY(-50%);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        
+
+    }
+    
+    .dropdown-menu {
+    z-index: 1055 !important; /* superior al z-index de botones normales y canvas */
+}
+
+
+    .buttonGuadar{
+        position: fixed;
+        top: 85%;
+        right: 20px;
+        transform: translateY(-50%);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+
+    /* // agregar_dispositivos */
+
+/* Estilo general para las pestañas */
+.nav-tabs .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #007bff;
+    background-color: #f8f9fa; /* Color claro para las pestañas inactivas */
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Estilo para la pestaña activa */
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+    color: #0056b3; /* Azul más oscuro */
+    background-color: #d1ecf1; /* Azul muy claro */
+    border-color: #bee5eb;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Iconos dentro de las pestañas */
+.nav-tabs .nav-link i {
+    font-size: 18px;
+}
+
+/* Resaltar el contenedor del contenido activo */
+.tab-content .tab-pane {
+    display: none;
+    padding: 20px;
+    background-color: #f8f9fa; /* Fondo claro */
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    margin-top: -1px;
+}
+
+.tab-content .tab-pane.active {
+    display: block;
+    background-color: #e9f7fc; /* Azul claro */
+    border-color: #bee5eb;
+    box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+}
+
+
+
+
+
+/* CSS PARA EL ICONO DE AGREGAR EN LSITADOS  */
+/* Ícono de agregar en la posición roja */
+.icono-circular-superior {
+    position: absolute;
+    top: -15px; /* Ajusta para colocarlo encima del borde */
+    left: -10px; /* Ajusta para alinearlo al borde izquierdo */
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #f0f8ff; /* Fondo claro */
+    color: #007bff; /* Azul del ícono */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 16px;
+    z-index: 10; /* Asegura que esté sobre otros elementos */
+}
+
+/* Hover para el ícono */
+.icono-circular-superior:hover {
+    background-color: #007bff;
+    color: #fff;
+}

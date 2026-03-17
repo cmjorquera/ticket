@@ -1,0 +1,44 @@
+Logica del modulo inventario_sofware
+===================================
+
+- La portada principal es `inventario_sofware/index.php`.
+- El modulo se divide en dos partes:
+  - software y licencias
+  - sitios web, apps y clientes
+
+Software
+--------
+- Cada registro se guarda en `software_catalogo`.
+- Puede tener multiples filas asociadas en `software_datos_almacenamiento`.
+- Se usa para guardar:
+  - nombre
+  - version
+  - cantidad
+  - licenciamiento
+  - pagado por
+  - costo
+  - proveedor
+  - referencia
+  - observaciones
+
+Sitios web
+----------
+- Cada registro se guarda en `sitios_web_catalogo`.
+- El tipo puede ser:
+  - Web
+  - App
+  - Cliente
+
+Flujo base
+----------
+- `registrar_software.php` crea software.
+- `editar_software.php` actualiza software.
+- `ver_software.php` muestra ficha.
+- `registrar_sitio_web.php` crea sitios.
+- `editar_sitio_web.php` actualiza sitios.
+- `ver_sitio_web.php` muestra ficha.
+- Los listados de la portada cargan por AJAX.
+
+Paso siguiente recomendado
+-------------------------
+- Ejecutar el SQL sugerido del modulo para habilitar la persistencia.
