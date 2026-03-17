@@ -2862,9 +2862,9 @@ WHERE t.id_usuario = '$idUsuarioSession'
                 $res_perfiles = $db->consulta($sql_perfiles);
             
                 $perfilNombres = [
-                    1 => "Administrador",
+                    1 => "Usuario",
                     2 => "Tecnico",
-                    3 => "Usuario"
+                    3 => "Administrador"
                 ];
             
                 $perfiles = [];
@@ -2883,6 +2883,9 @@ WHERE t.id_usuario = '$idUsuarioSession'
                     $perfil = $perfiles[0];
                     $contenidoHTML = "";
                     $perfilJS = strtolower($perfil['nombre']);
+                    if ($perfilJS === 'administrador') {
+                        $perfilJS = 'admin';
+                    }
             
                     // Consulta según perfil
                     if ($perfil['id'] == 1) {
@@ -3047,15 +3050,15 @@ WHERE t.id_usuario = '$idUsuarioSession'
         $res_perfiles = $db->consulta($sql_perfiles);
     
         $perfilNombres = [
-            1 => "Administrador",
+            1 => "Usuario",
             2 => "Tecnico",
-            3 => "Usuario"
+            3 => "Administrador"
         ];
     
         $perfilIconos = [
-            1 => "<i class='bi bi-shield-lock me-1'></i>",    // Admin
+            1 => "<i class='bi bi-person-fill me-1'></i>",    // Usuario
             2 => "<i class='bi bi-tools me-1'></i>",          // Técnico
-            3 => "<i class='bi bi-person-fill me-1'></i>"     // Usuario
+            3 => "<i class='bi bi-shield-lock me-1'></i>"     // Admin
         ];
     
         $perfiles = [];
@@ -3079,6 +3082,9 @@ WHERE t.id_usuario = '$idUsuarioSession'
         $botones = "";
         foreach ($perfiles as $perfil) {
             $nombreLower = strtolower($perfil['nombre']);
+            if ($nombreLower === 'administrador') {
+                $nombreLower = 'admin';
+            }
             $botones .= "<button class='btn btn-outline-primary me-2 mb-2' onclick=\"cambiarPerfil('$nombreLower')\">
                             {$perfil['icono']} {$perfil['nombre']}
                          </button>";

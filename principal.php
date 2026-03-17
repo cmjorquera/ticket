@@ -70,6 +70,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
     <link href="css/cronologiaTicket.css" rel="stylesheet">
     <link href="css/tour.css" rel="stylesheet">
     <link href="css/principal.css" rel="stylesheet">
+    <link href="css/ticket_admin.css?v=<?php echo $versionTicketAdminCss; ?>" rel="stylesheet">
 
     <script type="text/javascript" src="js/mensajes.js"></script>
     <script>
@@ -79,7 +80,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
     <script type="text/javascript" src="js/funciones.js"></script>
     <!--PARA LAS CONVERSACIONES DE WHASAP -->
-    <script type="text/javascript" src="js/ticket.js"></script>
+    <script type="text/javascript" src="js/ticket.js?v=<?php echo $versionTicketJs; ?>"></script>
     <script type="text/javascript" src="js/buscadores.js"></script>
     <script type="text/javascript" src="js/validacionTicket.js"></script>
     <script type="text/javascript" src="js/tour.js"></script>
@@ -445,6 +446,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                     </div>
                                     <div id="contenedorAdmin"
                                         style="display: <?= ($perfilPorDefecto == 'administrador') ? 'block' : 'none'; ?>;">
+                                        <?php $GLOBALS['ticketAdminColorColumn'] = true; ?>
                                         <?php  include("componentes/bloque_tabla_admin.php") ?>
                                     </div>
                                 </div>
@@ -469,15 +471,16 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     <script>
                     function mostrarListado(tipo) {
                         const contenedores = ['contenedorUsuario', 'contenedorTecnico', 'contenedorAdmin'];
+                        const contenedorId = tipo === 'admin' ? 'contenedorAdmin'
+                            : tipo === 'tecnico' ? 'contenedorTecnico'
+                            : 'contenedorUsuario';
 
                         contenedores.forEach(id => {
                             const el = document.getElementById(id);
-                            if (el) el.style.display = 'none';
+                            if (el) el.style.display = id === contenedorId ? 'block' : 'none';
                         });
 
-                        const seleccionado = document.getElementById('contenedor' + tipo.charAt(0).toUpperCase() + tipo
-                            .slice(1));
-                        if (seleccionado) seleccionado.style.display = 'block';
+                        inicializarTablaPerfilDashboard(contenedorId);
                     }
                     </script>
 
@@ -692,29 +695,6 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
         //******************************************************************************************
 
 
-        $(document).ready(function() {
-            if ($('#tablaUsuario').length) {
-                $('#tablaUsuario').DataTable({
-                    language: {
-                        url: "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
-                    }
-                });
-            }
-            if ($('#tablaTecnicoTicketAsignados').length) {
-                $('#tablaTecnicoTicketAsignados').DataTable({
-                    language: {
-                        url: "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
-                    }
-                });
-            }
-            if ($('#dataTableAdministrador').length) {
-                $('#dataTableAdministrador').DataTable({
-                    language: {
-                        url: "https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
-                    }
-                });
-            }
-        });
         </script>
 
         <!-- ******************************************************************** -->
@@ -739,6 +719,81 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
 
 <script>
+function inicializarTablaPerfilDashboard(contenedor) {
+    const $contenedor = $('#' + contenedor);
+    const $tablaUsuario = $contenedor.find('#tablaUsuario');
+    const $tablaTecnico = $contenedor.find('#tablaTecnicoTicketAsignados');
+    const $tablaAdmin = $contenedor.find('#dataTableAdministrador');
+
+    if ($tablaUsuario.length && !$.fn.DataTable.isDataTable($tablaUsuario)) {
+        $tablaUsuario.DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            responsive: true,
+            pageLength: 10,
+            paging: true,
+            pagingType: 'simple_numbers'
+        });
+    }
+
+    if ($tablaTecnico.length && !$.fn.DataTable.isDataTable($tablaTecnico)) {
+        $tablaTecnico.DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            responsive: true,
+            pageLength: 10,
+            paging: true,
+            pagingType: 'simple_numbers'
+        });
+    }
+
+    if ($tablaAdmin.length && !$.fn.DataTable.isDataTable($tablaAdmin)) {
+        $tablaAdmin.DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+            },
+            responsive: true,
+            pageLength: 10,
+            paging: true,
+            pagingType: 'simple_numbers'
+        });
+    }
+
+    $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust().draw(false);
+}
+
+function actualizarGraficosPerfil(perfil) {
+    if (typeof generarGraficoTicket === 'function') {
+        generarGraficoTicket(perfil);
+    }
+
+    if (typeof cargarGraficoPorPerfil === 'function') {
+        cargarGraficoPorPerfil(perfil);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const textoPerfil = document.getElementById('textoPerfilActual');
+    const perfilInicial = document.getElementById('contenedorAdmin')?.style.display === 'block'
+        ? 'admin'
+        : document.getElementById('contenedorTecnico')?.style.display === 'block'
+            ? 'tecnico'
+            : 'usuario';
+
+    inicializarTablaPerfilDashboard('contenedorUsuario');
+    inicializarTablaPerfilDashboard('contenedorTecnico');
+    inicializarTablaPerfilDashboard('contenedorAdmin');
+    mostrarListado(perfilInicial);
+
+    if (textoPerfil) {
+        textoPerfil.innerText = perfilInicial === 'admin'
+            ? 'Admin'
+            : perfilInicial.charAt(0).toUpperCase() + perfilInicial.slice(1);
+    }
+});
+
 function cambiarPerfil(perfil) {
     const nombrePerfil = perfil.charAt(0).toUpperCase() + perfil.slice(1);
     const iconos = {
@@ -765,26 +820,8 @@ function cambiarPerfil(perfil) {
         if (result.isConfirmed) {
             document.getElementById('textoPerfilActual').innerText = nombrePerfil;
 
-            ['contenedorUsuario', 'contenedorTecnico', 'contenedorAdmin'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = 'none';
-            });
-
-            const contenedorId = perfil === 'admin' ? 'contenedorAdmin'
-                               : perfil === 'tecnico' ? 'contenedorTecnico'
-                               : 'contenedorUsuario';
-            const contenedor = document.getElementById(contenedorId);
-            if (contenedor) contenedor.style.display = 'block';
-
-            // ✅ Este ya lo tienes
-            if (typeof generarGraficoTicket === 'function') {
-                generarGraficoTicket(perfil);
-            }
-
-            // ✅ Agrega esta línea para actualizar el otro gráfico
-            if (typeof cargarGraficoPorPerfil === 'function') {
-                cargarGraficoPorPerfil(perfil);
-            }
+            mostrarListado(perfil);
+            actualizarGraficosPerfil(perfil);
 
             Swal.fire({
                 title: 'Perfil cambiado',

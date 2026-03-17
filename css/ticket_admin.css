@@ -47,29 +47,29 @@
     background-color: #e7f3ff;
 }
 
-#dataTableAdministrador {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) {
     border-collapse: separate !important;
     border-spacing: 0 !important;
     font-size: 0.88rem !important;
 }
 
-#dataTableAdministrador thead th {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) thead th {
     font-size: 0.81rem !important;
     letter-spacing: 0.01em;
     white-space: nowrap !important;
 }
 
-#dataTableAdministrador tbody tr.fila-ticket-admin-compacta td {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.fila-ticket-admin-compacta td {
     background: #ffffff !important;
     border-color: #e5edf5 !important;
     vertical-align: middle;
 }
 
-#dataTableAdministrador tbody tr.fila-ticket-admin-compacta:hover td {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.fila-ticket-admin-compacta:hover td {
     background: #f8fbff !important;
 }
 
-#dataTableAdministrador .estado-indicador-dot {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .estado-indicador-dot {
     display: block;
     width: 8px !important;
     height: 64px !important;
@@ -78,7 +78,7 @@
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 
-#dataTableAdministrador .ticket-resumen-estado {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado {
     display: flex;
     align-items: flex-start;
     gap: 14px;
@@ -90,7 +90,7 @@
     box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
 }
 
-#dataTableAdministrador .ticket-resumen-estado__dot {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado__dot {
     width: 15px;
     height: 15px;
     min-width: 15px;
@@ -99,11 +99,11 @@
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95);
 }
 
-#dataTableAdministrador .ticket-resumen-estado__body {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado__body {
     min-width: 0;
 }
 
-#dataTableAdministrador .ticket-resumen-estado__titulo {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado__titulo {
     font-size: 0.84rem !important;
     line-height: 1.25;
     font-weight: 700;
@@ -111,7 +111,7 @@
     word-break: break-word;
 }
 
-#dataTableAdministrador .ticket-resumen-estado__detalle {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado__detalle {
     margin-top: 4px;
     font-size: 0.8rem !important;
     line-height: 1.25;
@@ -119,44 +119,44 @@
     word-break: break-word;
 }
 
-#dataTableAdministrador .ticket-resumen-estado--tecnico {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado--tecnico {
     min-height: 72px;
 }
 
-#dataTableAdministrador .ticket-fecha-hora {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-fecha-hora {
     display: flex;
     flex-direction: column;
     gap: 2px;
     line-height: 1.2;
 }
 
-#dataTableAdministrador .ticket-fecha-hora__fecha {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-fecha-hora__fecha {
     font-weight: 600;
     color: #111827;
     font-size: 0.86rem !important;
 }
 
-#dataTableAdministrador .ticket-fecha-hora__hora {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-fecha-hora__hora {
     color: #64748b;
     font-size: 0.78rem !important;
 }
 
-#dataTableAdministrador th.col-id,
-#dataTableAdministrador td.celda-id {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-id,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-id {
     width: 10px !important;
     min-width: 10px !important;
     max-width: 52px !important;
     text-align: center;
 }
 
-#dataTableAdministrador td.celda-id-con-indicador {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-id-con-indicador {
     position: relative;
     padding-left: 18px !important;
     padding-right: 4px !important;
     text-align: center !important;
 }
 
-#dataTableAdministrador .estado-indicador-dot--inline {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .estado-indicador-dot--inline {
     position: absolute;
     left: 4px;
     top: 50%;
@@ -166,46 +166,46 @@
     height: 58px !important;
 }
 
-#dataTableAdministrador .celda-id-numero {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .celda-id-numero {
     display: inline-block;
     min-width: 12px;
     text-align: center;
 }
 
-#dataTableAdministrador th.col-fecha-hora,
-#dataTableAdministrador td.celda-fecha-hora {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-fecha-hora,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-fecha-hora {
     width: 80px !important;
     min-width: 80px !important;
     max-width: 80px !important;
 }
 
-#dataTableAdministrador th.col-de,
-#dataTableAdministrador td.celda-de {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-de,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-de {
     width: 110px !important;
     min-width: 110px !important;
     max-width: 110px !important;
 }
 
-#dataTableAdministrador th.col-asunto,
-#dataTableAdministrador td.celda-asunto {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-asunto,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-asunto {
     width: 190px !important;
     min-width: 190px !important;
 }
 
-#dataTableAdministrador th.col-tecnico,
-#dataTableAdministrador td.celda-tecnico {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-tecnico,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-tecnico {
     width: 144px !important;
     min-width: 144px !important;
 }
 
-#dataTableAdministrador th.col-fecha-respuesta,
-#dataTableAdministrador td.celda-fecha-respuesta {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-fecha-respuesta,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-fecha-respuesta {
     width: 152px !important;
     min-width: 152px !important;
 }
 
-#dataTableAdministrador th.col-dias-restantes,
-#dataTableAdministrador td.celda-dias-restantes {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-dias-restantes,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-dias-restantes {
     width: 150px !important;
     min-width: 150px !important;
 }
@@ -216,18 +216,18 @@
     min-width: 90px !important;
 }
 
-#dataTableAdministrador th.col-opciones,
-#dataTableAdministrador td.celda-opciones {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-opciones,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-opciones {
     width: 92px !important;
     min-width: 92px !important;
 }
 
-#dataTableAdministrador .ticket-fecha-hora__fecha,
-#dataTableAdministrador .ticket-fecha-hora__hora {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-fecha-hora__fecha,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-fecha-hora__hora {
     white-space: nowrap;
 }
 
-#dataTableAdministrador .ticket-resumen-estado {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado {
     min-width: 0;
 }
 
@@ -240,14 +240,15 @@
     white-space: nowrap;
 }
 
-#dataTableAdministrador td.celda-de,
-#dataTableAdministrador td.celda-asunto {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-de,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-asunto {
     word-break: break-word;
 }
 
-#dataTableAdministrador td.celda-tecnico .ticket-resumen-estado,
-#dataTableAdministrador td.celda-fecha-respuesta .ticket-resumen-estado,
-#dataTableAdministrador td.celda-dias-restantes .ticket-resumen-estado {
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-tecnico .ticket-resumen-estado,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-fecha-respuesta .ticket-resumen-estado,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-dias-restantes .ticket-resumen-estado,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-estado .ticket-resumen-estado {
     padding: 10px 12px !important;
 }
 
@@ -298,4 +299,103 @@
     background: linear-gradient(180deg, #2f88ff 0%, #1d72f4 100%);
     border-color: #1d72f4;
     box-shadow: 0 12px 22px rgba(29, 114, 244, 0.22);
+}
+
+#tablaTecnicoTicketAsignados th.col-estado,
+#tablaTecnicoTicketAsignados td.celda-estado {
+    width: 142px !important;
+    min-width: 142px !important;
+}
+
+#tablaTecnicoTicketAsignados th.col-opciones,
+#tablaTecnicoTicketAsignados td.celda-opciones {
+    width: 132px !important;
+    min-width: 132px !important;
+}
+
+#tablaTecnicoTicketAsignados td.celda-estado .ticket-resumen-estado,
+#tablaTecnicoTicketAsignados td.celda-fecha-respuesta .ticket-resumen-estado,
+#tablaTecnicoTicketAsignados td.celda-dias-restantes .ticket-resumen-estado {
+    min-height: 64px !important;
+}
+
+#tablaTecnicoTicketAsignados .btn-tecnico-opcion {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid #d8e5f2;
+    background: #ffffff;
+    color: #165fc2;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+#tablaTecnicoTicketAsignados .btn-tecnico-opcion:hover,
+#tablaTecnicoTicketAsignados .btn-tecnico-opcion:focus {
+    background: #eff6ff;
+    color: #0f4aa3;
+    border-color: #bfd5ef;
+}
+
+#tablaTecnicoTicketAsignados .contenedor-opciones-tecnico {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+}
+
+#tablaUsuario th.col-estado,
+#tablaUsuario td.celda-estado,
+#tablaUsuario th.col-progreso,
+#tablaUsuario td.celda-progreso {
+    width: 142px !important;
+    min-width: 142px !important;
+}
+
+#tablaUsuario th.col-opciones,
+#tablaUsuario td.celda-opciones {
+    width: 150px !important;
+    min-width: 150px !important;
+}
+
+#tablaUsuario td.celda-estado .ticket-resumen-estado,
+#tablaUsuario td.celda-fecha-respuesta .ticket-resumen-estado,
+#tablaUsuario td.celda-dias-restantes .ticket-resumen-estado,
+#tablaUsuario td.celda-progreso .ticket-resumen-estado {
+    min-height: 64px !important;
+}
+
+#tablaUsuario .ticket-progreso {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 74px !important;
+    padding: 14px 16px !important;
+    border: 1px solid #d7e3ef;
+    border-radius: 18px;
+    background: #f8fbff;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+#tablaUsuario .ticket-progreso__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.76rem;
+    color: #5b6b7f;
+}
+
+#tablaUsuario .ticket-progreso .progress {
+    height: 12px !important;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+#tablaUsuario .ticket-progreso .progress-bar {
+    font-size: 0.72rem;
+    font-weight: 700;
 }
