@@ -12,7 +12,7 @@ try {
     inventario_responder_error('Error al cargar la portada del inventario de software: ' . $e->getMessage());
 }
 
-$idPagActual = '9';
+$idPagActual = '15';
 require __DIR__ . '/componentes/layout_top.inc';
 ?>
 <div class="row mx-1 mx-md-3">

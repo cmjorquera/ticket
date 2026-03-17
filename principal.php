@@ -116,17 +116,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 <!-- container para ver los el char de conversacion -->
 <div id="offcanvasContainerTicket"></div>
 <div id="offcanvasContainer"></div>
-<style>
-/*#bi {*/
-/*  position: fixed;*/
-/*  bottom: 20px;*/
-/*  right: 20px;*/
-/*  z-index: 9999;*/
-/*  width: 50px;*/
-/*  height: 50px;*/
-/*  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);*/
-/*}*/
-</style>
+
 <body id="page-top">
     <div id="wrapper">
         <?php $funciones->menuLateral($idUsuarioSession, $idPagActual); ?>
@@ -228,14 +218,41 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                 <!-- *********************************************  -->
 
                 <div class="container-fluid">
-                    <div class="contenedor-estados-ticket" id="idContenedoresEstadosTicket">
-                        <?php 
-                            $funciones->contenedorTicketRecibidos($idUsuarioSession, $idPagActual); 
-                            $funciones->contenedorTicketAsignados($idUsuarioSession, $idPagActual); 
-                            $funciones->contenedorTicketEnProceso($idUsuarioSession, $idPagActual); 
-                            $funciones->contenedorTicketTerminados($idUsuarioSession, $idPagActual); 
-                            $funciones->contenedorTicketDemorados($idUsuarioSession, $idPagActual); 
-                             // $funciones->contenedorTicketBorrador($idUsuarioSession, $idPagActual); 
+                    <?php
+                        $perfilDashboardInicial = 'usuario';
+                        if (in_array(2, $perfilesUsuario)) {
+                            $perfilDashboardInicial = 'tecnico';
+                        } elseif (in_array(1, $perfilesUsuario)) {
+                            $perfilDashboardInicial = 'usuario';
+                        } elseif (in_array(3, $perfilesUsuario)) {
+                            $perfilDashboardInicial = 'admin';
+                        }
+                    ?>
+                    <div id="contenedorEstadosUsuario" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'usuario') ? 'grid' : 'none'; ?>;">
+                        <?php
+                            $funciones->contenedorTicketRecibidos($idUsuarioSession, 3);
+                            $funciones->contenedorTicketAsignados($idUsuarioSession, 3);
+                            $funciones->contenedorTicketEnProceso($idUsuarioSession, 3);
+                            $funciones->contenedorTicketTerminados($idUsuarioSession, 3);
+                            $funciones->contenedorTicketDemorados($idUsuarioSession, 3);
+                        ?>
+                    </div>
+                    <div id="contenedorEstadosTecnico" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'tecnico') ? 'grid' : 'none'; ?>;">
+                        <?php
+                            $funciones->contenedorTicketRecibidos($idUsuarioSession, 5);
+                            $funciones->contenedorTicketAsignados($idUsuarioSession, 5);
+                            $funciones->contenedorTicketEnProceso($idUsuarioSession, 5);
+                            $funciones->contenedorTicketTerminados($idUsuarioSession, 5);
+                            $funciones->contenedorTicketDemorados($idUsuarioSession, 5);
+                        ?>
+                    </div>
+                    <div id="contenedorEstadosAdmin" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'admin') ? 'grid' : 'none'; ?>;">
+                        <?php
+                            $funciones->contenedorTicketRecibidos($idUsuarioSession, 4);
+                            $funciones->contenedorTicketAsignados($idUsuarioSession, 4);
+                            $funciones->contenedorTicketEnProceso($idUsuarioSession, 4);
+                            $funciones->contenedorTicketTerminados($idUsuarioSession, 4);
+                            $funciones->contenedorTicketDemorados($idUsuarioSession, 4);
                         ?>
                     </div><br>
                     <div class="row">
@@ -252,7 +269,6 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                         while ($fila = $bdato->fetch_array($resultado)) {
                                             $perfilesUsuario[] = $fila['id_perfil'];
                                         }
-                                        echo $fila['id_perfil'];
                                         // Mostrar el menú solo si tiene más de un perfil
                                         if (count($perfilesUsuario) > 1):
                                         ?>
@@ -320,7 +336,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     ?>
                         <script>
                         document.addEventListener("DOMContentLoaded", function() {
-                            const perfilPorDefecto = '<?= $perfilPorDefecto ?>';
+                            const perfilPorDefecto = '<?= $perfilDashboardInicial ?>';
                             if (perfilPorDefecto) {
                                 generarGraficoTicket(perfilPorDefecto);
                             } else {
@@ -329,7 +345,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                         });
 
                         document.addEventListener("DOMContentLoaded", () => {
-                            cargarGraficoPorPerfil();
+                            cargarGraficoPorPerfil('<?= $perfilDashboardInicial ?>');
                         });
                         </script>
 
@@ -437,15 +453,15 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                             <?php endif; ?>
                                     </div>
                                     <div id="contenedorUsuario"
-                                        style="display: <?= ($perfilPorDefecto == 'usuario') ? 'block' : 'none'; ?>;">
+                                        style="display: <?= ($perfilDashboardInicial == 'usuario') ? 'block' : 'none'; ?>;">
                                         <?php  include("componentes/bloque_tabla_usuario.php") ?>
                                     </div>
                                     <div id="contenedorTecnico"
-                                        style="display: <?= ($perfilPorDefecto == 'tecnico') ? 'block' : 'none'; ?>;">
+                                        style="display: <?= ($perfilDashboardInicial == 'tecnico') ? 'block' : 'none'; ?>;">
                                         <?php  include("componentes/bloque_tabla_tecnico.php") ?>
                                     </div>
                                     <div id="contenedorAdmin"
-                                        style="display: <?= ($perfilPorDefecto == 'administrador') ? 'block' : 'none'; ?>;">
+                                        style="display: <?= ($perfilDashboardInicial == 'admin') ? 'block' : 'none'; ?>;">
                                         <?php $GLOBALS['ticketAdminColorColumn'] = true; ?>
                                         <?php  include("componentes/bloque_tabla_admin.php") ?>
                                     </div>
@@ -470,14 +486,27 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 <!-- ******************************************************** -->
                     <script>
                     function mostrarListado(tipo) {
-                        const contenedores = ['contenedorUsuario', 'contenedorTecnico', 'contenedorAdmin'];
+                        const contenedoresListado = ['contenedorUsuario', 'contenedorTecnico', 'contenedorAdmin'];
+                        const contenedoresEstados = ['contenedorEstadosUsuario', 'contenedorEstadosTecnico', 'contenedorEstadosAdmin'];
                         const contenedorId = tipo === 'admin' ? 'contenedorAdmin'
                             : tipo === 'tecnico' ? 'contenedorTecnico'
                             : 'contenedorUsuario';
+                        const contenedorEstadosId = tipo === 'admin' ? 'contenedorEstadosAdmin'
+                            : tipo === 'tecnico' ? 'contenedorEstadosTecnico'
+                            : 'contenedorEstadosUsuario';
 
-                        contenedores.forEach(id => {
+                        contenedoresListado.forEach(id => {
                             const el = document.getElementById(id);
-                            if (el) el.style.display = id === contenedorId ? 'block' : 'none';
+                            if (el) {
+                                el.style.display = id === contenedorId ? 'block' : 'none';
+                            }
+                        });
+
+                        contenedoresEstados.forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.style.display = id === contenedorEstadosId ? 'grid' : 'none';
+                            }
                         });
 
                         inicializarTablaPerfilDashboard(contenedorId);

@@ -48,7 +48,7 @@ try {
 
 $idUsuarioSession = (int)($_SESSION['id'] ?? 0);
 $nombreUsuarioSession = trim((string)($_SESSION['nombre'] ?? '') . ' ' . (string)($_SESSION['apellido_paterno'] ?? ''));
-$idPagActual = '9';
+$idPagActual = '15';
 
 function inventario_url($ruta = '')
 {

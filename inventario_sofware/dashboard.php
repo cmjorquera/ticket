@@ -29,7 +29,7 @@ if (!empty($consultaColegio['colegio']['id_colegio'])) {
     }
 }
 
-$idPagActual = '9';
+$idPagActual = '15';
 require __DIR__ . '/componentes/layout_top.inc';
 ?>
 <?php if ($modo === 'consulta'): ?>

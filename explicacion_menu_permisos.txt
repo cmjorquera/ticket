@@ -1,0 +1,185 @@
+EXPLICACION MENU Y PERMISOS DE USUARIOS
+
+Objetivo
+Documentar las tablas involucradas en el sistema de permisos de usuarios y su relacion con el menu lateral del sistema.
+
+1. Tabla menu_1
+Consulta base:
+SELECT `id_menu`, `nombre`, `abreviacion`, `archivo`, `icono`, `caracteristica`, `orden`
+FROM `menu_1`
+
+Proposito:
+Esta tabla guarda la definicion de los menus del sistema.
+Cada registro representa una opcion que puede aparecer en el menu lateral.
+
+Campos:
+- id_menu: identificador unico del menu.
+- nombre: nombre completo del menu.
+- abreviacion: texto corto o etiqueta resumida para mostrar.
+- archivo: pagina o archivo asociado al menu.
+- icono: icono visual del menu.
+- caracteristica: descripcion o rasgo del menu.
+- orden: posicion en que debe mostrarse dentro del menu lateral.
+
+Relacion con el sistema:
+- La funcion menuLateral() usa esta informacion para imprimir el menu.
+- Desde esta tabla se obtiene la estructura base de navegacion.
+- Luego, sobre esta base, se debe aplicar la logica de permisos para saber que menus puede ver cada usuario.
+
+Idea general del flujo:
+1. menu_1 define que menus existen.
+2. menuLateral() toma esos menus y los renderiza.
+3. Las tablas de permisos determinan que menus se muestran segun el usuario o su perfil.
+
+Pendiente por documentar en este archivo:
+- tabla de perfiles
+- tabla usuario_perfil
+- tabla de permisos por menu
+- relacion entre usuario, perfil y menu
+- logica exacta usada por menuLateral()
+
+
+2. Tabla permisos_menu_1
+Consulta base:
+SELECT `id`, `id_menu1`, `id_usuario`, `id_tipo_permiso`
+FROM `permisos_menu_1`
+
+Proposito:
+Esta tabla guarda que menu tiene asociado un usuario y con que tipo de permiso.
+Es una tabla de relacion entre usuarios, menus y permisos.
+
+Campos:
+- id: identificador unico del registro.
+- id_menu1: referencia al menu definido en `menu_1`.
+- id_usuario: referencia al usuario al que se le asigna el permiso.
+- id_tipo_permiso: referencia al tipo de permiso asignado sobre ese menu.
+
+Relacion con el sistema:
+- `menu_1` define que menus existen.
+- `permisos_menu_1` define que menus puede usar un usuario especifico.
+- El campo `id_tipo_permiso` indica el nivel o tipo de acceso que tiene ese usuario sobre ese menu.
+
+Lectura funcional:
+- Si un usuario tiene un registro en `permisos_menu_1` para cierto `id_menu1`, entonces ese menu puede ser evaluado para mostrarse o habilitar acciones.
+- Si no existe relacion entre el usuario y el menu, ese menu no deberia considerarse disponible para ese usuario.
+- El detalle final del comportamiento depende del significado de `id_tipo_permiso`.
+
+Esquema relacional basico:
+- `menu_1.id_menu` <-> `permisos_menu_1.id_menu1`
+- `usuarios.id` <-> `permisos_menu_1.id_usuario`
+- `tipo_permiso.id` <-> `permisos_menu_1.id_tipo_permiso`  (nombre de tabla por confirmar si aplica)
+
+Flujo general actualizado:
+1. `menu_1` define todos los menus disponibles en el sistema.
+2. `permisos_menu_1` relaciona cada menu con un usuario y un tipo de permiso.
+3. `menuLateral()` deberia usar esta relacion para decidir que menus imprimir para el usuario logueado.
+
+
+3. Tabla usuario_perfil
+Consulta base:
+SELECT `id_usuario`, `id_perfil`
+FROM `usuario_perfil`
+
+Proposito:
+Esta tabla relaciona un usuario con uno o varios perfiles.
+En este sistema se usa especialmente para permisos por perfil, por ejemplo para decidir si un boton se muestra solo a ciertos perfiles.
+
+Campos:
+- id_usuario: usuario al que se le asigna el perfil.
+- id_perfil: perfil asociado al usuario.
+
+Uso practico en permisos:
+- Sirve para saber si un usuario pertenece al perfil `1`, `2` o `3`.
+- Puede usarse para mostrar o bloquear botones, acciones o bloques visuales segun el perfil.
+- Ejemplo tipico: permitir un boton solo a usuarios que tengan perfil `1` o `2`.
+
+Ejemplo conceptual:
+- Si un usuario tiene registros `(id_usuario = X, id_perfil = 1)` y `(id_usuario = X, id_perfil = 2)`,
+  entonces ese usuario puede acceder a botones o acciones reservadas para perfil 1 o perfil 2.
+
+Diferencia entre tablas:
+- `permisos_menu_1` sirve para permisos directos sobre menus por usuario.
+- `usuario_perfil` sirve para permisos generales por perfil.
+- Entonces el sistema puede combinar ambas logicas:
+  - menus por usuario
+  - botones o acciones por perfil
+
+Mapeo actual de perfiles:
+- `1 = usuario`
+- `2 = tecnico`
+- `3 = administrador`
+
+
+4. Tabla usuarios
+Consulta base referencial:
+SELECT `id`
+FROM `usuarios`
+
+Proposito:
+La tabla `usuarios` es la tabla principal de personas o cuentas del sistema.
+Desde aqui nace la relacion hacia perfiles y permisos.
+
+Campo clave usado en este esquema:
+- id: identificador unico del usuario.
+
+
+5. Diagrama simple entre tablas
+
+                +----------------------+
+                |       usuarios       |
+                |----------------------|
+                | id                   |
+                +----------+-----------+
+                           |
+                           |
+                           v
+                +----------------------+
+                |    usuario_perfil    |
+                |----------------------|
+                | id_usuario           |
+                | id_perfil            |
+                +----------------------+
+
+
+                +----------------------+
+                |        menu_1        |
+                |----------------------|
+                | id_menu              |
+                | nombre               |
+                | abreviacion          |
+                | archivo              |
+                | icono                |
+                | caracteristica       |
+                | orden                |
+                +----------+-----------+
+                           |
+                           |
+                           v
+                +----------------------+
+                |   permisos_menu_1    |
+                |----------------------|
+                | id                   |
+                | id_menu1             |
+                | id_usuario           |
+                | id_tipo_permiso      |
+                +----------+-----------+
+                           ^
+                           |
+                           |
+                +----------+-----------+
+                |       usuarios       |
+                |----------------------|
+                | id                   |
+                +----------------------+
+
+
+Lectura del diagrama:
+- `usuarios` se relaciona con `usuario_perfil` para saber que perfiles tiene cada usuario.
+- `usuarios` tambien se relaciona con `permisos_menu_1` para saber que menus tiene asignados de forma directa.
+- `menu_1` define todos los menus disponibles.
+- `permisos_menu_1` une un usuario con un menu y un tipo de permiso.
+
+Resumen funcional:
+- Si quieres controlar botones por perfil, usas `usuario_perfil`.
+- Si quieres controlar menus por usuario, usas `permisos_menu_1`.
+- `usuarios` es la tabla base que conecta ambas logicas.
