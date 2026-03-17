@@ -98,7 +98,7 @@ $totalConMusica = array_filter($eventos, fn($e) => $e['musica_ambiental'] == 1);
     <input type="hidden" id="idUsuario" value="<?= htmlspecialchars($idUsuarioSession) ?>" />
 
     <div id="wrapper">
-        <?php $funciones->menuLateral($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
 
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">

@@ -27,7 +27,7 @@ require __DIR__ . '/componentes/layout_top.inc';
                             <p class="inv-subtitle mb-0">Controla licencias, programas, cuentas relacionadas y registros de sitios web, apps o clientes.</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
-                            <a href="consulta_.php" class="btn btn-outline-primary"><i class="bi bi-search me-1"></i>Consulta</a>
+                            <a href="consulta_nueva.php" class="btn btn-outline-primary"><i class="bi bi-search me-1"></i>Consulta</a>
                             <a href="dashboard.php" class="btn btn-outline-primary"><i class="bi bi-bar-chart-line me-1"></i>Dashboard</a>
                         </div>
                     </div>

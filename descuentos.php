@@ -7,6 +7,7 @@ $funciones = new Funciones();
 $idUsuarioSession   = htmlspecialchars($_SESSION['id']);
 $nombresession      = htmlspecialchars($_SESSION['nombre']) . '-' . htmlspecialchars($_SESSION['apellido_paterno']);
 $nombre             = htmlspecialchars($_SESSION['nombre']) . ' ' . htmlspecialchars($_SESSION['apellido_paterno']) . ' ' . htmlspecialchars($_SESSION['apellido_materno']);
+$idPagActual        = 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -647,7 +648,7 @@ function modificarBeneficioPrincipal(id) {
 
 <body id="page-top">
     <div id="wrapper">
-        <?php $funciones->menuLateral($idUsuarioSession); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">

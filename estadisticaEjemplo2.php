@@ -227,7 +227,7 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
 
 <body id="page-to3p">
     <div id="wrapper">
-        <?php $funciones->menuLateral($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
 
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">

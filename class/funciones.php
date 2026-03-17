@@ -632,6 +632,9 @@ public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = n
                             <span class='menuLateral2-icon'>{$iconoMenu}</span>
                             <span class='menuLateral2-text'>{$nombreMenu}</span>
                         </span>
+                        <span class='menuLateral2-compact-indicator'>
+                            <i class='bi bi-chevron-down'></i>
+                        </span>
                         <i class='bi bi-chevron-down menuLateral2-chevron'></i>
                     </button>
                     <div id='submenu-{$idMenu}' class='menuLateral2-submenu'{$mostrarSubmenu}>
@@ -649,294 +652,11 @@ public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = n
         }
     }
 
-    echo "
-    <style>
-        .sidebar-v2.sidebar {
-            width: 18rem !important;
-            min-width: 18rem !important;
-            flex: 0 0 18rem !important;
-            min-height: 100vh;
-            background: linear-gradient(180deg, #8fd0fb 0%, #78b7e4 100%);
-            box-shadow: 14px 0 34px rgba(27, 74, 117, 0.16);
-            position: relative;
-            z-index: 10;
-            overflow-x: hidden;
-        }
-        .sidebar-v2.sidebar.is-collapsed {
-            width: 6.4rem !important;
-            min-width: 6.4rem !important;
-            flex-basis: 6.4rem !important;
-        }
-        .sidebar-v2.sidebar .menuLateral2-brand {
-            padding: 1.35rem 1.1rem 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: .75rem;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .sidebar-v2.sidebar .menuLateral2-brand img {
-            width: 54px;
-            height: 54px;
-            object-fit: contain;
-            background: rgba(255, 255, 255, 0.96);
-            border-radius: 16px;
-            padding: .45rem;
-            box-shadow: 0 10px 24px rgba(35, 76, 120, 0.16);
-        }
-        .sidebar-v2.sidebar .menuLateral2-brand-text {
-            color: #163a63;
-            font-weight: 800;
-            letter-spacing: .16em;
-            font-size: .82rem;
-            display: block !important;
-        }
-        .sidebar-v2.sidebar .menuLateral2-divider {
-            height: 1px;
-            margin: .8rem 1.1rem;
-            background: rgba(22, 58, 99, 0.18);
-        }
-        .sidebar-v2.sidebar .menuLateral2-heading {
-            margin: .2rem 1.2rem .7rem;
-            color: rgba(22, 58, 99, 0.7);
-            font-size: .74rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .12em;
-        }
-        .sidebar-v2.sidebar .menuLateral2-list {
-            list-style: none;
-            margin: 0;
-            padding: 0 1rem 1.2rem;
-        }
-        .sidebar-v2.sidebar .menuLateral2-item {
-            margin-bottom: .22rem;
-            width: 100%;
-        }
-        .sidebar-v2.sidebar .menuLateral2-link,
-        .sidebar-v2.sidebar .menuLateral2-toggle {
-            width: 100%;
-            border: 0;
-            background: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: .55rem;
-            padding: .58rem .7rem;
-            border-radius: 16px;
-            color: #163a63;
-            text-decoration: none;
-            transition: all .2s ease;
-            font-weight: 700;
-            text-align: left;
-        }
-        .sidebar-v2.sidebar .menuLateral2-link-main {
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-            min-width: 0;
-            flex: 1 1 auto;
-        }
-        .sidebar-v2.sidebar .menuLateral2-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 12px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.72);
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
-            color: #11406f;
-            flex: 0 0 34px;
-        }
-        .sidebar-v2.sidebar .menuLateral2-icon i {
-            font-size: .88rem;
-        }
-        .sidebar-v2.sidebar .menuLateral2-text {
-            line-height: 1.2;
-            white-space: normal;
-            display: block !important;
-            font-size: .78rem !important;
-            font-weight: 700;
-            color: #163a63;
-        }
-        .sidebar-v2.sidebar .menuLateral2-chevron {
-            font-size: .68rem;
-            transition: transform .2s ease;
-            flex: 0 0 auto;
-        }
-        .sidebar-v2.sidebar .menuLateral2-item.is-active > .menuLateral2-link,
-        .sidebar-v2.sidebar .menuLateral2-item.is-active > .menuLateral2-toggle,
-        .sidebar-v2.sidebar .menuLateral2-link:hover,
-        .sidebar-v2.sidebar .menuLateral2-toggle:hover {
-            background: rgba(255, 255, 255, 0.96);
-            color: #0e3761;
-            box-shadow: 0 12px 24px rgba(24, 67, 107, 0.14);
-            transform: translateX(3px);
-        }
-        .sidebar-v2.sidebar .menuLateral2-item.is-active > .menuLateral2-link .menuLateral2-icon,
-        .sidebar-v2.sidebar .menuLateral2-item.is-active > .menuLateral2-toggle .menuLateral2-icon {
-            background: linear-gradient(135deg, #1d7ff2, #33a4ff);
-            color: #fff;
-        }
-        .sidebar-v2.sidebar .menuLateral2-item.is-active > .menuLateral2-toggle .menuLateral2-chevron {
-            transform: rotate(180deg);
-        }
-        .sidebar-v2.sidebar .menuLateral2-submenu {
-            display: none;
-            margin: .35rem 0 .2rem 3.15rem;
-            padding: .4rem;
-            border-left: 2px solid rgba(21, 64, 103, 0.16);
-        }
-        .sidebar-v2.sidebar .menuLateral2-subitem {
-            display: flex;
-            align-items: center;
-            gap: .55rem;
-            padding: .62rem .8rem;
-            margin-bottom: .3rem;
-            border-radius: 14px;
-            color: #20476f;
-            text-decoration: none;
-            background: rgba(255, 255, 255, 0.42);
-            transition: all .2s ease;
-            font-weight: 600;
-            font-size: .8rem;
-        }
-        .sidebar-v2.sidebar .menuLateral2-subitem:hover,
-        .sidebar-v2.sidebar .menuLateral2-subitem.is-active {
-            background: rgba(255, 255, 255, 0.94);
-            color: #0f3860;
-            box-shadow: 0 10px 18px rgba(29, 73, 115, 0.12);
-        }
-        .sidebar-v2.sidebar .menuLateral2-subicon {
-            width: 22px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #1d7ff2;
-        }
-        .sidebar-v2.sidebar .menuLateral2-toggle[aria-expanded='true'] .menuLateral2-chevron {
-            transform: rotate(180deg);
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-brand {
-            padding: 1rem .6rem 1rem;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-heading,
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-chevron,
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-submenu,
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-divider {
-            display: none !important;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-list {
-            padding: 0 .55rem 1rem;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-link,
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-toggle {
-            justify-content: center;
-            padding: .48rem .22rem .55rem;
-            border-radius: 16px;
-            flex-direction: column;
-            gap: .26rem;
-            min-height: 72px;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-link-main {
-            justify-content: center;
-            flex: 0 0 auto;
-            flex-direction: column;
-            gap: .26rem;
-            width: 100%;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-icon {
-            margin: 0;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-text {
-            display: block !important;
-            text-align: center;
-            font-size: .6rem !important;
-            line-height: 1.05;
-            font-weight: 700;
-            white-space: normal;
-            max-width: 100%;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item.is-active > .menuLateral2-link,
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item.is-active > .menuLateral2-toggle {
-            transform: none;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item {
-            position: relative;
-            padding-bottom: .32rem;
-            margin-bottom: .3rem;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item::after {
-            content: '';
-            position: absolute;
-            left: 16%;
-            right: 16%;
-            bottom: 0;
-            height: 1px;
-            background: rgba(22, 58, 99, 0.18);
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item:last-child::after {
-            display: none;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item-home {
-            margin-top: .4rem;
-            padding-top: .4rem;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item-home::before,
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item-home::after {
-            content: '';
-            position: absolute;
-            left: 16%;
-            right: 16%;
-            height: 1px;
-            background: rgba(22, 58, 99, 0.18);
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item-home::before {
-            top: 0;
-        }
-        .sidebar-v2.sidebar.is-collapsed .menuLateral2-item-home::after {
-            bottom: 0;
-        }
-        .sidebar-v2.sidebar .nav-item,
-        .sidebar-v2.sidebar .nav-item .nav-link,
-        .sidebar-v2.sidebar .nav-item .nav-link span {
-            width: auto !important;
-        }
-        @media (min-width: 768px) {
-            .sidebar-v2.sidebar {
-                width: 18rem !important;
-                min-width: 18rem !important;
-            }
-            .sidebar-v2.sidebar .sidebar-brand {
-                display: flex !important;
-            }
-            .sidebar-v2.sidebar .nav-item .nav-link {
-                padding: 0 !important;
-            }
-            .sidebar-v2.sidebar .nav-item .nav-link i {
-                font-size: inherit !important;
-                margin-right: 0 !important;
-            }
-            .sidebar-v2.sidebar .nav-item .nav-link span,
-            .sidebar-v2.sidebar .sidebar-heading,
-            .sidebar-v2.sidebar .sidebar-brand .sidebar-brand-text {
-                display: block !important;
-            }
-        }
-        @media (max-width: 991.98px) {
-            .sidebar-v2.sidebar {
-                width: 100%;
-                min-width: 100% !important;
-                flex-basis: 100% !important;
-                min-height: auto;
-            }
-        }
-    </style>
+    $menuLateralCss = htmlspecialchars($this->resolverRutaSistema('css/menuLateral.css'), ENT_QUOTES, 'UTF-8');
 
+    echo "<link rel='stylesheet' href='{$menuLateralCss}'>
     <ul class='navbar-nav sidebar sidebar-v2 is-collapsed' id='accordionSidebarV2'>
-        <a class='menuLateral2-brand' href='{$urlPrincipal}' id='menuLateral2BrandToggle'>
+        <a class='menuLateral2-brand' href='{$urlPrincipal}'>
             <img src='" . htmlspecialchars($this->resolverRutaSistema('imagenes/logo_seduc.png'), ENT_QUOTES, 'UTF-8') . "' alt='Logo SEDUC'>
             <div class='menuLateral2-brand-text'>" . htmlspecialchars($tituloSistema, ENT_QUOTES, 'UTF-8') . "</div>
         </a>
@@ -949,29 +669,9 @@ public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = n
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('accordionSidebarV2');
-            const brandToggle = document.getElementById('menuLateral2BrandToggle');
-
-            function alternarSidebar(event) {
-                if (event) {
-                    event.preventDefault();
-                }
-                if (!sidebar) {
-                    return;
-                }
-                sidebar.classList.toggle('is-collapsed');
-            }
-
-            if (brandToggle && sidebar) {
-                brandToggle.addEventListener('click', alternarSidebar);
-            }
 
             document.querySelectorAll('[data-menu-toggle]').forEach(function (trigger) {
                 trigger.addEventListener('click', function () {
-                    if (sidebar && sidebar.classList.contains('is-collapsed')) {
-                        sidebar.classList.remove('is-collapsed');
-                        return;
-                    }
-
                     const targetId = this.getAttribute('data-menu-toggle');
                     const target = document.getElementById(targetId);
                     if (!target) {
@@ -5275,4 +4975,5 @@ public function invPC_getListadoEquipos($idUsuario, $idColegioSel)
 }
 
 }
+
 

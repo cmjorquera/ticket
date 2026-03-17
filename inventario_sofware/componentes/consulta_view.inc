@@ -20,10 +20,10 @@ $logoColegio = $logoColegio ?? '';
     <div class="card-body">
         <ul class="nav nav-pills inv-tabs mb-4" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link <?= $vista === 'software' ? 'active' : '' ?>" href="consulta_.php?vista=software">Ver por software</a>
+                <a class="nav-link <?= $vista === 'software' ? 'active' : '' ?>" href="consulta_nueva.php?vista=software">Ver por software</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link <?= $vista === 'colegio' ? 'active' : '' ?>" href="consulta_.php?vista=colegio">Ver por colegio</a>
+                <a class="nav-link <?= $vista === 'colegio' ? 'active' : '' ?>" href="consulta_nueva.php?vista=colegio">Ver por colegio</a>
             </li>
         </ul>
 
@@ -51,7 +51,7 @@ $logoColegio = $logoColegio ?? '';
                             <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                         </a>
                     <?php endif; ?>
-                    <a href="consulta_.php?vista=software" class="btn btn-light border">Limpiar</a>
+                    <a href="consulta_nueva.php?vista=software" class="btn btn-light border">Limpiar</a>
                 </div>
             </form>
 
@@ -138,7 +138,7 @@ $logoColegio = $logoColegio ?? '';
                             <i class="bi bi-file-earmark-pdf me-1"></i>PDF
                         </a>
                     <?php endif; ?>
-                    <a href="consulta_.php?vista=colegio" class="btn btn-light border">Limpiar</a>
+                    <a href="consulta_nueva.php?vista=colegio" class="btn btn-light border">Limpiar</a>
                 </div>
             </form>
 

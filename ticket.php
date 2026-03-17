@@ -71,7 +71,7 @@ $versionTicketJs = @filemtime(__DIR__ . '/js/ticket.js') ?: time();
 
 <body id="page-top">
     <div id="wrapper">
-        <?php $funciones->menuLateral($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
 
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
@@ -243,3 +243,4 @@ function mostrarOffcanvasAsunto(idTicket) {
 </script>
 </body>
 </html>
+

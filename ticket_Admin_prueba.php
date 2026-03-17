@@ -51,7 +51,7 @@ var idUsuarioSession = "<?php echo $idUsuarioSession; ?>";
 
 <body id="page-top" class="ticket-admin-prueba-body">
     <div id="wrapper">
-        <?php $funciones->menuLateral($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
                 <nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow">
@@ -131,3 +131,4 @@ var idUsuarioSession = "<?php echo $idUsuarioSession; ?>";
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

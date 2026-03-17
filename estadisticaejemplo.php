@@ -17,7 +17,7 @@ $datosCategorias    = json_decode($funciones->contarTicketsPorCategoria(), true)
 $datosPorcentajes   = json_decode($funciones->obtenerPorcentajeEstadosPorCategoria(), true);
 $promediosEstados   = json_decode($funciones->obtenerPromedioTiempoEstados(), true);
 $usuarios = $funciones->obtenerEstadisticasUsuarios();
-// Obtener los datos para el gr¨¢fico de colegios
+// Obtener los datos para el grï¿½ï¿½fico de colegios
 $datosGraficoColegios = $funciones->obtenerDatosGraficoColegios();
 $datosGraficoColegios2 = $funciones->obtenerDatosGraficoColegios2();
 // Obtener el usuario filtrado desde GET
@@ -90,7 +90,7 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
 <body id="page-top">
     <input type="hidden" id="idUsuario" value="<?php echo $idUsuarioSession; ?>" />
     <div id="wrapper">
-        <?php $funciones->menuLateral($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
@@ -109,18 +109,18 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
                       <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#" onclick="descargarPDF()">Informe PDF</a></li>
                         <li><a class="dropdown-item" href="#" onclick="descargarExcel()">Reporte Excel</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="descargarImagen('graficoEstado')">Gr¨¢fico de Estado</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="descargarImagen('graficoEstado')">Grï¿½ï¿½fico de Estado</a></li>
                       </ul>
                     </div>
                 </div>
                 <div class="container-fluid">
                     <div class="card shadow mb-4">
-                        <!-- T¨ªtulo principal -->
+                        <!-- Tï¿½ï¿½tulo principal -->
                         <div class="card-header py-3">
                             <h6 class="m-0 font-weight-bold text-primary">GRAFICOS DE TICKETS</h6>
                         </div>
                         <div class="card-body">
-                            <!-- ”9è7 PESTA0ˆ5AS -->
+                            <!-- ï¿½9ï¿½7 PESTAï¿½0ï¿½5AS -->
                             <ul class="nav nav-tabs" id="graficoTicketsTab" role="tablist">
                                    <li class="nav-item">
                                         <a class="nav-link active" href="#">Resumen General</a>
@@ -135,7 +135,7 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
                         
                          <div class="tab-pane fade show active" id="tabResumen" role="tabpanel" aria-labelledby="tabResumen-tab">
                             <div class="container mt-4">
-                              <!-- FILA DE M0‡7TRICAS -->
+                              <!-- FILA DE Mï¿½0ï¿½7TRICAS -->
                               <div class="row g-3 mb-3">
                                 <div class="col-lg-3 col-sm-6">
                                     <div class="card shadow px-0 mb-3 border-start border-danger border-4">
@@ -203,7 +203,7 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
                                     </div>
                                 </div>
                               </div>
-                        <!-- GR0†9FICOS EN 2 COLUMNAS -->
+                        <!-- GRï¿½0ï¿½9FICOS EN 2 COLUMNAS -->
                             <div class="row g-3 mb-3">
                                 <div class="col-lg-8">
                                   <div class="row g-3">
@@ -221,7 +221,7 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
                                                 <h6>Filtrar por Perfil</h6>
                                               </li>
                                               <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('usuario')">Usuario</a></li>
-                                              <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('tecnico')">T¨¦cnico</a></li>
+                                              <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('tecnico')">Tï¿½ï¿½cnico</a></li>
                                               <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('admin')">Administrador</a></li>
                                             </ul>
                                           </div>
@@ -248,7 +248,7 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
                                                 <h6>Filtrar por Perfil</h6>
                                               </li>
                                               <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('usuario')">Usuario</a></li>
-                                              <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('tecnico')">T¨¦cnico</a></li>
+                                              <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('tecnico')">Tï¿½ï¿½cnico</a></li>
                                               <li><a class="dropdown-item" href="#" onclick="generarGraficoTicket('admin')">Administrador</a></li>
                                             </ul>
                                           </div>
@@ -420,7 +420,7 @@ var datosGraficoColegios2 = <?php echo $datosGraficoColegios2; ?>;
                             
 
 
-                            <!-- Repite para m¨¢s colegios -->
+                            <!-- Repite para mï¿½ï¿½s colegios -->
                             
                           </div>
                         </div>
@@ -514,7 +514,7 @@ const graficoEstados = new Chart(ctxEstados, {
   new Chart(ctxColegios, {
     type: 'bar',
     data: {
-      labels: ['Cordillera', 'Tabancura', 'Los Andes', 'Los Alerces', 'Huel¨¦n'],
+      labels: ['Cordillera', 'Tabancura', 'Los Andes', 'Los Alerces', 'Huelï¿½ï¿½n'],
       datasets: [{
         label: 'Tickets',
         data: [120, 100, 85, 65, 40],
@@ -530,7 +530,7 @@ const graficoEstados = new Chart(ctxEstados, {
       }]
     },
     options: {
-      indexAxis: 'y', // 7¼3 barras horizontales
+      indexAxis: 'y', // ï¿½7ï¿½3 barras horizontales
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
@@ -598,13 +598,13 @@ const graficoEstados = new Chart(ctxEstados, {
 
 <script>
     function descargarPDF() {
-  alert("Funci¨®n para generar y descargar el informe PDF");
-  // Aqu¨ª ir¨ªa la l¨®gica para generar el PDF (usando jsPDF o fetch a backend PHP)
+  alert("Funciï¿½ï¿½n para generar y descargar el informe PDF");
+  // Aquï¿½ï¿½ irï¿½ï¿½a la lï¿½ï¿½gica para generar el PDF (usando jsPDF o fetch a backend PHP)
 }
 
 function descargarExcel() {
-  alert("Funci¨®n para generar y descargar el Excel");
-  // Aqu¨ª podr¨ªas usar SheetJS o simplemente redirigir a un .php que genere Excel
+  alert("Funciï¿½ï¿½n para generar y descargar el Excel");
+  // Aquï¿½ï¿½ podrï¿½ï¿½as usar SheetJS o simplemente redirigir a un .php que genere Excel
 }
 
 function descargarImagen(idCanvas) {

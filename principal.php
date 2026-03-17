@@ -119,7 +119,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
 <body id="page-top">
     <div id="wrapper">
-        <?php $funciones->menuLateral($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
                 <!-- Topbar -->
@@ -895,3 +895,4 @@ function cambiarPerfil(perfil) {
 </body>
 
 </html>
+
