@@ -300,17 +300,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 <!-- container para ver los el char de conversacion -->
 <div id="offcanvasContainerTicket"></div>
 <div id="offcanvasContainer"></div>
-<style>
-/*#bi {*/
-/*  position: fixed;*/
-/*  bottom: 20px;*/
-/*  right: 20px;*/
-/*  z-index: 9999;*/
-/*  width: 50px;*/
-/*  height: 50px;*/
-/*  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);*/
-/*}*/
-</style>
+
 <body id="page-top">
     <div id="wrapper">
         <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
