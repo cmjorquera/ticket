@@ -1,4 +1,54 @@
-                  
+<?php
+$tecnicosFiltroIds = [6, 7, 8, 42];
+$consultaTecnicosFiltro = new MySQL("", "", "");
+$sqlTecnicosFiltro = "SELECT id, nombre, apellido_paterno
+                      FROM usuarios
+                      WHERE id IN (" . implode(',', array_map('intval', $tecnicosFiltroIds)) . ")
+                      ORDER BY FIELD(id, " . implode(',', array_map('intval', $tecnicosFiltroIds)) . ")";
+$resultadoTecnicosFiltro = $consultaTecnicosFiltro->consulta($sqlTecnicosFiltro);
+$tecnicosFiltroAdmin = [];
+while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosFiltro)) {
+    $tecnicosFiltroAdmin[] = $tecnicoFiltro;
+}
+?>
+
+                                <div class="ticket-admin-filtros px-3 pt-3">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label for="filtroEstadoAdmin" class="form-label fw-semibold text-muted mb-1">Estado</label>
+                                            <select id="filtroEstadoAdmin" class="form-select form-select-sm">
+                                                <option value="">Todos</option>
+                                                <option value="Recibido">Recibido</option>
+                                                <option value="Asignado">Asignado</option>
+                                                <option value="En proceso">En proceso</option>
+                                                <option value="Terminado">Terminado</option>
+                                                <option value="Atrasado">Atrasado</option>
+                                                <option value="Cerrado">Cerrado</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filtroFechaAdmin" class="form-label fw-semibold text-muted mb-1">Fecha creación</label>
+                                            <input type="date" id="filtroFechaAdmin" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filtroTecnicoAdmin" class="form-label fw-semibold text-muted mb-1">Técnico</label>
+                                            <select id="filtroTecnicoAdmin" class="form-select form-select-sm">
+                                                <option value="">Todos</option>
+                                                <option value="__sin_asignar__">Sin asignar</option>
+                                                <?php foreach ($tecnicosFiltroAdmin as $tecnicoFiltro): ?>
+                                                    <option value="<?= (int)$tecnicoFiltro['id']; ?>">
+                                                        <?= htmlspecialchars(trim(($tecnicoFiltro['nombre'] ?? '') . ' ' . ($tecnicoFiltro['apellido_paterno'] ?? ''))); ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filtroFechaRespuestaAdmin" class="form-label fw-semibold text-muted mb-1">Fecha respuesta</label>
+                                            <input type="date" id="filtroFechaRespuestaAdmin" class="form-control form-control-sm">
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="table-responsive mt-3">
                                     <div class="table-responsive">
                                         <table id="dataTableAdministrador" class="table table-bordered table-hover table-striped">
@@ -41,7 +91,19 @@
                                                             $diasRestantes = max(0, $diasRestantes - $diasPasados);
                                                         }
                                                 ?>
-                                                <tr class="<?= $estadoClase ?><?= $usarIndicadorEstado ? ' fila-ticket-admin-compacta' : '' ?>" style="<?= $estiloFila ?>">
+                                                <?php
+                                                    $fechaCreacionIso = !empty($row['fecha_creacion_inicio']) ? date('Y-m-d', strtotime($row['fecha_creacion_inicio'])) : '';
+                                                    $fechaRespuestaIso = (!empty($row['fecha_estimada_admin']) && $row['fecha_estimada_admin'] !== '0000-00-00')
+                                                        ? date('Y-m-d', strtotime($row['fecha_estimada_admin']))
+                                                        : '';
+                                                    $tecnicoId = isset($row['id_tecnico']) && $row['id_tecnico'] !== null ? (int)$row['id_tecnico'] : '';
+                                                ?>
+                                                <tr class="<?= $estadoClase ?><?= $usarIndicadorEstado ? ' fila-ticket-admin-compacta' : '' ?>"
+                                                    style="<?= $estiloFila ?>"
+                                                    data-estado="<?= htmlspecialchars($row['nombreEstado'] ?? ''); ?>"
+                                                    data-fecha-creacion="<?= htmlspecialchars($fechaCreacionIso); ?>"
+                                                    data-tecnico-id="<?= htmlspecialchars((string)$tecnicoId); ?>"
+                                                    data-fecha-respuesta="<?= htmlspecialchars($fechaRespuestaIso); ?>">
                                                     <td class="celda-id<?= $usarIndicadorEstado ? ' celda-id-con-indicador' : '' ?>" style="<?= $estiloCelda ?>">
                                                         <?php if ($usarIndicadorEstado): ?>
                                                             <span class="estado-indicador-dot estado-indicador-dot--inline" style="background-color: <?= htmlspecialchars($row['colorEstado']); ?>"></span>
@@ -452,6 +514,78 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 }
 
+</script>
+
+<script>
+if (!window.adminTableFiltersSearchRegistered) {
+  $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+    if (!settings.nTable || settings.nTable.id !== 'dataTableAdministrador') {
+      return true;
+    }
+
+    const api = new $.fn.dataTable.Api(settings);
+    const rowNode = api.row(dataIndex).node();
+    if (!rowNode) {
+      return true;
+    }
+
+    const estadoFiltro = ($('#filtroEstadoAdmin').val() || '').trim().toLowerCase();
+    const fechaFiltro = ($('#filtroFechaAdmin').val() || '').trim();
+    const tecnicoFiltro = ($('#filtroTecnicoAdmin').val() || '').trim();
+    const fechaRespuestaFiltro = ($('#filtroFechaRespuestaAdmin').val() || '').trim();
+
+    const estadoFila = (rowNode.dataset.estado || '').trim().toLowerCase();
+    const fechaFila = (rowNode.dataset.fechaCreacion || '').trim();
+    const tecnicoFila = (rowNode.dataset.tecnicoId || '').trim();
+    const fechaRespuestaFila = (rowNode.dataset.fechaRespuesta || '').trim();
+
+    if (estadoFiltro && estadoFila !== estadoFiltro) {
+      return false;
+    }
+
+    if (fechaFiltro && fechaFila !== fechaFiltro) {
+      return false;
+    }
+
+    if (tecnicoFiltro) {
+      if (tecnicoFiltro === '__sin_asignar__' && tecnicoFila !== '') {
+        return false;
+      }
+      if (tecnicoFiltro !== '__sin_asignar__' && tecnicoFila !== tecnicoFiltro) {
+        return false;
+      }
+    }
+
+    if (fechaRespuestaFiltro && fechaRespuestaFila !== fechaRespuestaFiltro) {
+      return false;
+    }
+
+    return true;
+  });
+
+  window.adminTableFiltersSearchRegistered = true;
+}
+
+function configurarFiltrosTablaAdmin(dataTableAdmin) {
+  const $tabla = $('#dataTableAdministrador');
+  if (!$tabla.length || !dataTableAdmin) {
+    return;
+  }
+
+  if ($tabla.data('admin-filters-bound') === '1') {
+    dataTableAdmin.draw();
+    return;
+  }
+
+  $('#filtroEstadoAdmin, #filtroFechaAdmin, #filtroTecnicoAdmin, #filtroFechaRespuestaAdmin')
+    .off('.adminFilters')
+    .on('change.adminFilters input.adminFilters', function () {
+      dataTableAdmin.draw();
+    });
+
+  $tabla.data('admin-filters-bound', '1');
+  dataTableAdmin.draw();
+}
 </script>
 
                             
