@@ -201,12 +201,6 @@
                     </tr>
                     <?php
                 }
-            } else {
-                ?>
-                <tr>
-                    <td colspan="9">No hay tickets disponibles.</td>
-                </tr>
-                <?php
             }
             ?>
         </tbody>

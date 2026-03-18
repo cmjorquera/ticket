@@ -22,10 +22,6 @@
     // $estados    = $funciones->cargarEstadosTicket($idUsuarioSession);
             
         if ($_SESSION['primera_vez'] == 0) {
-            // Mostrar bienvenida unificada con botones si corresponde
-            $funciones->mostrarSoloBotonesPerfiles($idUsuarioSession);
-        
-            // Marcar que ya se mostró
             $_SESSION['primera_vez'] = 1;
         }
 $versionModalesTicket = @filemtime(__DIR__ . '/css/modalesTicket.css') ?: time();
@@ -382,12 +378,12 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                         $perfilesDashboardDisponibles[] = ['key' => 'tecnico', 'label' => 'Tecnico', 'icon' => 'bi-wrench-adjustable-circle'];
                     }
                     $perfilDashboardInicial = 'usuario';
-                    if (in_array(2, $perfilesUsuario)) {
+                    if (in_array(3, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'admin';
+                    } elseif (in_array(2, $perfilesUsuario)) {
                         $perfilDashboardInicial = 'tecnico';
                     } elseif (in_array(1, $perfilesUsuario)) {
                         $perfilDashboardInicial = 'usuario';
-                    } elseif (in_array(3, $perfilesUsuario)) {
-                        $perfilDashboardInicial = 'admin';
                     }
                     $vistaPerfilSolicitada = $_GET['vista_perfil'] ?? null;
                     $perfilesDashboardKeys = array_column($perfilesDashboardDisponibles, 'key');
@@ -1069,9 +1065,12 @@ document.addEventListener('DOMContentLoaded', function () {
             : 'usuario';
 
     if (typeof inicializarTablaPerfilDashboard === 'function') {
-        inicializarTablaPerfilDashboard('contenedorUsuario');
-        inicializarTablaPerfilDashboard('contenedorTecnico');
-        inicializarTablaPerfilDashboard('contenedorAdmin');
+        const contenedorInicial = perfilInicial === 'admin'
+            ? 'contenedorAdmin'
+            : perfilInicial === 'tecnico'
+                ? 'contenedorTecnico'
+                : 'contenedorUsuario';
+        inicializarTablaPerfilDashboard(contenedorInicial);
     }
 
     const textoPerfil = document.getElementById('textoPerfilActual');

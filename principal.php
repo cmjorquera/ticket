@@ -22,10 +22,6 @@
     // $estados    = $funciones->cargarEstadosTicket($idUsuarioSession);
             
         if ($_SESSION['primera_vez'] == 0) {
-            // Mostrar bienvenida unificada con botones si corresponde
-            $funciones->mostrarSoloBotonesPerfiles($idUsuarioSession);
-        
-            // Marcar que ya se mostró
             $_SESSION['primera_vez'] = 1;
         }
 $versionModalesTicket = @filemtime(__DIR__ . '/css/modalesTicket.css') ?: time();
@@ -285,12 +281,12 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                 <div class="container-fluid">
                     <?php
                         $perfilDashboardInicial = 'usuario';
-                        if (in_array(2, $perfilesUsuario)) {
+                        if (in_array(3, $perfilesUsuario)) {
+                            $perfilDashboardInicial = 'admin';
+                        } elseif (in_array(2, $perfilesUsuario)) {
                             $perfilDashboardInicial = 'tecnico';
                         } elseif (in_array(1, $perfilesUsuario)) {
                             $perfilDashboardInicial = 'usuario';
-                        } elseif (in_array(3, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'admin';
                         }
                     ?>
                     <div id="contenedorEstadosUsuario" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'usuario') ? 'grid' : 'none'; ?>;">
