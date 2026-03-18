@@ -149,7 +149,7 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
                             : '';
                         $tecnicoId = isset($row['id_tecnico']) && $row['id_tecnico'] !== null ? (int) $row['id_tecnico'] : '';
                         ?>
-                        <tr class="estado-ticket-<?= (int) $row['id_estado']; ?> fila-ticket-admin-compacta"
+                        <tr class="fila-ticket-admin-compacta"
                             data-estado="<?= htmlspecialchars($row['nombreEstado'] ?? ''); ?>"
                             data-fecha-creacion="<?= htmlspecialchars($fechaCreacionIso); ?>"
                             data-tecnico-id="<?= htmlspecialchars((string) $tecnicoId); ?>"

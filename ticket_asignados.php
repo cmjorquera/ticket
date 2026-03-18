@@ -54,6 +54,30 @@ $versionTicketJs = @filemtime(__DIR__ . '/js/ticket.js') ?: time();
   font-weight: 500;
   color: #212529;
 }
+
+#contenedorTablaTecnico #tablaTecnicoTicketAsignados {
+  font-size: 0.84rem !important;
+}
+
+#contenedorTablaTecnico #tablaTecnicoTicketAsignados thead th {
+  font-size: 0.78rem !important;
+}
+
+#contenedorTablaTecnico #tablaTecnicoTicketAsignados .ticket-fecha-hora__fecha {
+  font-size: 0.79rem !important;
+}
+
+#contenedorTablaTecnico #tablaTecnicoTicketAsignados .ticket-fecha-hora__hora {
+  font-size: 0.71rem !important;
+}
+
+#contenedorTablaTecnico #tablaTecnicoTicketAsignados .ticket-resumen-estado__titulo {
+  font-size: 0.78rem !important;
+}
+
+#contenedorTablaTecnico #tablaTecnicoTicketAsignados .ticket-resumen-estado__detalle {
+  font-size: 0.73rem !important;
+}
 </style>
 <body id="page-top">
     <div id="wrapper">

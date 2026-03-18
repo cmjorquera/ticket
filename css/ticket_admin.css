@@ -50,21 +50,35 @@
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) {
     border-collapse: separate !important;
     border-spacing: 0 !important;
-    font-size: 0.88rem !important;
+    font-size: 0.82rem !important;
 }
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) thead th {
-    font-size: 0.81rem !important;
+    font-size: 0.76rem !important;
     letter-spacing: 0.01em;
     white-space: nowrap !important;
 }
 
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-1 td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-2 td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-3 td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-4 td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-5 td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-6 td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-7 td,
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.fila-ticket-admin-compacta td {
     background: #ffffff !important;
     border-color: #e5edf5 !important;
     vertical-align: middle;
 }
 
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-1:hover td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-2:hover td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-3:hover td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-4:hover td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-5:hover td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-6:hover td,
+:is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.estado-ticket-7:hover td,
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) tbody tr.fila-ticket-admin-compacta:hover td {
     background: #f8fbff !important;
 }
@@ -104,7 +118,7 @@
 }
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado__titulo {
-    font-size: 0.84rem !important;
+    font-size: 0.78rem !important;
     line-height: 1.25;
     font-weight: 700;
     color: #0f2f57;
@@ -113,7 +127,7 @@
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-resumen-estado__detalle {
     margin-top: 4px;
-    font-size: 0.8rem !important;
+    font-size: 0.74rem !important;
     line-height: 1.25;
     color: #5b6b7f;
     word-break: break-word;
@@ -133,12 +147,12 @@
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-fecha-hora__fecha {
     font-weight: 600;
     color: #111827;
-    font-size: 0.86rem !important;
+    font-size: 0.8rem !important;
 }
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) .ticket-fecha-hora__hora {
     color: #64748b;
-    font-size: 0.78rem !important;
+    font-size: 0.72rem !important;
 }
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-id,
@@ -384,7 +398,7 @@
     justify-content: space-between;
     align-items: center;
     gap: 10px;
-    font-size: 0.76rem;
+    font-size: 0.7rem;
     color: #5b6b7f;
 }
 
@@ -396,6 +410,6 @@
 }
 
 #tablaUsuario .ticket-progreso .progress-bar {
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     font-weight: 700;
 }

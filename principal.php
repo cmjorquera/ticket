@@ -1296,10 +1296,7 @@ function cambiarPerfil(perfil) {
           <button id="btnCargarEventos" class="btn btn-primary">Ver eventos</button>
         </div>
 
-        <div class="alert alert-light border mb-3" role="alert">
-          Este modulo trabaja con tu calendario principal de Google.
-          Primero conecta tu cuenta, luego puedes crear un evento y ver los proximos eventos sincronizados.
-        </div>
+   
 
         <div class="row g-2 mb-3">
           <div class="col-md-6">
