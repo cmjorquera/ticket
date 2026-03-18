@@ -60,7 +60,8 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
     <!-- Incluir DataTableswww JS -->
     <link href="css/modalesTicket.css" rel="stylesheet">
     <!-- Incluir ESTILOS -->
-
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
     <link href="css/estilo.css" rel="stylesheet">
     <link href="css/bitacora.css" rel="stylesheet">
     <link href="css/contenedor.css" rel="stylesheet">
@@ -300,7 +301,17 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 <!-- container para ver los el char de conversacion -->
 <div id="offcanvasContainerTicket"></div>
 <div id="offcanvasContainer"></div>
-
+<style>
+/*#bi {*/
+/*  position: fixed;*/
+/*  bottom: 20px;*/
+/*  right: 20px;*/
+/*  z-index: 9999;*/
+/*  width: 50px;*/
+/*  height: 50px;*/
+/*  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);*/
+/*}*/
+</style>
 <body id="page-top">
     <div id="wrapper">
         <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
@@ -1169,6 +1180,269 @@ function cambiarPerfil(perfil) {
 }
 
 </script>
+<div class="modal fade" id="modalGoogleCalendar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Google Calendar</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <button id="btnConectarGoogle" class="btn btn-danger">Conectar con Google</button>
+          <button id="btnCargarEventos" class="btn btn-primary">Ver eventos</button>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label>Título</label>
+            <input type="text" id="gcTitulo" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label>Inicio</label>
+            <input type="datetime-local" id="gcInicio" class="form-control">
+          </div>
+          <div class="col-md-3">
+            <label>Fin</label>
+            <input type="datetime-local" id="gcFin" class="form-control">
+          </div>
+          <div class="col-12">
+            <label>Detalle</label>
+            <textarea id="gcDetalle" class="form-control"></textarea>
+          </div>
+          <div class="col-12">
+            <button id="btnCrearEvento" class="btn btn-success">Crear evento</button>
+          </div>
+        </div>
+
+        <hr>
+
+        <div id="estadoGoogle" class="mb-2 text-muted">Sin conectar</div>
+        <div id="listaEventosGoogle"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+window.abrirModalGoogleCalendarDesdeTicket = function (id, asunto, fechaInicio, fechaFin, detalle) {
+    const titulo = document.getElementById('gcTitulo');
+    const inicio = document.getElementById('gcInicio');
+    const fin = document.getElementById('gcFin');
+    const detalleInput = document.getElementById('gcDetalle');
+
+    if (!titulo || !inicio || !fin || !detalleInput) {
+        console.error('Faltan inputs del modal Google Calendar');
+        return;
+    }
+
+    titulo.value = 'Ticket #' + id + ' - ' + asunto;
+    inicio.value = fechaInicio;
+    fin.value = fechaFin;
+    detalleInput.value = detalle || '';
+
+    window.abrirModalGoogleCalendar();
+};
+
+const CLIENT_ID = '557343390711-kmt34rcumkba72860fsv7dgskqmepd6j.apps.googleusercontent.com';
+const API_KEY = 'AQUI_TU_API_KEY';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/calendar';
+
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+
+window.abrirModalGoogleCalendar = function () {
+    const modalElement = document.getElementById('modalGoogleCalendar');
+    if (!modalElement) {
+        console.error('No existe el modal #modalGoogleCalendar');
+        return;
+    }
+
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+};
+
+function gapiLoaded() {
+    gapi.load('client', initializeGapiClient);
+}
+
+async function initializeGapiClient() {
+    try {
+        await gapi.client.init({
+            apiKey: API_KEY,
+            discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        maybeEnableButtons();
+    } catch (error) {
+        console.error('Error iniciando gapi:', error);
+        const estado = document.getElementById('estadoGoogle');
+        if (estado) estado.innerText = 'Error al iniciar Google API';
+    }
+}
+
+function gisLoaded() {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: null,
+    });
+    gisInited = true;
+    maybeEnableButtons();
+}
+
+function maybeEnableButtons() {
+    const estado = document.getElementById('estadoGoogle');
+    if (gapiInited && gisInited && estado) {
+        estado.innerText = 'Listo para conectar';
+    }
+}
+
+function conectarGoogleCalendar() {
+    if (!tokenClient) {
+        console.error('tokenClient no inicializado');
+        return;
+    }
+
+    tokenClient.callback = async (resp) => {
+        const estado = document.getElementById('estadoGoogle');
+
+        if (resp.error !== undefined) {
+            console.error(resp);
+            if (estado) estado.innerText = 'Error al conectar';
+            return;
+        }
+
+        if (estado) estado.innerText = 'Conectado a Google Calendar';
+        await listarEventosGoogle();
+    };
+
+    const token = gapi.client.getToken();
+    if (token === null) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+    } else {
+        tokenClient.requestAccessToken({ prompt: '' });
+    }
+}
+
+async function listarEventosGoogle() {
+    try {
+        const estado = document.getElementById('estadoGoogle');
+        const contenedor = document.getElementById('listaEventosGoogle');
+
+        if (!gapi.client.getToken()) {
+            if (estado) estado.innerText = 'Primero debes conectar con Google';
+            return;
+        }
+
+        const ahora = new Date().toISOString();
+
+        const response = await gapi.client.calendar.events.list({
+            calendarId: 'primary',
+            timeMin: ahora,
+            showDeleted: false,
+            singleEvents: true,
+            maxResults: 10,
+            orderBy: 'startTime',
+        });
+
+        const eventos = response.result.items || [];
+
+        if (!contenedor) {
+            console.error('No existe #listaEventosGoogle');
+            return;
+        }
+
+        if (!eventos.length) {
+            contenedor.innerHTML = '<div class=\"alert alert-light\">No hay próximos eventos.</div>';
+            return;
+        }
+
+        let html = '<div class=\"list-group\">';
+        eventos.forEach(evento => {
+            const inicio = evento.start.dateTime || evento.start.date || '';
+            html += `
+                <div class="list-group-item">
+                    <div><strong>${evento.summary || '(Sin título)'}</strong></div>
+                    <div class="text-muted">${inicio}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        contenedor.innerHTML = html;
+    } catch (error) {
+        console.error(error);
+        const contenedor = document.getElementById('listaEventosGoogle');
+        if (contenedor) {
+            contenedor.innerHTML = '<div class="alert alert-danger">No se pudieron cargar los eventos.</div>';
+        }
+    }
+}
+
+async function crearEventoGoogle() {
+    try {
+        const estado = document.getElementById('estadoGoogle');
+
+        if (!gapi.client.getToken()) {
+            if (estado) estado.innerText = 'Primero debes conectar con Google';
+            return;
+        }
+
+        const titulo = document.getElementById('gcTitulo').value.trim();
+        const inicio = document.getElementById('gcInicio').value;
+        const fin = document.getElementById('gcFin').value;
+        const detalle = document.getElementById('gcDetalle').value.trim();
+
+        if (!titulo || !inicio || !fin) {
+            alert('Completa título, inicio y fin.');
+            return;
+        }
+
+        const evento = {
+            summary: titulo,
+            description: detalle,
+            start: {
+                dateTime: new Date(inicio).toISOString(),
+                timeZone: 'America/Santiago'
+            },
+            end: {
+                dateTime: new Date(fin).toISOString(),
+                timeZone: 'America/Santiago'
+            }
+        };
+
+        await gapi.client.calendar.events.insert({
+            calendarId: 'primary',
+            resource: evento
+        });
+
+        if (estado) estado.innerText = 'Evento creado correctamente';
+        await listarEventosGoogle();
+    } catch (error) {
+        console.error(error);
+        const estado = document.getElementById('estadoGoogle');
+        if (estado) estado.innerText = 'Error al crear el evento';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    gapiLoaded();
+    gisLoaded();
+
+    const btnConectar = document.getElementById('btnConectarGoogle');
+    const btnCargar = document.getElementById('btnCargarEventos');
+    const btnCrear = document.getElementById('btnCrearEvento');
+
+    if (btnConectar) btnConectar.addEventListener('click', conectarGoogleCalendar);
+    if (btnCargar) btnCargar.addEventListener('click', listarEventosGoogle);
+    if (btnCrear) btnCrear.addEventListener('click', crearEventoGoogle);
+});
+</script>
+
 
 </body>
 
