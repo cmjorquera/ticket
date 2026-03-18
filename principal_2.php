@@ -92,7 +92,6 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
@@ -156,7 +155,102 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             background: #edf3f8 !important;
             color: #3a5876 !important;
         }
+        .perfil-side-tabs-wrap {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1040;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .perfil-side-tabs {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.9rem;
+        }
+        .perfil-side-tab {
+            width: 72px;
+            padding: 0.0rem;
+            border-radius: 22px 0 0 22px;
+            border: 1px solid #dfe8f4;
+            background: #ffffff;
+            color: #4f6783;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            box-shadow: 0 10px 24px rgba(33, 69, 110, 0.10);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+        }
+        .perfil-side-tab:hover {
+            color: #17324d;
+            transform: translateX(-8px);
+            box-shadow: 0 14px 28px rgba(33, 69, 110, 0.14);
+        }
+        .perfil-side-tab.is-active {
+            width: 150px;
+            transform: translateX(-18px);
+            border-color: #3b82f6;
+            background: #ffffff;
+            color: #1f3b5b;
+            box-shadow: 0 16px 32px rgba(59, 130, 246, 0.16);
+            justify-content: flex-start;
+            gap: 0.8rem;
+        }
+        .perfil-side-tab-icon {
+            width: 44px;
+            height: 35px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #fafdff 0%, #eef5ff 100%);
+            color: #3b82f6;
+            flex: 0 0 44px;
+            box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.16);
+        }
+        .perfil-side-tab.is-active .perfil-side-tab-icon {
+            background: linear-gradient(180deg, #f5faff 0%, #e4efff 100%);
+            box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.20);
+        }
+        .perfil-side-tab-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.1;
+            display: none;
+        }
+        .perfil-side-tab.is-active .perfil-side-tab-title {
+            display: inline;
+        }
+        @media (max-width: 768px) {
+            .perfil-side-tabs-wrap {
+                position: static;
+                transform: none;
+                margin-bottom: 1rem;
+                justify-content: stretch;
+            }
+            .perfil-side-tabs {
+                width: 100%;
+                align-items: stretch;
+            }
+            .perfil-side-tab,
+            .perfil-side-tab.is-active {
+                width: 50%;
+                transform: none;
+                border-radius: 16px;
+                justify-content: flex-start;
+                gap: 0.8rem;
+            }
+            .perfil-side-tab .perfil-side-tab-title {
+                display: inline;
+            }
+        }
     </style>
+
 </head>
 <script>
     function iniciarTour() {
@@ -194,9 +288,9 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     </button>
                     <?php $funciones->cabezera(); ?>
                 </nav>
-                   <button id="bi" class="btn btn-light border rounded-circle" onclick="iniciarTour()" title="Guía rápida">
+                   <!-- <button id="bi" class="btn btn-light border rounded-circle" onclick="iniciarTour()" title="Guía rápida">
                       <i class="bi bi-info-circle-fill text-primary fs-3"></i>
-                    </button>
+                    </button> -->
                     
                 <!-- BUTTON DE ACCESO DIRECTO  ********************-->
                 <div id="botonesDescargar"><br><br>
@@ -205,12 +299,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                 $bloqueados = [28,29,30,31,32,33,34];
                 if (!in_array((int)$idUsuarioSession, $bloqueados, true)) :
                 ?>
-                  <button
-                    class="btn btn-light border w-100 rounded-pill shadow-sm d-flex justify-content-center align-items-center gap-2 py-2"
-                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" title="Ver conversación">
-                    <i class="bi bi-chat-dots-fill text-primary fs-10"></i>
-                    <span class="text-dark fw-semibold"></span>
-                  </button>
+            
                 <?php endif; ?>
 
 
@@ -226,12 +315,12 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     <!--</button>-->
 
                     <!-- Botón 3: Nuevo Recordatorio -->
-                    <button
+                    <!-- <button
                         class="btn btn-light border w-100 rounded-pill shadow-sm d-flex justify-content-center align-items-center gap-2 py-2"
                         type="button" onclick="mostrarAlertas(<?= $idUsuarioSession; ?>)" title="Agregar recordatorio">
                         <i class="bi bi-clipboard-data-fill text-primary fs-10"></i>
                         <span class="text-dark fw-semibold"></span>
-                    </button>
+                    </button> -->
 
                     <!-- Botón 4: Perfil Actual -->
                     <?php
@@ -243,56 +332,49 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     while ($fila = $bdato->fetch_array($resultado)) {
                         $perfilesUsuario[] = $fila['id_perfil'];
                     }
-                    
-                    // Mostrar solo si hay más de un perfil
-                    if (count($perfilesUsuario) > 1) {
-                    ?>
-                        <div class="dropdown w-100 position-relative">
-                            <button class="btn btn-light border w-100 rounded-pill shadow-sm d-flex justify-content-center align-items-center gap-2 py-2 dropdown-toggle"
-                                    type="button"
-                                    id="dropdownPerfil"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                    title="Seleccionar perfil">
-                                <i class="bi bi-person-badge-fill text-primary fs-5"></i>
-                                <span class="text-dark fw-semibold" id="textoPerfilActual">Perfil</span>
-                            </button>
-                    
-                            <ul class="dropdown-menu w-100 shadow-xm" aria-labelledby="dropdownPerfil">
-                                <li class="dropdown-header text-start px-4 py-2">
-                                    <strong>Perfiles</strong>
-                                </li>
-                    
-                                <?php
-                                if (in_array(3, $perfilesUsuario)) {
-                                    echo '<li><a class="dropdown-item text-dark" href="#" onclick="cambiarPerfil(\'admin\'); return false;">Admin</a></li>';
-                                }
-                                if (in_array(2, $perfilesUsuario)) {
-                                    echo '<li><a class="dropdown-item text-dark" href="#" onclick="cambiarPerfil(\'tecnico\'); return false;">Técnico</a></li>';
-                                }
-                                if (in_array(1, $perfilesUsuario)) {
-                                    echo '<li><a class="dropdown-item text-dark" href="#" onclick="cambiarPerfil(\'usuario\'); return false;">Usuario</a></li>';
-                                }
-                                ?>
-                            </ul>
-                        </div>
-                    <?php
+                    $perfilesDashboardDisponibles = [];
+                    if (in_array(3, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'admin', 'label' => 'Admin', 'icon' => 'bi-person-gear'];
+                    }
+                    if (in_array(1, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'usuario', 'label' => 'Usuario', 'icon' => 'bi-person-circle'];
+                    }
+                    if (in_array(2, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'tecnico', 'label' => 'Tecnico', 'icon' => 'bi-wrench-adjustable-circle'];
+                    }
+                    $perfilDashboardInicial = 'usuario';
+                    if (in_array(2, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'tecnico';
+                    } elseif (in_array(1, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'usuario';
+                    } elseif (in_array(3, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'admin';
+                    }
+                    $vistaPerfilSolicitada = $_GET['vista_perfil'] ?? null;
+                    $perfilesDashboardKeys = array_column($perfilesDashboardDisponibles, 'key');
+                    if ($vistaPerfilSolicitada && in_array($vistaPerfilSolicitada, $perfilesDashboardKeys, true)) {
+                        $perfilDashboardInicial = $vistaPerfilSolicitada;
                     }
                     ?>
                 </div>
                 <!-- *********************************************  -->
 
                 <div class="container-fluid">
-                    <?php
-                        $perfilDashboardInicial = 'usuario';
-                        if (in_array(2, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'tecnico';
-                        } elseif (in_array(1, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'usuario';
-                        } elseif (in_array(3, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'admin';
-                        }
-                    ?>
+                    <?php if (count($perfilesDashboardDisponibles) > 1): ?>
+                    <div class="perfil-side-tabs-wrap">
+                        <div class="perfil-side-tabs">
+                            <?php foreach ($perfilesDashboardDisponibles as $perfilTab): ?>
+                                <a class="perfil-side-tab <?= $perfilDashboardInicial === $perfilTab['key'] ? 'is-active' : ''; ?>"
+                                   href="principal_2.php?vista_perfil=<?= urlencode($perfilTab['key']) ?>">
+                                    <span class="perfil-side-tab-icon">
+                                        <i class="bi <?= $perfilTab['icon'] ?>"></i>
+                                    </span>
+                                    <span class="perfil-side-tab-title"><?= htmlspecialchars($perfilTab['label']) ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     <div id="contenedorEstadosUsuario" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'usuario') ? 'grid' : 'none'; ?>;">
                         <?php
                             $funciones->contenedorTicketRecibidos($idUsuarioSession, 3);
@@ -924,7 +1006,10 @@ function cambiarPerfil(perfil) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            document.getElementById('textoPerfilActual').innerText = nombrePerfil;
+            const textoPerfil = document.getElementById('textoPerfilActual');
+            if (textoPerfil) {
+                textoPerfil.innerText = nombrePerfil;
+            }
             mostrarListado(perfilNormalizado);
 
             // ✅ Este ya lo tienes

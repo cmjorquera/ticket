@@ -156,6 +156,76 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             background: #edf3f8 !important;
             color: #3a5876 !important;
         }
+        .perfil-tabs-shell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.35rem;
+            border-bottom: 1px solid #dfe6f1;
+        }
+        .perfil-tab-card {
+            position: relative;
+            flex: 1 1 240px;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            padding: 0.95rem 1.15rem 1rem;
+            border-radius: 18px 18px 0 0;
+            border: 1px solid transparent;
+            border-bottom: none;
+            background: linear-gradient(180deg, #f7faff 0%, #eef4fb 100%);
+            color: #27405d;
+            text-decoration: none;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+        .perfil-tab-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(34, 76, 124, 0.10);
+            color: #17324d;
+        }
+        .perfil-tab-card.is-active {
+            background: #fff;
+            border-color: #2f80ff;
+            box-shadow: 0 14px 28px rgba(47, 128, 255, 0.14);
+        }
+        .perfil-tab-card.is-active::after {
+            content: "";
+            position: absolute;
+            left: 14px;
+            right: 14px;
+            bottom: -1px;
+            height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2f80ff, #64b5ff);
+        }
+        .perfil-tab-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            flex: 0 0 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            color: #2f80ff;
+            box-shadow: inset 0 0 0 1px rgba(47, 128, 255, 0.10);
+        }
+        .perfil-tab-icon i {
+            font-size: 1.35rem;
+        }
+        .perfil-tab-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #17324d;
+        }
+        .perfil-tab-text {
+            margin: 0.1rem 0 0;
+            font-size: 0.88rem;
+            color: #5e748c;
+            line-height: 1.35;
+        }
     </style>
 </head>
 <script>
@@ -243,6 +313,29 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     while ($fila = $bdato->fetch_array($resultado)) {
                         $perfilesUsuario[] = $fila['id_perfil'];
                     }
+                    $perfilesDashboardDisponibles = [];
+                    if (in_array(1, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'usuario', 'label' => 'Perfil Usuario', 'icon' => 'bi-person-circle', 'text' => 'Tickets creados y seguimiento personal.'];
+                    }
+                    if (in_array(2, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'tecnico', 'label' => 'Perfil Tecnico', 'icon' => 'bi-wrench-adjustable-circle', 'text' => 'Asignaciones tecnicas y avances operativos.'];
+                    }
+                    if (in_array(3, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'admin', 'label' => 'Perfil Admin', 'icon' => 'bi-person-gear', 'text' => 'Vision global y control administrativo.'];
+                    }
+                    $perfilDashboardInicial = 'usuario';
+                    if (in_array(2, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'tecnico';
+                    } elseif (in_array(1, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'usuario';
+                    } elseif (in_array(3, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'admin';
+                    }
+                    $vistaPerfilSolicitada = $_GET['vista_perfil'] ?? null;
+                    $perfilesDashboardKeys = array_column($perfilesDashboardDisponibles, 'key');
+                    if ($vistaPerfilSolicitada && in_array($vistaPerfilSolicitada, $perfilesDashboardKeys, true)) {
+                        $perfilDashboardInicial = $vistaPerfilSolicitada;
+                    }
                     
                     // Mostrar solo si hay más de un perfil
                     if (count($perfilesUsuario) > 1) {
@@ -283,16 +376,22 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                 <!-- *********************************************  -->
 
                 <div class="container-fluid">
-                    <?php
-                        $perfilDashboardInicial = 'usuario';
-                        if (in_array(2, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'tecnico';
-                        } elseif (in_array(1, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'usuario';
-                        } elseif (in_array(3, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'admin';
-                        }
-                    ?>
+                    <?php if (count($perfilesDashboardDisponibles) > 1): ?>
+                    <div class="perfil-tabs-shell">
+                        <?php foreach ($perfilesDashboardDisponibles as $perfilCard): ?>
+                                <a class="perfil-tab-card <?= $perfilDashboardInicial === $perfilCard['key'] ? 'is-active' : ''; ?>"
+                                   href="principal_4.php?vista_perfil=<?= urlencode($perfilCard['key']) ?>">
+                                    <div class="perfil-tab-icon">
+                                        <i class="bi <?= $perfilCard['icon'] ?>"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="perfil-tab-title"><?= htmlspecialchars($perfilCard['label']) ?></h6>
+                                        <p class="perfil-tab-text"><?= htmlspecialchars($perfilCard['text']) ?></p>
+                                    </div>
+                                </a>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                     <div id="contenedorEstadosUsuario" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'usuario') ? 'grid' : 'none'; ?>;">
                         <?php
                             $funciones->contenedorTicketRecibidos($idUsuarioSession, 3);

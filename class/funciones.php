@@ -692,6 +692,11 @@ function cabezera()
 {
     $db = new MySQL("", "", "");
     $idUsuarioSession = htmlspecialchars($_SESSION['id']);
+    $urlPerfilImagen = htmlspecialchars($this->resolverRutaSistema('img/undraw_profile.svg'), ENT_QUOTES, 'UTF-8');
+    $urlPerfilImagenMujer = htmlspecialchars($this->resolverRutaSistema('img/undraw_profile_1.svg'), ENT_QUOTES, 'UTF-8');
+    $urlPerfilImagenHombre = htmlspecialchars($this->resolverRutaSistema('img/undraw_profile_2.svg'), ENT_QUOTES, 'UTF-8');
+    $urlPerfil = htmlspecialchars($this->resolverRutaSistema('perfil.php'), ENT_QUOTES, 'UTF-8');
+    $urlConfiguracion = htmlspecialchars($this->resolverRutaSistema('configuracion.php'), ENT_QUOTES, 'UTF-8');
 
     // --- ALERTAS ---
     $alertasQuery = "
@@ -767,7 +772,7 @@ function cabezera()
              ($alerta['tipo'] === 'ticket' ? 'ticket_asignados.php?id=' . $alerta['id'] : '#') . '">';
 
         echo '<div class="dropdown-list-image mr-3">';
-        echo '<img class="rounded-circle" src="img/undraw_profile_1.svg" alt="...">';
+        echo '<img class="rounded-circle" src="' . $urlPerfilImagenMujer . '" alt="...">';
         echo '<div class="status-indicator" style="background-color:' . ($alerta['estado_color'] ?: '#17a2b8') . ';"></div>';
         echo '</div>';
 
@@ -801,7 +806,7 @@ function cabezera()
     foreach ($mensajes as $mensaje) {
         echo '<a class="dropdown-item d-flex align-items-center" href="#">';
         echo '<div class="dropdown-list-image mr-3">';
-        $imageSrc = ($mensaje['sexo'] == 2) ? 'img/undraw_profile_1.svg' : 'img/undraw_profile_2.svg';
+        $imageSrc = ($mensaje['sexo'] == 2) ? $urlPerfilImagenMujer : $urlPerfilImagenHombre;
         echo '<img class="rounded-circle" src="' . $imageSrc . '" alt="...">';
         echo '<div class="status-indicator bg-success"></div>';
         echo '</div>';
@@ -820,11 +825,11 @@ function cabezera()
     echo '<li class="nav-item dropdown no-arrow" id="idDatosPersonales">';
     echo '<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
     echo '<span class="mr-2 d-none d-lg-inline text-gray-600 small">' . $_SESSION['nombre'] . " " .  htmlentities($_SESSION['apellido_paterno'], ENT_HTML5, "ISO-8859-1") . " <br> " . $_SESSION['apellido_materno'] . '</span>';
-    echo '<img class="img-profile rounded-circle" src="img/undraw_profile.svg">';
+    echo '<img class="img-profile rounded-circle" src="' . $urlPerfilImagen . '">';
     echo '</a>';
     echo '<div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">';
-    echo '<a class="dropdown-item" href="perfil.php"><i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Perfil</a>';
-    echo '<a class="dropdown-item" href="configuracion.php"><i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i> Configuración</a>';
+    echo '<a class="dropdown-item" href="' . $urlPerfil . '"><i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Perfil</a>';
+    echo '<a class="dropdown-item" href="' . $urlConfiguracion . '"><i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i> Configuración</a>';
     echo '<a class="dropdown-item" href="#"><i class="fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i> Actividades</a>';
     echo '<div class="dropdown-divider"></div>';
     echo '<a class="dropdown-item" onclick="cerrar_session()"><i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Cerrar sesión</a>';
