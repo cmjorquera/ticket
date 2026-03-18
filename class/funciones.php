@@ -753,9 +753,13 @@ function cabezera()
 
     // --- NAVBAR ---
     echo '<ul class="navbar-nav ml-auto">';
-echo "<button onclick=\"abrirModalGoogleCalendarDesdeTicket(123, 'Problema PC', '2026-03-20T10:00', '2026-03-20T11:00', 'Detalle del ticket')\">
-        Agendar en calendario
-      </button>";
+    echo '<li class="nav-item no-arrow mx-1" id="idGoogleCalendar">';
+    echo "<a class=\"nav-link\" href=\"#\"
+            onclick=\"abrirModalGoogleCalendarDesdeTicket(123, 'Problema PC', '2026-03-20T10:00', '2026-03-20T11:00', 'Detalle del ticket'); return false;\"
+            title=\"Agendar en Google Calendar\">
+            <i class=\"bi bi-calendar-event fa-fw\"></i>
+          </a>";
+    echo '</li>';
     // ALERTAS
     echo '<li class="nav-item dropdown no-arrow mx-1" id="idAlertar">';
     echo '<a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';

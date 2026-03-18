@@ -100,6 +100,109 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
     <script src="js/equipos.js"></script> <!-- FUNCIONES DE COMPUTADORES -->
     <script src="js/dispositivos.js"></script> <!-- FUNCIONES DE DISPOSITIVOS -->
     <style>
+        .google-calendar-panel {
+            border: 1px solid #e3e6f0;
+            border-radius: 0.35rem;
+            background: #fff;
+            overflow: hidden;
+        }
+        .google-calendar-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            background: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        .google-calendar-title {
+            margin: 0;
+            font-weight: 700;
+            color: #5a5c69;
+        }
+        .google-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+        }
+        .google-calendar-head {
+            padding: 0.65rem 0.5rem;
+            text-align: center;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #858796;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e3e6f0;
+            background: #fff;
+        }
+        .google-calendar-day {
+            min-height: 120px;
+            padding: 0.45rem;
+            border-right: 1px solid #e3e6f0;
+            border-bottom: 1px solid #e3e6f0;
+            background: #fff;
+        }
+        .google-calendar-day:nth-child(7n) {
+            border-right: none;
+        }
+        .google-calendar-day.is-outside {
+            background: #f8f9fc;
+        }
+        .google-calendar-day.is-today {
+            background: #eef4ff;
+        }
+        .google-calendar-day-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.9rem;
+            height: 1.9rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #5a5c69;
+        }
+        .google-calendar-day.is-today .google-calendar-day-number {
+            background: #4e73df;
+            color: #fff;
+        }
+        .google-calendar-events {
+            margin-top: 0.45rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .google-calendar-event-chip {
+            display: block;
+            padding: 0.35rem 0.45rem;
+            border-left: 3px solid #4e73df;
+            border-radius: 0.35rem;
+            background: #f8f9fc;
+            color: #3a3b45;
+            text-decoration: none;
+            font-size: 0.74rem;
+            line-height: 1.25;
+        }
+        .google-calendar-event-chip:hover {
+            text-decoration: none;
+            background: #eaecf4;
+            color: #224abe;
+        }
+        .google-calendar-event-time {
+            display: block;
+            color: #858796;
+            font-size: 0.7rem;
+            margin-bottom: 0.1rem;
+        }
+        @media (max-width: 767.98px) {
+            .google-calendar-day {
+                min-height: 88px;
+                padding: 0.35rem;
+            }
+            .google-calendar-event-chip {
+                padding: 0.25rem 0.35rem;
+                font-size: 0.68rem;
+            }
+        }
         .swal-perfil-popup {
             border-radius: 28px;
             border: 1px solid rgba(109, 170, 214, 0.25);
@@ -1193,6 +1296,11 @@ function cambiarPerfil(perfil) {
           <button id="btnCargarEventos" class="btn btn-primary">Ver eventos</button>
         </div>
 
+        <div class="alert alert-light border mb-3" role="alert">
+          Este modulo trabaja con tu calendario principal de Google.
+          Primero conecta tu cuenta, luego puedes crear un evento y ver los proximos eventos sincronizados.
+        </div>
+
         <div class="row g-2 mb-3">
           <div class="col-md-6">
             <label>Título</label>
@@ -1217,7 +1325,29 @@ function cambiarPerfil(perfil) {
 
         <hr>
 
-        <div id="estadoGoogle" class="mb-2 text-muted">Sin conectar</div>
+        <div id="estadoGoogle" class="alert alert-secondary py-2 mb-3">Sin conectar</div>
+        <div id="resumenEventoGoogle" class="d-none mb-3"></div>
+        <div class="google-calendar-panel mb-3">
+          <div class="google-calendar-toolbar">
+            <button id="btnMesAnteriorGoogle" type="button" class="btn btn-light btn-sm border">&lt;</button>
+            <h6 id="tituloMesGoogle" class="google-calendar-title">Calendario</h6>
+            <button id="btnMesSiguienteGoogle" type="button" class="btn btn-light btn-sm border">&gt;</button>
+          </div>
+          <div class="google-calendar-grid">
+            <div class="google-calendar-head">Lun</div>
+            <div class="google-calendar-head">Mar</div>
+            <div class="google-calendar-head">Mie</div>
+            <div class="google-calendar-head">Jue</div>
+            <div class="google-calendar-head">Vie</div>
+            <div class="google-calendar-head">Sab</div>
+            <div class="google-calendar-head">Dom</div>
+          </div>
+          <div id="calendarioGoogleGrid" class="google-calendar-grid"></div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0">Proximos eventos del calendario principal</h6>
+          <small class="text-muted">Se muestran hasta 10 eventos</small>
+        </div>
         <div id="listaEventosGoogle"></div>
       </div>
     </div>
@@ -1246,13 +1376,234 @@ window.abrirModalGoogleCalendarDesdeTicket = function (id, asunto, fechaInicio, 
 };
 
 const CLIENT_ID = '557343390711-kmt34rcumkba72860fsv7dgskqmepd6j.apps.googleusercontent.com';
-const API_KEY = 'AQUI_TU_API_KEY';
+const API_KEY = 'AIzaSyC-WYCrlJcoxNOjhLtTurm8Iyc-P8sno5c';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
+let eventosGoogleActuales = [];
+let mesVisualGoogle = new Date();
+
+function setEstadoGoogle(mensaje, tipo = 'secondary') {
+    const estado = document.getElementById('estadoGoogle');
+    if (!estado) {
+        return;
+    }
+
+    estado.className = `alert alert-${tipo} py-2 mb-3`;
+    estado.innerText = mensaje;
+}
+
+function formatearFechaGoogle(fecha, esTodoElDia = false) {
+    if (!fecha) {
+        return 'Sin fecha';
+    }
+
+    if (esTodoElDia) {
+        const [anio, mes, dia] = fecha.split('-').map(Number);
+        if (!anio || !mes || !dia) {
+            return fecha;
+        }
+
+        return new Intl.DateTimeFormat('es-CL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            timeZone: 'America/Santiago'
+        }).format(new Date(anio, mes - 1, dia));
+    }
+
+    const fechaObj = new Date(fecha);
+    if (Number.isNaN(fechaObj.getTime())) {
+        return fecha;
+    }
+
+    return new Intl.DateTimeFormat('es-CL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'America/Santiago'
+    }).format(fechaObj);
+}
+
+function normalizarEventoGoogle(evento) {
+    const esTodoElDia = !!evento.start?.date && !evento.start?.dateTime;
+    const inicioRaw = evento.start?.dateTime || evento.start?.date || '';
+    const finRaw = evento.end?.dateTime || evento.end?.date || '';
+
+    return {
+        ...evento,
+        esTodoElDia,
+        inicioRaw,
+        finRaw,
+        inicioTexto: formatearFechaGoogle(inicioRaw, esTodoElDia),
+        finTexto: formatearFechaGoogle(finRaw, esTodoElDia)
+    };
+}
+
+function obtenerClaveFechaLocal(fecha) {
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
+}
+
+function obtenerFechaEventoParaCalendario(evento) {
+    if (evento.esTodoElDia && evento.inicioRaw) {
+        const [anio, mes, dia] = evento.inicioRaw.split('-').map(Number);
+        return new Date(anio, (mes || 1) - 1, dia || 1);
+    }
+
+    const fecha = new Date(evento.inicioRaw);
+    if (Number.isNaN(fecha.getTime())) {
+        return null;
+    }
+    return fecha;
+}
+
+function renderizarCalendarioGoogle() {
+    const titulo = document.getElementById('tituloMesGoogle');
+    const grid = document.getElementById('calendarioGoogleGrid');
+    if (!titulo || !grid) {
+        return;
+    }
+
+    const anio = mesVisualGoogle.getFullYear();
+    const mes = mesVisualGoogle.getMonth();
+    const primerDiaMes = new Date(anio, mes, 1);
+    const ultimoDiaMes = new Date(anio, mes + 1, 0);
+    const offsetInicio = (primerDiaMes.getDay() + 6) % 7;
+    const diasMes = ultimoDiaMes.getDate();
+    const totalCeldas = Math.ceil((offsetInicio + diasMes) / 7) * 7;
+    const hoyClave = obtenerClaveFechaLocal(new Date());
+
+    titulo.textContent = new Intl.DateTimeFormat('es-CL', {
+        month: 'long',
+        year: 'numeric'
+    }).format(primerDiaMes);
+
+    const eventosPorDia = {};
+    eventosGoogleActuales.forEach((evento) => {
+        const fechaEvento = obtenerFechaEventoParaCalendario(evento);
+        if (!fechaEvento) {
+            return;
+        }
+
+        const clave = obtenerClaveFechaLocal(fechaEvento);
+        if (!eventosPorDia[clave]) {
+            eventosPorDia[clave] = [];
+        }
+        eventosPorDia[clave].push(evento);
+    });
+
+    let html = '';
+    for (let i = 0; i < totalCeldas; i++) {
+        const fechaCelda = new Date(anio, mes, i - offsetInicio + 1);
+        const esMesActual = fechaCelda.getMonth() === mes;
+        const clave = obtenerClaveFechaLocal(fechaCelda);
+        const eventosDia = eventosPorDia[clave] || [];
+        const clases = [
+            'google-calendar-day',
+            esMesActual ? '' : 'is-outside',
+            clave === hoyClave ? 'is-today' : ''
+        ].filter(Boolean).join(' ');
+
+        let htmlEventos = '<div class="google-calendar-events">';
+        eventosDia.slice(0, 3).forEach((evento) => {
+            const hora = evento.esTodoElDia ? 'Todo el dia' : new Intl.DateTimeFormat('es-CL', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+                timeZone: 'America/Santiago'
+            }).format(new Date(evento.inicioRaw));
+
+            htmlEventos += `
+                <a class="google-calendar-event-chip" href="${evento.htmlLink || '#'}" target="_blank" rel="noopener noreferrer" title="${evento.summary || '(Sin título)'}">
+                    <span class="google-calendar-event-time">${hora}</span>
+                    ${evento.summary || '(Sin título)'}
+                </a>
+            `;
+        });
+
+        if (eventosDia.length > 3) {
+            htmlEventos += `<div class="small text-muted">+${eventosDia.length - 3} mas</div>`;
+        }
+        htmlEventos += '</div>';
+
+        html += `
+            <div class="${clases}">
+                <div class="google-calendar-day-number">${fechaCelda.getDate()}</div>
+                ${htmlEventos}
+            </div>
+        `;
+    }
+
+    grid.innerHTML = html;
+}
+
+function renderizarEventosGoogle(eventos) {
+    const contenedor = document.getElementById('listaEventosGoogle');
+    if (!contenedor) {
+        return;
+    }
+
+    if (!eventos.length) {
+        contenedor.innerHTML = '<div class="alert alert-light border">No hay proximos eventos en tu calendario principal.</div>';
+        return;
+    }
+
+    let html = '<div class="list-group shadow-sm">';
+    eventos.forEach(evento => {
+        const descripcion = (evento.description || '').trim();
+        const enlace = evento.htmlLink || '#';
+
+        html += `
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <div class="fw-bold">${evento.summary || '(Sin título)'}</div>
+                        <div class="small text-muted">Inicio: ${evento.inicioTexto}</div>
+                        <div class="small text-muted">Fin: ${evento.finTexto}</div>
+                        ${descripcion ? `<div class="small mt-2">${descripcion}</div>` : '<div class="small mt-2 text-muted">Sin descripcion</div>'}
+                    </div>
+                    <div class="text-end">
+                        ${evento.status ? `<span class="badge text-bg-light border">${evento.status}</span>` : ''}
+                        ${enlace !== '#' ? `<div class="mt-2"><a href="${enlace}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">Abrir</a></div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+
+    contenedor.innerHTML = html;
+}
+
+function mostrarResumenEventoCreado(evento) {
+    const resumen = document.getElementById('resumenEventoGoogle');
+    if (!resumen) {
+        return;
+    }
+
+    const eventoNormalizado = normalizarEventoGoogle(evento);
+    const enlace = evento.htmlLink || '';
+
+    resumen.classList.remove('d-none');
+    resumen.innerHTML = `
+        <div class="alert alert-success mb-0">
+            <div class="fw-bold mb-1">Evento creado correctamente</div>
+            <div><strong>${evento.summary || '(Sin título)'}</strong></div>
+            <div class="small">Inicio: ${eventoNormalizado.inicioTexto}</div>
+            <div class="small">Fin: ${eventoNormalizado.finTexto}</div>
+            ${enlace ? `<div class="mt-2"><a href="${enlace}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">Abrir en Google Calendar</a></div>` : ''}
+        </div>
+    `;
+}
 
 window.abrirModalGoogleCalendar = function () {
     const modalElement = document.getElementById('modalGoogleCalendar');
@@ -1262,6 +1613,11 @@ window.abrirModalGoogleCalendar = function () {
     }
 
     const modal = new bootstrap.Modal(modalElement);
+    const resumen = document.getElementById('resumenEventoGoogle');
+    if (resumen) {
+        resumen.classList.add('d-none');
+        resumen.innerHTML = '';
+    }
     modal.show();
 };
 
@@ -1279,8 +1635,7 @@ async function initializeGapiClient() {
         maybeEnableButtons();
     } catch (error) {
         console.error('Error iniciando gapi:', error);
-        const estado = document.getElementById('estadoGoogle');
-        if (estado) estado.innerText = 'Error al iniciar Google API';
+        setEstadoGoogle('Error al iniciar Google API', 'danger');
     }
 }
 
@@ -1295,9 +1650,8 @@ function gisLoaded() {
 }
 
 function maybeEnableButtons() {
-    const estado = document.getElementById('estadoGoogle');
-    if (gapiInited && gisInited && estado) {
-        estado.innerText = 'Listo para conectar';
+    if (gapiInited && gisInited) {
+        setEstadoGoogle('Listo para conectar con Google Calendar', 'secondary');
     }
 }
 
@@ -1308,15 +1662,13 @@ function conectarGoogleCalendar() {
     }
 
     tokenClient.callback = async (resp) => {
-        const estado = document.getElementById('estadoGoogle');
-
         if (resp.error !== undefined) {
             console.error(resp);
-            if (estado) estado.innerText = 'Error al conectar';
+            setEstadoGoogle('Error al conectar con Google Calendar', 'danger');
             return;
         }
 
-        if (estado) estado.innerText = 'Conectado a Google Calendar';
+        setEstadoGoogle('Conectado a Google Calendar. Ya puedes crear y revisar eventos.', 'success');
         await listarEventosGoogle();
     };
 
@@ -1330,13 +1682,14 @@ function conectarGoogleCalendar() {
 
 async function listarEventosGoogle() {
     try {
-        const estado = document.getElementById('estadoGoogle');
         const contenedor = document.getElementById('listaEventosGoogle');
 
         if (!gapi.client.getToken()) {
-            if (estado) estado.innerText = 'Primero debes conectar con Google';
+            setEstadoGoogle('Primero debes conectar con Google', 'warning');
             return;
         }
+
+        setEstadoGoogle('Cargando eventos desde Google Calendar...', 'info');
 
         const ahora = new Date().toISOString();
 
@@ -1349,46 +1702,31 @@ async function listarEventosGoogle() {
             orderBy: 'startTime',
         });
 
-        const eventos = response.result.items || [];
+        const eventos = (response.result.items || []).map(normalizarEventoGoogle);
+        eventosGoogleActuales = eventos;
 
         if (!contenedor) {
             console.error('No existe #listaEventosGoogle');
             return;
         }
 
-        if (!eventos.length) {
-            contenedor.innerHTML = '<div class=\"alert alert-light\">No hay próximos eventos.</div>';
-            return;
-        }
-
-        let html = '<div class=\"list-group\">';
-        eventos.forEach(evento => {
-            const inicio = evento.start.dateTime || evento.start.date || '';
-            html += `
-                <div class="list-group-item">
-                    <div><strong>${evento.summary || '(Sin título)'}</strong></div>
-                    <div class="text-muted">${inicio}</div>
-                </div>
-            `;
-        });
-        html += '</div>';
-
-        contenedor.innerHTML = html;
+        renderizarCalendarioGoogle();
+        renderizarEventosGoogle(eventos);
+        setEstadoGoogle(`Conectado. Se cargaron ${eventos.length} evento(s) del calendario principal.`, 'success');
     } catch (error) {
         console.error(error);
         const contenedor = document.getElementById('listaEventosGoogle');
         if (contenedor) {
             contenedor.innerHTML = '<div class="alert alert-danger">No se pudieron cargar los eventos.</div>';
         }
+        setEstadoGoogle('No se pudieron cargar los eventos de Google Calendar', 'danger');
     }
 }
 
 async function crearEventoGoogle() {
     try {
-        const estado = document.getElementById('estadoGoogle');
-
         if (!gapi.client.getToken()) {
-            if (estado) estado.innerText = 'Primero debes conectar con Google';
+            setEstadoGoogle('Primero debes conectar con Google', 'warning');
             return;
         }
 
@@ -1399,6 +1737,11 @@ async function crearEventoGoogle() {
 
         if (!titulo || !inicio || !fin) {
             alert('Completa título, inicio y fin.');
+            return;
+        }
+
+        if (new Date(fin) <= new Date(inicio)) {
+            alert('La fecha de fin debe ser mayor a la fecha de inicio.');
             return;
         }
 
@@ -1415,17 +1758,20 @@ async function crearEventoGoogle() {
             }
         };
 
-        await gapi.client.calendar.events.insert({
+        setEstadoGoogle('Creando evento en Google Calendar...', 'info');
+
+        const respuesta = await gapi.client.calendar.events.insert({
             calendarId: 'primary',
             resource: evento
         });
 
-        if (estado) estado.innerText = 'Evento creado correctamente';
+        const eventoCreado = respuesta.result || {};
+        setEstadoGoogle('Evento creado correctamente en Google Calendar', 'success');
+        mostrarResumenEventoCreado(eventoCreado);
         await listarEventosGoogle();
     } catch (error) {
         console.error(error);
-        const estado = document.getElementById('estadoGoogle');
-        if (estado) estado.innerText = 'Error al crear el evento';
+        setEstadoGoogle('Error al crear el evento en Google Calendar', 'danger');
     }
 }
 
@@ -1436,10 +1782,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnConectar = document.getElementById('btnConectarGoogle');
     const btnCargar = document.getElementById('btnCargarEventos');
     const btnCrear = document.getElementById('btnCrearEvento');
+    const btnMesAnterior = document.getElementById('btnMesAnteriorGoogle');
+    const btnMesSiguiente = document.getElementById('btnMesSiguienteGoogle');
 
     if (btnConectar) btnConectar.addEventListener('click', conectarGoogleCalendar);
     if (btnCargar) btnCargar.addEventListener('click', listarEventosGoogle);
     if (btnCrear) btnCrear.addEventListener('click', crearEventoGoogle);
+    if (btnMesAnterior) {
+        btnMesAnterior.addEventListener('click', function () {
+            mesVisualGoogle = new Date(mesVisualGoogle.getFullYear(), mesVisualGoogle.getMonth() - 1, 1);
+            renderizarCalendarioGoogle();
+        });
+    }
+    if (btnMesSiguiente) {
+        btnMesSiguiente.addEventListener('click', function () {
+            mesVisualGoogle = new Date(mesVisualGoogle.getFullYear(), mesVisualGoogle.getMonth() + 1, 1);
+            renderizarCalendarioGoogle();
+        });
+    }
+
+    renderizarCalendarioGoogle();
 });
 </script>
 

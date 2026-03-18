@@ -1,3 +1,53 @@
+<?php
+$tecnicosFiltroIds = [6, 7, 8, 42];
+$consultaTecnicosFiltro = new MySQL("", "", "");
+$sqlTecnicosFiltro = "SELECT id, nombre, apellido_paterno
+                      FROM usuarios
+                      WHERE id IN (" . implode(',', array_map('intval', $tecnicosFiltroIds)) . ")
+                      ORDER BY FIELD(id, " . implode(',', array_map('intval', $tecnicosFiltroIds)) . ")";
+$resultadoTecnicosFiltro = $consultaTecnicosFiltro->consulta($sqlTecnicosFiltro);
+$tecnicosFiltroTecnico = [];
+while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosFiltro)) {
+    $tecnicosFiltroTecnico[] = $tecnicoFiltro;
+}
+?>
+
+<div class="ticket-admin-filtros px-3 pt-3">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label for="filtroEstadoTecnico" class="form-label fw-semibold text-muted mb-1">Estado</label>
+            <select id="filtroEstadoTecnico" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="Asignado">Asignado</option>
+                <option value="En proceso">En proceso</option>
+                <option value="Terminado">Terminado</option>
+                <option value="Atrasado">Atrasado</option>
+                <option value="Cerrado">Cerrado</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="filtroFechaTecnico" class="form-label fw-semibold text-muted mb-1">Fecha creación</label>
+            <input type="date" id="filtroFechaTecnico" class="form-control form-control-sm">
+        </div>
+        <div class="col-md-3">
+            <label for="filtroTecnicoAsignado" class="form-label fw-semibold text-muted mb-1">Técnico</label>
+            <select id="filtroTecnicoAsignado" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="__sin_asignar__">Sin asignar</option>
+                <?php foreach ($tecnicosFiltroTecnico as $tecnicoFiltro): ?>
+                    <option value="<?= (int) $tecnicoFiltro['id']; ?>">
+                        <?= htmlspecialchars(trim(($tecnicoFiltro['nombre'] ?? '') . ' ' . ($tecnicoFiltro['apellido_paterno'] ?? ''))); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="filtroFechaRespuestaTecnico" class="form-label fw-semibold text-muted mb-1">Fecha respuesta</label>
+            <input type="date" id="filtroFechaRespuestaTecnico" class="form-control form-control-sm">
+        </div>
+    </div>
+</div>
+
 <div class="table-responsive mt-3">
     <div class="table-responsive">
         <table id="tablaTecnicoTicketAsignados" class="table table-bordered table-hover table-striped">
@@ -91,8 +141,19 @@
                                 $diasDetalle = 'Dias estimados';
                             }
                         }
+                        $fechaCreacionIso = !empty($row['fecha_creacion_inicio']) && $row['fecha_creacion_inicio'] !== '0000-00-00'
+                            ? date('Y-m-d', strtotime($row['fecha_creacion_inicio']))
+                            : '';
+                        $fechaRespuestaIso = !empty($row['fecha_estimada_admin']) && $row['fecha_estimada_admin'] !== '0000-00-00'
+                            ? date('Y-m-d', strtotime($row['fecha_estimada_admin']))
+                            : '';
+                        $tecnicoId = isset($row['id_tecnico']) && $row['id_tecnico'] !== null ? (int) $row['id_tecnico'] : '';
                         ?>
-                        <tr class="estado-ticket-<?= (int) $row['id_estado']; ?> fila-ticket-admin-compacta">
+                        <tr class="estado-ticket-<?= (int) $row['id_estado']; ?> fila-ticket-admin-compacta"
+                            data-estado="<?= htmlspecialchars($row['nombreEstado'] ?? ''); ?>"
+                            data-fecha-creacion="<?= htmlspecialchars($fechaCreacionIso); ?>"
+                            data-tecnico-id="<?= htmlspecialchars((string) $tecnicoId); ?>"
+                            data-fecha-respuesta="<?= htmlspecialchars($fechaRespuestaIso); ?>">
                             <td class="celda-id celda-id-con-indicador">
                                 <span class="estado-indicador-dot estado-indicador-dot--inline" style="background-color: <?= htmlspecialchars($row['colorEstado']); ?>"></span>
                                 <span class="celda-id-numero"><?= $counter++; ?></span>
@@ -182,3 +243,87 @@
         </table>
     </div>
 </div>
+
+<script>
+if (!window.tecnicoTableFiltersSearchRegistered) {
+    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (!settings.nTable || settings.nTable.id !== 'tablaTecnicoTicketAsignados') {
+            return true;
+        }
+
+        const api = new $.fn.dataTable.Api(settings);
+        const rowNode = api.row(dataIndex).node();
+        if (!rowNode) {
+            return true;
+        }
+
+        const estadoFiltro = ($('#filtroEstadoTecnico').val() || '').trim().toLowerCase();
+        const fechaFiltro = ($('#filtroFechaTecnico').val() || '').trim();
+        const tecnicoFiltro = ($('#filtroTecnicoAsignado').val() || '').trim();
+        const fechaRespuestaFiltro = ($('#filtroFechaRespuestaTecnico').val() || '').trim();
+
+        const estadoFila = (rowNode.dataset.estado || '').trim().toLowerCase();
+        const fechaFila = (rowNode.dataset.fechaCreacion || '').trim();
+        const tecnicoFila = (rowNode.dataset.tecnicoId || '').trim();
+        const fechaRespuestaFila = (rowNode.dataset.fechaRespuesta || '').trim();
+
+        if (estadoFiltro && estadoFila !== estadoFiltro) {
+            return false;
+        }
+
+        if (fechaFiltro && fechaFila !== fechaFiltro) {
+            return false;
+        }
+
+        if (tecnicoFiltro) {
+            if (tecnicoFiltro === '__sin_asignar__' && tecnicoFila !== '') {
+                return false;
+            }
+            if (tecnicoFiltro !== '__sin_asignar__' && tecnicoFila !== tecnicoFiltro) {
+                return false;
+            }
+        }
+
+        if (fechaRespuestaFiltro && fechaRespuestaFila !== fechaRespuestaFiltro) {
+            return false;
+        }
+
+        return true;
+    });
+
+    window.tecnicoTableFiltersSearchRegistered = true;
+}
+
+function configurarFiltrosTablaTecnico(dataTableTecnico) {
+    const $tabla = $('#tablaTecnicoTicketAsignados');
+    if (!$tabla.length || !dataTableTecnico) {
+        return;
+    }
+
+    if ($tabla.data('tecnico-filters-bound') === '1') {
+        dataTableTecnico.draw();
+        return;
+    }
+
+    $('#filtroEstadoTecnico, #filtroFechaTecnico, #filtroTecnicoAsignado, #filtroFechaRespuestaTecnico')
+        .off('.tecnicoFilters')
+        .on('change.tecnicoFilters input.tecnicoFilters', function () {
+            dataTableTecnico.draw();
+        });
+
+    $tabla.data('tecnico-filters-bound', '1');
+    dataTableTecnico.draw();
+}
+
+$(document).on('init.dt', function (event, settings) {
+    if (settings && settings.nTable && settings.nTable.id === 'tablaTecnicoTicketAsignados') {
+        configurarFiltrosTablaTecnico(new $.fn.dataTable.Api(settings));
+    }
+});
+
+$(function () {
+    if ($.fn.DataTable.isDataTable('#tablaTecnicoTicketAsignados')) {
+        configurarFiltrosTablaTecnico($('#tablaTecnicoTicketAsignados').DataTable());
+    }
+});
+</script>
