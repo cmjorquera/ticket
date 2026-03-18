@@ -50,12 +50,13 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/7.2.0/intro.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <!-- Incluir DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <!-- Incluir Bootstrap Icons -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Incluir jQuery -->
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <!-- Incluir DataTableswww JS -->
     <link href="css/modalesTicket.css" rel="stylesheet">
     <!-- Incluir ESTILOS -->
@@ -88,7 +89,6 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
@@ -152,7 +152,140 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             background: #edf3f8 !important;
             color: #3a5876 !important;
         }
+        .perfil-side-tabs-wrap {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1040;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .perfil-side-tabs {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.9rem;
+        }
+        .perfil-side-tab {
+            width: 72px;
+            padding: 0.0rem;
+            border-radius: 22px 0 0 22px;
+            border: 1px solid #dfe8f4;
+            background: #ffffff;
+            color: #4f6783;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            box-shadow: 0 10px 24px rgba(33, 69, 110, 0.10);
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+        }
+        .perfil-side-tab:hover {
+            color: #17324d;
+            transform: translateX(-8px);
+            box-shadow: 0 14px 28px rgba(33, 69, 110, 0.14);
+        }
+        .perfil-side-tab.is-active {
+            width: 150px;
+            transform: translateX(-18px);
+            border-color: #3b82f6;
+            background: #ffffff;
+            color: #1f3b5b;
+            box-shadow: 0 16px 32px rgba(59, 130, 246, 0.16);
+            justify-content: flex-start;
+            gap: 0.8rem;
+        }
+        .perfil-side-tab-icon {
+            width: 44px;
+            height: 35px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #fafdff 0%, #eef5ff 100%);
+            color: #3b82f6;
+            flex: 0 0 44px;
+            box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.16);
+        }
+        .perfil-side-tab.is-active .perfil-side-tab-icon {
+            background: linear-gradient(180deg, #f5faff 0%, #e4efff 100%);
+            box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.20);
+        }
+        .perfil-side-tab-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.1;
+            display: none;
+        }
+        .perfil-side-tab.is-active .perfil-side-tab-title {
+            display: inline;
+        }
+        .dashboard-loading-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .dashboard-loading-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 0.65rem;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(2px);
+            z-index: 15;
+        }
+        .dashboard-loading-overlay.is-visible {
+            display: flex;
+        }
+        .dashboard-loading-spinner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 4px solid #dbeafe;
+            border-top-color: #3b82f6;
+            animation: dashboardSpin .9s linear infinite;
+        }
+        .dashboard-loading-text {
+            margin: 0;
+            color: #36506d;
+            font-size: 0.98rem;
+            font-weight: 700;
+        }
+        @keyframes dashboardSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        @media (max-width: 768px) {
+            .perfil-side-tabs-wrap {
+                position: static;
+                transform: none;
+                margin-bottom: 1rem;
+                justify-content: stretch;
+            }
+            .perfil-side-tabs {
+                width: 100%;
+                align-items: stretch;
+            }
+            .perfil-side-tab,
+            .perfil-side-tab.is-active {
+                width: 50%;
+                transform: none;
+                border-radius: 16px;
+                justify-content: flex-start;
+                gap: 0.8rem;
+            }
+            .perfil-side-tab .perfil-side-tab-title {
+                display: inline;
+            }
+        }
     </style>
+
 </head>
 <script>
     function iniciarTour() {
@@ -190,9 +323,9 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     </button>
                     <?php $funciones->cabezera(); ?>
                 </nav>
-                   <button id="bi" class="btn btn-light border rounded-circle" onclick="iniciarTour()" title="Guía rápida">
+                   <!-- <button id="bi" class="btn btn-light border rounded-circle" onclick="iniciarTour()" title="Guía rápida">
                       <i class="bi bi-info-circle-fill text-primary fs-3"></i>
-                    </button>
+                    </button> -->
                     
                 <!-- BUTTON DE ACCESO DIRECTO  ********************-->
                 <div id="botonesDescargar"><br><br>
@@ -201,12 +334,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                 $bloqueados = [28,29,30,31,32,33,34];
                 if (!in_array((int)$idUsuarioSession, $bloqueados, true)) :
                 ?>
-                  <button
-                    class="btn btn-light border w-100 rounded-pill shadow-sm d-flex justify-content-center align-items-center gap-2 py-2"
-                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" title="Ver conversación">
-                    <i class="bi bi-chat-dots-fill text-primary fs-10"></i>
-                    <span class="text-dark fw-semibold"></span>
-                  </button>
+            
                 <?php endif; ?>
 
 
@@ -222,12 +350,12 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     <!--</button>-->
 
                     <!-- Botón 3: Nuevo Recordatorio -->
-                    <button
+                    <!-- <button
                         class="btn btn-light border w-100 rounded-pill shadow-sm d-flex justify-content-center align-items-center gap-2 py-2"
                         type="button" onclick="mostrarAlertas(<?= $idUsuarioSession; ?>)" title="Agregar recordatorio">
                         <i class="bi bi-clipboard-data-fill text-primary fs-10"></i>
                         <span class="text-dark fw-semibold"></span>
-                    </button>
+                    </button> -->
 
                     <!-- Botón 4: Perfil Actual -->
                     <?php
@@ -239,56 +367,49 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     while ($fila = $bdato->fetch_array($resultado)) {
                         $perfilesUsuario[] = $fila['id_perfil'];
                     }
-                    
-                    // Mostrar solo si hay más de un perfil
-                    if (count($perfilesUsuario) > 1) {
-                    ?>
-                        <div class="dropdown w-100 position-relative">
-                            <button class="btn btn-light border w-100 rounded-pill shadow-sm d-flex justify-content-center align-items-center gap-2 py-2 dropdown-toggle"
-                                    type="button"
-                                    id="dropdownPerfil"
-                                    data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                    title="Seleccionar perfil">
-                                <i class="bi bi-person-badge-fill text-primary fs-5"></i>
-                                <span class="text-dark fw-semibold" id="textoPerfilActual">Perfil</span>
-                            </button>
-                    
-                            <ul class="dropdown-menu w-100 shadow-xm" aria-labelledby="dropdownPerfil">
-                                <li class="dropdown-header text-start px-4 py-2">
-                                    <strong>Perfiles</strong>
-                                </li>
-                    
-                                <?php
-                                if (in_array(3, $perfilesUsuario)) {
-                                    echo '<li><a class="dropdown-item text-dark" href="#" onclick="cambiarPerfil(\'admin\'); return false;">Admin</a></li>';
-                                }
-                                if (in_array(2, $perfilesUsuario)) {
-                                    echo '<li><a class="dropdown-item text-dark" href="#" onclick="cambiarPerfil(\'tecnico\'); return false;">Técnico</a></li>';
-                                }
-                                if (in_array(1, $perfilesUsuario)) {
-                                    echo '<li><a class="dropdown-item text-dark" href="#" onclick="cambiarPerfil(\'usuario\'); return false;">Usuario</a></li>';
-                                }
-                                ?>
-                            </ul>
-                        </div>
-                    <?php
+                    $perfilesDashboardDisponibles = [];
+                    if (in_array(3, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'admin', 'label' => 'Admin', 'icon' => 'bi-person-gear'];
+                    }
+                    if (in_array(1, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'usuario', 'label' => 'Usuario', 'icon' => 'bi-person-circle'];
+                    }
+                    if (in_array(2, $perfilesUsuario)) {
+                        $perfilesDashboardDisponibles[] = ['key' => 'tecnico', 'label' => 'Tecnico', 'icon' => 'bi-wrench-adjustable-circle'];
+                    }
+                    $perfilDashboardInicial = 'usuario';
+                    if (in_array(3, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'admin';
+                    } elseif (in_array(2, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'tecnico';
+                    } elseif (in_array(1, $perfilesUsuario)) {
+                        $perfilDashboardInicial = 'usuario';
+                    }
+                    $vistaPerfilSolicitada = $_GET['vista_perfil'] ?? null;
+                    $perfilesDashboardKeys = array_column($perfilesDashboardDisponibles, 'key');
+                    if ($vistaPerfilSolicitada && in_array($vistaPerfilSolicitada, $perfilesDashboardKeys, true)) {
+                        $perfilDashboardInicial = $vistaPerfilSolicitada;
                     }
                     ?>
                 </div>
                 <!-- *********************************************  -->
 
                 <div class="container-fluid">
-                    <?php
-                        $perfilDashboardInicial = 'usuario';
-                        if (in_array(3, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'admin';
-                        } elseif (in_array(2, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'tecnico';
-                        } elseif (in_array(1, $perfilesUsuario)) {
-                            $perfilDashboardInicial = 'usuario';
-                        }
-                    ?>
+                    <?php if (count($perfilesDashboardDisponibles) > 1): ?>
+                    <div class="perfil-side-tabs-wrap">
+                        <div class="perfil-side-tabs">
+                            <?php foreach ($perfilesDashboardDisponibles as $perfilTab): ?>
+                                <a class="perfil-side-tab <?= $perfilDashboardInicial === $perfilTab['key'] ? 'is-active' : ''; ?>"
+                                   href="principal_2.php?vista_perfil=<?= urlencode($perfilTab['key']) ?>">
+                                    <span class="perfil-side-tab-icon">
+                                        <i class="bi <?= $perfilTab['icon'] ?>"></i>
+                                    </span>
+                                    <span class="perfil-side-tab-title"><?= htmlspecialchars($perfilTab['label']) ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     <div id="contenedorEstadosUsuario" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'usuario') ? 'grid' : 'none'; ?>;">
                         <?php
                             $funciones->contenedorTicketRecibidos($idUsuarioSession, 3);
@@ -319,7 +440,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     <div class="row">
                         <!-- CONTENEDOR 1: Gráfico de Tickets (BARRAS SEGUN ESTADOS DE LOS TICKETS) -->
                         <div class="col-lg-6 col-sm-12">
-                            <div class="card shadow mb-4 p-4" data-intro="En este gráfico de barras puedes visualizar la cantidad de tickets clasificados según su estado actual, como Recibido, En proceso, Terminado, entre otros. Esta vista te permite identificar rápidamente el avance y distribución de los tickets en el sistema..">
+                            <div class="card shadow mb-4 p-4 dashboard-loading-card" data-intro="En este gráfico de barras puedes visualizar la cantidad de tickets clasificados según su estado actual, como Recibido, En proceso, Terminado, entre otros. Esta vista te permite identificar rápidamente el avance y distribución de los tickets en el sistema..">
                                 <div class="d-flex justify-content-between align-items-center mb-3" >
                                     <h5 class="card-title m-0 text-primary fw-bold">Gráfico de Tickets</h5>
                                         <?php
@@ -357,6 +478,10 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                         <?php endif; ?>
                                 </div>
 
+                                <div class="dashboard-loading-overlay" id="loadingGraficoTicket">
+                                    <div class="dashboard-loading-spinner"></div>
+                                    <p class="dashboard-loading-text">Cargando gráfico...</p>
+                                </div>
                                 <div id="contenedorGraficoTicket">
                                     <canvas id="canvasGraficoTicket" height="500px"></canvas>
                                 </div>
@@ -412,7 +537,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
                         <!-- CONTENEDOR 2: Estados por Categoría de Ticket -->
                         <div class="col-lg-6 col-sm-12 ">
-                            <div class="card shadow mb-4 p-4" data-intro="Este gráfico de líneas muestra la distribución de tickets según su estado en cada categoría. Permite visualizar cómo evolucionan los tickets (Recibido, En proceso, Terminado, etc.) dentro de distintas áreas, como Correos u Otros, facilitando el análisis por tipo de solicitud..">
+                            <div class="card shadow mb-4 p-4 dashboard-loading-card" data-intro="Este gráfico de líneas muestra la distribución de tickets según su estado en cada categoría. Permite visualizar cómo evolucionan los tickets (Recibido, En proceso, Terminado, etc.) dentro de distintas áreas, como Correos u Otros, facilitando el análisis por tipo de solicitud..">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="card-title m-0 text-primary fw-bold">Estados por Categoría de Ticket</h5>
                                         <?php
@@ -448,6 +573,10 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                             </div>
                                         <?php endif; ?>
                                 </div>
+                                <div class="dashboard-loading-overlay" id="loadingGraficoCategorias">
+                                    <div class="dashboard-loading-spinner"></div>
+                                    <p class="dashboard-loading-text">Cargando gráfico...</p>
+                                </div>
                                 <div id="grafico_estados_categoria"></div>
                             </div>
                         </div>
@@ -472,7 +601,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
                         <!-- Contenedor Listado de Tickets -->
                         <div class="col-12">
-                            <div class="card shadow mb-4 px-0" data-step=12>
+                            <div class="card shadow mb-4 px-0 dashboard-loading-card" data-step=12>
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center px-3 mt-2">
                                         <h6 class="m-0 font-weight-bold text-primary">Listado de Tickets</h6>
@@ -513,6 +642,10 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                                 </div>
                                             <?php endif; ?>
                                     </div>
+                                    <div class="dashboard-loading-overlay" id="loadingListadoTickets">
+                                        <div class="dashboard-loading-spinner"></div>
+                                        <p class="dashboard-loading-text">Cargando listado...</p>
+                                    </div>
                                     <div id="contenedorUsuario"
                                         style="display: <?= ($perfilDashboardInicial == 'usuario') ? 'block' : 'none'; ?>;">
                                         <?php  include("componentes/bloque_tabla_usuario.php") ?>
@@ -547,6 +680,8 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 <!-- ******************************************************** -->
                     <script>
                     function mostrarListado(tipo) {
+                        const inicioCarga = Date.now();
+                        cambiarVisibilidadCarga('loadingListadoTickets', true);
                         const contenedoresListado = ['contenedorUsuario', 'contenedorTecnico', 'contenedorAdmin'];
                         const contenedoresEstados = ['contenedorEstadosUsuario', 'contenedorEstadosTecnico', 'contenedorEstadosAdmin'];
                         const contenedorId = tipo === 'admin' ? 'contenedorAdmin'
@@ -573,6 +708,10 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                         if (typeof inicializarTablaPerfilDashboard === 'function') {
                             inicializarTablaPerfilDashboard(contenedorId);
                         }
+
+                        esperarMinimoCarga(inicioCarga).then(() => {
+                            cambiarVisibilidadCarga('loadingListadoTickets', false);
+                        });
                     }
                     </script>
 
@@ -603,12 +742,41 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             return perfil === 'administrador' ? 'admin' : perfil.toLowerCase();
         }
 
+        function esperarMinimoCarga(inicio, minimo = 1000) {
+            const transcurrido = Date.now() - inicio;
+            const restante = Math.max(0, minimo - transcurrido);
+            return new Promise(resolve => setTimeout(resolve, restante));
+        }
+
+        function cambiarVisibilidadCarga(idOverlay, visible) {
+            const overlay = document.getElementById(idOverlay);
+            if (overlay) {
+                overlay.classList.toggle('is-visible', visible);
+            }
+        }
+
+        function mostrarCargaDashboard() {
+            cambiarVisibilidadCarga('loadingGraficoTicket', true);
+            cambiarVisibilidadCarga('loadingGraficoCategorias', true);
+            cambiarVisibilidadCarga('loadingListadoTickets', true);
+        }
+
+        function prepararCambioPerfilConCarga(destino) {
+            mostrarCargaDashboard();
+            setTimeout(() => {
+                window.location.href = destino;
+            }, 1000);
+        }
+
         // estas 2 funcione sno me correon si als pongo en el archivo funciones.js
         function cargarGraficoPorPerfil(perfil = 'usuario') {
             const perfilNormalizado = normalizarPerfilDashboard(perfil);
+            const inicioCarga = Date.now();
+            cambiarVisibilidadCarga('loadingGraficoCategorias', true);
             fetch('grafico_estados_categoria.php?perfil=' + perfilNormalizado)
                 .then(res => res.json())
-                .then(data => {
+                .then(async data => {
+                    await esperarMinimoCarga(inicioCarga);
                     const contenedor = document.querySelector("#grafico_estados_categoria");
                     // Validar si hay datos para mostrar
                     const hayDatos = data.series.length > 0 && data.series.some(serie => serie.data
@@ -620,6 +788,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                     <p class="mt-2 mb-0">No hay tickets asociados para este perfil.</p>
                             </div>
                         `;
+                        cambiarVisibilidadCarga('loadingGraficoCategorias', false);
                         return;
                     }
                     // Si hay datos, renderizar el gráfico
@@ -673,6 +842,10 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                             }
                         }
                     }).render();
+                    cambiarVisibilidadCarga('loadingGraficoCategorias', false);
+                })
+                .catch(() => {
+                    cambiarVisibilidadCarga('loadingGraficoCategorias', false);
                 });
 
         }
@@ -681,6 +854,8 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
         function generarGraficoTicket(tipoUsuario = 'auto') {
             const idUsuarioSession = window.ID_USUARIO_SESSION || null;
             const perfilNormalizado = normalizarPerfilDashboard(tipoUsuario);
+            const inicioCarga = Date.now();
+            cambiarVisibilidadCarga('loadingGraficoTicket', true);
             let url = `modelos/filtros/filtro_estadoTicketGrafico.php?tipoUsuario=${perfilNormalizado}`;
             if (perfilNormalizado === "usuario" || perfilNormalizado === "tecnico") {
                 url += `&idUsuario=${idUsuarioSession}`;
@@ -688,7 +863,8 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
             fetch(url)
                 .then(res => res.json())
-                .then(data => {
+                .then(async data => {
+                    await esperarMinimoCarga(inicioCarga);
                     const todosLosEstados = ["Recibido", "Asignado", "En proceso", "Terminado", "Borrador",
                         "Atrasado", "Cerrado"
                     ];
@@ -718,6 +894,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                             <p class="mt-2 mb-0">No hay tickets registrados para este perfil.</p>
                         </div>
                     `;
+                        cambiarVisibilidadCarga('loadingGraficoTicket', false);
                         return;
                     }
 
@@ -788,9 +965,11 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
                         }
                     });
+                    cambiarVisibilidadCarga('loadingGraficoTicket', false);
                 })
                 .catch(error => {
                     console.error("Error cargando gráfico:", error);
+                    cambiarVisibilidadCarga('loadingGraficoTicket', false);
                 });
         }
 
@@ -827,7 +1006,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             }
 
             if ($tablaAdmin.length && !$.fn.DataTable.isDataTable($tablaAdmin)) {
-                $tablaAdmin.DataTable({
+                const dataTableAdmin = $tablaAdmin.DataTable({
                     language: {
                         url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                     },
@@ -836,6 +1015,13 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     paging: true,
                     pagingType: 'simple_numbers'
                 });
+                if (typeof configurarFiltrosTablaAdmin === 'function') {
+                    configurarFiltrosTablaAdmin(dataTableAdmin);
+                }
+            } else if ($tablaAdmin.length && $.fn.DataTable.isDataTable($tablaAdmin)) {
+                if (typeof configurarFiltrosTablaAdmin === 'function') {
+                    configurarFiltrosTablaAdmin($tablaAdmin.DataTable());
+                }
             }
 
             $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust().draw(false);
@@ -865,6 +1051,13 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.perfil-side-tab').forEach((link) => {
+        link.addEventListener('click', function (event) {
+            event.preventDefault();
+            prepararCambioPerfilConCarga(this.href);
+        });
+    });
+
     const perfilInicial = document.getElementById('contenedorAdmin')?.style.display === 'block'
         ? 'admin'
         : document.getElementById('contenedorTecnico')?.style.display === 'block'
@@ -872,9 +1065,12 @@ document.addEventListener('DOMContentLoaded', function () {
             : 'usuario';
 
     if (typeof inicializarTablaPerfilDashboard === 'function') {
-        inicializarTablaPerfilDashboard('contenedorUsuario');
-        inicializarTablaPerfilDashboard('contenedorTecnico');
-        inicializarTablaPerfilDashboard('contenedorAdmin');
+        const contenedorInicial = perfilInicial === 'admin'
+            ? 'contenedorAdmin'
+            : perfilInicial === 'tecnico'
+                ? 'contenedorTecnico'
+                : 'contenedorUsuario';
+        inicializarTablaPerfilDashboard(contenedorInicial);
     }
 
     const textoPerfil = document.getElementById('textoPerfilActual');
@@ -920,7 +1116,10 @@ function cambiarPerfil(perfil) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            document.getElementById('textoPerfilActual').innerText = nombrePerfil;
+            const textoPerfil = document.getElementById('textoPerfilActual');
+            if (textoPerfil) {
+                textoPerfil.innerText = nombrePerfil;
+            }
             mostrarListado(perfilNormalizado);
 
             // ✅ Este ya lo tienes
