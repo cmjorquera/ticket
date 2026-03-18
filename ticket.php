@@ -82,9 +82,9 @@ $versionTicketJs = @filemtime(__DIR__ . '/js/ticket.js') ?: time();
                     <?php $funciones->cabezera(); ?>
                 </nav>
 
-                <button id="bi" class="btn btn-light border rounded-circle" onclick="iniciarTour()" title="Guia rapida">
+                <!-- <button id="bi" class="btn btn-light border rounded-circle" onclick="iniciarTour()" title="Guia rapida">
                     <i class="bi bi-info-circle-fill text-primary fs-3"></i>
-                </button>
+                </button> -->
 
                 <div class="container-fluid">
                     <div class="contenedor-estados-ticket" id="idContenedoresEstadosTicket">

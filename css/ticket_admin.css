@@ -96,7 +96,7 @@
     display: flex;
     align-items: flex-start;
     gap: 14px;
-    min-height: 74px !important;
+    min-height: 55px !important;
     padding: 14px 16px !important;
     border: 1px solid #d7e3ef;
     border-radius: 18px;
@@ -220,7 +220,7 @@
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) th.col-dias-restantes,
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario) td.celda-dias-restantes {
-    width: 150px !important;
+    width: 200px !important;
     min-width: 150px !important;
 }
 
@@ -272,7 +272,7 @@
 
 #dataTableAdministrador td.celda-tecnico .ticket-resumen-estado {
     gap: 8px !important;
-    min-height: 62px !important;
+    min-height: 55px !important;
     padding: 8px 10px !important;
 }
 
@@ -330,7 +330,7 @@
 #tablaTecnicoTicketAsignados td.celda-estado .ticket-resumen-estado,
 #tablaTecnicoTicketAsignados td.celda-fecha-respuesta .ticket-resumen-estado,
 #tablaTecnicoTicketAsignados td.celda-dias-restantes .ticket-resumen-estado {
-    min-height: 64px !important;
+    min-height: 55px !important;
 }
 
 #tablaTecnicoTicketAsignados .btn-tecnico-opcion {
@@ -378,7 +378,7 @@
 #tablaUsuario td.celda-fecha-respuesta .ticket-resumen-estado,
 #tablaUsuario td.celda-dias-restantes .ticket-resumen-estado,
 #tablaUsuario td.celda-progreso .ticket-resumen-estado {
-    min-height: 64px !important;
+    min-height: 55px !important;
 }
 
 #tablaUsuario .ticket-progreso {

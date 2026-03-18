@@ -1382,9 +1382,9 @@
                 if (id_estado == 2) {
                     seleccionarPrioridad = `
                       <div class="mb-3">
-                        <label><strong>Prioridad:</strong></label>
+                        <label class="form-label"><strong>Prioridad:</strong></label>
                         <select class="form-select" id="prioridadAsignada">
-                          <option value="">Cargandooooooooooo...</option>
+                          <option value="">Cargando...</option>
                         </select>
                       </div>
                     `;
@@ -1722,23 +1722,23 @@
             showCancelButton: false,
             preConfirm: preConfirmAction,
                didOpen: () => {
-  // 1) Scroll al inicio del modal
-  document.querySelector('.cuerpo_modal_guardar')?.scrollTo({ top: 0, behavior: 'auto' });
+        // 1) Scroll al inicio del modal
+        document.querySelector('.cuerpo_modal_guardar')?.scrollTo({ top: 0, behavior: 'auto' });
 
-  // 2) Popovers (activar todos los que estén en el DOM actual)
-  document.querySelectorAll("[data-bs-toggle='popover']")
-    .forEach(el => new bootstrap.Popover(el));
+        // 2) Popovers (activar todos los que estén en el DOM actual)
+        document.querySelectorAll("[data-bs-toggle='popover']")
+          .forEach(el => new bootstrap.Popover(el));
 
-  // 3) Timeline dinámico
-  const lineaBox = document.getElementById("lineaTiempoDinamica");
-  if (lineaBox) {
-    lineaDeTiempoTicket(id_ticket).then(html => {
-      lineaBox.innerHTML = html;
-      if (typeof actualizarBarraResumenEstados === 'function') {
-        actualizarBarraResumenEstados();
-      }
-    });
-  }
+        // 3) Timeline dinámico
+        const lineaBox = document.getElementById("lineaTiempoDinamica");
+        if (lineaBox) {
+          lineaDeTiempoTicket(id_ticket).then(html => {
+            lineaBox.innerHTML = html;
+            if (typeof actualizarBarraResumenEstados === 'function') {
+              actualizarBarraResumenEstados();
+            }
+          });
+        }
 
   // 4) Fecha estimada (min = hoy) + badge de días
   const inputFecha = document.getElementById("fechaDiasEstimados");

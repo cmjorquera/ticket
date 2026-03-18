@@ -215,9 +215,81 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
         let ultimaTablaAdminHtml = null;
         let actualizacionTablaEnCurso = false;
 
+        if (!window.adminTableFiltersSearchRegistered) {
+            $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                if (!settings.nTable || settings.nTable.id !== 'dataTableAdministrador') {
+                    return true;
+                }
+
+                const api = new $.fn.dataTable.Api(settings);
+                const rowNode = api.row(dataIndex).node();
+                if (!rowNode) {
+                    return true;
+                }
+
+                const estadoFiltro = ($('#filtroEstadoAdmin').val() || '').trim().toLowerCase();
+                const fechaFiltro = ($('#filtroFechaAdmin').val() || '').trim();
+                const tecnicoFiltro = ($('#filtroTecnicoAdmin').val() || '').trim();
+                const fechaRespuestaFiltro = ($('#filtroFechaRespuestaAdmin').val() || '').trim();
+
+                const estadoFila = (rowNode.dataset.estado || '').trim().toLowerCase();
+                const fechaFila = (rowNode.dataset.fechaCreacion || '').trim();
+                const tecnicoFila = (rowNode.dataset.tecnicoId || '').trim();
+                const fechaRespuestaFila = (rowNode.dataset.fechaRespuesta || '').trim();
+
+                if (estadoFiltro && estadoFila !== estadoFiltro) {
+                    return false;
+                }
+
+                if (fechaFiltro && fechaFila !== fechaFiltro) {
+                    return false;
+                }
+
+                if (tecnicoFiltro) {
+                    if (tecnicoFiltro === '__sin_asignar__' && tecnicoFila !== '') {
+                        return false;
+                    }
+
+                    if (tecnicoFiltro !== '__sin_asignar__' && tecnicoFila !== tecnicoFiltro) {
+                        return false;
+                    }
+                }
+
+                if (fechaRespuestaFiltro && fechaRespuestaFila !== fechaRespuestaFiltro) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            window.adminTableFiltersSearchRegistered = true;
+        }
+
+        function configurarFiltrosTablaAdmin() {
+            const $tabla = $('#dataTableAdministrador');
+            if (!$tabla.length || !tablaAdmin) {
+                return;
+            }
+
+            if ($tabla.data('admin-filters-bound') === '1') {
+                tablaAdmin.draw();
+                return;
+            }
+
+            $('#filtroEstadoAdmin, #filtroFechaAdmin, #filtroTecnicoAdmin, #filtroFechaRespuestaAdmin')
+                .off('.adminFilters')
+                .on('change.adminFilters input.adminFilters', function () {
+                    tablaAdmin.draw();
+                });
+
+            $tabla.data('admin-filters-bound', '1');
+            tablaAdmin.draw();
+        }
+
         function inicializarTablaAdmin() {
             if ($.fn.DataTable.isDataTable('#dataTableAdministrador')) {
                 tablaAdmin = $('#dataTableAdministrador').DataTable();
+                configurarFiltrosTablaAdmin();
                 return;
             }
 
@@ -228,6 +300,8 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                 paging: true,
                 pagingType: 'simple_numbers'
             });
+
+            configurarFiltrosTablaAdmin();
         }
 
         function mostrarEstrellas(id_ticket, contenedorID) {
