@@ -3,11 +3,11 @@
         <div>
             <div class="ticket-admin-eyebrow">Administracion avanzada</div>
             <h3 class="ticket-admin-title">Mantenimiento de tickets</h3>
-            <p class="ticket-admin-text">
+            <!-- <p class="ticket-admin-text">
                 Este espacio puede quedar reservado para acciones delicadas del administrador,
                 como fusionar tickets duplicados o eliminar casos completos manteniendo control
                 sobre el impacto en la trazabilidad, conversaciones y adjuntos.
-            </p>
+            </p> -->
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <button type="button" class="ticket-admin-info-trigger" data-bs-toggle="modal" data-bs-target="#modalInfoMantenimientoTickets" title="Ver tablas involucradas y flujo sugerido">
@@ -24,82 +24,32 @@
     </div>
 
     <div class="ticket-admin-grid">
-        <div class="ticket-admin-card ticket-admin-card--full">
-            <h4>Centro de operaciones</h4>
-            <p>
-                Te propongo separar esta pestaña en dos acciones claras: <strong>fusionar</strong>
-                cuando dos tickets hablan del mismo caso, y <strong>eliminar</strong> cuando un ticket
-                fue creado por error y ya no debe existir.
-            </p>
-
-            <div class="ticket-admin-action ticket-admin-action--merge">
-                <div class="ticket-admin-action-title">
-                    <i class="bi bi-intersect"></i>
-                    <span>Fusionar tickets</span>
-                </div>
-                <form class="ticket-admin-form">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Ticket principal</label>
-                            <input type="text" class="form-control" id="ticketMergePrincipal" placeholder="Ej: #1258">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Ticket secundario</label>
-                            <input type="text" class="form-control" id="ticketMergeSecundario" placeholder="Ej: #1291">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Motivo de fusion</label>
-                            <textarea class="form-control" id="ticketMergeMotivo" rows="3" placeholder="Describe por que ambos tickets pertenecen al mismo caso."></textarea>
-                        </div>
-                    </div>
-                    <div class="ticket-admin-actions-bar">
-                        <button type="button" class="btn btn-primary ticket-admin-btn" id="btnPreviewFusion">
-                            <i class="bi bi-search me-1"></i>Previsualizar fusion
-                        </button>
-                        <button type="button" class="btn btn-outline-primary ticket-admin-btn" id="btnImpactoFusion">
-                            <i class="bi bi-diagram-3 me-1"></i>Ver impacto relacionado
-                        </button>
-                    </div>
-                </form>
-
-                <div class="ticket-admin-preview is-hidden" id="ticketMergePreview"></div>
-            </div>
-
-            <div class="ticket-admin-action ticket-admin-action--delete">
-                <div class="ticket-admin-action-title">
+        <div class="ticket-admin-selector-grid">
+            <a href="configuracion/mantenimiento_ticket_eliminar.php" class="ticket-admin-selector-card ticket-admin-selector-card--danger">
+                <div class="ticket-admin-selector-icon">
                     <i class="bi bi-trash3"></i>
-                    <span>Eliminar ticket</span>
                 </div>
-                <form class="ticket-admin-form">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Ticket a eliminar</label>
-                            <input type="text" class="form-control" id="ticketDeleteId" placeholder="Ej: #1320">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Tipo de eliminacion</label>
-                            <select class="form-select" id="ticketDeleteTipo">
-                                <option value="completa">Eliminacion completa</option>
-                                <option value="ocultar">Solo ocultar del sistema</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Justificacion administrativa</label>
-                            <textarea class="form-control" id="ticketDeleteMotivo" rows="3" placeholder="Ej: ticket duplicado, prueba interna o error de creacion."></textarea>
-                        </div>
-                    </div>
-                    <div class="ticket-admin-actions-bar">
-                        <button type="button" class="btn btn-danger ticket-admin-btn" id="btnPreviewEliminar">
-                            <i class="bi bi-exclamation-triangle me-1"></i>Revisar antes de eliminar
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary ticket-admin-btn" id="btnGuardarBorradorMantenimiento">
-                            <i class="bi bi-clock-history me-1"></i>Guardar como borrador
-                        </button>
-                    </div>
-                </form>
+                <h4>Eliminar Ticket</h4>
+                <p>Revisa el ticket dentro de este modulo antes de ejecutar una eliminacion administrativa.</p>
+                <div class="ticket-admin-selector-meta">
+                    <div><i class="bi bi-check2"></i> Flujo aislado en permisos</div>
+                    <div><i class="bi bi-check2"></i> Revision antes de eliminar</div>
+                    <div><i class="bi bi-check2"></i> Sin tocar tablas compartidas</div>
+                </div>
+            </a>
 
-                <div class="ticket-admin-preview is-hidden" id="ticketDeletePreview"></div>
-            </div>
+            <a href="configuracion/mantenimiento_ticket_fusion.php" class="ticket-admin-selector-card ticket-admin-selector-card--primary">
+                <div class="ticket-admin-selector-icon">
+                    <i class="bi bi-shuffle"></i>
+                </div>
+                <h4>Fusionar Tickets</h4>
+                <p>Une tickets relacionados sin salir del panel administrativo de permisos.</p>
+                <div class="ticket-admin-selector-meta">
+                    <div><i class="bi bi-check2"></i> Trabajo sobre tickets reales</div>
+                    <div><i class="bi bi-check2"></i> Resumen previo del impacto</div>
+                    <div><i class="bi bi-check2"></i> Flujo administrativo guiado</div>
+                </div>
+            </a>
         </div>
     </div>
 </div>

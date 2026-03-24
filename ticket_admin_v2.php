@@ -87,6 +87,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                             ?>
                         </div>
                     </div>
+
                     <?php $funciones->footer(); ?>
                 </div>
             </div>
@@ -416,5 +417,6 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
       });
     }
     </script>
+
 </body>
 </html>

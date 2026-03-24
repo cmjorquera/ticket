@@ -233,6 +233,8 @@
     display: block !important;
     position: absolute;
     min-width: 220px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
     margin: 0;
     padding: .6rem;
     border-left: 0;

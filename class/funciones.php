@@ -881,8 +881,6 @@ public function menuLateral2($idUsuarioSession, $idPagActual)
                     }
 
                     if (sidebar && sidebar.classList.contains('is-collapsed')) {
-                        const rectTrigger = this.getBoundingClientRect();
-                        const rectSidebar = sidebar.getBoundingClientRect();
                         const abierto = target.classList.contains('is-floating-open');
 
                         cerrarSubmenuFlotante();
@@ -895,8 +893,22 @@ public function menuLateral2($idUsuarioSession, $idPagActual)
 
                         target.style.display = 'block';
                         target.classList.add('is-floating-open');
-                        target.style.top = (rectTrigger.top - rectSidebar.top) + 'px';
-                        target.style.left = (rectSidebar.width - 6) + 'px';
+                        target.style.top = '0px';
+                        target.style.left = 'calc(100% - 6px)';
+
+                        const submenuRect = target.getBoundingClientRect();
+                        const overflowBottom = submenuRect.bottom - (window.innerHeight - 12);
+                        const overflowTop = submenuRect.top - 12;
+
+                        if (overflowBottom > 0) {
+                            target.style.top = (-overflowBottom) + 'px';
+                        }
+
+                        if (overflowTop < 0) {
+                            const topActual = parseFloat(target.style.top || '0') || 0;
+                            target.style.top = (topActual + Math.abs(overflowTop)) + 'px';
+                        }
+
                         submenuFlotanteActivo = target;
                         this.setAttribute('aria-expanded', 'true');
                         this.parentElement.classList.add('is-active');
