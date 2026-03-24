@@ -545,7 +545,7 @@ public function menuLateral($idUsuarioSession, $idPagActual)
           </ul>';
 }
 
-public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = null, $tituloSistema = 'SEDUC')
+public function menuLateral3($idUsuarioSession, $idPagActual, $archivoActual = null, $tituloSistema = 'SEDUC')
 {
     $bdato = new MySQL("", "", "");
     $idUsuarioSession = intval($idUsuarioSession);
@@ -598,8 +598,8 @@ public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = n
             $iconoSubmenuHtml = $this->renderizarIconoMenu($iconoSubmenu, 'bi bi-dot');
 
             $submenuHtml .= "
-                <a class='menuLateral2-subitem $submenuClase' href='{$archivoSubmenuSeguro}'>
-                    <span class='menuLateral2-subicon'>{$iconoSubmenuHtml}</span>
+                <a class='menuLateral3-subitem $submenuClase' href='{$archivoSubmenuSeguro}'>
+                    <span class='menuLateral3-subicon'>{$iconoSubmenuHtml}</span>
                     <span>{$nombreSubmenu}</span>
                 </a>";
         }
@@ -608,45 +608,45 @@ public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = n
         $itemClase = $bloqueActivo ? 'is-active' : '';
 
         if ($idMenu === 8) {
-            $menuItems .= '<div class="menuLateral2-divider"></div>';
+            $menuItems .= '<div class="menuLateral3-divider"></div>';
             if (!$agregoHeadingTickets) {
-                $menuItems .= '<div class="menuLateral2-heading">Tickets</div>';
+                $menuItems .= '<div class="menuLateral3-heading">Tickets</div>';
                 $agregoHeadingTickets = true;
             }
         }
 
-        $claseInicio = ($idMenu === 8) ? 'menuLateral2-item-home' : '';
+        $claseInicio = ($idMenu === 8) ? 'menuLateral3-item-home' : '';
 
         if ($submenuHtml !== '') {
             $mostrarSubmenu = $bloqueActivo ? ' style="display:block;"' : '';
             $ariaExpanded = $bloqueActivo ? 'true' : 'false';
 
             $menuItems .= "
-                <li class='menuLateral2-item has-children {$itemClase} {$claseInicio}'>
+                <li class='menuLateral3-item has-children {$itemClase} {$claseInicio}'>
                     <button type='button'
-                            class='menuLateral2-link menuLateral2-toggle'
+                            class='menuLateral3-link menuLateral3-toggle'
                             data-menu-toggle='submenu-{$idMenu}'
                             aria-expanded='{$ariaExpanded}'
                             title='{$descripcionMenu}'>
-                        <span class='menuLateral2-link-main'>
-                            <span class='menuLateral2-icon'>{$iconoMenu}</span>
-                            <span class='menuLateral2-text'>{$nombreMenu}</span>
+                        <span class='menuLateral3-link-main'>
+                            <span class='menuLateral3-icon'>{$iconoMenu}</span>
+                            <span class='menuLateral3-text'>{$nombreMenu}</span>
                         </span>
-                        <span class='menuLateral2-compact-indicator'>
+                        <span class='menuLateral3-compact-indicator'>
                             <i class='bi bi-chevron-down'></i>
                         </span>
-                        <i class='bi bi-chevron-down menuLateral2-chevron'></i>
+                        <i class='bi bi-chevron-down menuLateral3-chevron'></i>
                     </button>
-                    <div id='submenu-{$idMenu}' class='menuLateral2-submenu'{$mostrarSubmenu}>
+                    <div id='submenu-{$idMenu}' class='menuLateral3-submenu'{$mostrarSubmenu}>
                         {$submenuHtml}
                     </div>
                 </li>";
         } else {
             $menuItems .= "
-                <li class='menuLateral2-item {$itemClase} {$claseInicio}'>
-                    <a class='menuLateral2-link' href='{$archivoMenuSeguro}' title='{$descripcionMenu}'>
-                        <span class='menuLateral2-icon'>{$iconoMenu}</span>
-                        <span class='menuLateral2-text'>{$nombreMenu}</span>
+                <li class='menuLateral3-item {$itemClase} {$claseInicio}'>
+                    <a class='menuLateral3-link' href='{$archivoMenuSeguro}' title='{$descripcionMenu}'>
+                        <span class='menuLateral3-icon'>{$iconoMenu}</span>
+                        <span class='menuLateral3-text'>{$nombreMenu}</span>
                     </a>
                 </li>";
         }
@@ -656,12 +656,12 @@ public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = n
 
     echo "<link rel='stylesheet' href='{$menuLateralCss}'>
     <ul class='navbar-nav sidebar sidebar-v2 is-collapsed' id='accordionSidebarV2'>
-        <a class='menuLateral2-brand' href='{$urlPrincipal}'>
+        <a class='menuLateral3-brand' href='{$urlPrincipal}'>
             <img src='" . htmlspecialchars($this->resolverRutaSistema('imagenes/logo_seduc.png'), ENT_QUOTES, 'UTF-8') . "' alt='Logo SEDUC'>
-            <div class='menuLateral2-brand-text'>" . htmlspecialchars($tituloSistema, ENT_QUOTES, 'UTF-8') . "</div>
+            <div class='menuLateral3-brand-text'>" . htmlspecialchars($tituloSistema, ENT_QUOTES, 'UTF-8') . "</div>
         </a>
-        <div class='menuLateral2-divider'></div>
-        <div class='menuLateral2-list'>
+        <div class='menuLateral3-divider'></div>
+        <div class='menuLateral3-list'>
             {$menuItems}
         </div>
     </ul>
@@ -687,6 +687,158 @@ public function menuLateral2($idUsuarioSession, $idPagActual, $archivoActual = n
         });
     </script>";
 }
+
+
+
+
+public function menuLateral3($idUsuarioSession, $idPagActual)
+{
+    $bdato = new MySQL("", "", "");
+    $idUsuarioSession = (int) $idUsuarioSession;
+    $archivoActual = basename(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '');
+    $urlPrincipal = htmlspecialchars($this->resolverRutaSistema('principal.php'), ENT_QUOTES, 'UTF-8');
+
+    $sqlMenus = "SELECT DISTINCT
+                    m.id_menu,
+                    m.nombre AS NombreMenu,
+                    m.abreviacion,
+                    m.icono AS iconoMenu,
+                    m.archivo AS archivoMenu,
+                    m.caracteristica AS descripcionMenu,
+                    m.orden
+                FROM permisos_menu_1 pm
+                INNER JOIN menu_1 m ON pm.id_menu1 = m.id_menu
+                WHERE pm.id_usuario = $idUsuarioSession
+                  AND pm.id_tipo_permiso IN (1, 2)
+                ORDER BY m.orden ASC";
+
+    $resultadoMenus = $bdato->consulta($sqlMenus);
+    $menuItems = '';
+
+    while ($menu = $bdato->fetch_array($resultadoMenus)) {
+        $idMenu = (int) $menu['id_menu'];
+        $nombreMenu = htmlspecialchars($menu['NombreMenu'], ENT_QUOTES, 'UTF-8');
+        $archivoMenu = trim((string) $menu['archivoMenu']);
+        $archivoMenuSeguro = htmlspecialchars($this->resolverRutaSistema($archivoMenu), ENT_QUOTES, 'UTF-8');
+        $descripcionMenu = htmlspecialchars((string) $menu['descripcionMenu'], ENT_QUOTES, 'UTF-8');
+        $iconoMenu = $this->renderizarIconoMenu($menu['iconoMenu'] ?? '', 'bi bi-grid');
+        $isActive = ($idMenu === (int) $idPagActual);
+
+        $submenuHtml = '';
+        $submenuActivo = false;
+        $sqlSubmenus = "SELECT id_submenu, nombre, archivo, icono
+                        FROM menu_1_sub
+                        WHERE id_menu = $idMenu
+                        ORDER BY orden ASC";
+        $resultadoSubmenus = $bdato->consulta($sqlSubmenus);
+
+        while ($submenu = $bdato->fetch_array($resultadoSubmenus)) {
+            $nombreSubmenu = htmlspecialchars($submenu['nombre'], ENT_QUOTES, 'UTF-8');
+            $archivoSubmenu = trim((string) $submenu['archivo']);
+            $archivoSubmenuSeguro = htmlspecialchars($this->resolverRutaSistema($archivoSubmenu), ENT_QUOTES, 'UTF-8');
+            $submenuEstaActivo = ($archivoSubmenu !== '' && $archivoActual === $archivoSubmenu);
+            $submenuActivo = $submenuActivo || $submenuEstaActivo;
+            $submenuClase = $submenuEstaActivo ? 'is-active' : '';
+            $iconoSubmenu = $this->renderizarIconoMenu($submenu['icono'] ?? '', 'bi bi-dot');
+
+            $submenuHtml .= "
+                <a class='menuLateralClassic-subitem {$submenuClase}' href='{$archivoSubmenuSeguro}'>
+                    <span class='menuLateralClassic-subicon'>{$iconoSubmenu}</span>
+                    <span>{$nombreSubmenu}</span>
+                </a>";
+        }
+
+        $itemActivo = ($isActive || $submenuActivo) ? 'is-active' : '';
+        $tieneSubmenu = $submenuHtml !== '';
+
+        if ($tieneSubmenu) {
+            $mostrarSubmenu = $submenuActivo ? ' style="display:block;"' : '';
+            $ariaExpanded = $submenuActivo ? 'true' : 'false';
+            $menuItems .= "
+                <li class='menuLateralClassic-item has-children {$itemActivo}'>
+                    <button type='button'
+                            class='menuLateralClassic-link menuLateralClassic-toggle'
+                            data-classic-toggle='classic-submenu-{$idMenu}'
+                            aria-expanded='{$ariaExpanded}'
+                            title='{$descripcionMenu}'>
+                        <span class='menuLateralClassic-link-main'>
+                            <span class='menuLateralClassic-icon'>{$iconoMenu}</span>
+                            <span class='menuLateralClassic-text'>{$nombreMenu}</span>
+                        </span>
+                        <span class='menuLateralClassic-dot'></span>
+                    </button>
+                    <div id='classic-submenu-{$idMenu}' class='menuLateralClassic-submenu'{$mostrarSubmenu}>
+                        {$submenuHtml}
+                    </div>
+                </li>";
+        } else {
+            $menuItems .= "
+                <li class='menuLateralClassic-item {$itemActivo}'>
+                    <a class='menuLateralClassic-link' href='{$archivoMenuSeguro}' title='{$descripcionMenu}'>
+                        <span class='menuLateralClassic-link-main'>
+                            <span class='menuLateralClassic-icon'>{$iconoMenu}</span>
+                            <span class='menuLateralClassic-text'>{$nombreMenu}</span>
+                        </span>
+                        <span class='menuLateralClassic-dot'></span>
+                    </a>
+                </li>";
+        }
+    }
+
+    $menuLateralCss = htmlspecialchars($this->resolverRutaSistema('css/menuLateral.css'), ENT_QUOTES, 'UTF-8');
+    $logoSistema = htmlspecialchars($this->resolverRutaSistema('imagenes/logo_seduc.png'), ENT_QUOTES, 'UTF-8');
+
+    echo "<link rel='stylesheet' href='{$menuLateralCss}'>
+    <aside class='navbar-nav sidebar sidebar-classic' id='accordionSidebarClassic'>
+        <a class='menuLateralClassic-brand' href='{$urlPrincipal}'>
+            <img src='{$logoSistema}' alt='Logo administrador'>
+            <div class='menuLateralClassic-brand-copy'>
+                <strong>Admin</strong>
+                <span>Panel de Control</span>
+            </div>
+        </a>
+        <div class='menuLateralClassic-list'>
+            {$menuItems}
+        </div>
+    </aside>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-classic-toggle]').forEach(function (trigger) {
+                trigger.addEventListener('click', function () {
+                    const targetId = this.getAttribute('data-classic-toggle');
+                    const target = document.getElementById(targetId);
+                    if (!target) {
+                        return;
+                    }
+
+                    const expanded = this.getAttribute('aria-expanded') === 'true';
+                    this.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                    target.style.display = expanded ? 'none' : 'block';
+                    this.parentElement.classList.toggle('is-active', !expanded);
+                });
+            });
+        });
+    </script>";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function cabezera()
 {

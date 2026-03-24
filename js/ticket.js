@@ -1382,6 +1382,7 @@
                 if (id_estado == 2) {
                     seleccionarPrioridad = `
                       <div class="mb-3">
+                        <label><strong>:</strong></label>
                         <label class="form-label"><strong>Prioridad:</strong></label>
                         <select class="form-select" id="prioridadAsignada">
                           <option value="">Cargando...</option>
@@ -1664,12 +1665,12 @@
                       </div>
 
                   <!-- Cuerpo -->
-                  <div class="container-fluid py-3">
+                  <div class="container-fluid py-3 ticket-modal-layout">
                     <!-- FILA 1: Datos del ticket (izquierda) + Avances (derecha) -->
-                    <div class="row g-3">
+                    <div class="row g-3 ticket-modal-main">
                       <!-- Izquierda -->
                       <div class="col-lg-8">
-                        <form class="text-start">
+                        <form class="text-start ticket-modal-form">
                           <div class="row g-2">
                             <div class="col-12 col-md-6">
                               <div class="mb-2">
@@ -1692,19 +1693,18 @@
                 
                             <div class="col-12">
                               <label class="form-label"><strong>Descripción:</strong></label>
-                              <textarea class="form-control form-control-sm" rows="9" disabled>${descripcion_ticket}</textarea>
+                              <textarea class="form-control form-control-sm ticket-modal-description" rows="6" disabled>${descripcion_ticket}</textarea>
                             </div>
                           </div>
                         </form>
                       </div>
                         <!-- Derecha: Avances del Técnico -->
-                     <div class="col-lg-4 d-flex flex-column" id="timelineContainer">
+                     <div class="col-lg-4 d-flex flex-column ticket-modal-side" id="timelineContainer">
                           <input type="hidden" id="ticketId" value="${id_ticket}">
                           <input type="hidden" id="idEstadoTicket" value="${id_estado}">
                           ${accionesHTML}
                         </div>
-                        <!-- FILA 2: Mensaje al Usuario (ancho completo) -->
-                          ${mensajeUsuarioHTML}   <!-- solo aparece si id_estado==5 -->
+                        ${mensajeUsuarioHTML}
                         <!-- FILA 3: Línea de tiempo dinámica (ancho completo) -->
                         <div class="row mt-3">
                           <div class="col-12">
@@ -1713,12 +1713,12 @@
                         </div>
                       </div>
                   `,
-            width: "90%",   
+            width: "88%",   
             showCloseButton: true,
             allowEscapeKey: false,
             confirmButtonText: confirmButtonText,
             allowOutsideClick: false,
-            customClass: {popup: "cuerpo_modal_guardar",confirmButton: "bt_crear",title: "titulo_swal_custom"},
+            customClass: {popup: "cuerpo_modal_guardar modal-ticket-tecnico",confirmButton: "bt_crear",title: "titulo_swal_custom"},
             showCancelButton: false,
             preConfirm: preConfirmAction,
                didOpen: () => {
@@ -2618,12 +2618,12 @@
                           ${badgesHTML}
                         </div>
                       </div>
-                    <div class="container-fluid py-3">
+                    <div class="container-fluid py-3 ticket-modal-layout">
                     <!-- FILA 1: Datos del ticket (izquierda) + Avances (derecha) -->
-                    <div class="row g-3">
+                    <div class="row g-3 ticket-modal-main">
                       <!-- Izquierda -->
                       <div class="col-lg-8">
-                        <form class="text-start">
+                        <form class="text-start ticket-modal-form">
                           <div class="row g-2">
                             <div class="col-12 col-md-6">
                               <div class="mb-2">
@@ -2643,20 +2643,20 @@
                 
                             <div class="col-12">
                               <label class="form-label"><strong>Descripción:</strong></label>
-                              <textarea class="form-control form-control-sm ticket-admin-descripcion" rows="7" readonly>${descripcion_ticket}</textarea>
+                              <textarea class="form-control form-control-sm ticket-admin-descripcion ticket-modal-description" rows="6" readonly>${descripcion_ticket}</textarea>
                             </div>
                           </div>
                         </form>
                       </div>
             
                         <!-- Derecha: Avances del Técnico -->
-                        <div class="col-lg-4 d-flex flex-column" id="timelineContainer" class="mt-4 p-3 rounded">
+                        <div class="col-lg-4 d-flex flex-column ticket-modal-side" id="timelineContainer" class="mt-4 p-3 rounded">
                           <input type="hidden" id="ticketId" value="${id_ticket}">
                           <input type="hidden" id="idEstadoTicket" value="${id_estado}">
                             ${accionesHTML}  <!-- aquí se inyecta la card completa -->
                         </div>
                     
-                          ${mensajeUsuarioHTML}   <!-- 👈 solo aparece si id_estado==5 -->
+                          ${mensajeUsuarioHTML}
 
             
                         <!-- FILA 3: Línea de tiempo dinámica (ancho completo) -->
@@ -2669,11 +2669,11 @@
 
                   `,
     
-                width: "86%",
+                width: "88%",
                 showCloseButton: true,
                 confirmButtonText: confirmButtonText,
                 customClass: {
-                  popup: "cuerpo_modal_guardar",
+                  popup: "cuerpo_modal_guardar modal-ticket-tecnico",
                   confirmButton: "bt_crear",
                     title: "titulo_swal_custom"   // 👈 agregamos clase personalizada al título
                 },

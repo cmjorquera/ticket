@@ -160,6 +160,45 @@
 .cuerpo_modal_guardar .icono-linea-estado { width: 28px; height: 28px; font-size: 14px; }
 .cuerpo_modal_guardar .swal2-actions { margin-top: .55rem !important; padding-top: 0 !important; }
 .cuerpo_modal_guardar .bt_crear { padding: .65rem 1.75rem !important; }
+.modal-ticket-tecnico {
+  max-height: 96vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+.modal-ticket-tecnico .swal2-html-container {
+  margin: 0 !important;
+  overflow: visible !important;
+}
+.modal-ticket-tecnico .ticket-modal-layout {
+  padding-bottom: .2rem !important;
+}
+.modal-ticket-tecnico .ticket-modal-main {
+  align-items: stretch;
+}
+.modal-ticket-tecnico .ticket-modal-form,
+.modal-ticket-tecnico .ticket-modal-side {
+  height: 100%;
+}
+.modal-ticket-tecnico .ticket-modal-description {
+  min-height: 138px;
+  max-height: 138px;
+  resize: none !important;
+}
+.modal-ticket-tecnico #mensajeUsuario,
+.modal-ticket-tecnico #comentarioFinal {
+  min-height: 88px;
+  max-height: 88px;
+  resize: none !important;
+}
+.modal-ticket-tecnico #timelineContainer {
+  gap: .45rem;
+}
+.modal-ticket-tecnico #lineaTiempoDinamica {
+  margin-top: 0 !important;
+}
+.modal-ticket-tecnico .swal2-actions {
+  margin-top: .4rem !important;
+}
 
 .ticket-admin-input-destacado,
 .ticket-admin-input-destacado[readonly] {
