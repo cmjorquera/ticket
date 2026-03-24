@@ -52,7 +52,9 @@ $idColegioSel = isset($_GET['colegio']) ? (int)$_GET['colegio'] : 0;
         <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
         <script src="js/funciones.js"></script>                                                                         <!-- FUNCIONES DE DISPOSITIVOS -->
         <script src="js/permisos.js"></script>                                                                          <!-- FUNCIONES DE DISPOSITIVOS -->
+        <script src="configuracion/js/mantenimiento_tickets.js"></script>
         <script src="js/comunes.js"></script>                                                                           <!-- FUNCIONES DE DISPOSITIVOS -->
+        <link rel="stylesheet" href="configuracion/css/mantenimiento_tickets.css">
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -103,6 +105,11 @@ $idColegioSel = isset($_GET['colegio']) ? (int)$_GET['colegio'] : 0;
                                             <button class="nav-link" data-bs-toggle="tab"
                                                 data-bs-target="#nuevoMenu-tab" aria-selected="false" tabindex="-1"
                                                 role="tab"> Dashboard Inventario </button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" data-bs-toggle="tab"
+                                                data-bs-target="#mantenimientoTickets-tab" aria-selected="false" tabindex="-1"
+                                                role="tab"> Mantenimiento Tickets </button>
                                         </li>
                                     </ul>
 
@@ -159,6 +166,10 @@ $idColegioSel = isset($_GET['colegio']) ? (int)$_GET['colegio'] : 0;
                             <?php
                             include("dashboard_inventario_pc.php") ?>
                             
+                            </div>
+
+                            <div class="tab-pane fade pt-3" id="mantenimientoTickets-tab" role="tabpanel">
+                                <?php include("configuracion/mantenimiento_tickets.php"); ?>
                             </div>
 
                                     </div><!-- End Bordered Tabs -->
