@@ -313,7 +313,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 </style>
 <body id="page-top">
     <div id="wrapper">
-        <?php $funciones->menuLateral3($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
                 <!-- Topbar -->

@@ -545,7 +545,7 @@ public function menuLateral($idUsuarioSession, $idPagActual)
           </ul>';
 }
 
-public function menuLateral3($idUsuarioSession, $idPagActual, $archivoActual = null, $tituloSistema = 'SEDUC')
+public function menuLateral_antiguo_2($idUsuarioSession, $idPagActual, $archivoActual = null, $tituloSistema = 'SEDUC')
 {
     $bdato = new MySQL("", "", "");
     $idUsuarioSession = intval($idUsuarioSession);
@@ -598,8 +598,8 @@ public function menuLateral3($idUsuarioSession, $idPagActual, $archivoActual = n
             $iconoSubmenuHtml = $this->renderizarIconoMenu($iconoSubmenu, 'bi bi-dot');
 
             $submenuHtml .= "
-                <a class='menuLateral3-subitem $submenuClase' href='{$archivoSubmenuSeguro}'>
-                    <span class='menuLateral3-subicon'>{$iconoSubmenuHtml}</span>
+                <a class='menuLateral2-subitem $submenuClase' href='{$archivoSubmenuSeguro}'>
+                    <span class='menuLateral2-subicon'>{$iconoSubmenuHtml}</span>
                     <span>{$nombreSubmenu}</span>
                 </a>";
         }
@@ -608,45 +608,45 @@ public function menuLateral3($idUsuarioSession, $idPagActual, $archivoActual = n
         $itemClase = $bloqueActivo ? 'is-active' : '';
 
         if ($idMenu === 8) {
-            $menuItems .= '<div class="menuLateral3-divider"></div>';
+            $menuItems .= '<div class="menuLateral2-divider"></div>';
             if (!$agregoHeadingTickets) {
-                $menuItems .= '<div class="menuLateral3-heading">Tickets</div>';
+                $menuItems .= '<div class="menuLateral2-heading">Tickets</div>';
                 $agregoHeadingTickets = true;
             }
         }
 
-        $claseInicio = ($idMenu === 8) ? 'menuLateral3-item-home' : '';
+        $claseInicio = ($idMenu === 8) ? 'menuLateral2-item-home' : '';
 
         if ($submenuHtml !== '') {
             $mostrarSubmenu = $bloqueActivo ? ' style="display:block;"' : '';
             $ariaExpanded = $bloqueActivo ? 'true' : 'false';
 
             $menuItems .= "
-                <li class='menuLateral3-item has-children {$itemClase} {$claseInicio}'>
+                <li class='menuLateral2-item has-children {$itemClase} {$claseInicio}'>
                     <button type='button'
-                            class='menuLateral3-link menuLateral3-toggle'
+                            class='menuLateral2-link menuLateral2-toggle'
                             data-menu-toggle='submenu-{$idMenu}'
                             aria-expanded='{$ariaExpanded}'
                             title='{$descripcionMenu}'>
-                        <span class='menuLateral3-link-main'>
-                            <span class='menuLateral3-icon'>{$iconoMenu}</span>
-                            <span class='menuLateral3-text'>{$nombreMenu}</span>
+                        <span class='menuLateral2-link-main'>
+                            <span class='menuLateral2-icon'>{$iconoMenu}</span>
+                            <span class='menuLateral2-text'>{$nombreMenu}</span>
                         </span>
-                        <span class='menuLateral3-compact-indicator'>
+                        <span class='menuLateral2-compact-indicator'>
                             <i class='bi bi-chevron-down'></i>
                         </span>
-                        <i class='bi bi-chevron-down menuLateral3-chevron'></i>
+                        <i class='bi bi-chevron-down menuLateral2-chevron'></i>
                     </button>
-                    <div id='submenu-{$idMenu}' class='menuLateral3-submenu'{$mostrarSubmenu}>
+                    <div id='submenu-{$idMenu}' class='menuLateral2-submenu'{$mostrarSubmenu}>
                         {$submenuHtml}
                     </div>
                 </li>";
         } else {
             $menuItems .= "
-                <li class='menuLateral3-item {$itemClase} {$claseInicio}'>
-                    <a class='menuLateral3-link' href='{$archivoMenuSeguro}' title='{$descripcionMenu}'>
-                        <span class='menuLateral3-icon'>{$iconoMenu}</span>
-                        <span class='menuLateral3-text'>{$nombreMenu}</span>
+                <li class='menuLateral2-item {$itemClase} {$claseInicio}'>
+                    <a class='menuLateral2-link' href='{$archivoMenuSeguro}' title='{$descripcionMenu}'>
+                        <span class='menuLateral2-icon'>{$iconoMenu}</span>
+                        <span class='menuLateral2-text'>{$nombreMenu}</span>
                     </a>
                 </li>";
         }
@@ -656,12 +656,12 @@ public function menuLateral3($idUsuarioSession, $idPagActual, $archivoActual = n
 
     echo "<link rel='stylesheet' href='{$menuLateralCss}'>
     <ul class='navbar-nav sidebar sidebar-v2 is-collapsed' id='accordionSidebarV2'>
-        <a class='menuLateral3-brand' href='{$urlPrincipal}'>
+        <a class='menuLateral2-brand' href='{$urlPrincipal}'>
             <img src='" . htmlspecialchars($this->resolverRutaSistema('imagenes/logo_seduc.png'), ENT_QUOTES, 'UTF-8') . "' alt='Logo SEDUC'>
-            <div class='menuLateral3-brand-text'>" . htmlspecialchars($tituloSistema, ENT_QUOTES, 'UTF-8') . "</div>
+            <div class='menuLateral2-brand-text'>" . htmlspecialchars($tituloSistema, ENT_QUOTES, 'UTF-8') . "</div>
         </a>
-        <div class='menuLateral3-divider'></div>
-        <div class='menuLateral3-list'>
+        <div class='menuLateral2-divider'></div>
+        <div class='menuLateral2-list'>
             {$menuItems}
         </div>
     </ul>
@@ -691,7 +691,7 @@ public function menuLateral3($idUsuarioSession, $idPagActual, $archivoActual = n
 
 
 
-public function menuLateral3($idUsuarioSession, $idPagActual)
+public function menuLateral2($idUsuarioSession, $idPagActual)
 {
     $bdato = new MySQL("", "", "");
     $idUsuarioSession = (int) $idUsuarioSession;
@@ -752,7 +752,7 @@ public function menuLateral3($idUsuarioSession, $idPagActual)
         $tieneSubmenu = $submenuHtml !== '';
 
         if ($tieneSubmenu) {
-            $mostrarSubmenu = $submenuActivo ? ' style="display:block;"' : '';
+            $mostrarSubmenu = $submenuActivo ? ' style=\"display:block;\"' : '';
             $ariaExpanded = $submenuActivo ? 'true' : 'false';
             $menuItems .= "
                 <li class='menuLateralClassic-item has-children {$itemActivo}'>
@@ -804,11 +804,102 @@ public function menuLateral3($idUsuarioSession, $idPagActual)
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('accordionSidebarClassic');
+            const sidebarStorageKey = 'menuLateral2Collapsed';
+            const sidebarToggles = Array.prototype.slice.call(
+                document.querySelectorAll('#sidebarToggleTop, #sidebarToggle')
+            );
+            let submenuFlotanteActivo = null;
+
+            function cerrarSubmenuFlotante() {
+                if (!submenuFlotanteActivo) {
+                    return;
+                }
+
+                submenuFlotanteActivo.classList.remove('is-floating-open');
+                submenuFlotanteActivo.style.display = 'none';
+                submenuFlotanteActivo.style.top = '';
+                submenuFlotanteActivo.style.left = '';
+                submenuFlotanteActivo = null;
+            }
+
+            function actualizarSubmenus() {
+                if (!sidebar) {
+                    return;
+                }
+
+                const colapsado = sidebar.classList.contains('is-collapsed');
+                sidebar.querySelectorAll('[data-classic-toggle]').forEach(function (trigger) {
+                    const targetId = trigger.getAttribute('data-classic-toggle');
+                    const target = document.getElementById(targetId);
+                    if (!target) {
+                        return;
+                    }
+
+                    if (colapsado) {
+                        target.style.display = 'none';
+                        target.classList.remove('is-floating-open');
+                        return;
+                    }
+
+                    const expanded = trigger.getAttribute('aria-expanded') === 'true';
+                    target.style.display = expanded ? 'block' : 'none';
+                });
+            }
+
+            function aplicarEstadoSidebar(colapsado) {
+                if (!sidebar) {
+                    return;
+                }
+
+                sidebar.classList.toggle('is-collapsed', colapsado);
+                sidebarToggles.forEach(function (toggle) {
+                    toggle.setAttribute('aria-expanded', colapsado ? 'false' : 'true');
+                });
+                cerrarSubmenuFlotante();
+                localStorage.setItem(sidebarStorageKey, colapsado ? '1' : '0');
+                actualizarSubmenus();
+            }
+
+            if (sidebar) {
+                const estadoGuardado = localStorage.getItem(sidebarStorageKey);
+                aplicarEstadoSidebar(estadoGuardado === '1');
+
+                sidebarToggles.forEach(function (toggle) {
+                    toggle.addEventListener('click', function () {
+                        aplicarEstadoSidebar(!sidebar.classList.contains('is-collapsed'));
+                    });
+                });
+            }
+
             document.querySelectorAll('[data-classic-toggle]').forEach(function (trigger) {
                 trigger.addEventListener('click', function () {
                     const targetId = this.getAttribute('data-classic-toggle');
                     const target = document.getElementById(targetId);
                     if (!target) {
+                        return;
+                    }
+
+                    if (sidebar && sidebar.classList.contains('is-collapsed')) {
+                        const rectTrigger = this.getBoundingClientRect();
+                        const rectSidebar = sidebar.getBoundingClientRect();
+                        const abierto = target.classList.contains('is-floating-open');
+
+                        cerrarSubmenuFlotante();
+
+                        if (abierto) {
+                            this.setAttribute('aria-expanded', 'false');
+                            this.parentElement.classList.remove('is-active');
+                            return;
+                        }
+
+                        target.style.display = 'block';
+                        target.classList.add('is-floating-open');
+                        target.style.top = (rectTrigger.top - rectSidebar.top) + 'px';
+                        target.style.left = (rectSidebar.width - 6) + 'px';
+                        submenuFlotanteActivo = target;
+                        this.setAttribute('aria-expanded', 'true');
+                        this.parentElement.classList.add('is-active');
                         return;
                     }
 
@@ -818,6 +909,26 @@ public function menuLateral3($idUsuarioSession, $idPagActual)
                     this.parentElement.classList.toggle('is-active', !expanded);
                 });
             });
+
+            document.addEventListener('click', function (event) {
+                if (!sidebar || !sidebar.classList.contains('is-collapsed') || !submenuFlotanteActivo) {
+                    return;
+                }
+
+                if (event.target.closest('.menuLateralClassic-submenu.is-floating-open') || event.target.closest('[data-classic-toggle]')) {
+                    return;
+                }
+
+                cerrarSubmenuFlotante();
+                document.querySelectorAll('[data-classic-toggle]').forEach(function (toggle) {
+                    toggle.setAttribute('aria-expanded', 'false');
+                    if (toggle.parentElement) {
+                        toggle.parentElement.classList.remove('is-active');
+                    }
+                });
+            });
+
+            actualizarSubmenus();
         });
     </script>";
 }

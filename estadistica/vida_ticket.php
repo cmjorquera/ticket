@@ -99,6 +99,37 @@ $renderizarDetalleTicket = static function (array $ticket, array $acciones) use 
         ],
     ];
 
+    $resumenEtapas = [
+        [
+            'titulo' => 'Creado',
+            'fecha' => $creacion ? $creacion->format('d/m/Y H:i') : 'Pendiente',
+            'detalle' => 'Ingreso',
+            'estado' => $creacion ? 'is-done' : 'is-pending',
+            'icono' => 'bi bi-1-circle-fill',
+        ],
+        [
+            'titulo' => 'Asignado',
+            'fecha' => $asignacion ? $asignacion->format('H:i') : '--:--',
+            'detalle' => trim((string) ($ticket['tecnico_nombre'] ?? 'Sin tecnico')),
+            'estado' => $asignacion ? 'is-done' : 'is-pending',
+            'icono' => 'bi bi-check-circle-fill',
+        ],
+        [
+            'titulo' => 'Inicio',
+            'fecha' => $comienzo ? $comienzo->format('H:i') : '--:--',
+            'detalle' => $duracion($asignacion, $comienzo),
+            'estado' => $comienzo ? 'is-done' : 'is-pending',
+            'icono' => 'bi bi-person-workspace',
+        ],
+        [
+            'titulo' => 'En proceso',
+            'fecha' => $termino ? $termino->format('H:i') : '--:--',
+            'detalle' => $termino ? 'Termino tecnico' : 'Sigue en proceso',
+            'estado' => $termino ? 'is-done' : ($comienzo ? 'is-current' : 'is-pending'),
+            'icono' => 'bi bi-arrow-right-circle-fill',
+        ],
+    ];
+
     ob_start();
     ?>
     <div class="ticket-life-detail">
@@ -112,12 +143,28 @@ $renderizarDetalleTicket = static function (array $ticket, array $acciones) use 
                 <strong><?= htmlspecialchars((string) ($ticket['prioridad_nombre'] ?? 'Sin prioridad'), ENT_QUOTES, 'UTF-8') ?></strong>
             </div>
             <div class="ticket-life-summary-card">
-                <span>Solicitante</span>
+                <span>Usuario</span>
                 <strong><?= htmlspecialchars(trim((string) ($ticket['usuario_nombre'] ?? 'Sin solicitante')), ENT_QUOTES, 'UTF-8') ?></strong>
             </div>
             <div class="ticket-life-summary-card">
                 <span>Tecnico</span>
                 <strong><?= htmlspecialchars(trim((string) ($ticket['tecnico_nombre'] ?? 'Sin tecnico')), ENT_QUOTES, 'UTF-8') ?></strong>
+            </div>
+        </div>
+
+        <div class="ticket-life-progress">
+            <div class="ticket-life-progress__line"></div>
+            <div class="ticket-life-progress__grid">
+                <?php foreach ($resumenEtapas as $etapaResumen): ?>
+                    <article class="ticket-life-progress__step <?= htmlspecialchars($etapaResumen['estado'], ENT_QUOTES, 'UTF-8') ?>">
+                        <div class="ticket-life-progress__icon">
+                            <i class="<?= htmlspecialchars($etapaResumen['icono'], ENT_QUOTES, 'UTF-8') ?>"></i>
+                        </div>
+                        <div class="ticket-life-progress__time"><?= htmlspecialchars($etapaResumen['fecha'], ENT_QUOTES, 'UTF-8') ?></div>
+                        <div class="ticket-life-progress__label"><?= htmlspecialchars($etapaResumen['titulo'], ENT_QUOTES, 'UTF-8') ?></div>
+                        <div class="ticket-life-progress__detail"><?= htmlspecialchars($etapaResumen['detalle'] !== '' ? $etapaResumen['detalle'] : 'Pendiente', ENT_QUOTES, 'UTF-8') ?></div>
+                    </article>
+                <?php endforeach; ?>
             </div>
         </div>
 
@@ -268,6 +315,7 @@ $colegiosVisibles = $funciones->obtenerColegios((int) $idUsuarioSession);
 $resultadoTickets = $db->consulta("
     SELECT
         t.id_ticket,
+        t.id_estado,
         t.asunto,
         et.nombre AS estado_nombre,
         et.color AS estado_color,
@@ -293,7 +341,6 @@ $resultadoTickets = $db->consulta("
     ) col ON col.id_usuario = t.id_usuario
     LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
     ORDER BY pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC, t.id_ticket DESC
-    LIMIT 30
 ");
 $ticketsRecientes = [];
 if ($resultadoTickets) {
@@ -321,17 +368,24 @@ ksort($estadosDisponibles);
 <head>
     <base href="../">
     <?php $funciones->header(); ?>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <link href="css/estilo.css" rel="stylesheet">
     <link href="css/bitacora.css" rel="stylesheet">
     <link href="css/contenedor.css" rel="stylesheet">
     <link href="css/tour.css" rel="stylesheet">
     <link href="css/principal.css" rel="stylesheet">
+    <link href="css/ticket_admin.css" rel="stylesheet">
     <link href="estadistica/css/estadistica.css?v=<?php echo $versionCss; ?>" rel="stylesheet">
 </head>
 <body id="page-top">
     <input type="hidden" id="idUsuario" value="<?php echo htmlspecialchars((string) $idUsuarioSession, ENT_QUOTES, 'UTF-8'); ?>">
     <div id="wrapper">
-        <?php $funciones->menuLateral3($idUsuarioSession, $idPagActual); ?>
+        <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
@@ -371,45 +425,44 @@ ksort($estadosDisponibles);
                                             <span class="panel-chip"><?php echo count($ticketsRecientes); ?> recientes</span>
                                         </div>
 
-                                        <div class="ticket-filters-grid">
-                                            <div>
-                                                <label class="form-label">Colegio</label>
-                                                <select id="ticketLifeFilterColegio" class="form-select">
-                                                    <option value="">Todos</option>
-                                                    <?php foreach ($colegiosVisibles as $colegio): ?>
-                                                        <option value="<?php echo htmlspecialchars((string) $colegio['nom_colegio'], ENT_QUOTES, 'UTF-8'); ?>">
-                                                            <?php echo htmlspecialchars((string) $colegio['nom_colegio'], ENT_QUOTES, 'UTF-8'); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="form-label">Categoria</label>
-                                                <select id="ticketLifeFilterCategoria" class="form-select">
-                                                    <option value="">Todas</option>
-                                                    <?php foreach ($categoriasDisponibles as $categoria): ?>
-                                                        <option value="<?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?>">
-                                                            <?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="form-label">Estado</label>
-                                                <select id="ticketLifeFilterEstado" class="form-select">
-                                                    <option value="activos">Activos</option>
-                                                    <option value="">Todos</option>
-                                                    <?php foreach ($estadosDisponibles as $estado): ?>
-                                                        <option value="<?php echo htmlspecialchars($estado, ENT_QUOTES, 'UTF-8'); ?>">
-                                                            <?php echo htmlspecialchars($estado, ENT_QUOTES, 'UTF-8'); ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="form-label">Buscar</label>
-                                                <div class="ticket-module-search ticket-module-search--full">
-                                                    <i class="bi bi-search"></i>
+                                        <div class="ticket-admin-filtros ticket-life-filtros px-0 pt-0">
+                                            <div class="row g-3">
+                                                <div class="col-md-3">
+                                                    <label class="form-label fw-semibold text-muted mb-1">Colegio</label>
+                                                    <select id="ticketLifeFilterColegio" class="form-select">
+                                                        <option value="">Todos</option>
+                                                        <?php foreach ($colegiosVisibles as $colegio): ?>
+                                                            <option value="<?php echo htmlspecialchars((string) $colegio['nom_colegio'], ENT_QUOTES, 'UTF-8'); ?>">
+                                                                <?php echo htmlspecialchars((string) $colegio['nom_colegio'], ENT_QUOTES, 'UTF-8'); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label fw-semibold text-muted mb-1">Categoria</label>
+                                                    <select id="ticketLifeFilterCategoria" class="form-select">
+                                                        <option value="">Todas</option>
+                                                        <?php foreach ($categoriasDisponibles as $categoria): ?>
+                                                            <option value="<?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?>">
+                                                                <?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label fw-semibold text-muted mb-1">Estado</label>
+                                                    <select id="ticketLifeFilterEstado" class="form-select">
+                                                        <option value="activos">Activos</option>
+                                                        <option value="">Todos</option>
+                                                        <?php foreach ($estadosDisponibles as $estado): ?>
+                                                            <option value="<?php echo htmlspecialchars($estado, ENT_QUOTES, 'UTF-8'); ?>">
+                                                                <?php echo htmlspecialchars($estado, ENT_QUOTES, 'UTF-8'); ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label fw-semibold text-muted mb-1">Buscar</label>
                                                     <input type="text" id="ticketLifeSearch" class="form-control" placeholder="Ticket, asunto, solicitante o tecnico...">
                                                 </div>
                                             </div>
@@ -420,24 +473,25 @@ ksort($estadosDisponibles);
                                                 <div class="ticket-life-empty">No hay tickets disponibles para mostrar en este momento.</div>
                                             <?php else: ?>
                                                 <div class="table-responsive">
-                                                    <table class="table table-hover align-middle ticket-life-table" id="ticketLifeTable">
-                                                        <thead>
+                                                    <table class="table table-bordered table-hover align-middle ticket-life-table" id="ticketLifeTable">
+                                                        <thead class="table-dark">
                                                             <tr>
-                                                                <th>ID</th>
-                                                                <th>Asunto</th>
-                                                                <th>Colegio</th>
-                                                                <th>Categoria</th>
-                                                                <th>Solicitante</th>
-                                                                <th>Estado</th>
-                                                                <th>Prioridad</th>
-                                                                <th>Fecha</th>
-                                                                <th>Accion</th>
+                                                                <th class="col-id">ID</th>
+                                                                <th class="col-fecha-hora">FECHA / HORA</th>
+                                                                <th class="col-de">DE</th>
+                                                                <th class="col-asunto">ASUNTO</th>
+                                                                <th class="col-de">COLEGIO</th>
+                                                                <th class="col-fecha-respuesta">ESTADO</th>
+                                                                <th class="col-fecha-respuesta">PRIORIDAD</th>
+                                                                <th class="col-opciones">OPCIONES</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
+                                                            <?php $contadorFila = 1; ?>
                                                             <?php foreach ($ticketsRecientes as $ticket): ?>
                                                                 <?php
                                                                 $ticketId = (int) ($ticket['id_ticket'] ?? 0);
+                                                                $estadoId = (int) ($ticket['id_estado'] ?? 0);
                                                                 $estadoColor = trim((string) ($ticket['estado_color'] ?? '#0f4c81'));
                                                                 $usuarioNombre = trim((string) ($ticket['usuario_nombre'] ?? 'Sin solicitante'));
                                                                 $tecnicoNombre = trim((string) ($ticket['tecnico_nombre'] ?? 'Sin tecnico'));
@@ -464,40 +518,54 @@ ksort($estadosDisponibles);
                                                                     $prioridadNombre,
                                                                 ]));
                                                                 ?>
-                                                                <tr class="ticket-life-row"
+                                                                <tr class="ticket-life-row fila-ticket-admin-compacta estado-ticket-<?php echo $estadoId; ?>"
                                                                     data-ticket-id="<?php echo $ticketId; ?>"
                                                                     data-ticket-search="<?php echo htmlspecialchars($buscarTexto, ENT_QUOTES, 'UTF-8'); ?>"
                                                                     data-colegio="<?php echo htmlspecialchars(strtolower($colegioNombre), ENT_QUOTES, 'UTF-8'); ?>"
                                                                     data-categoria="<?php echo htmlspecialchars(strtolower($categoriaNombre), ENT_QUOTES, 'UTF-8'); ?>"
                                                                     data-estado="<?php echo htmlspecialchars(strtolower($estadoNombre), ENT_QUOTES, 'UTF-8'); ?>">
-                                                                    <td class="fw-bold">#<?php echo $ticketId; ?></td>
-                                                                    <td>
+                                                                    <td class="celda-id celda-id-con-indicador">
+                                                                        <span class="estado-indicador-dot estado-indicador-dot--inline" style="background-color: <?php echo htmlspecialchars($estadoColor, ENT_QUOTES, 'UTF-8'); ?>;"></span>
+                                                                        <span class="celda-id-numero"><?php echo $contadorFila++; ?></span>
+                                                                    </td>
+                                                                    <td class="celda-fecha-hora">
+                                                                        <div class="ticket-fecha-hora">
+                                                                            <div class="ticket-fecha-hora__fecha"><?php echo htmlspecialchars(explode(' ', $fechaCreacionLabel)[0] ?? 'Sin fecha', ENT_QUOTES, 'UTF-8'); ?></div>
+                                                                            <div class="ticket-fecha-hora__hora"><?php echo htmlspecialchars(explode(' ', $fechaCreacionLabel)[1] ?? '--', ENT_QUOTES, 'UTF-8'); ?></div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="celda-de"><?php echo htmlspecialchars($usuarioNombre, ENT_QUOTES, 'UTF-8'); ?></td>
+                                                                    <td class="celda-asunto">
                                                                         <div class="ticket-life-table__title"><?php echo htmlspecialchars($asuntoTicket, ENT_QUOTES, 'UTF-8'); ?></div>
-                                                                        <div class="ticket-life-table__subtitle"><?php echo htmlspecialchars($tecnicoNombre, ENT_QUOTES, 'UTF-8'); ?></div>
+                                                                        <div class="ticket-life-table__subtitle">
+                                                                            <?php echo htmlspecialchars($tecnicoNombre, ENT_QUOTES, 'UTF-8'); ?> | <?php echo htmlspecialchars($categoriaNombre, ENT_QUOTES, 'UTF-8'); ?>
+                                                                        </div>
                                                                     </td>
-                                                                    <td><?php echo htmlspecialchars($colegioNombre, ENT_QUOTES, 'UTF-8'); ?></td>
-                                                                    <td><?php echo htmlspecialchars($categoriaNombre, ENT_QUOTES, 'UTF-8'); ?></td>
-                                                                    <td><?php echo htmlspecialchars($usuarioNombre, ENT_QUOTES, 'UTF-8'); ?></td>
-                                                                    <td>
-                                                                        <span class="ticket-life-badge" style="background-color: <?php echo htmlspecialchars($estadoColor, ENT_QUOTES, 'UTF-8'); ?>;">
-                                                                            <?php echo htmlspecialchars($estadoNombre, ENT_QUOTES, 'UTF-8'); ?>
-                                                                        </span>
+                                                                    <td class="celda-de"><?php echo htmlspecialchars($colegioNombre, ENT_QUOTES, 'UTF-8'); ?></td>
+                                                                    <td class="celda-fecha-respuesta">
+                                                                        <div class="ticket-resumen-estado">
+                                                                            <span class="ticket-resumen-estado__dot" style="background-color: <?php echo htmlspecialchars($estadoColor, ENT_QUOTES, 'UTF-8'); ?>;"></span>
+                                                                            <div class="ticket-resumen-estado__body">
+                                                                                <div class="ticket-resumen-estado__titulo"><?php echo htmlspecialchars($estadoNombre, ENT_QUOTES, 'UTF-8'); ?></div>
+                                                                                <div class="ticket-resumen-estado__detalle">Estado actual</div>
+                                                                            </div>
+                                                                        </div>
                                                                     </td>
-                                                                    <td><span class="ticket-life-chip"><?php echo htmlspecialchars($prioridadNombre, ENT_QUOTES, 'UTF-8'); ?></span></td>
-                                                                    <td><?php echo htmlspecialchars($fechaCreacionLabel, ENT_QUOTES, 'UTF-8'); ?></td>
-                                                                    <td>
+                                                                    <td class="celda-fecha-respuesta">
+                                                                        <div class="ticket-resumen-estado">
+                                                                            <span class="ticket-resumen-estado__dot" style="background-color: #93c5fd;"></span>
+                                                                            <div class="ticket-resumen-estado__body">
+                                                                                <div class="ticket-resumen-estado__titulo"><?php echo htmlspecialchars($prioridadNombre, ENT_QUOTES, 'UTF-8'); ?></div>
+                                                                                <div class="ticket-resumen-estado__detalle">Prioridad</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="celda-opciones">
                                                                         <button type="button"
-                                                                                class="btn btn-sm btn-outline-primary ticket-life-row__toggle"
+                                                                                class="btn btn-sm btn-primary btn-tecnico-accion ticket-life-row__toggle"
                                                                                 data-ticket-id="<?php echo $ticketId; ?>">
                                                                             Ver vida
                                                                         </button>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr class="ticket-life-detail-row d-none" data-detail-for="<?php echo $ticketId; ?>">
-                                                                    <td colspan="9">
-                                                                        <div class="ticket-life-content"
-                                                                             data-ticket-id="<?php echo $ticketId; ?>"
-                                                                             data-vida-ticket-url="estadistica/vida_ticket.php?id_ticket=<?php echo $ticketId; ?>"></div>
                                                                     </td>
                                                                 </tr>
                                                             <?php endforeach; ?>

@@ -201,57 +201,13 @@
             });
     }
 
-    function toggleTicketRow(row) {
-        if (!row) {
-            return;
-        }
-
-        const ticketId = row.getAttribute('data-ticket-id');
-        const detailRow = document.querySelector('.ticket-life-detail-row[data-detail-for="' + ticketId + '"]');
-        if (!detailRow) {
-            return;
-        }
-
-        const isOpen = !detailRow.classList.contains('d-none');
-        document.querySelectorAll('.ticket-life-detail-row').forEach(function (otherDetail) {
-            otherDetail.classList.add('d-none');
-        });
-        document.querySelectorAll('.ticket-life-row.is-open').forEach(function (otherRow) {
-            otherRow.classList.remove('is-open');
-        });
-
-        if (isOpen) {
-            return;
-        }
-
-        row.classList.add('is-open');
-        detailRow.classList.remove('d-none');
-        loadTicketLifeContent(detailRow.querySelector('.ticket-life-content'));
-    }
-
-    document.querySelectorAll('.ticket-life-row').forEach(function (row) {
-        row.addEventListener('click', function (event) {
-            if (event.target.closest('.ticket-life-row__toggle')) {
-                return;
-            }
-            toggleTicketRow(row);
-        });
-    });
-
-    document.querySelectorAll('.ticket-life-row__toggle').forEach(function (button) {
-        button.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const row = document.querySelector('.ticket-life-row[data-ticket-id="' + button.getAttribute('data-ticket-id') + '"]');
-            toggleTicketRow(row);
-        });
-    });
-
     const searchInput = document.getElementById('ticketLifeSearch');
     const colegioFilter = document.getElementById('ticketLifeFilterColegio');
     const categoriaFilter = document.getElementById('ticketLifeFilterCategoria');
     const estadoFilter = document.getElementById('ticketLifeFilterEstado');
     const noResults = document.getElementById('ticketLifeNoResults');
+    const tableElement = document.getElementById('ticketLifeTable');
+    let tablaVida = null;
 
     function estadoMatches(filterValue, estadoValue) {
         if (!filterValue) {
@@ -265,49 +221,121 @@
         return estadoValue === filterValue.toLowerCase();
     }
 
-    function applyTicketFilters() {
-        const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-        const colegio = colegioFilter ? colegioFilter.value.trim().toLowerCase() : '';
-        const categoria = categoriaFilter ? categoriaFilter.value.trim().toLowerCase() : '';
-        const estado = estadoFilter ? estadoFilter.value.trim().toLowerCase() : '';
-        let visibleCount = 0;
+    function toggleTicketRow(rowNode) {
+        if (!tablaVida || !rowNode) {
+            return;
+        }
 
-        document.querySelectorAll('.ticket-life-row').forEach(function (row) {
-            const haystack = row.getAttribute('data-ticket-search') || '';
-            const rowColegio = row.getAttribute('data-colegio') || '';
-            const rowCategoria = row.getAttribute('data-categoria') || '';
-            const rowEstado = row.getAttribute('data-estado') || '';
-            const match = haystack.indexOf(query) !== -1 &&
-                (!colegio || rowColegio === colegio) &&
-                (!categoria || rowCategoria === categoria) &&
-                estadoMatches(estado, rowEstado);
+        const rowApi = tablaVida.row(rowNode);
+        const ticketId = rowNode.getAttribute('data-ticket-id');
+        if (!ticketId) {
+            return;
+        }
 
-            row.style.display = match ? '' : 'none';
-            const detailRow = document.querySelector('.ticket-life-detail-row[data-detail-for="' + row.getAttribute('data-ticket-id') + '"]');
-            if (detailRow) {
-                detailRow.style.display = match ? '' : 'none';
-                if (!match) {
-                    detailRow.classList.add('d-none');
-                    row.classList.remove('is-open');
-                }
-            }
+        const alreadyOpen = rowApi.child.isShown();
 
-            if (match) {
-                visibleCount++;
+        tablaVida.rows().every(function () {
+            if (this.child.isShown()) {
+                this.child.hide();
+                this.node().classList.remove('is-open');
             }
         });
 
-        if (noResults) {
-            noResults.classList.toggle('d-none', visibleCount > 0);
+        if (alreadyOpen) {
+            return;
         }
+
+        const content = document.createElement('div');
+        content.className = 'ticket-life-content';
+        content.dataset.ticketId = ticketId;
+        content.setAttribute('data-vida-ticket-url', 'estadistica/vida_ticket.php?id_ticket=' + ticketId);
+        rowApi.child(content).show();
+        rowNode.classList.add('is-open');
+        loadTicketLifeContent(content);
     }
 
-    [searchInput, colegioFilter, categoriaFilter, estadoFilter].forEach(function (input) {
-        if (input) {
-            input.addEventListener('input', applyTicketFilters);
-            input.addEventListener('change', applyTicketFilters);
+    function updateNoResults() {
+        if (!noResults || !tablaVida) {
+            return;
         }
-    });
 
-    applyTicketFilters();
+        noResults.classList.toggle('d-none', tablaVida.rows({ filter: 'applied' }).count() > 0);
+    }
+
+    if (window.jQuery && tableElement && window.jQuery.fn && window.jQuery.fn.dataTable) {
+        if (!window.ticketLifeFiltersSearchRegistered) {
+            window.jQuery.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+                if (!settings.nTable || settings.nTable.id !== 'ticketLifeTable') {
+                    return true;
+                }
+
+                const api = new window.jQuery.fn.dataTable.Api(settings);
+                const rowNode = api.row(dataIndex).node();
+                if (!rowNode) {
+                    return true;
+                }
+
+                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                const colegio = colegioFilter ? colegioFilter.value.trim().toLowerCase() : '';
+                const categoria = categoriaFilter ? categoriaFilter.value.trim().toLowerCase() : '';
+                const estado = estadoFilter ? estadoFilter.value.trim().toLowerCase() : '';
+                const haystack = rowNode.getAttribute('data-ticket-search') || '';
+                const rowColegio = rowNode.getAttribute('data-colegio') || '';
+                const rowCategoria = rowNode.getAttribute('data-categoria') || '';
+                const rowEstado = rowNode.getAttribute('data-estado') || '';
+
+                return haystack.indexOf(query) !== -1 &&
+                    (!colegio || rowColegio === colegio) &&
+                    (!categoria || rowCategoria === categoria) &&
+                    estadoMatches(estado, rowEstado);
+            });
+
+            window.ticketLifeFiltersSearchRegistered = true;
+        }
+
+        tablaVida = window.jQuery('#ticketLifeTable').DataTable({
+            language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+            responsive: true,
+            pageLength: 10,
+            paging: true,
+            pagingType: 'simple_numbers',
+            info: true,
+            searching: false,
+            order: [[0, 'desc']]
+        });
+
+        window.jQuery('#ticketLifeTable tbody').on('click', 'tr.ticket-life-row', function (event) {
+            if (event.target.closest('.ticket-life-row__toggle')) {
+                return;
+            }
+            toggleTicketRow(this);
+        });
+
+        window.jQuery('#ticketLifeTable tbody').on('click', '.ticket-life-row__toggle', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const rowNode = this.closest('tr.ticket-life-row');
+            toggleTicketRow(rowNode);
+        });
+
+        [searchInput, colegioFilter, categoriaFilter, estadoFilter].forEach(function (input) {
+            if (input) {
+                input.addEventListener('input', function () {
+                    tablaVida.draw();
+                    updateNoResults();
+                });
+                input.addEventListener('change', function () {
+                    tablaVida.draw();
+                    updateNoResults();
+                });
+            }
+        });
+
+        tablaVida.on('draw', function () {
+            updateNoResults();
+        });
+
+        tablaVida.draw();
+        updateNoResults();
+    }
 })();
