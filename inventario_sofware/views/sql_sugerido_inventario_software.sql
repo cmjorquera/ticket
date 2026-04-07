@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS software_catalogo (
     version_software VARCHAR(80) DEFAULT NULL,
     cantidad_licencias INT NOT NULL DEFAULT 1,
     tipo_licenciamiento ENUM('Suscripcion', 'Licencia perpetua', 'Gratuita') NOT NULL DEFAULT 'Suscripcion',
-    pagado_por ENUM('Colegio', 'Persona') NOT NULL DEFAULT 'Colegio',
+    pagado_por ENUM('Colegio', 'Seduc', 'Persona') NOT NULL DEFAULT 'Colegio',
     costo DECIMAL(12,2) NOT NULL DEFAULT 0.00,
     moneda VARCHAR(10) NOT NULL DEFAULT 'USD',
     proveedor VARCHAR(180) DEFAULT NULL,

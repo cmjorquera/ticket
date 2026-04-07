@@ -5,6 +5,7 @@ $colegios = $inventario->obtenerColegios();
 $usuarios = $inventario->obtenerUsuarios();
 $tiposLicenciamiento = $inventario->obtenerTiposLicenciamiento();
 $pagadores = $inventario->obtenerPagadores();
+$monedas = $inventario->obtenerMonedas();
 $datosSensiblesCatalogo = $inventario->obtenerDatosSensiblesCatalogo();
 $modo = 'crear';
 require __DIR__ . '/componentes/layout_top.inc';

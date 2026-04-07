@@ -314,6 +314,80 @@
         });
     }
 
+    function crearCardDatoSensible(dato) {
+        const descripcion = dato && dato.descripcion ? `<small class="text-muted d-block mt-2">${escapeHtml(dato.descripcion)}</small>` : '';
+        return `<div class="col-md-6">
+            <label class="inv-repeat-card py-3 h-100 d-block">
+                <div class="form-check m-0">
+                    <input class="form-check-input" type="checkbox" name="datos_sensibles[]" value="${parseInt(dato.id_dato_sensible, 10)}" checked>
+                    <span class="form-check-label fw-semibold">${escapeHtml(dato.nombre || '')}</span>
+                </div>
+                ${descripcion}
+            </label>
+        </div>`;
+    }
+
+    function bindDatosSensibles() {
+        $(document).on('click', '#btnAgregarDatoSensible', function () {
+            const endpoint = $(this).data('endpoint');
+            if (!endpoint) { return; }
+
+            Swal.fire({
+                title: 'Nuevo dato sensible',
+                html: `
+                    <input id="swalDatoSensibleNombre" class="swal2-input" placeholder="Nombre">
+                    <textarea id="swalDatoSensibleDescripcion" class="swal2-textarea" placeholder="Descripcion opcional"></textarea>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: function () {
+                    const nombre = $('#swalDatoSensibleNombre').val().trim();
+                    const descripcion = $('#swalDatoSensibleDescripcion').val().trim();
+                    if (!nombre) {
+                        Swal.showValidationMessage('Debes ingresar el nombre del dato sensible.');
+                        return false;
+                    }
+
+                    return $.ajax({
+                        url: endpoint,
+                        method: 'POST',
+                        dataType: 'json',
+                        data: { nombre: nombre, descripcion: descripcion }
+                    }).then(function (response) {
+                        return response;
+                    }).catch(function (xhr) {
+                        const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible guardar el dato sensible.';
+                        Swal.showValidationMessage(mensaje);
+                    });
+                }
+            }).then(function (result) {
+                if (!result.isConfirmed || !result.value || !result.value.ok || !result.value.dato) {
+                    return;
+                }
+
+                const dato = result.value.dato;
+                const $contenedor = $('#contenedorDatosSensibles');
+                if (!$contenedor.length) { return; }
+
+                const selector = `input[name="datos_sensibles[]"][value="${parseInt(dato.id_dato_sensible, 10)}"]`;
+                const $existente = $(selector);
+                if ($existente.length) {
+                    $existente.prop('checked', true);
+                } else {
+                    $contenedor.prepend(crearCardDatoSensible(dato));
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Dato sensible listo',
+                    text: result.value.mensaje
+                });
+            });
+        });
+    }
+
     function initDashboard() {
         if (!window.INVENTARIO_DASHBOARD || typeof Chart === 'undefined') { return; }
         const resumenCanvas = document.getElementById('graficoDashboardResumen');
@@ -397,6 +471,7 @@
         bindFormAjax();
         bindDelete();
         bindRepeater();
+        bindDatosSensibles();
         renderResumenActivo();
         actualizarLinksPdf();
     });

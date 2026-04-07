@@ -98,7 +98,7 @@ try {
 
         $html .= inv_pdf_encabezado('Listado de software y licencias', 'Exportacion filtrada del modulo operativo');
         $html .= '<div class="box"><span class="chip">Registros: ' . count($datos) . '</span><span class="chip">Licencias: ' . $licencias . '</span><span class="chip">Costo: ' . inv_pdf_moneda($costo) . '</span></div>';
-        $html .= '<table><thead><tr><th>ID</th><th>Software</th><th>Colegio</th><th>Version</th><th>Licencias</th><th>Tipo</th><th>Pagado por</th><th>Responsable</th></tr></thead><tbody>';
+        $html .= '<table><thead><tr><th>ID</th><th>Software</th><th>Colegio</th><th>Version</th><th>Licencias</th><th>Tipo</th><th>Datos sensibles</th><th>Pagado por</th><th>Responsable</th></tr></thead><tbody>';
         if ($datos) {
             foreach ($datos as $fila) {
                 $html .= '<tr>';
@@ -108,12 +108,13 @@ try {
                 $html .= '<td>' . inv_pdf_h($fila['version_software'] ?: '-') . '</td>';
                 $html .= '<td>' . (int)$fila['cantidad_licencias'] . '</td>';
                 $html .= '<td>' . inv_pdf_h($fila['tipo_licenciamiento']) . '</td>';
+                $html .= '<td>' . inv_pdf_h($fila['datos_sensibles'] ?: '-') . '</td>';
                 $html .= '<td>' . inv_pdf_h($fila['pagado_por']) . '</td>';
                 $html .= '<td>' . inv_pdf_h($fila['responsable'] ?: 'Sin asignar') . '</td>';
                 $html .= '</tr>';
             }
         } else {
-            $html .= '<tr><td colspan="8" class="empty">No hay software para los filtros seleccionados.</td></tr>';
+            $html .= '<tr><td colspan="9" class="empty">No hay software para los filtros seleccionados.</td></tr>';
         }
         $html .= '</tbody></table>';
         $nombreArchivo = 'inventario_software_' . date('Ymd_His') . '.pdf';
@@ -160,7 +161,7 @@ try {
         $html .= inv_pdf_encabezado('Consulta por software', $software !== '' ? $software : 'Sin software seleccionado');
         $html .= '<table class="grid"><tbody><tr><td><strong>Software</strong><br>' . inv_pdf_h($consulta['software'] ?: '-') . '</td><td><strong>Licencias</strong><br>' . (int)$consulta['resumen']['total_licencias'] . '</td><td><strong>Colegios</strong><br>' . (int)$consulta['resumen']['total_colegios'] . '</td><td><strong>Costo total</strong><br>' . inv_pdf_moneda($consulta['resumen']['costo_total']) . '</td></tr></tbody></table>';
         $html .= '<h2>Distribucion por colegio</h2>';
-        $html .= '<table><thead><tr><th>Colegio</th><th>Licencias</th><th>Registros</th><th>Licenciamiento</th><th>Pagado por</th><th>Costo total</th></tr></thead><tbody>';
+        $html .= '<table><thead><tr><th>Colegio</th><th>Licencias</th><th>Registros</th><th>Licenciamiento</th><th>Datos sensibles</th><th>Pagado por</th><th>Costo total</th></tr></thead><tbody>';
         if (!empty($consulta['colegios'])) {
             foreach ($consulta['colegios'] as $fila) {
                 $html .= '<tr>';
@@ -168,12 +169,13 @@ try {
                 $html .= '<td>' . (int)$fila['licencias'] . '</td>';
                 $html .= '<td>' . (int)$fila['registros'] . '</td>';
                 $html .= '<td>' . inv_pdf_h($fila['licenciamiento'] ?: '-') . '</td>';
+                $html .= '<td>' . inv_pdf_h($fila['datos_sensibles'] ?: '-') . '</td>';
                 $html .= '<td>' . inv_pdf_h($fila['pagado_por'] ?: '-') . '</td>';
                 $html .= '<td>' . inv_pdf_moneda($fila['costo_total']) . '</td>';
                 $html .= '</tr>';
             }
         } else {
-            $html .= '<tr><td colspan="6" class="empty">No se encontraron registros para este software.</td></tr>';
+            $html .= '<tr><td colspan="7" class="empty">No se encontraron registros para este software.</td></tr>';
         }
         $html .= '</tbody></table>';
         $nombreArchivo = 'consulta_software_' . preg_replace('/[^a-z0-9]+/i', '_', $software ?: 'sin_dato') . '.pdf';
@@ -190,7 +192,7 @@ try {
         $html .= '<div class="box"><strong>Colegio:</strong> ' . inv_pdf_h($colegio['nom_colegio']) . '</div>';
         $html .= '<table class="grid"><tbody><tr><td><strong>Softwares</strong><br>' . (int)$consulta['resumen']['total_softwares'] . '</td><td><strong>Licencias</strong><br>' . (int)$consulta['resumen']['total_licencias'] . '</td><td><strong>Sitios</strong><br>' . (int)$consulta['resumen']['total_sitios'] . '</td><td><strong>Costo software</strong><br>' . inv_pdf_moneda($consulta['resumen']['costo_total']) . '</td></tr></tbody></table>';
         $html .= '<h2>Softwares del colegio</h2>';
-        $html .= '<table><thead><tr><th>Software</th><th>Version</th><th>Licencias</th><th>Tipo</th><th>Pagado por</th></tr></thead><tbody>';
+        $html .= '<table><thead><tr><th>Software</th><th>Version</th><th>Licencias</th><th>Tipo</th><th>Datos sensibles</th><th>Pagado por</th></tr></thead><tbody>';
         if (!empty($consulta['softwares'])) {
             foreach ($consulta['softwares'] as $fila) {
                 $html .= '<tr>';
@@ -198,11 +200,12 @@ try {
                 $html .= '<td>' . inv_pdf_h($fila['version_software'] ?: '-') . '</td>';
                 $html .= '<td>' . (int)$fila['cantidad_licencias'] . '</td>';
                 $html .= '<td>' . inv_pdf_h($fila['tipo_licenciamiento']) . '</td>';
+                $html .= '<td>' . inv_pdf_h($fila['datos_sensibles'] ?: '-') . '</td>';
                 $html .= '<td>' . inv_pdf_h($fila['pagado_por']) . '</td>';
                 $html .= '</tr>';
             }
         } else {
-            $html .= '<tr><td colspan="5" class="empty">Este colegio no tiene software registrado.</td></tr>';
+            $html .= '<tr><td colspan="6" class="empty">Este colegio no tiene software registrado.</td></tr>';
         }
         $html .= '</tbody></table>';
         $html .= '<h2>Sitios del colegio</h2>';
@@ -242,6 +245,7 @@ try {
             . '<tr><th>Pagado por</th><td>' . inv_pdf_h($software['pagado_por']) . '</td></tr>'
             . '<tr><th>Proveedor</th><td>' . inv_pdf_h($software['proveedor'] ?: '-') . '</td></tr>'
             . '<tr><th>URL o referencia</th><td>' . inv_pdf_h($software['url_referencia'] ?: '-') . '</td></tr>'
+            . '<tr><th>Datos sensibles</th><td>' . (!empty($software['datos_sensibles']) ? inv_pdf_h(implode(', ', array_map(static function ($fila) { return $fila['nombre']; }, $software['datos_sensibles']))) : '-') . '</td></tr>'
             . '<tr><th>Observaciones</th><td>' . nl2br(inv_pdf_h($software['observaciones'] ?: 'Sin observaciones.')) . '</td></tr>'
             . '</tbody></table>';
 

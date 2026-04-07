@@ -12,10 +12,10 @@ require __DIR__ . '/componentes/layout_top.inc';
         <p class="text-muted mb-0"><?= inventario_h($software['nom_colegio']) ?> | Version <?= inventario_h($software['version_software'] ?: '-') ?> | <?= inventario_h($software['tipo_licenciamiento']) ?></p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="descargar_pdf.php?tipo=software_ficha&id_software=<?= (int)$software['id_software'] ?>" class="btn btn-outline-danger" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
-        <a href="ficha_qr.php?tipo=software&id=<?= (int)$software['id_software'] ?>" class="btn btn-outline-dark" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>Ficha QR</a>
-        <a href="editar_software.php?id_software=<?= (int)$software['id_software'] ?>" class="btn btn-outline-primary">Editar</a>
-        <a href="index.php" class="btn btn-light border">Volver</a>
+        <a href="descargar_pdf.php?tipo=software_ficha&id_software=<?= (int)$software['id_software'] ?>" class="btn inv-top-btn inv-top-btn-danger" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+        <a href="ficha_qr.php?tipo=software&id=<?= (int)$software['id_software'] ?>" class="btn inv-top-btn inv-top-btn-dark" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>Ficha QR</a>
+        <a href="editar_software.php?id_software=<?= (int)$software['id_software'] ?>" class="btn inv-top-btn inv-top-btn-primary">Editar</a>
+        <a href="index.php" class="btn inv-top-btn inv-top-btn-light">Volver</a>
     </div>
 </div>
 <div class="row g-4">
@@ -30,9 +30,29 @@ require __DIR__ . '/componentes/layout_top.inc';
             <div class="col-md-3"><span class="text-muted d-block small">Costo</span><strong><?= inventario_h($software['moneda']) ?> <?= number_format((float)$software['costo'], 2, ',', '.') ?></strong></div>
             <div class="col-md-6"><span class="text-muted d-block small">Proveedor</span><strong><?= inventario_h($software['proveedor'] ?: '-') ?></strong></div>
             <div class="col-md-6"><span class="text-muted d-block small">URL o referencia</span><strong class="text-break"><?= inventario_h($software['url_referencia'] ?: '-') ?></strong></div>
-            <div class="col-12"><span class="text-muted d-block small">Datos sensibles</span><p class="mb-0"><?= !empty($software['datos_sensibles']) ? inventario_h(implode(', ', array_map(static function ($fila) { return $fila['nombre']; }, $software['datos_sensibles']))) : 'Sin datos sensibles asociados.' ?></p></div>
             <div class="col-12"><span class="text-muted d-block small">Observaciones</span><p class="mb-0"><?= nl2br(inventario_h($software['observaciones'] ?: 'Sin observaciones.')) ?></p></div>
         </div></div></div>
+        <div class="card shadow-sm border-0 inv-panel mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">Datos sensibles</h5>
+                <?php if (!empty($software['datos_sensibles'])): ?>
+                    <div class="row g-3">
+                        <?php foreach ($software['datos_sensibles'] as $fila): ?>
+                            <div class="col-md-6">
+                                <div class="inv-repeat-card py-3 h-100">
+                                    <strong class="d-block"><?= inventario_h($fila['nombre']) ?></strong>
+                                    <?php if (!empty($fila['descripcion'])): ?>
+                                        <small class="text-muted d-block mt-2"><?= inventario_h($fila['descripcion']) ?></small>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-light border mb-0">No hay datos sensibles asociados.</div>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
     <div class="col-lg-4">
         <div class="card shadow-sm border-0 inv-panel mb-4">
@@ -41,8 +61,8 @@ require __DIR__ . '/componentes/layout_top.inc';
                 <img src="qr_codigo.php?tipo=software&id_software=<?= (int)$software['id_software'] ?>" alt="QR <?= inventario_h($software['nombre_software']) ?>" class="img-fluid inv-qr-image mb-3">
                 <p class="text-muted small mb-3">Al escanearlo se abre una ficha rapida con las caracteristicas principales.</p>
                 <div class="d-grid gap-2">
-                    <a href="qr_codigo.php?tipo=software&id_software=<?= (int)$software['id_software'] ?>" class="btn btn-outline-secondary" target="_blank">Ver QR</a>
-                    <a href="ficha_qr.php?tipo=software&id=<?= (int)$software['id_software'] ?>" class="btn btn-outline-dark" target="_blank">Abrir ficha QR</a>
+                    <a href="qr_codigo.php?tipo=software&id_software=<?= (int)$software['id_software'] ?>" class="btn inv-top-btn inv-top-btn-light" target="_blank">Ver QR</a>
+                    <a href="ficha_qr.php?tipo=software&id=<?= (int)$software['id_software'] ?>" class="btn inv-top-btn inv-top-btn-dark" target="_blank">Abrir ficha QR</a>
                 </div>
             </div>
         </div>

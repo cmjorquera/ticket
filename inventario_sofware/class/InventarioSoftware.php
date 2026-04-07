@@ -6,7 +6,8 @@ class InventarioSoftware
     private $cn;
     private $cacheTablas = [];
     private $tiposLicenciamiento = ['Suscripcion', 'Licencia perpetua', 'Gratuita'];
-    private $pagadoPor = ['Colegio', 'Persona'];
+    private $pagadoPor = ['Colegio', 'Seduc', 'Persona'];
+    private $monedas = ['CLP', 'USD'];
     private $tiposSitio = ['Web', 'App', 'Cliente'];
     private $estadosSitio = ['Activo', 'Mantenimiento', 'En desarrollo', 'Inactivo'];
 
@@ -98,6 +99,11 @@ class InventarioSoftware
     public function obtenerPagadores()
     {
         return $this->pagadoPor;
+    }
+
+    public function obtenerMonedas()
+    {
+        return $this->monedas;
     }
 
     public function obtenerTiposSitio()
@@ -272,15 +278,26 @@ class InventarioSoftware
             $vacio['resumen'] = $fila;
         }
 
+        $usaDatosSensibles = $this->tablaExiste('software_datos_sensibles_rel') && $this->tablaExiste('inventario_software_datos_sensibles');
+        $selectDatosSensibles = $usaDatosSensibles
+            ? ", GROUP_CONCAT(DISTINCT d.nombre ORDER BY d.nombre SEPARATOR ', ') AS datos_sensibles"
+            : ", '' AS datos_sensibles";
+        $joinDatosSensibles = $usaDatosSensibles
+            ? " LEFT JOIN software_datos_sensibles_rel r ON r.id_software = s.id_software
+                LEFT JOIN inventario_software_datos_sensibles d ON d.id_dato_sensible = r.id_dato_sensible AND d.activo = 1"
+            : '';
+
         $sql = "SELECT c.id_colegio,
-                       c.nom_colegio,
+                       COALESCE(NULLIF(c.nom_colegio, ''), CONCAT('Colegio ID ', s.id_colegio)) AS nom_colegio,
                        COALESCE(SUM(s.cantidad_licencias), 0) AS licencias,
                        COUNT(*) AS registros,
                        GROUP_CONCAT(DISTINCT s.tipo_licenciamiento ORDER BY s.tipo_licenciamiento SEPARATOR ', ') AS licenciamiento,
                        GROUP_CONCAT(DISTINCT s.pagado_por ORDER BY s.pagado_por SEPARATOR ', ') AS pagado_por,
+                       " . ltrim($selectDatosSensibles, ', ') . ",
                        COALESCE(SUM(s.costo), 0) AS costo_total
                 FROM software_catalogo s
                 LEFT JOIN colegio c ON c.id_colegio = s.id_colegio
+                {$joinDatosSensibles}
                 WHERE s.activo = 1 AND s.nombre_software = ?
                 GROUP BY s.id_colegio, c.nom_colegio
                 ORDER BY licencias DESC, nom_colegio ASC";
@@ -334,7 +351,7 @@ class InventarioSoftware
                 $vacio['resumen'] = array_merge($vacio['resumen'], $fila);
             }
 
-            $stmt = mysqli_prepare($this->cn, "SELECT nombre_software, version_software, cantidad_licencias, tipo_licenciamiento, pagado_por, costo, proveedor FROM software_catalogo WHERE activo = 1 AND id_colegio = ? ORDER BY cantidad_licencias DESC, nombre_software ASC");
+            $stmt = mysqli_prepare($this->cn, "SELECT id_software, nombre_software, version_software, cantidad_licencias, tipo_licenciamiento, pagado_por, costo, proveedor FROM software_catalogo WHERE activo = 1 AND id_colegio = ? ORDER BY cantidad_licencias DESC, nombre_software ASC");
             mysqli_stmt_bind_param($stmt, 'i', $idColegio);
             mysqli_stmt_execute($stmt);
             $rs = mysqli_stmt_get_result($stmt);
@@ -342,6 +359,13 @@ class InventarioSoftware
                 $vacio['softwares'][] = $fila;
             }
             mysqli_stmt_close($stmt);
+
+            $mapaDatosSensibles = $this->obtenerMapaDatosSensiblesPorSoftware(array_column($vacio['softwares'], 'id_software'));
+            foreach ($vacio['softwares'] as &$fila) {
+                $idSoftware = (int)($fila['id_software'] ?? 0);
+                $fila['datos_sensibles'] = $mapaDatosSensibles[$idSoftware] ?? '';
+            }
+            unset($fila);
         }
 
         if ($this->tablaExiste('sitios_web_catalogo')) {
@@ -403,6 +427,14 @@ class InventarioSoftware
         while ($fila = mysqli_fetch_assoc($rs)) {
             $datos[] = $fila;
         }
+
+        $mapaDatosSensibles = $this->obtenerMapaDatosSensiblesPorSoftware(array_column($datos, 'id_software'));
+        foreach ($datos as &$fila) {
+            $idSoftware = (int)($fila['id_software'] ?? 0);
+            $fila['datos_sensibles'] = $mapaDatosSensibles[$idSoftware] ?? '';
+        }
+        unset($fila);
+
         return $datos;
     }
 
@@ -418,6 +450,48 @@ class InventarioSoftware
             $datos[] = $fila;
         }
         return $datos;
+    }
+
+    public function registrarDatoSensible($nombre, $descripcion = '')
+    {
+        if (!$this->tablaExiste('inventario_software_datos_sensibles')) {
+            throw new RuntimeException('Falta la tabla inventario_software_datos_sensibles.');
+        }
+
+        $nombre = trim((string)$nombre);
+        $descripcion = trim((string)$descripcion);
+
+        if ($nombre === '') {
+            throw new RuntimeException('Debes indicar el nombre del dato sensible.');
+        }
+
+        $stmt = mysqli_prepare($this->cn, "SELECT id_dato_sensible, nombre, descripcion FROM inventario_software_datos_sensibles WHERE LOWER(nombre) = LOWER(?) LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 's', $nombre);
+        mysqli_stmt_execute($stmt);
+        $existente = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+        mysqli_stmt_close($stmt);
+
+        if ($existente) {
+            return [
+                'creado' => false,
+                'id_dato_sensible' => (int)$existente['id_dato_sensible'],
+                'nombre' => (string)$existente['nombre'],
+                'descripcion' => (string)($existente['descripcion'] ?? ''),
+            ];
+        }
+
+        $stmt = mysqli_prepare($this->cn, "INSERT INTO inventario_software_datos_sensibles (nombre, descripcion, activo, created_at, updated_at) VALUES (?, ?, 1, NOW(), NOW())");
+        mysqli_stmt_bind_param($stmt, 'ss', $nombre, $descripcion);
+        mysqli_stmt_execute($stmt);
+        $idDatoSensible = (int)mysqli_insert_id($this->cn);
+        mysqli_stmt_close($stmt);
+
+        return [
+            'creado' => true,
+            'id_dato_sensible' => $idDatoSensible,
+            'nombre' => $nombre,
+            'descripcion' => $descripcion,
+        ];
     }
 
     public function obtenerConsultaPorDatoSensible($idDatoSensible)
@@ -748,6 +822,9 @@ class InventarioSoftware
         if (!in_array($payload['pagado_por'], $this->pagadoPor, true)) {
             throw new RuntimeException('Dato pagado por invalido.');
         }
+        if (!in_array($payload['moneda'], $this->monedas, true)) {
+            throw new RuntimeException('Moneda invalida.');
+        }
 
         foreach (($post['almacenamiento'] ?? []) as $index => $fila) {
             $nombre = trim((string)($fila['nombre_contacto'] ?? ''));
@@ -850,6 +927,33 @@ class InventarioSoftware
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }
+    }
+
+    private function obtenerMapaDatosSensiblesPorSoftware($idsSoftware)
+    {
+        $mapa = [];
+        $idsSoftware = array_values(array_unique(array_filter(array_map('intval', (array)$idsSoftware))));
+        if (
+            empty($idsSoftware) ||
+            !$this->tablaExiste('software_datos_sensibles_rel') ||
+            !$this->tablaExiste('inventario_software_datos_sensibles')
+        ) {
+            return $mapa;
+        }
+
+        $idsSql = implode(',', $idsSoftware);
+        $sql = "SELECT r.id_software,
+                       GROUP_CONCAT(DISTINCT d.nombre ORDER BY d.nombre SEPARATOR ', ') AS datos_sensibles
+                FROM software_datos_sensibles_rel r
+                INNER JOIN inventario_software_datos_sensibles d ON d.id_dato_sensible = r.id_dato_sensible
+                WHERE d.activo = 1 AND r.id_software IN ({$idsSql})
+                GROUP BY r.id_software";
+        $rs = $this->db->consulta($sql);
+        while ($fila = $this->db->fetch_assoc($rs)) {
+            $mapa[(int)$fila['id_software']] = (string)($fila['datos_sensibles'] ?? '');
+        }
+
+        return $mapa;
     }
 
     private function guardarHistorial($idSoftware, $accion, $detalle, $idUsuario)

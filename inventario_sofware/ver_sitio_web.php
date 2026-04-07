@@ -12,10 +12,10 @@ require __DIR__ . '/componentes/layout_top.inc';
         <p class="text-muted mb-0"><?= inventario_h($sitio['nom_colegio']) ?> | <?= inventario_h($sitio['tipo_sitio']) ?> | <?= inventario_h($sitio['estado_sitio']) ?></p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <a href="descargar_pdf.php?tipo=sitio_ficha&id_sitio=<?= (int)$sitio['id_sitio'] ?>" class="btn btn-outline-danger" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
-        <a href="ficha_qr.php?tipo=sitio&id=<?= (int)$sitio['id_sitio'] ?>" class="btn btn-outline-dark" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>Ficha QR</a>
-        <a href="editar_sitio_web.php?id_sitio=<?= (int)$sitio['id_sitio'] ?>" class="btn btn-outline-primary">Editar</a>
-        <a href="index.php" class="btn btn-light border">Volver</a>
+        <a href="descargar_pdf.php?tipo=sitio_ficha&id_sitio=<?= (int)$sitio['id_sitio'] ?>" class="btn inv-top-btn inv-top-btn-danger" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</a>
+        <a href="ficha_qr.php?tipo=sitio&id=<?= (int)$sitio['id_sitio'] ?>" class="btn inv-top-btn inv-top-btn-dark" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>Ficha QR</a>
+        <a href="editar_sitio_web.php?id_sitio=<?= (int)$sitio['id_sitio'] ?>" class="btn inv-top-btn inv-top-btn-primary">Editar</a>
+        <a href="index.php" class="btn inv-top-btn inv-top-btn-light">Volver</a>
     </div>
 </div>
 <div class="row g-4">
@@ -41,8 +41,8 @@ require __DIR__ . '/componentes/layout_top.inc';
                 <img src="qr_codigo.php?tipo=sitio&id_sitio=<?= (int)$sitio['id_sitio'] ?>" alt="QR <?= inventario_h($sitio['nombre_sitio']) ?>" class="img-fluid inv-qr-image mb-3">
                 <p class="text-muted small mb-3">Al escanearlo se abre una ficha rapida con los datos principales.</p>
                 <div class="d-grid gap-2">
-                    <a href="qr_codigo.php?tipo=sitio&id_sitio=<?= (int)$sitio['id_sitio'] ?>" class="btn btn-outline-secondary" target="_blank">Ver QR</a>
-                    <a href="ficha_qr.php?tipo=sitio&id=<?= (int)$sitio['id_sitio'] ?>" class="btn btn-outline-dark" target="_blank">Abrir ficha QR</a>
+                    <a href="qr_codigo.php?tipo=sitio&id_sitio=<?= (int)$sitio['id_sitio'] ?>" class="btn inv-top-btn inv-top-btn-light" target="_blank">Ver QR</a>
+                    <a href="ficha_qr.php?tipo=sitio&id=<?= (int)$sitio['id_sitio'] ?>" class="btn inv-top-btn inv-top-btn-dark" target="_blank">Abrir ficha QR</a>
                 </div>
             </div>
         </div>

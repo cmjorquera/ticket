@@ -38,7 +38,7 @@ CREATE TABLE `software_catalogo` (
   `tipo_licenciamiento` enum('Suscripcion','Licencia perpetua','Gratuita') NOT NULL DEFAULT 'Suscripcion',
   `fecha_inicio_licencia` date DEFAULT NULL,
   `fecha_fin_licencia` date DEFAULT NULL,
-  `pagado_por` enum('Colegio','Persona') NOT NULL DEFAULT 'Colegio',
+  `pagado_por` enum('Colegio','Seduc','Persona') NOT NULL DEFAULT 'Colegio',
   `costo` decimal(12,2) NOT NULL DEFAULT 0.00,
   `moneda` varchar(10) NOT NULL DEFAULT 'USD',
   `proveedor` varchar(180) DEFAULT NULL,
