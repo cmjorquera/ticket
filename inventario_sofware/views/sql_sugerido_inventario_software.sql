@@ -90,6 +90,44 @@ INSERT INTO inventario_software_datos_sensibles (nombre, descripcion)
 SELECT 'Direccion', 'Domicilio o ubicacion personal'
 WHERE NOT EXISTS (SELECT 1 FROM inventario_software_datos_sensibles WHERE nombre = 'Direccion');
 
+CREATE TABLE IF NOT EXISTS inventario_software_tipo_usuario (
+    id_tipo_usuario INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(120) NOT NULL,
+    descripcion VARCHAR(255) DEFAULT NULL,
+    activo TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_tipo_usuario),
+    UNIQUE KEY uq_tipo_usuario_nombre (nombre)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS software_tipo_usuario_rel (
+    id_relacion INT NOT NULL AUTO_INCREMENT,
+    id_software INT NOT NULL,
+    id_tipo_usuario INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_relacion),
+    UNIQUE KEY uq_software_tipo_usuario (id_software, id_tipo_usuario),
+    KEY idx_rel_tipo_usuario (id_tipo_usuario),
+    KEY idx_rel_tipo_software (id_software)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO inventario_software_tipo_usuario (nombre, descripcion)
+SELECT 'Colaborador', NULL
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_tipo_usuario WHERE nombre = 'Colaborador');
+
+INSERT INTO inventario_software_tipo_usuario (nombre, descripcion)
+SELECT 'Alumno', NULL
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_tipo_usuario WHERE nombre = 'Alumno');
+
+INSERT INTO inventario_software_tipo_usuario (nombre, descripcion)
+SELECT 'Proveedor', NULL
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_tipo_usuario WHERE nombre = 'Proveedor');
+
+INSERT INTO inventario_software_tipo_usuario (nombre, descripcion)
+SELECT 'Otro', NULL
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_tipo_usuario WHERE nombre = 'Otro');
+
 CREATE TABLE IF NOT EXISTS sitios_web_catalogo (
     id_sitio INT NOT NULL AUTO_INCREMENT,
     id_colegio INT NOT NULL,

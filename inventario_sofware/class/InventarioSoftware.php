@@ -60,7 +60,7 @@ class InventarioSoftware
 
     public function obtenerEstadoInstalacion()
     {
-        $tablas = ['software_catalogo', 'software_datos_almacenamiento', 'software_historial', 'sitios_web_catalogo', 'inventario_software_datos_sensibles', 'software_datos_sensibles_rel'];
+        $tablas = ['software_catalogo', 'software_datos_almacenamiento', 'software_historial', 'sitios_web_catalogo', 'inventario_software_datos_sensibles', 'software_datos_sensibles_rel', 'inventario_software_tipo_usuario', 'software_tipo_usuario_rel'];
         $faltantes = [];
         foreach ($tablas as $tabla) {
             if (!$this->tablaExiste($tabla)) {
@@ -452,6 +452,20 @@ class InventarioSoftware
         return $datos;
     }
 
+    public function obtenerTiposUsuarioCatalogo()
+    {
+        if (!$this->tablaExiste('inventario_software_tipo_usuario')) {
+            return [];
+        }
+
+        $datos = [];
+        $rs = $this->db->consulta("SELECT id_tipo_usuario, nombre, descripcion FROM inventario_software_tipo_usuario WHERE activo = 1 ORDER BY nombre ASC");
+        while ($fila = $this->db->fetch_assoc($rs)) {
+            $datos[] = $fila;
+        }
+        return $datos;
+    }
+
     public function registrarDatoSensible($nombre, $descripcion = '')
     {
         if (!$this->tablaExiste('inventario_software_datos_sensibles')) {
@@ -636,6 +650,7 @@ class InventarioSoftware
 
         $software['almacenamiento'] = [];
         $software['datos_sensibles'] = [];
+        $software['tipos_usuario'] = [];
         if ($this->tablaExiste('software_datos_almacenamiento')) {
             $stmt = mysqli_prepare($this->cn, "SELECT * FROM software_datos_almacenamiento WHERE id_software = ? ORDER BY orden_dato ASC, id_dato ASC");
             mysqli_stmt_bind_param($stmt, 'i', $idSoftware);
@@ -660,6 +675,30 @@ class InventarioSoftware
                 $software['datos_sensibles'][] = $fila;
             }
             mysqli_stmt_close($stmt);
+        }
+
+        if ($this->tablaExiste('software_tipo_usuario_rel') && $this->tablaExiste('inventario_software_tipo_usuario')) {
+            $stmt = mysqli_prepare($this->cn, "SELECT t.id_tipo_usuario, t.nombre, t.descripcion
+                                               FROM software_tipo_usuario_rel r
+                                               INNER JOIN inventario_software_tipo_usuario t ON t.id_tipo_usuario = r.id_tipo_usuario
+                                               WHERE r.id_software = ? AND t.activo = 1
+                                               ORDER BY t.nombre ASC");
+            mysqli_stmt_bind_param($stmt, 'i', $idSoftware);
+            mysqli_stmt_execute($stmt);
+            $rs = mysqli_stmt_get_result($stmt);
+            while ($fila = mysqli_fetch_assoc($rs)) {
+                $software['tipos_usuario'][] = $fila;
+            }
+            mysqli_stmt_close($stmt);
+        } elseif (!empty($software['id_tipo_usuario']) && $this->tablaExiste('inventario_software_tipo_usuario')) {
+            $stmt = mysqli_prepare($this->cn, "SELECT id_tipo_usuario, nombre, descripcion FROM inventario_software_tipo_usuario WHERE id_tipo_usuario = ? AND activo = 1 LIMIT 1");
+            mysqli_stmt_bind_param($stmt, 'i', $software['id_tipo_usuario']);
+            mysqli_stmt_execute($stmt);
+            $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+            mysqli_stmt_close($stmt);
+            if ($fila) {
+                $software['tipos_usuario'][] = $fila;
+            }
         }
 
         return $software;
@@ -704,6 +743,7 @@ class InventarioSoftware
 
             $this->guardarDatosAlmacenamiento($idSoftware, $payload['almacenamiento']);
             $this->guardarDatosSensiblesSoftware($idSoftware, $payload['datos_sensibles']);
+            $this->guardarTiposUsuarioSoftware($idSoftware, $payload['tipos_usuario']);
             $this->guardarHistorial($idSoftware, 'creacion', 'Software creado', $idUsuario);
             mysqli_commit($this->cn);
             return $idSoftware;
@@ -739,6 +779,7 @@ class InventarioSoftware
 
             $this->guardarDatosAlmacenamiento($idSoftware, $payload['almacenamiento']);
             $this->guardarDatosSensiblesSoftware($idSoftware, $payload['datos_sensibles']);
+            $this->guardarTiposUsuarioSoftware($idSoftware, $payload['tipos_usuario']);
             $this->guardarHistorial($idSoftware, 'actualizacion', 'Software actualizado', $idUsuario);
             mysqli_commit($this->cn);
         } catch (Throwable $e) {
@@ -808,6 +849,7 @@ class InventarioSoftware
             'observaciones' => trim((string)($post['observaciones'] ?? '')),
             'almacenamiento' => [],
             'datos_sensibles' => [],
+            'tipos_usuario' => [],
         ];
 
         if ($payload['id_colegio'] <= 0) {
@@ -859,6 +901,23 @@ class InventarioSoftware
             $payload['datos_sensibles'][] = $idDato;
         }
         $payload['datos_sensibles'] = array_values(array_unique($payload['datos_sensibles']));
+
+        $catalogoTiposUsuario = [];
+        foreach ($this->obtenerTiposUsuarioCatalogo() as $tipoUsuario) {
+            $catalogoTiposUsuario[(int)$tipoUsuario['id_tipo_usuario']] = true;
+        }
+
+        foreach ((array)($post['tipos_usuario'] ?? []) as $idTipoUsuario) {
+            $idTipoUsuario = (int)$idTipoUsuario;
+            if ($idTipoUsuario <= 0) {
+                continue;
+            }
+            if (!empty($catalogoTiposUsuario) && !isset($catalogoTiposUsuario[$idTipoUsuario])) {
+                continue;
+            }
+            $payload['tipos_usuario'][] = $idTipoUsuario;
+        }
+        $payload['tipos_usuario'] = array_values(array_unique($payload['tipos_usuario']));
 
         return $payload;
     }
@@ -924,6 +983,33 @@ class InventarioSoftware
             }
             $stmt = mysqli_prepare($this->cn, "INSERT INTO software_datos_sensibles_rel (id_software, id_dato_sensible, created_at) VALUES (?, ?, NOW())");
             mysqli_stmt_bind_param($stmt, 'ii', $idSoftware, $idDatoSensible);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    private function guardarTiposUsuarioSoftware($idSoftware, $idsTiposUsuario)
+    {
+        if (!$this->tablaExiste('software_tipo_usuario_rel')) {
+            return;
+        }
+
+        $stmt = mysqli_prepare($this->cn, "DELETE FROM software_tipo_usuario_rel WHERE id_software = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $idSoftware);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        if (!$this->tablaExiste('inventario_software_tipo_usuario')) {
+            return;
+        }
+
+        foreach ($idsTiposUsuario as $idTipoUsuario) {
+            $idTipoUsuario = (int)$idTipoUsuario;
+            if ($idTipoUsuario <= 0) {
+                continue;
+            }
+            $stmt = mysqli_prepare($this->cn, "INSERT INTO software_tipo_usuario_rel (id_software, id_tipo_usuario, created_at) VALUES (?, ?, NOW())");
+            mysqli_stmt_bind_param($stmt, 'ii', $idSoftware, $idTipoUsuario);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }

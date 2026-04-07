@@ -245,6 +245,7 @@ try {
             . '<tr><th>Pagado por</th><td>' . inv_pdf_h($software['pagado_por']) . '</td></tr>'
             . '<tr><th>Proveedor</th><td>' . inv_pdf_h($software['proveedor'] ?: '-') . '</td></tr>'
             . '<tr><th>URL o referencia</th><td>' . inv_pdf_h($software['url_referencia'] ?: '-') . '</td></tr>'
+            . '<tr><th>Tipos de usuario</th><td>' . (!empty($software['tipos_usuario']) ? inv_pdf_h(implode(', ', array_map(static function ($fila) { return $fila['nombre']; }, $software['tipos_usuario']))) : '-') . '</td></tr>'
             . '<tr><th>Datos sensibles</th><td>' . (!empty($software['datos_sensibles']) ? inv_pdf_h(implode(', ', array_map(static function ($fila) { return $fila['nombre']; }, $software['datos_sensibles']))) : '-') . '</td></tr>'
             . '<tr><th>Observaciones</th><td>' . nl2br(inv_pdf_h($software['observaciones'] ?: 'Sin observaciones.')) . '</td></tr>'
             . '</tbody></table>';

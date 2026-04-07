@@ -80,6 +80,7 @@ if (!$registro) {
                     <div class="item"><span>Responsable</span><p><?= ficha_qr_h($registro['responsable'] ?: 'Sin asignar') ?></p></div>
                     <div class="item"><span>Proveedor</span><p><?= ficha_qr_h($registro['proveedor'] ?: '-') ?></p></div>
                     <div class="item" style="grid-column: 1 / -1;"><span>URL o referencia</span><p><?= $registro['url_referencia'] ? '<a href="' . ficha_qr_h($registro['url_referencia']) . '" target="_blank" rel="noopener noreferrer">' . ficha_qr_h($registro['url_referencia']) . '</a>' : '-' ?></p></div>
+                    <div class="item" style="grid-column: 1 / -1;"><span>Tipos de usuario</span><p><?= !empty($registro['tipos_usuario']) ? ficha_qr_h(implode(', ', array_map(static function ($fila) { return $fila['nombre']; }, $registro['tipos_usuario']))) : 'Sin tipos de usuario asociados.' ?></p></div>
                     <div class="item" style="grid-column: 1 / -1;"><span>Datos sensibles</span><p><?= !empty($registro['datos_sensibles']) ? ficha_qr_h(implode(', ', array_map(static function ($fila) { return $fila['nombre']; }, $registro['datos_sensibles']))) : 'Sin datos sensibles asociados.' ?></p></div>
                     <div class="item" style="grid-column: 1 / -1;"><span>Observaciones</span><p><?= nl2br(ficha_qr_h($registro['observaciones'] ?: 'Sin observaciones.')) ?></p></div>
                 </div>

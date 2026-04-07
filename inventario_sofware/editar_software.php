@@ -10,6 +10,7 @@ $tiposLicenciamiento = $inventario->obtenerTiposLicenciamiento();
 $pagadores = $inventario->obtenerPagadores();
 $monedas = $inventario->obtenerMonedas();
 $datosSensiblesCatalogo = $inventario->obtenerDatosSensiblesCatalogo();
+$tiposUsuarioCatalogo = $inventario->obtenerTiposUsuarioCatalogo();
 $modo = 'editar';
 require __DIR__ . '/componentes/layout_top.inc';
 ?>

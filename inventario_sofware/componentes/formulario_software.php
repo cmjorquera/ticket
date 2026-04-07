@@ -3,8 +3,10 @@ $modo = $modo ?? 'crear';
 $software = $software ?? [];
 $almacenamiento = !empty($software['almacenamiento']) ? $software['almacenamiento'] : [[]];
 $datosSensiblesCatalogo = $datosSensiblesCatalogo ?? [];
+$tiposUsuarioCatalogo = $tiposUsuarioCatalogo ?? [];
 $monedas = $monedas ?? ['CLP', 'USD'];
 $datosSensiblesSeleccionados = array_map('intval', array_column(($software['datos_sensibles'] ?? []), 'id_dato_sensible'));
+$tiposUsuarioSeleccionados = array_map('intval', array_column(($software['tipos_usuario'] ?? []), 'id_tipo_usuario'));
 $action = $modo === 'editar' ? 'actualizar_software.php' : 'guardar_software.php';
 ?>
 <form id="formInventario" action="<?= inventario_h($action) ?>" method="post" class="inv-form">
@@ -24,6 +26,28 @@ $action = $modo === 'editar' ? 'actualizar_software.php' : 'guardar_software.php
                 <div class="col-md-3"><label class="form-label">Moneda</label><select name="moneda" class="form-select" required><?php foreach ($monedas as $moneda): ?><option value="<?= inventario_h($moneda) ?>" <?= ($software['moneda'] ?? 'USD') === $moneda ? 'selected' : '' ?>><?= $moneda === 'CLP' ? '🇨🇱 Peso chileno (CLP)' : '🇺🇸 Dolar estadounidense (USD)' ?></option><?php endforeach; ?></select></div>
                 <div class="col-md-3"><label class="form-label">Proveedor</label><input type="text" name="proveedor" class="form-control" value="<?= inventario_h($software['proveedor'] ?? '') ?>"></div>
                 <div class="col-md-6"><label class="form-label">URL o referencia</label><input type="text" name="url_referencia" class="form-control" value="<?= inventario_h($software['url_referencia'] ?? '') ?>" placeholder="Panel admin, web del proveedor, portal de licencias, etc."></div>
+                <div class="col-md-12">
+                    <label class="form-label">Quienes ocupan el sistema</label>
+                    <?php if (!empty($tiposUsuarioCatalogo)): ?>
+                        <div class="row g-3">
+                            <?php foreach ($tiposUsuarioCatalogo as $tipoUsuario): ?>
+                                <div class="col-md-3">
+                                    <label class="inv-repeat-card py-3 h-100 d-block">
+                                        <div class="form-check m-0">
+                                            <input class="form-check-input" type="checkbox" name="tipos_usuario[]" value="<?= (int)$tipoUsuario['id_tipo_usuario'] ?>" <?= in_array((int)$tipoUsuario['id_tipo_usuario'], $tiposUsuarioSeleccionados, true) ? 'checked' : '' ?>>
+                                            <span class="form-check-label fw-semibold"><?= inventario_h($tipoUsuario['nombre']) ?></span>
+                                        </div>
+                                        <?php if (!empty($tipoUsuario['descripcion'])): ?>
+                                            <small class="text-muted d-block mt-2"><?= inventario_h($tipoUsuario['descripcion']) ?></small>
+                                        <?php endif; ?>
+                                    </label>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-light border mb-0">No hay tipos de usuario cargados todavia.</div>
+                    <?php endif; ?>
+                </div>
                 <div class="col-md-12"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="3"><?= inventario_h($software['observaciones'] ?? '') ?></textarea></div>
             </div></div></div>
         </div>
