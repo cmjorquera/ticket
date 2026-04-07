@@ -1,0 +1,167 @@
+Diagrama de tablas - modulo inventario_sofware
+============================================
+
+1. Version compacta
+------------------
+
+colegio
+  |
+  +---- 1:N ---- software_catalogo ---- 1:N ---- software_datos_almacenamiento
+  |                     |
+  |                     +---- 1:N ---- software_historial
+  |                     |
+  |                     +---- 1:N ---- software_datos_sensibles_rel ---- N:1 ---- inventario_software_datos_sensibles
+  |
+  +---- 1:N ---- sitios_web_catalogo
+
+usuarios
+  |
+  +---- 1:N ---- software_catalogo (id_usuario_responsable)
+  |
+  +---- 1:N ---- sitios_web_catalogo (id_usuario_responsable)
+
+inventario_software_tipo_usuario
+  |
+  +---- 1:N ---- software_catalogo (id_tipo_usuario)
+
+
+2. Version detallada
+--------------------
+
+                           +----------------------+
+                           |       colegio        |
+                           |----------------------|
+                           | id_colegio PK        |
+                           | nom_colegio          |
+                           +----------------------+
+                                     |
+                                     | 1:N
+                                     v
++---------------------------------------------------+
+|                 software_catalogo                 |
+|---------------------------------------------------|
+| id_software PK                                    |
+| id_colegio FK                                     |
+| id_usuario_responsable FK                         |
+| id_tipo_usuario FK                                |
+| nombre_software                                   |
+| version_software                                  |
+| cantidad_licencias                                |
+| tipo_licenciamiento                               |
+| fecha_inicio_licencia                             |
+| fecha_fin_licencia                                |
+| pagado_por                                        |
+| costo                                             |
+| moneda                                            |
+| proveedor                                         |
+| url_referencia                                    |
+| observaciones                                     |
+| id_usuario                                        |
+| activo                                            |
+| created_at                                        |
+| updated_at                                        |
++---------------------------------------------------+
+      | 1:N                    | 1:N                         | 1:N
+      v                        v                             v
++------------------------+  +----------------------+  +-----------------------------+
+|software_datos_         |  | software_historial   |  |software_datos_sensibles_rel |
+|almacenamiento          |  |----------------------|  |-----------------------------|
+|------------------------|  | id_historial PK      |  | id_relacion PK              |
+| id_dato PK             |  | id_software FK       |  | id_software FK              |
+| id_software FK         |  | accion               |  | id_dato_sensible FK         |
+| nombre_contacto        |  | detalle              |  | UQ(id_software,             |
+| rut_contacto           |  | id_usuario           |  |    id_dato_sensible)        |
+| email_contacto         |  | fecha_registro       |  | created_at                  |
+| otros_datos            |  +----------------------+  +-----------------------------+
+| orden_dato             |                                    |
++------------------------+                                    | N:1
+                                                              v
+                                                  +-----------------------------------+
+                                                  |inventario_software_datos_         |
+                                                  |sensibles                          |
+                                                  |-----------------------------------|
+                                                  | id_dato_sensible PK               |
+                                                  | nombre UQ                         |
+                                                  | descripcion                       |
+                                                  | activo                            |
+                                                  | created_at                        |
+                                                  | updated_at                        |
+                                                  +-----------------------------------+
+
+                           +-----------------------------------+
+                           |inventario_software_tipo_usuario   |
+                           |-----------------------------------|
+                           | id_tipo_usuario PK                |
+                           | nombre                            |
+                           | descripcion                       |
+                           | activo                            |
+                           | created_at                        |
+                           | updated_at                        |
+                           +-----------------------------------+
+                                      ^
+                                      | N:1
+                                      |
+                              software_catalogo.id_tipo_usuario
+
+                           +----------------------+
+                           |       usuarios       |
+                           |----------------------|
+                           | id PK                |
+                           | nombre               |
+                           | apellido_paterno     |
+                           | apellido_materno     |
+                           +----------------------+
+                                      ^
+                                      | N:1
+                                      |
+                    software_catalogo.id_usuario_responsable
+                    sitios_web_catalogo.id_usuario_responsable
+
+
+Modulo de sitios web / apps / clientes
+--------------------------------------
+
+                           +----------------------+
+                           |       colegio        |
+                           |----------------------|
+                           | id_colegio PK        |
+                           +----------------------+
+                                      |
+                                      | 1:N
+                                      v
++---------------------------------------------------+
+|               sitios_web_catalogo                 |
+|---------------------------------------------------|
+| id_sitio PK                                       |
+| id_colegio FK                                     |
+| id_usuario_responsable FK                         |
+| nombre_sitio                                      |
+| tipo_sitio                                        |
+| url_sitio                                         |
+| proveedor_hosting                                 |
+| estado_sitio                                      |
+| observaciones                                     |
+| id_usuario                                        |
+| activo                                            |
+| created_at                                        |
+| updated_at                                        |
++---------------------------------------------------+
+
+3. Resumen de relaciones
+------------------------
+- `colegio` 1:N `software_catalogo`
+- `software_catalogo` 1:N `software_datos_almacenamiento`
+- `software_catalogo` 1:N `software_historial`
+- `software_catalogo` 1:N `software_datos_sensibles_rel`
+- `inventario_software_datos_sensibles` 1:N `software_datos_sensibles_rel`
+- `inventario_software_tipo_usuario` 1:N `software_catalogo`
+- `usuarios` 1:N `software_catalogo`
+- `colegio` 1:N `sitios_web_catalogo`
+- `usuarios` 1:N `sitios_web_catalogo`
+
+4. Notas utiles
+---------------
+- `software_datos_sensibles_rel` es la tabla puente entre software y catalogo de datos sensibles.
+- `inventario_software_tipo_usuario` funciona como catalogo de tipos de usuario del sistema.
+- `software_historial` guarda trazabilidad basica del ciclo de vida del software.
+- `sitios_web_catalogo` es parte del mismo modulo, pero separado del flujo de licencias.
