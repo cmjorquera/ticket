@@ -2,6 +2,8 @@
 $modo = $modo ?? 'crear';
 $software = $software ?? [];
 $almacenamiento = !empty($software['almacenamiento']) ? $software['almacenamiento'] : [[]];
+$datosSensiblesCatalogo = $datosSensiblesCatalogo ?? [];
+$datosSensiblesSeleccionados = array_map('intval', array_column(($software['datos_sensibles'] ?? []), 'id_dato_sensible'));
 $action = $modo === 'editar' ? 'actualizar_software.php' : 'guardar_software.php';
 ?>
 <form id="formInventario" action="<?= inventario_h($action) ?>" method="post" class="inv-form">
@@ -23,6 +25,31 @@ $action = $modo === 'editar' ? 'actualizar_software.php' : 'guardar_software.php
                 <div class="col-md-12"><label class="form-label">URL o referencia</label><input type="text" name="url_referencia" class="form-control" value="<?= inventario_h($software['url_referencia'] ?? '') ?>" placeholder="Panel admin, web del proveedor, portal de licencias, etc."></div>
                 <div class="col-md-12"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="3"><?= inventario_h($software['observaciones'] ?? '') ?></textarea></div>
             </div></div></div>
+        </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosSensibles">Datos sensibles</button></h2>
+            <div id="datosSensibles" class="accordion-collapse collapse" data-bs-parent="#accordionSoftware"><div class="accordion-body">
+                <?php if (!empty($datosSensiblesCatalogo)): ?>
+                    <p class="text-muted mb-3">Marca los datos sensibles que este software procesa, almacena o visualiza.</p>
+                    <div class="row g-3">
+                        <?php foreach ($datosSensiblesCatalogo as $dato): ?>
+                            <div class="col-md-6">
+                                <label class="inv-repeat-card py-3 h-100 d-block">
+                                    <div class="form-check m-0">
+                                        <input class="form-check-input" type="checkbox" name="datos_sensibles[]" value="<?= (int)$dato['id_dato_sensible'] ?>" <?= in_array((int)$dato['id_dato_sensible'], $datosSensiblesSeleccionados, true) ? 'checked' : '' ?>>
+                                        <span class="form-check-label fw-semibold"><?= inventario_h($dato['nombre']) ?></span>
+                                    </div>
+                                    <?php if (!empty($dato['descripcion'])): ?>
+                                        <small class="text-muted d-block mt-2"><?= inventario_h($dato['descripcion']) ?></small>
+                                    <?php endif; ?>
+                                </label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-light border mb-0">No hay catalogo de datos sensibles cargado todavia.</div>
+                <?php endif; ?>
+            </div></div>
         </div>
         <div class="accordion-item">
             <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosAlmacenamiento">Datos de almacenamiento</button></h2>

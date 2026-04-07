@@ -4,8 +4,11 @@ $softwaresDisponibles = $softwaresDisponibles ?? [];
 $vista = $vista ?? 'software';
 $softwareSeleccionado = $softwareSeleccionado ?? '';
 $idColegioSeleccionado = (int)($idColegioSeleccionado ?? 0);
+$idDatoSensibleSeleccionado = (int)($idDatoSensibleSeleccionado ?? 0);
 $consultaSoftware = $consultaSoftware ?? ['software' => '', 'resumen' => ['total_licencias' => 0, 'total_colegios' => 0, 'costo_total' => 0], 'colegios' => []];
 $consultaColegio = $consultaColegio ?? ['colegio' => null, 'resumen' => ['total_softwares' => 0, 'total_licencias' => 0, 'total_webs' => 0, 'total_apps' => 0, 'total_clientes' => 0, 'total_sitios' => 0, 'costo_total' => 0], 'softwares' => [], 'sitios' => []];
+$datosSensiblesDisponibles = $datosSensiblesDisponibles ?? [];
+$consultaDatoSensible = $consultaDatoSensible ?? ['dato' => null, 'resumen' => ['total_softwares' => 0, 'total_licencias' => 0, 'total_colegios' => 0, 'costo_total' => 0], 'softwares' => []];
 $logoColegio = $logoColegio ?? '';
 ?>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -24,6 +27,9 @@ $logoColegio = $logoColegio ?? '';
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link <?= $vista === 'colegio' ? 'active' : '' ?>" href="consulta_nueva.php?vista=colegio">Ver por colegio</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link <?= $vista === 'dato_sensible' ? 'active' : '' ?>" href="consulta_nueva.php?vista=dato_sensible">Ver por dato sensible</a>
             </li>
         </ul>
 
@@ -96,7 +102,7 @@ $logoColegio = $logoColegio ?? '';
             <?php else: ?>
                 <div class="alert alert-light border mb-0">Selecciona un software para ver su distribucion entre colegios.</div>
             <?php endif; ?>
-        <?php else: ?>
+        <?php elseif ($vista === 'colegio'): ?>
             <div class="row g-4 align-items-start mb-4">
                 <div class="col-lg-7">
                     <h4 class="mb-1">Resumen por colegio</h4>
@@ -202,6 +208,74 @@ $logoColegio = $logoColegio ?? '';
                 </div>
             <?php else: ?>
                 <div class="alert alert-light border mb-0">Selecciona un colegio para ver su resumen digital.</div>
+            <?php endif; ?>
+        <?php else: ?>
+            <div class="mb-4">
+                <h4 class="mb-1">Consulta por dato sensible</h4>
+                <p class="text-muted mb-0">Revisa que software utiliza o trata un dato sensible del catalogo.</p>
+            </div>
+
+            <form method="get" class="row g-3 align-items-end mb-4">
+                <input type="hidden" name="modo" value="consulta">
+                <input type="hidden" name="vista" value="dato_sensible">
+                <div class="col-lg-8">
+                    <label class="form-label">Dato sensible</label>
+                    <select name="id_dato_sensible" class="form-select js-auto-submit">
+                        <option value="">Seleccione un dato sensible</option>
+                        <?php foreach ($datosSensiblesDisponibles as $dato): ?>
+                            <option value="<?= (int)$dato['id_dato_sensible'] ?>" <?= $idDatoSensibleSeleccionado === (int)$dato['id_dato_sensible'] ? 'selected' : '' ?>><?= inventario_h($dato['nombre']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-lg-4 d-flex gap-2">
+                    <a href="consulta_nueva.php?vista=dato_sensible" class="btn btn-light border">Limpiar</a>
+                </div>
+            </form>
+
+            <?php if (empty($datosSensiblesDisponibles)): ?>
+                <div class="alert alert-warning border mb-0">Faltan datos en el catalogo de datos sensibles. Ejecuta el SQL del modulo y carga al menos un dato sensible.</div>
+            <?php elseif (!empty($consultaDatoSensible['dato'])): ?>
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-6 col-xl-3"><div class="inv-stat-card inv-stat-primary"><span class="inv-stat-label">Dato sensible</span><strong><?= inventario_h($consultaDatoSensible['dato']['nombre']) ?></strong><small><?= inventario_h($consultaDatoSensible['dato']['descripcion'] ?: 'Catalogo activo') ?></small></div></div>
+                    <div class="col-12 col-md-6 col-xl-3"><div class="inv-stat-card inv-stat-info"><span class="inv-stat-label">Softwares</span><strong><?= (int)$consultaDatoSensible['resumen']['total_softwares'] ?></strong><small>Registros relacionados</small></div></div>
+                    <div class="col-12 col-md-6 col-xl-3"><div class="inv-stat-card inv-stat-warning"><span class="inv-stat-label">Licencias</span><strong><?= (int)$consultaDatoSensible['resumen']['total_licencias'] ?></strong><small>Total asociado</small></div></div>
+                    <div class="col-12 col-md-6 col-xl-3"><div class="inv-stat-card inv-stat-success"><span class="inv-stat-label">Costo total</span><strong>USD <?= number_format((float)$consultaDatoSensible['resumen']['costo_total'], 0, ',', '.') ?></strong><small><?= (int)$consultaDatoSensible['resumen']['total_colegios'] ?> colegios</small></div></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Colegio</th>
+                                <th>Software</th>
+                                <th>Version</th>
+                                <th>Licencias</th>
+                                <th>Licenciamiento</th>
+                                <th>Responsable</th>
+                                <th>Costo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($consultaDatoSensible['softwares'])): ?>
+                                <?php foreach ($consultaDatoSensible['softwares'] as $fila): ?>
+                                    <tr>
+                                        <td><?= inventario_h($fila['nom_colegio']) ?></td>
+                                        <td><?= inventario_h($fila['nombre_software']) ?></td>
+                                        <td><?= inventario_h($fila['version_software'] ?: '-') ?></td>
+                                        <td><?= (int)$fila['cantidad_licencias'] ?></td>
+                                        <td><?= inventario_h($fila['tipo_licenciamiento']) ?></td>
+                                        <td><?= inventario_h(trim((string)($fila['responsable'] ?? '')) ?: 'Sin asignar') ?></td>
+                                        <td><?= inventario_h($fila['moneda'] ?: 'USD') ?> <?= number_format((float)$fila['costo'], 0, ',', '.') ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr><td colspan="7" class="text-center text-muted">No hay software asociado a este dato sensible.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-light border mb-0">Selecciona un dato sensible para revisar los software relacionados.</div>
             <?php endif; ?>
         <?php endif; ?>
     </div>

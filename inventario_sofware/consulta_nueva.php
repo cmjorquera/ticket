@@ -5,11 +5,16 @@ try {
     $tituloPagina = 'Consulta de software';
     $colegios = $inventario->obtenerColegios();
     $softwaresDisponibles = $inventario->obtenerOpcionesSoftwareConsulta();
-    $vista = ($_GET['vista'] ?? 'software') === 'colegio' ? 'colegio' : 'software';
+    $datosSensiblesDisponibles = $inventario->obtenerDatosSensiblesCatalogo();
+    $vistaSolicitada = trim((string)($_GET['vista'] ?? 'software'));
+    $vistasPermitidas = ['software', 'colegio', 'dato_sensible'];
+    $vista = in_array($vistaSolicitada, $vistasPermitidas, true) ? $vistaSolicitada : 'software';
     $softwareSeleccionado = trim((string)($_GET['software'] ?? ''));
     $idColegioSeleccionado = (int)($_GET['id_colegio'] ?? 0);
+    $idDatoSensibleSeleccionado = (int)($_GET['id_dato_sensible'] ?? 0);
     $consultaSoftware = $inventario->obtenerConsultaPorSoftware($softwareSeleccionado);
     $consultaColegio = $inventario->obtenerConsultaPorColegio($idColegioSeleccionado);
+    $consultaDatoSensible = $inventario->obtenerConsultaPorDatoSensible($idDatoSensibleSeleccionado);
 } catch (Throwable $e) {
     inventario_responder_error('Error al cargar la consulta del inventario de software: ' . $e->getMessage());
 }

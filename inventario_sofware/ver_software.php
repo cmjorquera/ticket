@@ -30,6 +30,7 @@ require __DIR__ . '/componentes/layout_top.inc';
             <div class="col-md-3"><span class="text-muted d-block small">Costo</span><strong><?= inventario_h($software['moneda']) ?> <?= number_format((float)$software['costo'], 2, ',', '.') ?></strong></div>
             <div class="col-md-6"><span class="text-muted d-block small">Proveedor</span><strong><?= inventario_h($software['proveedor'] ?: '-') ?></strong></div>
             <div class="col-md-6"><span class="text-muted d-block small">URL o referencia</span><strong class="text-break"><?= inventario_h($software['url_referencia'] ?: '-') ?></strong></div>
+            <div class="col-12"><span class="text-muted d-block small">Datos sensibles</span><p class="mb-0"><?= !empty($software['datos_sensibles']) ? inventario_h(implode(', ', array_map(static function ($fila) { return $fila['nombre']; }, $software['datos_sensibles']))) : 'Sin datos sensibles asociados.' ?></p></div>
             <div class="col-12"><span class="text-muted d-block small">Observaciones</span><p class="mb-0"><?= nl2br(inventario_h($software['observaciones'] ?: 'Sin observaciones.')) ?></p></div>
         </div></div></div>
     </div>

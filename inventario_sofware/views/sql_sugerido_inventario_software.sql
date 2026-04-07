@@ -47,6 +47,49 @@ CREATE TABLE IF NOT EXISTS software_historial (
     CONSTRAINT fk_historial_software FOREIGN KEY (id_software) REFERENCES software_catalogo (id_software) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS inventario_software_datos_sensibles (
+    id_dato_sensible INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(150) NOT NULL,
+    descripcion VARCHAR(255) DEFAULT NULL,
+    activo TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_dato_sensible),
+    UNIQUE KEY uq_dato_sensible_nombre (nombre)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS software_datos_sensibles_rel (
+    id_relacion INT NOT NULL AUTO_INCREMENT,
+    id_software INT NOT NULL,
+    id_dato_sensible INT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_relacion),
+    UNIQUE KEY uq_software_dato_sensible (id_software, id_dato_sensible),
+    KEY idx_rel_dato_sensible (id_dato_sensible),
+    CONSTRAINT fk_rel_software FOREIGN KEY (id_software) REFERENCES software_catalogo (id_software) ON DELETE CASCADE,
+    CONSTRAINT fk_rel_dato_sensible FOREIGN KEY (id_dato_sensible) REFERENCES inventario_software_datos_sensibles (id_dato_sensible) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO inventario_software_datos_sensibles (nombre, descripcion)
+SELECT 'RUT', 'Identificador tributario o de identidad'
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_datos_sensibles WHERE nombre = 'RUT');
+
+INSERT INTO inventario_software_datos_sensibles (nombre, descripcion)
+SELECT 'Nombre completo', 'Nombre y apellidos de una persona'
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_datos_sensibles WHERE nombre = 'Nombre completo');
+
+INSERT INTO inventario_software_datos_sensibles (nombre, descripcion)
+SELECT 'Email', 'Correo electronico personal o institucional'
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_datos_sensibles WHERE nombre = 'Email');
+
+INSERT INTO inventario_software_datos_sensibles (nombre, descripcion)
+SELECT 'Telefono', 'Numero de contacto'
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_datos_sensibles WHERE nombre = 'Telefono');
+
+INSERT INTO inventario_software_datos_sensibles (nombre, descripcion)
+SELECT 'Direccion', 'Domicilio o ubicacion personal'
+WHERE NOT EXISTS (SELECT 1 FROM inventario_software_datos_sensibles WHERE nombre = 'Direccion');
+
 CREATE TABLE IF NOT EXISTS sitios_web_catalogo (
     id_sitio INT NOT NULL AUTO_INCREMENT,
     id_colegio INT NOT NULL,

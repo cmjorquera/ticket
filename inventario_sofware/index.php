@@ -23,7 +23,7 @@ require __DIR__ . '/componentes/layout_top.inc';
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                         <div>
                             <!--<span class="inv-kicker">Modulo operativo</span>-->
-                            <h1 class="inv-title mb-2">Inventario de Sofware</h1>
+                            <h1 class="inv-title mb-2">Inventario de Software</h1>
                             <p class="inv-subtitle mb-0">Controla licencias, programas, cuentas relacionadas y registros de sitios web, apps o clientes.</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">

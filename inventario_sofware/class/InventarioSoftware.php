@@ -59,7 +59,7 @@ class InventarioSoftware
 
     public function obtenerEstadoInstalacion()
     {
-        $tablas = ['software_catalogo', 'software_datos_almacenamiento', 'software_historial', 'sitios_web_catalogo'];
+        $tablas = ['software_catalogo', 'software_datos_almacenamiento', 'software_historial', 'sitios_web_catalogo', 'inventario_software_datos_sensibles', 'software_datos_sensibles_rel'];
         $faltantes = [];
         foreach ($tablas as $tabla) {
             if (!$this->tablaExiste($tabla)) {
@@ -138,7 +138,7 @@ class InventarioSoftware
                 $resumen = array_merge($resumen, $fila);
             }
 
-            $rs = $this->db->consulta("SELECT c.nom_colegio, COUNT(*) AS total FROM software_catalogo s INNER JOIN colegio c ON c.id_colegio = s.id_colegio WHERE s.activo = 1 GROUP BY c.id_colegio, c.nom_colegio ORDER BY total DESC, c.nom_colegio ASC");
+            $rs = $this->db->consulta("SELECT COALESCE(NULLIF(c.nom_colegio, ''), CONCAT('Colegio ID ', s.id_colegio)) AS nom_colegio, COUNT(*) AS total FROM software_catalogo s LEFT JOIN colegio c ON c.id_colegio = s.id_colegio WHERE s.activo = 1 GROUP BY s.id_colegio, c.nom_colegio ORDER BY total DESC, nom_colegio ASC");
             while ($fila = $this->db->fetch_assoc($rs)) {
                 $resumen['por_colegio'][] = $fila;
             }
@@ -280,10 +280,10 @@ class InventarioSoftware
                        GROUP_CONCAT(DISTINCT s.pagado_por ORDER BY s.pagado_por SEPARATOR ', ') AS pagado_por,
                        COALESCE(SUM(s.costo), 0) AS costo_total
                 FROM software_catalogo s
-                INNER JOIN colegio c ON c.id_colegio = s.id_colegio
+                LEFT JOIN colegio c ON c.id_colegio = s.id_colegio
                 WHERE s.activo = 1 AND s.nombre_software = ?
-                GROUP BY c.id_colegio, c.nom_colegio
-                ORDER BY licencias DESC, c.nom_colegio ASC";
+                GROUP BY s.id_colegio, c.nom_colegio
+                ORDER BY licencias DESC, nom_colegio ASC";
         $stmt = mysqli_prepare($this->cn, $sql);
         mysqli_stmt_bind_param($stmt, 's', $nombreSoftware);
         mysqli_stmt_execute($stmt);
@@ -374,49 +374,127 @@ class InventarioSoftware
         }
 
         $where = ['s.activo = 1'];
-        $params = [];
-        $types = '';
 
         if (!empty($filtros['id_colegio'])) {
-            $where[] = 's.id_colegio = ?';
-            $params[] = (int)$filtros['id_colegio'];
-            $types .= 'i';
+            $where[] = 's.id_colegio = ' . (int)$filtros['id_colegio'];
         }
         if (!empty($filtros['id_usuario_responsable'])) {
-            $where[] = 's.id_usuario_responsable = ?';
-            $params[] = (int)$filtros['id_usuario_responsable'];
-            $types .= 'i';
+            $where[] = 's.id_usuario_responsable = ' . (int)$filtros['id_usuario_responsable'];
         }
         if (!empty($filtros['tipo_licenciamiento'])) {
-            $where[] = 's.tipo_licenciamiento = ?';
-            $params[] = trim((string)$filtros['tipo_licenciamiento']);
-            $types .= 's';
+            $tipoLicenciamiento = $this->db->escape_string(trim((string)$filtros['tipo_licenciamiento']));
+            $where[] = "s.tipo_licenciamiento = '{$tipoLicenciamiento}'";
         }
         if (!empty($filtros['busqueda'])) {
-            $where[] = '(s.nombre_software LIKE ? OR s.version_software LIKE ? OR s.proveedor LIKE ?)';
-            $like = '%' . trim((string)$filtros['busqueda']) . '%';
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
-            $types .= 'sss';
+            $like = $this->db->escape_string('%' . trim((string)$filtros['busqueda']) . '%');
+            $where[] = "(s.nombre_software LIKE '{$like}' OR s.version_software LIKE '{$like}' OR s.proveedor LIKE '{$like}')";
         }
 
-        $sql = "SELECT s.*, c.nom_colegio, CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
+        $sql = "SELECT s.*,
+                       COALESCE(NULLIF(c.nom_colegio, ''), CONCAT('Colegio ID ', s.id_colegio)) AS nom_colegio,
+                       CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
                 FROM software_catalogo s
-                INNER JOIN colegio c ON c.id_colegio = s.id_colegio
+                LEFT JOIN colegio c ON c.id_colegio = s.id_colegio
                 LEFT JOIN usuarios u ON u.id = s.id_usuario_responsable
                 WHERE " . implode(' AND ', $where) . "
                 ORDER BY s.id_software DESC";
-        $stmt = mysqli_prepare($this->cn, $sql);
-        $this->bindParams($stmt, $types, $params);
-        mysqli_stmt_execute($stmt);
-        $rs = mysqli_stmt_get_result($stmt);
+        $rs = $this->db->consulta($sql);
         $datos = [];
         while ($fila = mysqli_fetch_assoc($rs)) {
             $datos[] = $fila;
         }
-        mysqli_stmt_close($stmt);
         return $datos;
+    }
+
+    public function obtenerDatosSensiblesCatalogo()
+    {
+        if (!$this->tablaExiste('inventario_software_datos_sensibles')) {
+            return [];
+        }
+
+        $datos = [];
+        $rs = $this->db->consulta("SELECT id_dato_sensible, nombre, descripcion FROM inventario_software_datos_sensibles WHERE activo = 1 ORDER BY nombre ASC");
+        while ($fila = $this->db->fetch_assoc($rs)) {
+            $datos[] = $fila;
+        }
+        return $datos;
+    }
+
+    public function obtenerConsultaPorDatoSensible($idDatoSensible)
+    {
+        $idDatoSensible = (int)$idDatoSensible;
+        $vacio = [
+            'dato' => null,
+            'resumen' => [
+                'total_softwares' => 0,
+                'total_licencias' => 0,
+                'total_colegios' => 0,
+                'costo_total' => 0,
+            ],
+            'softwares' => [],
+        ];
+
+        if (
+            $idDatoSensible <= 0 ||
+            !$this->tablaExiste('inventario_software_datos_sensibles') ||
+            !$this->tablaExiste('software_datos_sensibles_rel') ||
+            !$this->tablaExiste('software_catalogo')
+        ) {
+            return $vacio;
+        }
+
+        $stmt = mysqli_prepare($this->cn, "SELECT id_dato_sensible, nombre, descripcion FROM inventario_software_datos_sensibles WHERE id_dato_sensible = ? AND activo = 1 LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idDatoSensible);
+        mysqli_stmt_execute($stmt);
+        $vacio['dato'] = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+        mysqli_stmt_close($stmt);
+
+        if (empty($vacio['dato'])) {
+            return $vacio;
+        }
+
+        $sql = "SELECT COUNT(DISTINCT s.id_software) AS total_softwares,
+                       COALESCE(SUM(s.cantidad_licencias), 0) AS total_licencias,
+                       COUNT(DISTINCT s.id_colegio) AS total_colegios,
+                       COALESCE(SUM(s.costo), 0) AS costo_total
+                FROM software_datos_sensibles_rel r
+                INNER JOIN software_catalogo s ON s.id_software = r.id_software
+                WHERE r.id_dato_sensible = ? AND s.activo = 1";
+        $stmt = mysqli_prepare($this->cn, $sql);
+        mysqli_stmt_bind_param($stmt, 'i', $idDatoSensible);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        mysqli_stmt_close($stmt);
+        if ($fila) {
+            $vacio['resumen'] = $fila;
+        }
+
+        $sql = "SELECT s.id_software,
+                       s.nombre_software,
+                       s.version_software,
+                       s.cantidad_licencias,
+                       s.tipo_licenciamiento,
+                       s.pagado_por,
+                       s.costo,
+                       s.moneda,
+                       COALESCE(NULLIF(c.nom_colegio, ''), CONCAT('Colegio ID ', s.id_colegio)) AS nom_colegio,
+                       CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
+                FROM software_datos_sensibles_rel r
+                INNER JOIN software_catalogo s ON s.id_software = r.id_software
+                LEFT JOIN colegio c ON c.id_colegio = s.id_colegio
+                LEFT JOIN usuarios u ON u.id = s.id_usuario_responsable
+                WHERE r.id_dato_sensible = ? AND s.activo = 1
+                ORDER BY nom_colegio ASC, s.nombre_software ASC, s.id_software DESC";
+        $stmt = mysqli_prepare($this->cn, $sql);
+        mysqli_stmt_bind_param($stmt, 'i', $idDatoSensible);
+        mysqli_stmt_execute($stmt);
+        $rs = mysqli_stmt_get_result($stmt);
+        while ($fila = mysqli_fetch_assoc($rs)) {
+            $vacio['softwares'][] = $fila;
+        }
+        mysqli_stmt_close($stmt);
+
+        return $vacio;
     }
 
     public function listarSitiosWeb($filtros = [])
@@ -426,48 +504,35 @@ class InventarioSoftware
         }
 
         $where = ['sw.activo = 1'];
-        $params = [];
-        $types = '';
 
         if (!empty($filtros['id_colegio'])) {
-            $where[] = 'sw.id_colegio = ?';
-            $params[] = (int)$filtros['id_colegio'];
-            $types .= 'i';
+            $where[] = 'sw.id_colegio = ' . (int)$filtros['id_colegio'];
         }
         if (!empty($filtros['id_usuario_responsable'])) {
-            $where[] = 'sw.id_usuario_responsable = ?';
-            $params[] = (int)$filtros['id_usuario_responsable'];
-            $types .= 'i';
+            $where[] = 'sw.id_usuario_responsable = ' . (int)$filtros['id_usuario_responsable'];
         }
         if (!empty($filtros['tipo_sitio'])) {
-            $where[] = 'sw.tipo_sitio = ?';
-            $params[] = trim((string)$filtros['tipo_sitio']);
-            $types .= 's';
+            $tipoSitio = $this->db->escape_string(trim((string)$filtros['tipo_sitio']));
+            $where[] = "sw.tipo_sitio = '{$tipoSitio}'";
         }
         if (!empty($filtros['busqueda'])) {
-            $where[] = '(sw.nombre_sitio LIKE ? OR sw.url_sitio LIKE ? OR sw.proveedor_hosting LIKE ?)';
-            $like = '%' . trim((string)$filtros['busqueda']) . '%';
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
-            $types .= 'sss';
+            $like = $this->db->escape_string('%' . trim((string)$filtros['busqueda']) . '%');
+            $where[] = "(sw.nombre_sitio LIKE '{$like}' OR sw.url_sitio LIKE '{$like}' OR sw.proveedor_hosting LIKE '{$like}')";
         }
 
-        $sql = "SELECT sw.*, c.nom_colegio, CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
+        $sql = "SELECT sw.*,
+                       COALESCE(NULLIF(c.nom_colegio, ''), CONCAT('Colegio ID ', sw.id_colegio)) AS nom_colegio,
+                       CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
                 FROM sitios_web_catalogo sw
-                INNER JOIN colegio c ON c.id_colegio = sw.id_colegio
+                LEFT JOIN colegio c ON c.id_colegio = sw.id_colegio
                 LEFT JOIN usuarios u ON u.id = sw.id_usuario_responsable
                 WHERE " . implode(' AND ', $where) . "
                 ORDER BY sw.id_sitio DESC";
-        $stmt = mysqli_prepare($this->cn, $sql);
-        $this->bindParams($stmt, $types, $params);
-        mysqli_stmt_execute($stmt);
-        $rs = mysqli_stmt_get_result($stmt);
+        $rs = $this->db->consulta($sql);
         $datos = [];
         while ($fila = mysqli_fetch_assoc($rs)) {
             $datos[] = $fila;
         }
-        mysqli_stmt_close($stmt);
         return $datos;
     }
 
@@ -478,9 +543,11 @@ class InventarioSoftware
             return null;
         }
 
-        $sql = "SELECT s.*, c.nom_colegio, CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
+        $sql = "SELECT s.*,
+                       COALESCE(NULLIF(c.nom_colegio, ''), CONCAT('Colegio ID ', s.id_colegio)) AS nom_colegio,
+                       CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
                 FROM software_catalogo s
-                INNER JOIN colegio c ON c.id_colegio = s.id_colegio
+                LEFT JOIN colegio c ON c.id_colegio = s.id_colegio
                 LEFT JOIN usuarios u ON u.id = s.id_usuario_responsable
                 WHERE s.id_software = ? AND s.activo = 1";
         $stmt = mysqli_prepare($this->cn, $sql);
@@ -494,6 +561,7 @@ class InventarioSoftware
         }
 
         $software['almacenamiento'] = [];
+        $software['datos_sensibles'] = [];
         if ($this->tablaExiste('software_datos_almacenamiento')) {
             $stmt = mysqli_prepare($this->cn, "SELECT * FROM software_datos_almacenamiento WHERE id_software = ? ORDER BY orden_dato ASC, id_dato ASC");
             mysqli_stmt_bind_param($stmt, 'i', $idSoftware);
@@ -501,6 +569,21 @@ class InventarioSoftware
             $rs = mysqli_stmt_get_result($stmt);
             while ($fila = mysqli_fetch_assoc($rs)) {
                 $software['almacenamiento'][] = $fila;
+            }
+            mysqli_stmt_close($stmt);
+        }
+
+        if ($this->tablaExiste('software_datos_sensibles_rel') && $this->tablaExiste('inventario_software_datos_sensibles')) {
+            $stmt = mysqli_prepare($this->cn, "SELECT d.id_dato_sensible, d.nombre, d.descripcion
+                                               FROM software_datos_sensibles_rel r
+                                               INNER JOIN inventario_software_datos_sensibles d ON d.id_dato_sensible = r.id_dato_sensible
+                                               WHERE r.id_software = ? AND d.activo = 1
+                                               ORDER BY d.nombre ASC");
+            mysqli_stmt_bind_param($stmt, 'i', $idSoftware);
+            mysqli_stmt_execute($stmt);
+            $rs = mysqli_stmt_get_result($stmt);
+            while ($fila = mysqli_fetch_assoc($rs)) {
+                $software['datos_sensibles'][] = $fila;
             }
             mysqli_stmt_close($stmt);
         }
@@ -515,9 +598,11 @@ class InventarioSoftware
             return null;
         }
 
-        $sql = "SELECT sw.*, c.nom_colegio, CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
+        $sql = "SELECT sw.*,
+                       COALESCE(NULLIF(c.nom_colegio, ''), CONCAT('Colegio ID ', sw.id_colegio)) AS nom_colegio,
+                       CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS responsable
                 FROM sitios_web_catalogo sw
-                INNER JOIN colegio c ON c.id_colegio = sw.id_colegio
+                LEFT JOIN colegio c ON c.id_colegio = sw.id_colegio
                 LEFT JOIN usuarios u ON u.id = sw.id_usuario_responsable
                 WHERE sw.id_sitio = ? AND sw.activo = 1";
         $stmt = mysqli_prepare($this->cn, $sql);
@@ -544,6 +629,7 @@ class InventarioSoftware
             mysqli_stmt_close($stmt);
 
             $this->guardarDatosAlmacenamiento($idSoftware, $payload['almacenamiento']);
+            $this->guardarDatosSensiblesSoftware($idSoftware, $payload['datos_sensibles']);
             $this->guardarHistorial($idSoftware, 'creacion', 'Software creado', $idUsuario);
             mysqli_commit($this->cn);
             return $idSoftware;
@@ -578,6 +664,7 @@ class InventarioSoftware
             mysqli_stmt_close($stmt);
 
             $this->guardarDatosAlmacenamiento($idSoftware, $payload['almacenamiento']);
+            $this->guardarDatosSensiblesSoftware($idSoftware, $payload['datos_sensibles']);
             $this->guardarHistorial($idSoftware, 'actualizacion', 'Software actualizado', $idUsuario);
             mysqli_commit($this->cn);
         } catch (Throwable $e) {
@@ -646,6 +733,7 @@ class InventarioSoftware
             'url_referencia' => trim((string)($post['url_referencia'] ?? '')),
             'observaciones' => trim((string)($post['observaciones'] ?? '')),
             'almacenamiento' => [],
+            'datos_sensibles' => [],
         ];
 
         if ($payload['id_colegio'] <= 0) {
@@ -677,6 +765,23 @@ class InventarioSoftware
                 'orden_dato' => $index + 1,
             ];
         }
+
+        $catalogo = [];
+        foreach ($this->obtenerDatosSensiblesCatalogo() as $dato) {
+            $catalogo[(int)$dato['id_dato_sensible']] = true;
+        }
+
+        foreach ((array)($post['datos_sensibles'] ?? []) as $idDato) {
+            $idDato = (int)$idDato;
+            if ($idDato <= 0) {
+                continue;
+            }
+            if (!empty($catalogo) && !isset($catalogo[$idDato])) {
+                continue;
+            }
+            $payload['datos_sensibles'][] = $idDato;
+        }
+        $payload['datos_sensibles'] = array_values(array_unique($payload['datos_sensibles']));
 
         return $payload;
     }
@@ -715,6 +820,33 @@ class InventarioSoftware
         foreach ($filas as $fila) {
             $stmt = mysqli_prepare($this->cn, "INSERT INTO software_datos_almacenamiento (id_software, nombre_contacto, rut_contacto, email_contacto, otros_datos, orden_dato) VALUES (?, ?, ?, ?, ?, ?)");
             mysqli_stmt_bind_param($stmt, 'issssi', $idSoftware, $fila['nombre_contacto'], $fila['rut_contacto'], $fila['email_contacto'], $fila['otros_datos'], $fila['orden_dato']);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
+
+    private function guardarDatosSensiblesSoftware($idSoftware, $idsDatosSensibles)
+    {
+        if (!$this->tablaExiste('software_datos_sensibles_rel')) {
+            return;
+        }
+
+        $stmt = mysqli_prepare($this->cn, "DELETE FROM software_datos_sensibles_rel WHERE id_software = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $idSoftware);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        if (!$this->tablaExiste('inventario_software_datos_sensibles')) {
+            return;
+        }
+
+        foreach ($idsDatosSensibles as $idDatoSensible) {
+            $idDatoSensible = (int)$idDatoSensible;
+            if ($idDatoSensible <= 0) {
+                continue;
+            }
+            $stmt = mysqli_prepare($this->cn, "INSERT INTO software_datos_sensibles_rel (id_software, id_dato_sensible, created_at) VALUES (?, ?, NOW())");
+            mysqli_stmt_bind_param($stmt, 'ii', $idSoftware, $idDatoSensible);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }
