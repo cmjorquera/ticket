@@ -40,6 +40,10 @@ $assetPrefix = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/funciones.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/permisos.js"></script>
+    <script>
+        window.CONFIG_RELATIVE_ROOT = '<?php echo $assetPrefix; ?>';
+    </script>
+    <script src="<?php echo $assetPrefix; ?>configuracion/js/comun.js"></script>
     <script src="<?php echo $assetPrefix; ?>configuracion/js/mantenimiento_tickets.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/comunes.js"></script>
     <link rel="stylesheet" href="<?php echo $assetPrefix; ?>configuracion/css/mantenimiento_tickets.css">

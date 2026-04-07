@@ -12,10 +12,12 @@ if (empty($token)) {
 }
 
 $bdato = new MySQL("", "", "");
-$sql = "SELECT * FROM usuarios WHERE token_reinicio = '$token'";
+$tokenEscapado = $bdato->escape_string($token);
+$sql = "SELECT * FROM usuarios WHERE token_reinicio = '$tokenEscapado'";
 $resultado = $bdato->consulta($sql);
 if ($bdato->num_rows($resultado) > 0) {
     $row = $bdato->fetch_array($resultado);
+    $idUsuario            = (int)$row['id'];
     $nombreUsuario       = htmlspecialchars($row['nombre'] . " " . $row['apellido_paterno']. " " . $row['apellido_materno']);
     $emailUsuario        = htmlspecialchars($row['email']);
     $currentPasswordHash = $row['clave']; 
@@ -46,11 +48,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;
     } else {
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        $sql = "UPDATE `usuarios` SET `clave`='$hashed_password', `token_reinicio`='' WHERE email ='$usuario'";
-        $bdato->consulta($sql);
-        
-        if ($bdato->getTotalConsultas() > 0) {
-            header("Location: index.php?error=nuevas_credenciales&email=" . urlencode($emailUsuario));
+        $usuarioEscapado = $bdato->escape_string($usuario);
+        $hashedPasswordEscapado = $bdato->escape_string($hashed_password);
+        $sql = "UPDATE `usuarios`
+                SET `clave`='$hashedPasswordEscapado',
+                    `token_reinicio`='',
+                    `estado`='Activo',
+                    `intentos_fallidos`='0'
+                WHERE `id`='$idUsuario' AND `email`='$usuarioEscapado' AND `token_reinicio`='$tokenEscapado'";
+        $actualizado = $bdato->consulta($sql);
+
+        if ($actualizado) {
+            header("Location: index.php?error=cuenta_activada&email=" . urlencode($emailUsuario));
             exit;
         } else {
             header("Location: reiniciar_clave.php?token=$token&mensaje=error_actualizacion");
@@ -170,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="d-flex justify-content-center align-items-center vh-100">
   <div class="reset-container">
-    <img src="../img/logo_seduc.png" alt="Logo SEDUC" class="reset-logo">
+    <img src="img/logo_seduc.png" alt="Logo SEDUC" class="reset-logo">
     <h4>Restablecer Contraseña</h4>
     <p>Bienvenido nuevamente, <strong><?php echo $nombreUsuario; ?></strong></p>
 

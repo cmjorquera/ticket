@@ -124,7 +124,7 @@ body {
 
 <div class="d-flex justify-content-center align-items-center vh-100">
   <div class="login-box">
-    <img src="../img/logo_seduc.png" alt="Logo" class="logo-login">
+    <img src="img/logo_seduc.png" alt="Logo" class="logo-login">
     <h4>¿Olvidaste tu clave?</h4>
     <p>Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
 

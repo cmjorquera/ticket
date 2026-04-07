@@ -1,16 +1,3 @@
-
-
-
-<?php
-$token = $_POST['token'] ?? "";
-
-if (!$token) {
-    die("Error: No se recibió el ID del ticket.");
-}
-
-echo "ID del Ticket recibido: " . htmlspecialchars($token);
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -196,7 +183,6 @@ echo "ID del Ticket recibido: " . htmlspecialchars($token);
 </body>
 
 </html>
-
 
 
 

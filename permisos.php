@@ -1,2 +1,3 @@
 <?php
-require __DIR__ . '/configuracion/index.php';
+header('Location: configuracion/', true, 302);
+exit;
