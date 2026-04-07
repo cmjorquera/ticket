@@ -459,11 +459,53 @@ class InventarioSoftware
         }
 
         $datos = [];
-        $rs = $this->db->consulta("SELECT id_tipo_usuario, nombre, descripcion FROM inventario_software_tipo_usuario WHERE activo = 1 ORDER BY nombre ASC");
+        $rs = $this->db->consulta("SELECT id_tipo_usuario, nombre, descripcion FROM inventario_software_tipo_usuario WHERE activo = 1 ORDER BY id_tipo_usuario ASC");
         while ($fila = $this->db->fetch_assoc($rs)) {
             $datos[] = $fila;
         }
         return $datos;
+    }
+
+    public function registrarTipoUsuario($nombre, $descripcion = '')
+    {
+        if (!$this->tablaExiste('inventario_software_tipo_usuario')) {
+            throw new RuntimeException('Falta la tabla inventario_software_tipo_usuario.');
+        }
+
+        $nombre = trim((string)$nombre);
+        $descripcion = trim((string)$descripcion);
+
+        if ($nombre === '') {
+            throw new RuntimeException('Debes indicar el nombre del tipo de usuario.');
+        }
+
+        $stmt = mysqli_prepare($this->cn, "SELECT id_tipo_usuario, nombre, descripcion FROM inventario_software_tipo_usuario WHERE LOWER(nombre) = LOWER(?) LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 's', $nombre);
+        mysqli_stmt_execute($stmt);
+        $existente = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+        mysqli_stmt_close($stmt);
+
+        if ($existente) {
+            return [
+                'creado' => false,
+                'id_tipo_usuario' => (int)$existente['id_tipo_usuario'],
+                'nombre' => (string)$existente['nombre'],
+                'descripcion' => (string)($existente['descripcion'] ?? ''),
+            ];
+        }
+
+        $stmt = mysqli_prepare($this->cn, "INSERT INTO inventario_software_tipo_usuario (nombre, descripcion, activo, created_at, updated_at) VALUES (?, ?, 1, NOW(), NOW())");
+        mysqli_stmt_bind_param($stmt, 'ss', $nombre, $descripcion);
+        mysqli_stmt_execute($stmt);
+        $idTipoUsuario = (int)mysqli_insert_id($this->cn);
+        mysqli_stmt_close($stmt);
+
+        return [
+            'creado' => true,
+            'id_tipo_usuario' => $idTipoUsuario,
+            'nombre' => $nombre,
+            'descripcion' => $descripcion,
+        ];
     }
 
     public function registrarDatoSensible($nombre, $descripcion = '')
@@ -733,10 +775,10 @@ class InventarioSoftware
 
         mysqli_begin_transaction($this->cn);
         try {
-            $sql = "INSERT INTO software_catalogo (id_colegio, id_usuario_responsable, nombre_software, version_software, cantidad_licencias, tipo_licenciamiento, pagado_por, costo, moneda, proveedor, url_referencia, observaciones, id_usuario, activo, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())";
+            $sql = "INSERT INTO software_catalogo (id_colegio, id_usuario_responsable, nombre_software, version_software, cantidad_licencias, tipo_licenciamiento, fecha_inicio_licencia, fecha_fin_licencia, pagado_por, costo, moneda, proveedor, url_referencia, observaciones, id_usuario, activo, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())";
             $stmt = mysqli_prepare($this->cn, $sql);
-            mysqli_stmt_bind_param($stmt, 'iississdssssi', $payload['id_colegio'], $payload['id_usuario_responsable'], $payload['nombre_software'], $payload['version_software'], $payload['cantidad_licencias'], $payload['tipo_licenciamiento'], $payload['pagado_por'], $payload['costo'], $payload['moneda'], $payload['proveedor'], $payload['url_referencia'], $payload['observaciones'], $idUsuario);
+            mysqli_stmt_bind_param($stmt, 'iississssdssssi', $payload['id_colegio'], $payload['id_usuario_responsable'], $payload['nombre_software'], $payload['version_software'], $payload['cantidad_licencias'], $payload['tipo_licenciamiento'], $payload['fecha_inicio_licencia'], $payload['fecha_fin_licencia'], $payload['pagado_por'], $payload['costo'], $payload['moneda'], $payload['proveedor'], $payload['url_referencia'], $payload['observaciones'], $idUsuario);
             mysqli_stmt_execute($stmt);
             $idSoftware = (int)mysqli_insert_id($this->cn);
             mysqli_stmt_close($stmt);
@@ -765,10 +807,10 @@ class InventarioSoftware
         mysqli_begin_transaction($this->cn);
         try {
             $sql = "UPDATE software_catalogo
-                    SET id_colegio = ?, id_usuario_responsable = ?, nombre_software = ?, version_software = ?, cantidad_licencias = ?, tipo_licenciamiento = ?, pagado_por = ?, costo = ?, moneda = ?, proveedor = ?, url_referencia = ?, observaciones = ?, updated_at = NOW()
+                    SET id_colegio = ?, id_usuario_responsable = ?, nombre_software = ?, version_software = ?, cantidad_licencias = ?, tipo_licenciamiento = ?, fecha_inicio_licencia = ?, fecha_fin_licencia = ?, pagado_por = ?, costo = ?, moneda = ?, proveedor = ?, url_referencia = ?, observaciones = ?, updated_at = NOW()
                     WHERE id_software = ?";
             $stmt = mysqli_prepare($this->cn, $sql);
-            mysqli_stmt_bind_param($stmt, 'iississdssssi', $payload['id_colegio'], $payload['id_usuario_responsable'], $payload['nombre_software'], $payload['version_software'], $payload['cantidad_licencias'], $payload['tipo_licenciamiento'], $payload['pagado_por'], $payload['costo'], $payload['moneda'], $payload['proveedor'], $payload['url_referencia'], $payload['observaciones'], $idSoftware);
+            mysqli_stmt_bind_param($stmt, 'iississssdssssi', $payload['id_colegio'], $payload['id_usuario_responsable'], $payload['nombre_software'], $payload['version_software'], $payload['cantidad_licencias'], $payload['tipo_licenciamiento'], $payload['fecha_inicio_licencia'], $payload['fecha_fin_licencia'], $payload['pagado_por'], $payload['costo'], $payload['moneda'], $payload['proveedor'], $payload['url_referencia'], $payload['observaciones'], $idSoftware);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
 
@@ -841,6 +883,8 @@ class InventarioSoftware
             'version_software' => trim((string)($post['version_software'] ?? '')),
             'cantidad_licencias' => max(1, (int)($post['cantidad_licencias'] ?? 1)),
             'tipo_licenciamiento' => trim((string)($post['tipo_licenciamiento'] ?? '')),
+            'fecha_inicio_licencia' => trim((string)($post['fecha_inicio_licencia'] ?? '')),
+            'fecha_fin_licencia' => trim((string)($post['fecha_fin_licencia'] ?? '')),
             'pagado_por' => trim((string)($post['pagado_por'] ?? '')),
             'costo' => (float)($post['costo'] ?? 0),
             'moneda' => trim((string)($post['moneda'] ?? 'USD')),
@@ -866,6 +910,11 @@ class InventarioSoftware
         }
         if (!in_array($payload['moneda'], $this->monedas, true)) {
             throw new RuntimeException('Moneda invalida.');
+        }
+        $payload['fecha_inicio_licencia'] = $this->normalizarFechaFormulario($payload['fecha_inicio_licencia']);
+        $payload['fecha_fin_licencia'] = $this->normalizarFechaFormulario($payload['fecha_fin_licencia']);
+        if ($payload['fecha_inicio_licencia'] !== null && $payload['fecha_fin_licencia'] !== null && $payload['fecha_fin_licencia'] < $payload['fecha_inicio_licencia']) {
+            throw new RuntimeException('La fecha de fin no puede ser menor que la fecha de inicio.');
         }
 
         foreach (($post['almacenamiento'] ?? []) as $index => $fila) {
@@ -959,6 +1008,21 @@ class InventarioSoftware
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         }
+    }
+
+    private function normalizarFechaFormulario($fecha)
+    {
+        $fecha = trim((string)$fecha);
+        if ($fecha === '' || $fecha === '0000-00-00') {
+            return null;
+        }
+
+        $dt = DateTime::createFromFormat('Y-m-d', $fecha);
+        if (!$dt || $dt->format('Y-m-d') !== $fecha) {
+            throw new RuntimeException('Formato de fecha invalido.');
+        }
+
+        return $fecha;
     }
 
     private function guardarDatosSensiblesSoftware($idSoftware, $idsDatosSensibles)

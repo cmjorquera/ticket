@@ -4,6 +4,14 @@ $idSoftware = (int)($_GET['id_software'] ?? 0);
 $software = $inventario->obtenerSoftwareCompleto($idSoftware);
 if (!$software) { header('Location: index.php'); exit; }
 $tituloPagina = 'Ficha software';
+
+$fechaInicioLicencia = !empty($software['fecha_inicio_licencia']) && $software['fecha_inicio_licencia'] !== '0000-00-00'
+    ? date('d-m-Y', strtotime($software['fecha_inicio_licencia']))
+    : '-';
+$fechaFinLicencia = !empty($software['fecha_fin_licencia']) && $software['fecha_fin_licencia'] !== '0000-00-00'
+    ? date('d-m-Y', strtotime($software['fecha_fin_licencia']))
+    : '-';
+
 require __DIR__ . '/componentes/layout_top.inc';
 ?>
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -26,6 +34,8 @@ require __DIR__ . '/componentes/layout_top.inc';
             <div class="col-md-4"><span class="text-muted d-block small">Licenciamiento</span><strong><?= inventario_h($software['tipo_licenciamiento']) ?></strong></div>
             <div class="col-md-3"><span class="text-muted d-block small">Version</span><strong><?= inventario_h($software['version_software'] ?: '-') ?></strong></div>
             <div class="col-md-3"><span class="text-muted d-block small">Cantidad</span><strong><?= (int)$software['cantidad_licencias'] ?></strong></div>
+            <div class="col-md-3"><span class="text-muted d-block small">Inicio licencia</span><strong><?= inventario_h($fechaInicioLicencia) ?></strong></div>
+            <div class="col-md-3"><span class="text-muted d-block small">Fin licencia</span><strong><?= inventario_h($fechaFinLicencia) ?></strong></div>
             <div class="col-md-3"><span class="text-muted d-block small">Pagado por</span><strong><?= inventario_h($software['pagado_por']) ?></strong></div>
             <div class="col-md-3"><span class="text-muted d-block small">Costo</span><strong><?= inventario_h($software['moneda']) ?> <?= number_format((float)$software['costo'], 2, ',', '.') ?></strong></div>
             <div class="col-md-6"><span class="text-muted d-block small">Proveedor</span><strong><?= inventario_h($software['proveedor'] ?: '-') ?></strong></div>

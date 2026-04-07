@@ -28,6 +28,13 @@ if (!$registro) {
     echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>No encontrado</title></head><body><p>No se encontro el registro solicitado.</p></body></html>';
     exit;
 }
+
+$fechaInicioLicencia = !empty($registro['fecha_inicio_licencia']) && $registro['fecha_inicio_licencia'] !== '0000-00-00'
+    ? date('d-m-Y', strtotime($registro['fecha_inicio_licencia']))
+    : '-';
+$fechaFinLicencia = !empty($registro['fecha_fin_licencia']) && $registro['fecha_fin_licencia'] !== '0000-00-00'
+    ? date('d-m-Y', strtotime($registro['fecha_fin_licencia']))
+    : '-';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -75,6 +82,8 @@ if (!$registro) {
                     <div class="item"><span>Version</span><p><?= ficha_qr_h($registro['version_software'] ?: '-') ?></p></div>
                     <div class="item"><span>Licencias</span><p><?= (int)$registro['cantidad_licencias'] ?></p></div>
                     <div class="item"><span>Licenciamiento</span><p><?= ficha_qr_h($registro['tipo_licenciamiento']) ?></p></div>
+                    <div class="item"><span>Inicio licencia</span><p><?= ficha_qr_h($fechaInicioLicencia) ?></p></div>
+                    <div class="item"><span>Fin licencia</span><p><?= ficha_qr_h($fechaFinLicencia) ?></p></div>
                     <div class="item"><span>Pagado por</span><p><?= ficha_qr_h($registro['pagado_por']) ?></p></div>
                     <div class="item"><span>Costo</span><p><?= ficha_qr_h($registro['moneda']) ?> <?= number_format((float)$registro['costo'], 2, ',', '.') ?></p></div>
                     <div class="item"><span>Responsable</span><p><?= ficha_qr_h($registro['responsable'] ?: 'Sin asignar') ?></p></div>

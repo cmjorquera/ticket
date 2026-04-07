@@ -22,6 +22,22 @@
         };
     }
 
+    function getSwalBaseConfig() {
+        return {
+            customClass: {
+                popup: 'inv-swal-popup',
+                title: 'inv-swal-title',
+                htmlContainer: 'inv-swal-html',
+                confirmButton: 'inv-swal-confirm',
+                cancelButton: 'inv-swal-cancel',
+                input: 'inv-swal-input',
+                textarea: 'inv-swal-textarea',
+                validationMessage: 'inv-swal-validation'
+            },
+            buttonsStyling: false
+        };
+    }
+
     function numeroSeguro(valor) {
         const numero = Number(valor);
         return Number.isFinite(numero) ? numero : 0;
@@ -332,7 +348,7 @@
             const endpoint = $(this).data('endpoint');
             if (!endpoint) { return; }
 
-            Swal.fire({
+            Swal.fire($.extend(true, {}, getSwalBaseConfig(), {
                 title: 'Nuevo dato sensible',
                 html: `
                     <input id="swalDatoSensibleNombre" class="swal2-input" placeholder="Nombre">
@@ -362,7 +378,7 @@
                         Swal.showValidationMessage(mensaje);
                     });
                 }
-            }).then(function (result) {
+            })).then(function (result) {
                 if (!result.isConfirmed || !result.value || !result.value.ok || !result.value.dato) {
                     return;
                 }
@@ -379,11 +395,85 @@
                     $contenedor.prepend(crearCardDatoSensible(dato));
                 }
 
-                Swal.fire({
+                Swal.fire($.extend(true, {}, getSwalBaseConfig(), {
                     icon: 'success',
                     title: 'Dato sensible listo',
                     text: result.value.mensaje
-                });
+                }));
+            });
+        });
+    }
+
+    function crearCardTipoUsuario(tipoUsuario) {
+        const descripcion = tipoUsuario && tipoUsuario.descripcion ? `<small class="text-muted d-block mt-2">${escapeHtml(tipoUsuario.descripcion)}</small>` : '';
+        return `<div class="inv-user-type-item">
+            <label class="inv-repeat-card inv-user-type-card py-3 h-100 d-block">
+                <div class="form-check m-0">
+                    <input class="form-check-input" type="checkbox" name="tipos_usuario[]" value="${parseInt(tipoUsuario.id_tipo_usuario, 10)}" checked>
+                    <span class="form-check-label fw-semibold">${escapeHtml(tipoUsuario.nombre || '')}</span>
+                </div>
+                ${descripcion}
+            </label>
+        </div>`;
+    }
+
+    function bindTiposUsuario() {
+        $(document).on('click', '#btnAgregarTipoUsuario', function () {
+            const endpoint = $(this).data('endpoint');
+            if (!endpoint) { return; }
+
+            Swal.fire($.extend(true, {}, getSwalBaseConfig(), {
+                title: 'Nuevo tipo de usuario',
+                html: `
+                    <input id="swalTipoUsuarioNombre" class="swal2-input" placeholder="Nombre">
+                    <textarea id="swalTipoUsuarioDescripcion" class="swal2-textarea" placeholder="Descripcion opcional"></textarea>
+                `,
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                preConfirm: function () {
+                    const nombre = $('#swalTipoUsuarioNombre').val().trim();
+                    const descripcion = $('#swalTipoUsuarioDescripcion').val().trim();
+                    if (!nombre) {
+                        Swal.showValidationMessage('Debes ingresar el nombre del tipo de usuario.');
+                        return false;
+                    }
+
+                    return $.ajax({
+                        url: endpoint,
+                        method: 'POST',
+                        dataType: 'json',
+                        data: { nombre: nombre, descripcion: descripcion }
+                    }).then(function (response) {
+                        return response;
+                    }).catch(function (xhr) {
+                        const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible guardar el tipo de usuario.';
+                        Swal.showValidationMessage(mensaje);
+                    });
+                }
+            })).then(function (result) {
+                if (!result.isConfirmed || !result.value || !result.value.ok || !result.value.tipo_usuario) {
+                    return;
+                }
+
+                const tipoUsuario = result.value.tipo_usuario;
+                const $contenedor = $('#contenedorTiposUsuario');
+                if (!$contenedor.length) { return; }
+
+                const selector = `input[name="tipos_usuario[]"][value="${parseInt(tipoUsuario.id_tipo_usuario, 10)}"]`;
+                const $existente = $(selector);
+                if ($existente.length) {
+                    $existente.prop('checked', true);
+                } else {
+                    $contenedor.append(crearCardTipoUsuario(tipoUsuario));
+                }
+
+                Swal.fire($.extend(true, {}, getSwalBaseConfig(), {
+                    icon: 'success',
+                    title: 'Tipo de usuario listo',
+                    text: result.value.mensaje
+                }));
             });
         });
     }
@@ -472,6 +562,7 @@
         bindDelete();
         bindRepeater();
         bindDatosSensibles();
+        bindTiposUsuario();
         renderResumenActivo();
         actualizarLinksPdf();
     });

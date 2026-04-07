@@ -14,6 +14,16 @@ function inv_pdf_moneda($valor)
     return 'USD ' . number_format((float)$valor, 0, ',', '.');
 }
 
+function inv_pdf_fecha($valor)
+{
+    if (!$valor || $valor === '0000-00-00') {
+        return '-';
+    }
+
+    $timestamp = strtotime((string)$valor);
+    return $timestamp ? date('d-m-Y', $timestamp) : '-';
+}
+
 function inv_pdf_logo_base()
 {
     $candidatos = [
@@ -242,6 +252,8 @@ try {
         $html .= '<table><tbody>'
             . '<tr><th width="24%">Version</th><td>' . inv_pdf_h($software['version_software'] ?: '-') . '</td></tr>'
             . '<tr><th>Licenciamiento</th><td>' . inv_pdf_h($software['tipo_licenciamiento']) . '</td></tr>'
+            . '<tr><th>Inicio licencia</th><td>' . inv_pdf_h(inv_pdf_fecha($software['fecha_inicio_licencia'] ?? null)) . '</td></tr>'
+            . '<tr><th>Fin licencia</th><td>' . inv_pdf_h(inv_pdf_fecha($software['fecha_fin_licencia'] ?? null)) . '</td></tr>'
             . '<tr><th>Pagado por</th><td>' . inv_pdf_h($software['pagado_por']) . '</td></tr>'
             . '<tr><th>Proveedor</th><td>' . inv_pdf_h($software['proveedor'] ?: '-') . '</td></tr>'
             . '<tr><th>URL o referencia</th><td>' . inv_pdf_h($software['url_referencia'] ?: '-') . '</td></tr>'

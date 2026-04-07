@@ -21,18 +21,26 @@ $action = $modo === 'editar' ? 'actualizar_software.php' : 'guardar_software.php
                 <div class="col-md-3"><label class="form-label">Nombre</label><input type="text" name="nombre_software" class="form-control" value="<?= inventario_h($software['nombre_software'] ?? '') ?>" required></div>
                 <div class="col-md-3"><label class="form-label">Version</label><input type="text" name="version_software" class="form-control" value="<?= inventario_h($software['version_software'] ?? '') ?>"></div>
                 <div class="col-md-3"><label class="form-label">Cantidad</label><input type="number" min="1" name="cantidad_licencias" class="form-control" value="<?= inventario_h($software['cantidad_licencias'] ?? 1) ?>"></div>
+                <div class="col-md-3"><label class="form-label">Inicio licencia</label><input type="date" name="fecha_inicio_licencia" class="form-control" value="<?= inventario_h(!empty($software['fecha_inicio_licencia']) && $software['fecha_inicio_licencia'] !== '0000-00-00' ? $software['fecha_inicio_licencia'] : '') ?>"></div>
+                <div class="col-md-3"><label class="form-label">Fin licencia</label><input type="date" name="fecha_fin_licencia" class="form-control" value="<?= inventario_h(!empty($software['fecha_fin_licencia']) && $software['fecha_fin_licencia'] !== '0000-00-00' ? $software['fecha_fin_licencia'] : '') ?>"></div>
                 <div class="col-md-3"><label class="form-label">Pagado por</label><select name="pagado_por" class="form-select" required><?php foreach ($pagadores as $tipo): ?><option value="<?= inventario_h($tipo) ?>" <?= ($software['pagado_por'] ?? 'Colegio') === $tipo ? 'selected' : '' ?>><?= inventario_h($tipo) ?></option><?php endforeach; ?></select></div>
                 <div class="col-md-3"><label class="form-label">Costo</label><input type="number" step="0.01" min="0" name="costo" class="form-control" value="<?= inventario_h($software['costo'] ?? 0) ?>"></div>
                 <div class="col-md-3"><label class="form-label">Moneda</label><select name="moneda" class="form-select" required><?php foreach ($monedas as $moneda): ?><option value="<?= inventario_h($moneda) ?>" <?= ($software['moneda'] ?? 'USD') === $moneda ? 'selected' : '' ?>><?= $moneda === 'CLP' ? '🇨🇱 Peso chileno (CLP)' : '🇺🇸 Dolar estadounidense (USD)' ?></option><?php endforeach; ?></select></div>
                 <div class="col-md-3"><label class="form-label">Proveedor</label><input type="text" name="proveedor" class="form-control" value="<?= inventario_h($software['proveedor'] ?? '') ?>"></div>
                 <div class="col-md-6"><label class="form-label">URL o referencia</label><input type="text" name="url_referencia" class="form-control" value="<?= inventario_h($software['url_referencia'] ?? '') ?>" placeholder="Panel admin, web del proveedor, portal de licencias, etc."></div>
                 <div class="col-md-12">
-                    <label class="form-label">Quienes ocupan el sistema</label>
+                    <div class="inv-user-types-panel">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <label class="form-label mb-0">Usuarios</label>
+                        <button type="button" class="btn inv-top-btn inv-top-btn-primary btn-sm" id="btnAgregarTipoUsuario" data-endpoint="ajax/guardar_tipo_usuario.php">
+                            <i class="bi bi-plus-circle me-1"></i>Agregar tipo usuario
+                        </button>
+                    </div>
                     <?php if (!empty($tiposUsuarioCatalogo)): ?>
-                        <div class="row g-3">
+                        <div class="inv-user-types-grid" id="contenedorTiposUsuario">
                             <?php foreach ($tiposUsuarioCatalogo as $tipoUsuario): ?>
-                                <div class="col-md-3">
-                                    <label class="inv-repeat-card py-3 h-100 d-block">
+                                <div class="inv-user-type-item">
+                                    <label class="inv-repeat-card inv-user-type-card py-3 h-100 d-block">
                                         <div class="form-check m-0">
                                             <input class="form-check-input" type="checkbox" name="tipos_usuario[]" value="<?= (int)$tipoUsuario['id_tipo_usuario'] ?>" <?= in_array((int)$tipoUsuario['id_tipo_usuario'], $tiposUsuarioSeleccionados, true) ? 'checked' : '' ?>>
                                             <span class="form-check-label fw-semibold"><?= inventario_h($tipoUsuario['nombre']) ?></span>
@@ -46,7 +54,9 @@ $action = $modo === 'editar' ? 'actualizar_software.php' : 'guardar_software.php
                         </div>
                     <?php else: ?>
                         <div class="alert alert-light border mb-0">No hay tipos de usuario cargados todavia.</div>
+                        <div class="inv-user-types-grid mt-3" id="contenedorTiposUsuario"></div>
                     <?php endif; ?>
+                    </div>
                 </div>
                 <div class="col-md-12"><label class="form-label">Observaciones</label><textarea name="observaciones" class="form-control" rows="3"><?= inventario_h($software['observaciones'] ?? '') ?></textarea></div>
             </div></div></div>

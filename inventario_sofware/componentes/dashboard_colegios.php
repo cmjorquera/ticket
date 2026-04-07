@@ -21,6 +21,22 @@ foreach ($dashboardColegios as $fila) {
     $totalesGlobales['clientes'] += (int)$fila['total_clientes'];
     $totalesGlobales['softwares'] += (int)$fila['total_softwares'];
 }
+
+$logosColegios = [];
+foreach ($dashboardColegios as $fila) {
+    $idColegio = (int)($fila['id_colegio'] ?? 0);
+    if ($idColegio <= 0) {
+        continue;
+    }
+
+    foreach (['png', 'jpg', 'jpeg', 'webp'] as $extension) {
+        $rutaFisica = dirname(__DIR__, 2) . '/img/colegios/colegio_' . $idColegio . '.' . $extension;
+        if (is_file($rutaFisica)) {
+            $logosColegios[$idColegio] = inventario_sistema_url('img/colegios/colegio_' . $idColegio . '.' . $extension);
+            break;
+        }
+    }
+}
 ?>
 <div class="card shadow-sm border-0 inv-panel mb-4">
     <div class="card-body">
@@ -83,7 +99,7 @@ foreach ($dashboardColegios as $fila) {
                 <thead>
                     <tr>
                         <th>Colegio</th>
-                        <th>RBD</th>
+                        <!-- <th>RBD</th> -->
                         <th>Softwares</th>
                         <th>Licencias</th>
                         <th>Webs</th>
@@ -97,8 +113,17 @@ foreach ($dashboardColegios as $fila) {
                     <?php if (!empty($dashboardColegios)): ?>
                         <?php foreach ($dashboardColegios as $fila): ?>
                             <tr>
-                                <td><?= inventario_h($fila['nom_colegio']) ?></td>
-                                <td><?= inventario_h($fila['rbd_colegio'] ?: '-') ?></td>
+                                <td>
+                                    <div class="inv-colegio-row">
+                                        <?php if (!empty($logosColegios[(int)$fila['id_colegio']])): ?>
+                                            <span class="inv-colegio-thumb">
+                                                <img src="<?= inventario_h($logosColegios[(int)$fila['id_colegio']]) ?>" alt="<?= inventario_h($fila['nom_colegio']) ?>" class="inv-colegio-thumb-img">
+                                            </span>
+                                        <?php endif; ?>
+                                        <span class="fw-semibold"><?= inventario_h($fila['nom_colegio']) ?></span>
+                                    </div>
+                                </td>
+                                <!-- <td><?= inventario_h($fila['rbd_colegio'] ?: '-') ?></td> -->
                                 <td><?= (int)$fila['total_softwares'] ?></td>
                                 <td><?= (int)$fila['total_licencias'] ?></td>
                                 <td><?= (int)$fila['total_webs'] ?></td>
