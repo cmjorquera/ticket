@@ -563,7 +563,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Enviar correo electrónico al usuario usando PHPMailer
                     $mail = new PHPMailer(true);
                     try {
-                        $mail->IsSMTP();
+                            $mail->IsSMTP();
                             $mail->SMTPDebug = SMTP::DEBUG_SERVER;
                             $mail->Host = 'smtp.itdchile.cl';
                             $mail->Port = 46500; 

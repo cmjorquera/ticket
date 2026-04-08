@@ -32,14 +32,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $new_password = $_POST['new_password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $usuario = $_POST['usuario_oculto'] ?? '';
+    $esCuentaPendiente = strcasecmp((string)($row['estado'] ?? ''), 'Pendiente') === 0;
 
     if (empty($new_password) || empty($confirm_password)) {
         $mensaje = 'pass_vacia'; 
     } elseif ($new_password !== $confirm_password) {
         $mensaje = 'contrasenas_no_coinciden';
-    } elseif (strlen($new_password) < 5) { 
+    } elseif (strlen($new_password) < 8) {
         $mensaje = 'pass_corta';
-    } elseif (password_verify($new_password, $currentPasswordHash)) {
+    } elseif (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]+$/', $new_password)) {
+        $mensaje = 'pass_no_alfanumerica';
+    } elseif (!$esCuentaPendiente && !empty($currentPasswordHash) && password_verify($new_password, $currentPasswordHash)) {
         $mensaje = 'misma_clave';
     }
 
@@ -74,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <?php $funciones->header(); ?>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Restablecer Clave | Sistema Tickets</title>
+  <title>Activar Cuenta | Sistema Tickets</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
@@ -158,7 +161,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           echo "Debe ingresar una nueva contraseña.";
           break;
         case 'pass_corta':
-          echo "La contraseña debe tener al menos 5 caracteres.";
+          echo "La contraseña debe tener al menos 8 caracteres.";
+          break;
+        case 'pass_no_alfanumerica':
+          echo "La contraseña debe ser alfanumérica y contener al menos una letra y un número.";
           break;
         case 'misma_clave':
           echo "Estás intentando usar la misma clave anterior.";
@@ -180,15 +186,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <div class="d-flex justify-content-center align-items-center vh-100">
   <div class="reset-container">
     <img src="img/logo_seduc.png" alt="Logo SEDUC" class="reset-logo">
-    <h4>Restablecer Contraseña</h4>
-    <p>Bienvenido nuevamente, <strong><?php echo $nombreUsuario; ?></strong></p>
+    <h4><?php echo strcasecmp((string)($row['estado'] ?? ''), 'Pendiente') === 0 ? 'Activar Cuenta' : 'Restablecer Contraseña'; ?></h4>
+    <p>
+      <?php if (strcasecmp((string)($row['estado'] ?? ''), 'Pendiente') === 0): ?>
+        Bienvenido, <strong><?php echo $nombreUsuario; ?></strong>. Para activar tu cuenta debes crear una contraseña alfanumérica.
+      <?php else: ?>
+        Bienvenido nuevamente, <strong><?php echo $nombreUsuario; ?></strong>
+      <?php endif; ?>
+    </p>
 
     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?token=<?php echo htmlspecialchars($token); ?>" method="POST">
       <input type="hidden" name="usuario_oculto" value="<?php echo htmlspecialchars($emailUsuario); ?>">
 
       <div class="mb-3 input-group">
         <input type="password" name="new_password" id="newPassword" placeholder="Nueva contraseña" required
-               class="form-control <?php if (isset($_GET['mensaje']) && in_array($_GET['mensaje'], ['pass_vacia', 'pass_corta', 'misma_clave'])) echo 'is-invalid'; ?>">
+               class="form-control <?php if (isset($_GET['mensaje']) && in_array($_GET['mensaje'], ['pass_vacia', 'pass_corta', 'pass_no_alfanumerica', 'misma_clave'])) echo 'is-invalid'; ?>">
         <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('newPassword', 'iconNew')">
           <i class="bi bi-eye-fill" id="iconNew"></i>
         </button>
@@ -203,9 +215,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
       </div>
 
       <button type="submit" class="btn btn-primary w-100 mb-2">
-        <i class="bi bi-shield-lock-fill me-1"></i> Cambiar Contraseña
+        <i class="bi bi-shield-lock-fill me-1"></i> <?php echo strcasecmp((string)($row['estado'] ?? ''), 'Pendiente') === 0 ? 'Activar Cuenta' : 'Cambiar Contraseña'; ?>
       </button>
     </form>
+
+    <p class="text-muted mt-3 mb-0" style="font-size: 13px;">
+      La contraseña debe tener al menos 8 caracteres, incluir letras y números, y no usar espacios ni símbolos.
+    </p>
 
     <a href="index.php" class="footer-link d-block mt-3">
       <i class="bi bi-arrow-left-circle me-1"></i>Volver al inicio de sesión

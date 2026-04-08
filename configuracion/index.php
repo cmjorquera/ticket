@@ -15,29 +15,14 @@ $colegios = $funciones->obtenerColegios($idUsuarioSession);
 $idColegioSel = isset($_GET['colegio']) ? (int) $_GET['colegio'] : 0;
 
 $assetPrefix = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/configuracion/') !== false) ? '../' : '';
+$tituloPagina = 'Configuracion';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <?php $funciones->header(); ?>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Table Usuarios</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+<?php require __DIR__ . '/componentes/head.php'; ?>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
-    <link href="<?php echo $assetPrefix; ?>css/estilo.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css">
-    <script type="text/javascript" src="<?php echo $assetPrefix; ?>js/buscadores.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css">
+    <script type="text/javascript" src="<?php echo $assetPrefix; ?>js/buscadores.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/funciones.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/permisos.js"></script>
     <script>
@@ -46,18 +31,10 @@ $assetPrefix = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/
     <script src="<?php echo $assetPrefix; ?>configuracion/js/comun.js"></script>
     <script src="<?php echo $assetPrefix; ?>configuracion/js/mantenimiento_tickets.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/comunes.js"></script>
-    <link rel="stylesheet" href="<?php echo $assetPrefix; ?>configuracion/css/mantenimiento_tickets.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    <style>
-        #dataTableTecnicos {
-            width: 100%;
-            table-layout: auto;
-        }
-    </style>
 </head>
 
 <body id="page-top">
+    <input type="hidden" id="idUsuario" value="<?php echo (int) $idUsuarioSession; ?>">
     <div id="wrapper">
         <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
         <div id="content-wrapper" class="d-flex flex-column">
@@ -91,14 +68,7 @@ $assetPrefix = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/
 
                                     <div class="tab-content pt-2">
                                         <div class="tab-pane fade show active pt-1" id="usuarios-tab" role="tabpanel">
-                                            <a href="#" class="btn btn-primary btn-icon-split btn-sm" id="buttonAgregarTicket" onclick="agregarUsuario()">
-                                                <span class="text">AGREGAR USUARIO</span>
-                                            </a>
-                                            <div class="row mb-6">
-                                                <div class="container mt-4">
-                                                    <?php echo $funciones->listaUsuarios(); ?>
-                                                </div>
-                                            </div>
+                                            <?php include __DIR__ . '/componentes/usuarios_tab.php'; ?>
                                         </div>
 
                                         <div class="tab-pane fade pt-3" id="configuracion-tab" role="tabpanel">
@@ -201,107 +171,9 @@ $assetPrefix = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type='text/javascript' src='<?php echo $assetPrefix; ?>template_01/js/funciones.js'></script>
-
-    <script>
-    $(document).ready(function() {
-        $('#dataTableUsuarios').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
-            },
-            "pageLength": 10
-        });
-    });
-    </script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const usuarioId = document.getElementById('idUsuario').value;
-
-        function actualizarNumeroAlertas() {
-            $.ajax({
-                type: 'GET',
-                url: 'http://127.0.0.1/ticket/api/obtenerCantidadAlertas',
-                dataType: "json",
-                data: { id_usuario: usuarioId },
-                success: function(data) {
-                    $('#numeroAlertas').text(data);
-                }
-            });
-        }
-
-        actualizarNumeroAlertas();
-        setInterval(actualizarNumeroAlertas, 3000);
-    });
-    </script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const usuarioId = document.getElementById('idUsuario').value;
-
-        function actualizarMensajes() {
-            $.ajax({
-                type: 'GET',
-                url: 'http://127.0.0.1/ticket/api/obtenerMensajes',
-                data: { id_usuario: usuarioId },
-                success: function(data) {
-                    $('#contendorMensajes').html(data);
-                }
-            });
-        }
-
-        actualizarMensajes();
-        setInterval(actualizarMensajes, 3000);
-    });
-    </script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const usuarioId = document.getElementById('idUsuario').value;
-
-        function actualizarRecordatorio() {
-            $.ajax({
-                type: 'GET',
-                url: 'http://127.0.0.1/ticket/api/obtenerRecordatorios',
-                data: { id_usuario: usuarioId },
-                success: function(data) {
-                    $('#contendorTicket').html(data);
-                }
-            });
-        }
-
-        actualizarRecordatorio();
-        setInterval(actualizarRecordatorio, 3000);
-    });
-    </script>
-
-    <script>
-    function toggleSubmenuColor(elemento) {
-        const categoria = elemento.getAttribute('data-id_categoria');
-        const esActivo = elemento.classList.contains('green');
-
-        if (!esActivo) {
-            const yaAsignada = document.querySelectorAll('.submenu-item.green[data-id_categoria="' + categoria + '"]');
-            if (yaAsignada.length > 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Ya asignada',
-                    text: 'Esta categoría ya fue asignada a otro técnico.',
-                    timer: 2000,
-                    showConfirmButton: false,
-                    customClass: {
-                        popup: 'cuerpo_modal_guardar',
-                    }
-                });
-                return;
-            }
-        }
-
-        elemento.classList.toggle('green');
-        elemento.classList.toggle('red');
-    }
-    </script>
+    <script src="<?php echo $assetPrefix; ?>configuracion/js/index.js"></script>
 </body>
 </html>

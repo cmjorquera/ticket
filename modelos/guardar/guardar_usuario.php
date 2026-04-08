@@ -148,7 +148,6 @@ switch ($action) {
         $areaTrabajo = $db->escape_string($areaTrabajo);
 
         $tokenActivacion = bin2hex(random_bytes(16));
-        $claveTemporal = password_hash(bin2hex(random_bytes(12)), PASSWORD_DEFAULT);
 
         $sql = "INSERT INTO usuarios (
                     nombre,
@@ -169,7 +168,7 @@ switch ($action) {
                     '$apellidoMaterno',
                     '$email',
                     '$telefono',
-                    '$claveTemporal',
+                    NULL,
                     '$anexo',
                     '$sexo',
                     '$fechaNacimiento',
@@ -194,12 +193,12 @@ switch ($action) {
 
             try {
                 enviarCorreoActivacion($email, $nombreCompleto, $nombreArea, $tokenActivacion);
-                echo json_encode(["success" => true, "message" => "Usuario agregado correctamente y correo enviado."]);
+                echo json_encode(["success" => true, "message" => "Usuario creado en estado Pendiente y correo de activacion enviado."]);
             } catch (Exception $e) {
                 error_log('Error correo activacion usuario: ' . $e->getMessage());
                 echo json_encode([
                     "success" => true,
-                    "message" => "Usuario agregado correctamente, pero el correo de activacion no se pudo enviar."
+                    "message" => "Usuario creado en estado Pendiente, pero el correo de activacion no se pudo enviar."
                 ]);
             }
         } else {
@@ -265,8 +264,61 @@ switch ($action) {
         }
         break;
 
+    case 'reenviarActivacion':
+        $idUsuario = isset($_POST["userId"]) ? (int)$_POST["userId"] : 0;
+
+        if ($idUsuario <= 0) {
+            echo json_encode(["success" => false, "message" => "Usuario invalido."]);
+            break;
+        }
+
+        $sqlUsuario = "SELECT id, nombre, apellido_paterno, apellido_materno, email, clave, estado, id_area_trabajo, token_reinicio
+                       FROM usuarios
+                       WHERE id = '$idUsuario'
+                       LIMIT 1";
+        $resUsuario = $db->consulta($sqlUsuario);
+        $usuario = $db->fetch_assoc($resUsuario);
+
+        if (!$usuario) {
+            echo json_encode(["success" => false, "message" => "Usuario no encontrado."]);
+            break;
+        }
+
+        if (!empty($usuario['clave'])) {
+            echo json_encode(["success" => false, "message" => "Este usuario ya activo su cuenta y no necesita reenviar activacion."]);
+            break;
+        }
+
+        $tokenActivacion = trim((string)($usuario['token_reinicio'] ?? ''));
+        if ($tokenActivacion === '') {
+            $tokenActivacion = bin2hex(random_bytes(16));
+            $tokenSeguro = $db->escape_string($tokenActivacion);
+            $db->consulta("UPDATE usuarios SET token_reinicio = '$tokenSeguro' WHERE id = '$idUsuario'");
+        }
+
+        $idAreaTrabajo = $db->escape_string((string)($usuario['id_area_trabajo'] ?? ''));
+        $sqlArea = "SELECT nombre_area FROM area_trabajo WHERE id_area = '$idAreaTrabajo' LIMIT 1";
+        $resArea = $db->consulta($sqlArea);
+        $rowArea = $db->fetch_assoc($resArea);
+        $nombreArea = $rowArea ? $rowArea['nombre_area'] : 'Sin area asignada';
+
+        $nombreCompleto = trim(
+            (string)$usuario['nombre'] . ' ' .
+            (string)$usuario['apellido_paterno'] . ' ' .
+            (string)$usuario['apellido_materno']
+        );
+
+        try {
+            enviarCorreoActivacion($usuario['email'], $nombreCompleto, $nombreArea, $tokenActivacion);
+            echo json_encode(["success" => true, "message" => "Correo de activacion reenviado correctamente."]);
+        } catch (Exception $e) {
+            error_log('Error reenvio activacion usuario: ' . $e->getMessage());
+            echo json_encode(["success" => false, "message" => "No se pudo reenviar el correo de activacion."]);
+        }
+        break;
+
     default:
-        echo json_encode(["success" => false, "message" => "AcciÃ³n no vÃ¡lida."]);
+        echo json_encode(["success" => false, "message" => "Acci¨®n no v¨¢lida."]);
         break;
 }
 ?>

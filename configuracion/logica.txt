@@ -1,0 +1,320 @@
+LOGICA DEL MODULO CONFIGURACION
+===============================
+
+Este archivo resume como funciona hoy la creacion de usuarios, la asignacion de permisos
+y las tablas involucradas en ese flujo.
+
+
+1. ARCHIVOS PRINCIPALES
+-----------------------
+
+- configuracion/index.php
+  Vista principal del modulo Configuracion.
+
+- configuracion/js/comun.js
+  Logica del frontend para:
+  - agregar usuario
+  - modificar usuario
+  - ver y guardar permisos
+  - activar o bloquear usuario
+
+- class/funciones.php
+  Construye el listado de usuarios y genera los botones de acciones.
+
+- modelos/guardar/guardar_usuario.php
+  Backend principal para:
+  - agregarUsuario
+  - modificarUsuario
+  - bloquearUsuario
+  - activarUsuario
+  - validacion previa de email y anexo
+
+- modelos/rescatar/usuariModificacion.php
+  Devuelve los datos del usuario para abrir el modal de edicion.
+
+- modelos/rescatar/area_trabajo.php
+  Devuelve las areas disponibles.
+
+- modelos/rescatar/menu_1.php
+  Devuelve la estructura de menus y permisos para el modal de permisos.
+
+- modelos/rescatar/colegio.php
+  Devuelve los colegios disponibles para asignar al usuario.
+
+- modelos/rescatar/razones_bloqueo.php
+  Devuelve razones de bloqueo para el cambio de estado.
+
+- modelos/guardar/guardar_permisos.php
+  Guarda los permisos del usuario desde el modal de permisos.
+
+
+2. TABLAS INVOLUCRADAS
+----------------------
+
+- usuarios
+  Tabla principal del usuario.
+  Aqui se guardan nombre, apellidos, email, telefono, sexo, area, estado, token, etc.
+
+- area_trabajo
+  Catalogo de areas o roles de trabajo.
+  Se usa para poblar selects y para guardar id_area_trabajo en usuarios.
+
+- menu_1
+  Catalogo de menus principales del sistema.
+
+- menu_1_sub
+  Catalogo de submenus.
+  Se usa para mostrar la estructura del menu, pero el permiso principal se controla desde menu_1.
+
+- permisos_menu_1
+  Tabla donde se guarda el permiso por usuario y por menu.
+  Campos clave:
+  - id_menu1
+  - id_usuario
+  - id_tipo_permiso
+
+- permisos
+  Catalogo de tipos de permiso.
+  En la practica, en este flujo se usa:
+  - 1 = habilitado
+  - 3 = bloqueado o sin acceso
+
+- usuario_perfil
+  Relacion entre usuario y perfil base.
+  Al crear un usuario nuevo se inserta por defecto id_perfil = 1.
+
+- usuario_colegio
+  Relacion entre usuario y colegio.
+  Al crear usuario se guarda aqui el colegio seleccionado.
+  Tambien guarda:
+  - id_perfil
+  - estado
+  - fecha_asignacion
+
+- colegio
+  Catalogo de colegios.
+  Se usa para mostrar nombre y logo del colegio en el listado.
+
+- razones_bloqueo_usuario
+  Catalogo de motivos de bloqueo.
+  Se usa al bloquear un usuario desde el boton de estado.
+
+
+3. LOGICA DE AGREGAR USUARIO
+----------------------------
+
+Frontend:
+
+1. El boton "Agregar usuario" abre un SweetAlert desde configuracion/js/comun.js.
+2. Antes de mostrar el modal se cargan por AJAX:
+   - areas de trabajo
+   - colegios
+   - menus disponibles
+3. En el modal se validan los campos obligatorios:
+   - nombre
+   - apellido paterno
+   - email
+   - area de trabajo
+   - sexo
+   - colegio
+4. El correo se valida para revisar si ya existe.
+5. Aunque el usuario no marque todos los menus, el sistema fuerza siempre estos dos:
+   - menu 8
+   - menu 3
+6. Al confirmar, se envian los datos a modelos/guardar/guardar_usuario.php
+   con action = agregarUsuario.
+
+
+Backend real en guardar_usuario.php:
+
+1. Se reciben los datos del formulario.
+2. Se validan datos obligatorios.
+3. Se limpian con escape_string.
+4. Se genera un token con random_bytes para activacion de cuenta.
+5. Se inserta el usuario en la tabla usuarios con:
+   - clave = NULL
+   - estado = Pendiente
+   - token_reinicio = token generado
+
+Despues de insertar en usuarios:
+
+6. Se llama a guardarPermisosIniciales(...)
+7. Se llama a guardarPerfilInicial(...)
+8. Se llama a guardarColegioInicial(...)
+9. Se intenta enviar correo de activacion.
+
+
+4. COMO SE CREAN LOS PERMISOS INICIALES
+---------------------------------------
+
+Funcion usada:
+- guardarPermisosIniciales($db, $idUsuario, $menuIds)
+
+Logica:
+
+1. Toma los menus marcados en el frontend.
+2. Fuerza siempre los menus 8 y 3.
+3. Hace un SELECT de todos los menus existentes en menu_1.
+4. Recorre uno por uno todos los menus del sistema.
+5. Por cada menu inserta un registro en permisos_menu_1:
+
+   - si el menu esta dentro de la lista seleccionada:
+     id_tipo_permiso = 1
+
+   - si el menu NO esta seleccionado:
+     id_tipo_permiso = 3
+
+Resultado:
+
+Cada usuario nuevo queda con un registro en permisos_menu_1 para cada menu existente,
+no solo para los menus seleccionados.
+
+Eso significa que el sistema no guarda "solo lo permitido", sino un mapa completo
+de acceso por usuario.
+
+
+5. COMO SE GUARDA EL PERFIL INICIAL
+-----------------------------------
+
+Funcion usada:
+- guardarPerfilInicial($db, $idUsuario)
+
+Logica:
+
+1. Inserta un registro en usuario_perfil.
+2. El valor fijo actual es:
+   - id_perfil = 1
+
+Esto significa que hoy el perfil inicial del usuario nuevo queda fijo por codigo.
+
+
+6. COMO SE GUARDA EL COLEGIO INICIAL
+-----------------------------------
+
+Funcion usada:
+- guardarColegioInicial($db, $idUsuario, $idColegio)
+
+Logica:
+
+1. Si no viene un colegio valido, no inserta nada.
+2. Si viene un colegio valido, inserta en usuario_colegio:
+   - id_usuario
+   - id_colegio
+   - id_perfil = 1
+   - estado = 1
+   - fecha_asignacion = fecha y hora actual
+
+Observacion:
+
+Aqui el id_perfil tambien queda fijo en 1.
+
+
+7. LOGICA DEL LISTADO DE USUARIOS
+---------------------------------
+
+El listado visible se arma desde class/funciones.php en listaUsuarios().
+
+La consulta cruza:
+- usuarios
+- area_trabajo
+- usuario_colegio
+- colegio
+
+Con eso se muestra:
+- numero correlativo visible
+- colegio y logo
+- nombre
+- email
+- area
+- estado
+- acciones
+
+Los botones de acciones llaman a:
+- modificarUsuario(id)
+- mostrarPermisos(id)
+- estadoUsuario(id, estado)
+
+
+8. LOGICA DE MODIFICAR USUARIO
+------------------------------
+
+1. El boton editar llama a modificarUsuario(userId).
+2. El frontend consulta modelos/rescatar/usuariModificacion.php.
+3. Ese endpoint devuelve:
+   - datos del usuario
+   - lista completa de areas
+4. Al guardar, se envia action = modificarUsuario a guardar_usuario.php.
+5. El backend actualiza la tabla usuarios.
+
+
+9. LOGICA DE PERMISOS
+---------------------
+
+1. El boton de permisos abre un modal con la estructura del menu.
+2. Se consulta modelos/rescatar/menu_1.php.
+3. El usuario puede dejar menus en estado habilitado o bloqueado.
+4. Al guardar, se envia la lista a modelos/guardar/guardar_permisos.php.
+5. Esa parte actualiza la tabla permisos_menu_1.
+
+Nota:
+
+Los submenus se muestran visualmente, pero la base del permiso del flujo actual gira
+principalmente sobre menu_1 y permisos_menu_1.
+
+
+10. LOGICA DE ESTADO DEL USUARIO
+--------------------------------
+
+Desde el listado:
+
+- Si el usuario esta Activo:
+  el boton abre el flujo de bloqueo.
+
+- Si el usuario NO esta Activo:
+  el boton abre el flujo de activacion.
+
+Bloqueo:
+
+1. Se cargan razones desde razones_bloqueo_usuario.
+2. Se confirma en modal.
+3. Se llama a guardar_usuario.php con action = bloquearUsuario.
+4. Hoy el backend deja el campo estado en:
+   - Bloqueado
+
+Activacion:
+
+1. Se confirma en modal.
+2. Se llama a guardar_usuario.php con action = activarUsuario.
+3. Hoy el backend deja el campo estado en:
+   - Activo
+
+
+11. VALIDACIONES IMPORTANTES
+----------------------------
+
+- El correo se valida antes de crear usuario.
+- El anexo tambien tiene validacion disponible en guardar_usuario.php.
+- Un usuario nuevo nace con estado Pendiente y sin clave.
+- Si el correo de activacion falla, igual se crea el usuario.
+
+
+12. OBSERVACIONES IMPORTANTES DEL CODIGO ACTUAL
+-----------------------------------------------
+
+- El flujo de permisos iniciales usa ids fijos:
+  - menu 8
+  - menu 3
+
+- El perfil inicial tambien usa valor fijo:
+  - id_perfil = 1
+
+- En usuario_colegio tambien se guarda id_perfil = 1 por codigo.
+
+- El sistema muestra "Pendiente" al crear el usuario, pero luego el listado de estados
+  tambien trabaja con "Activo" y "Bloqueado".
+
+- La explicacion de este archivo esta basada en el codigo actual del proyecto,
+  principalmente en:
+  - modelos/guardar/guardar_usuario.php
+  - configuracion/js/comun.js
+  - class/funciones.php

@@ -125,6 +125,13 @@
     white-space: normal;
 }
 
+.sidebar-classic.sidebar .menuLateralClassic-chevron {
+    color: rgba(214, 225, 242, 0.82);
+    font-size: .9rem;
+    flex: 0 0 auto;
+    transition: transform .18s ease, color .18s ease;
+}
+
 .sidebar-classic.sidebar .menuLateralClassic-dot {
     width: 6px;
     height: 6px;
@@ -138,6 +145,12 @@
 .sidebar-classic.sidebar .menuLateralClassic-item.is-active > .menuLateralClassic-toggle .menuLateralClassic-dot {
     background: rgba(255, 255, 255, 0.92);
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-classic.sidebar .menuLateralClassic-item.is-active > .menuLateralClassic-toggle .menuLateralClassic-chevron,
+.sidebar-classic.sidebar .menuLateralClassic-toggle[aria-expanded='true'] .menuLateralClassic-chevron {
+    color: #ffffff;
+    transform: rotate(180deg);
 }
 
 .sidebar-classic.sidebar .menuLateralClassic-submenu {
@@ -215,6 +228,7 @@
 }
 
 .sidebar-classic.sidebar.is-collapsed .menuLateralClassic-text,
+.sidebar-classic.sidebar.is-collapsed .menuLateralClassic-chevron,
 .sidebar-classic.sidebar.is-collapsed .menuLateralClassic-dot,
 .sidebar-classic.sidebar.is-collapsed .menuLateralClassic-submenu {
     display: none !important;

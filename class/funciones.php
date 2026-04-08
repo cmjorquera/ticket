@@ -195,24 +195,31 @@ class Funciones
                 CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS nombre_completo,
                 u.email,
                 u.telefono,
+                u.clave,
+                u.token_reinicio,
                 u.estado,
-                at.nombre_area
+                at.nombre_area,
+                GROUP_CONCAT(DISTINCT uc.id_colegio ORDER BY uc.id_colegio ASC SEPARATOR ',') AS colegios_ids,
+                GROUP_CONCAT(DISTINCT c.nom_colegio ORDER BY c.nom_colegio ASC SEPARATOR '||') AS colegios_nombres
             FROM usuarios u 
             LEFT JOIN area_trabajo at ON at.id_area = u.id_area_trabajo
+            LEFT JOIN usuario_colegio uc ON uc.id_usuario = u.id AND uc.estado = 1
+            LEFT JOIN colegio c ON c.id_colegio = uc.id_colegio
+            GROUP BY u.id, u.nombre, u.apellido_paterno, u.apellido_materno, u.email, u.telefono, u.clave, u.estado, at.nombre_area
             ORDER BY u.nombre ASC
         ";
         $resultado = $bdato->consulta($consulta);
         
         if ($bdato->num_rows($resultado) > 0) {
-            $html = '<div class="table-responsive">
-                       <table id="dataTableTecnicos" class="table table-bordered table-hover table-striped">
+            $html = '<div class="usuarios-table-wrap">
+                       <table id="dataTableUsuarios" class="table table-bordered table-hover table-striped w-100">
 
                             <thead class="table-dark">
                                 <tr>
                                     <th>ID</th>
+                                    <th>Colegio</th>
                                     <th>Nombre</th>
                                     <th>Email</th>
-                                    <th>Teléfono</th>
                                     <th>Área</th>
                                     <th>Estado</th>
                                     <th class="text-center">Acciones</th>
@@ -220,42 +227,86 @@ class Funciones
                             </thead>
                             <tbody>';
                             
+            $indiceVisible = 1;
+
             while ($row = mysqli_fetch_array($resultado)) {
                 $userId     = htmlspecialchars($row['id']);
                 $fullName   = htmlspecialchars($row['nombre_completo']);
                 $email      = htmlspecialchars($row['email']);
-                $telefono = htmlspecialchars($row['telefono'] ?? '', ENT_QUOTES, 'UTF-8');
-                $area     = htmlspecialchars($row['nombre_area'] ?? '', ENT_QUOTES, 'UTF-8');
+                $area       = htmlspecialchars($row['nombre_area'] ?? '', ENT_QUOTES, 'UTF-8');
                 $estado     = htmlspecialchars($row['estado']);
+                $tieneClave = !empty($row['clave']);
+                $puedeReenviarActivacion = ($estado !== "Activo" && !$tieneClave);
                 $stateLabel = ($estado == "Activo")
-                    ? '<i class="bi bi-check-circle-fill text-success" title="Activo"></i>'
-                    : '<i class="bi bi-x-circle-fill text-danger" title="Inactivo"></i>';
+                    ? '<span class="usuario-estado-badge usuario-estado-badge--activo">Activo</span>'
+                    : '<span class="usuario-estado-badge usuario-estado-badge--inactivo">Inactivo</span>';
+                $detalleEstado = '';
+                if ($estado !== "Activo") {
+                    $detalleEstado = $tieneClave
+                        ? 'Usuario bloqueado.'
+                        : 'Esperando confirmacion de activacion de cuenta.';
+                }
+                $colegiosIds = array_filter(array_map('trim', explode(',', (string)($row['colegios_ids'] ?? ''))));
+                $colegiosNombres = array_filter(array_map('trim', explode('||', (string)($row['colegios_nombres'] ?? ''))));
+
+                $colegiosHtml = '<span class="usuario-colegio-vacio">Sin colegio</span>';
+                if (!empty($colegiosIds)) {
+                    $items = [];
+                    foreach ($colegiosIds as $indexColegio => $idColegio) {
+                        $idColegioSeguro = (int)$idColegio;
+                        $nombreColegio = htmlspecialchars($colegiosNombres[$indexColegio] ?? ('Colegio ' . $idColegioSeguro), ENT_QUOTES, 'UTF-8');
+                        $rutaLogo = '../img/colegios/colegio_' . $idColegioSeguro . '.png';
+
+                        $items[] = '<div class="usuario-colegio-item" title="' . $nombreColegio . '">
+                            <img src="' . $rutaLogo . '" alt="' . $nombreColegio . '" class="usuario-colegio-logo" loading="lazy"
+                                onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'inline-flex\';">
+                            <span class="usuario-colegio-fallback" style="display:none;">' . $idColegioSeguro . '</span>
+                            <span class="usuario-colegio-nombre">' . $nombreColegio . '</span>
+                        </div>';
+                    }
+
+                    $colegiosHtml = '<div class="usuario-colegio-lista">' . implode('', $items) . '</div>';
+                }
                 
+                $emailHtml = '<div class="usuario-email-wrap">
+                        <span class="usuario-email-text">' . $email . '</span>' .
+                        ($puedeReenviarActivacion ? '<button type="button" class="usuario-email-action" onclick="confirmarReenvioActivacion(' . $userId . ', \'' . addslashes($email) . '\')" title="Reenviar correo de activacion">
+                            <i class="bi bi-envelope-arrow-up"></i>
+                        </button>' : '') . '
+                    </div>';
+
                     $html .= '<tr>
-                    <td>' . $userId . '</td>
+                    <td>' . $indiceVisible . '</td>
+                    <td>' . $colegiosHtml . '</td>
                     <td>' . $fullName . '</td>
-                    <td>' . $email . '</td>
-                    <td>' . $telefono . '</td>
+                    <td>' . $emailHtml . '</td>
                     <td>' . $area . '</td>
-                    <td class="text-center">' . $stateLabel . '</td>
                     <td class="text-center">
-                        <div class="btn-group" role="group">
+                        <div class="usuario-estado-wrap">
+                            ' . $stateLabel .
+                            ($detalleEstado !== '' ? '<button type="button" class="usuario-estado-info" onclick="mostrarDetalleEstadoUsuario(\'' . htmlspecialchars($detalleEstado, ENT_QUOTES, 'UTF-8') . '\')" title="Ver detalle del estado">
+                                <i class="bi bi-question-lg"></i>
+                            </button>' : '') . '
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group usuario-acciones-group" role="group">
                             <!-- Modificar -->
-                            <a href="#" class="btn btn-primary btn-sm me-1" onclick="modificarUsuario(' . $userId . ')" 
+                            <a href="#" class="btn btn-primary btn-sm me-1 usuario-accion-btn" onclick="modificarUsuario(' . $userId . ')" 
                                 data-bs-toggle="popover" data-bs-placement="top" 
                                 data-bs-content=\"Modificar usuario\" aria-label=\"Modificar usuario\">
                                 <i class="bi bi-pencil"></i>
                             </a>
         
                             <!-- Permisos -->
-                            <a href="#" class="btn btn-success btn-sm me-1" onclick="mostrarPermisos(' . $userId . ')" 
+                            <a href="#" class="btn btn-success btn-sm me-1 usuario-accion-btn" onclick="mostrarPermisos(' . $userId . ')" 
                                 data-bs-toggle="popover" data-bs-placement="top" 
                                 data-bs-content=\"Ver permisos del usuario\" aria-label=\"Permisos\">
                                 <i class="bi bi-shield-lock"></i>
                             </a>
         
                             <!-- Estado -->
-                            <a href="#" class="btn btn-secondary btn-sm me-1" onclick="estadoUsuario(' . $userId . ', \'' . $estado . '\')" 
+                            <a href="#" class="btn btn-secondary btn-sm me-1 usuario-accion-btn" onclick="estadoUsuario(' . $userId . ', \'' . $estado . '\')" 
                                 data-bs-toggle="popover" data-bs-placement="top" 
                                 data-bs-content=\"Activar/Desactivar usuario\" aria-label=\"Estado\">
                                 <i class="bi bi-toggle-off"></i>
@@ -270,8 +321,8 @@ class Funciones
                         </div>
                     </td>
                  </tr>';
-        
-        
+
+                $indiceVisible++;
             }
             $html .= '</tbody></table></div>';
             return $html;
@@ -765,7 +816,7 @@ public function menuLateral2($idUsuarioSession, $idPagActual)
                             <span class='menuLateralClassic-icon'>{$iconoMenu}</span>
                             <span class='menuLateralClassic-text'>{$nombreMenu}</span>
                         </span>
-                        <span class='menuLateralClassic-dot'></span>
+                        <i class='bi bi-chevron-down menuLateralClassic-chevron'></i>
                     </button>
                     <div id='classic-submenu-{$idMenu}' class='menuLateralClassic-submenu'{$mostrarSubmenu}>
                         {$submenuHtml}
