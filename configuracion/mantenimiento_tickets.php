@@ -25,7 +25,7 @@
 
     <div class="ticket-admin-grid">
         <div class="ticket-admin-selector-grid">
-            <a href="configuracion/mantenimiento_ticket_eliminar.php" class="ticket-admin-selector-card ticket-admin-selector-card--danger">
+            <a href="mantenimiento_ticket_eliminar.php" class="ticket-admin-selector-card ticket-admin-selector-card--danger">
                 <div class="ticket-admin-selector-icon">
                     <i class="bi bi-trash3"></i>
                 </div>
@@ -38,7 +38,7 @@
                 </div>
             </a>
 
-            <a href="configuracion/mantenimiento_ticket_fusion.php" class="ticket-admin-selector-card ticket-admin-selector-card--primary">
+            <a href="mantenimiento_ticket_fusion.php" class="ticket-admin-selector-card ticket-admin-selector-card--primary">
                 <div class="ticket-admin-selector-icon">
                     <i class="bi bi-shuffle"></i>
                 </div>

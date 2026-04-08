@@ -1,32 +1,30 @@
 <?php
 session_start();
-require_once '../class/conexion.php';
-require_once '../class/funciones.php';
+require_once __DIR__ . '/../class/conexion.php';
+require_once __DIR__ . '/../class/funciones.php';
 
 $funciones = new Funciones();
 $idUsuarioSession = htmlspecialchars($_SESSION['id']);
 $idPagActual = 7;
 $db = new MySQL("", "", "");
 $resultado = $funciones->ticketAdministrador($idUsuarioSession);
+$assetPrefix = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/configuracion/') !== false) ? '../' : '';
+$tituloPagina = 'Mantenimiento Tickets | Eliminar';
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <?php $funciones->header(); ?>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mantenimiento Tickets | Eliminar</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="../css/estilo.css">
-    <link rel="stylesheet" href="../css/menuLateral.css">
-    <link rel="stylesheet" href="css/mantenimiento_tickets.css">
+<?php require __DIR__ . '/componentes/head.php'; ?>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="text/javascript" src="<?php echo $assetPrefix; ?>js/buscadores.js"></script>
+    <script src="<?php echo $assetPrefix; ?>js/funciones.js"></script>
+    <script src="<?php echo $assetPrefix; ?>js/permisos.js"></script>
+    <script>
+        window.CONFIG_RELATIVE_ROOT = '<?php echo $assetPrefix; ?>';
+    </script>
+    <script src="<?php echo $assetPrefix; ?>configuracion/js/comun.js"></script>
+    <script src="<?php echo $assetPrefix; ?>js/comunes.js"></script>
 </head>
 <body id="page-top">
     <div id="wrapper">
@@ -167,6 +165,7 @@ $resultado = $funciones->ticketAdministrador($idUsuarioSession);
         </div>
     </div>
 
-    <script src="js/mantenimiento_ticket_eliminar.js"></script>
+    <script type='text/javascript' src='<?php echo $assetPrefix; ?>template_01/js/funciones.js'></script>
+    <script src="<?php echo $assetPrefix; ?>configuracion/js/mantenimiento_ticket_eliminar.js"></script>
 </body>
 </html>
