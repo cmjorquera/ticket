@@ -237,15 +237,18 @@ class Funciones
                 $estado     = htmlspecialchars($row['estado']);
                 $tieneClave = !empty($row['clave']);
                 $puedeReenviarActivacion = ($estado !== "Activo" && !$tieneClave);
-                $stateLabel = ($estado == "Activo")
-                    ? '<span class="usuario-estado-badge usuario-estado-badge--activo">Activo</span>'
-                    : '<span class="usuario-estado-badge usuario-estado-badge--inactivo">Inactivo</span>';
+                $estadoEsActivo = ($estado == "Activo");
+                $stateLabel = $estadoEsActivo ? 'Activo' : 'Inactivo';
+                $stateDetail = $estadoEsActivo ? 'Cuenta habilitada' : 'Revision requerida';
+                $stateColor = $estadoEsActivo ? '#b8f4bb' : '#d9e2ec';
                 $detalleEstado = '';
                 if ($estado !== "Activo") {
                     $detalleEstado = $tieneClave
                         ? 'Usuario bloqueado.'
                         : 'Esperando confirmacion de activacion de cuenta.';
                 }
+                $areaTitulo = $area !== '' ? $area : 'Sin area';
+                $areaDetalle = 'Area de trabajo';
                 $colegiosIds = array_filter(array_map('trim', explode(',', (string)($row['colegios_ids'] ?? ''))));
                 $colegiosNombres = array_filter(array_map('trim', explode('||', (string)($row['colegios_nombres'] ?? ''))));
 
@@ -280,10 +283,24 @@ class Funciones
                     <td>' . $colegiosHtml . '</td>
                     <td>' . $fullName . '</td>
                     <td>' . $emailHtml . '</td>
-                    <td>' . $area . '</td>
+                    <td class="celda-estado-config">
+                        <div class="ticket-resumen-estado ticket-resumen-estado--config">
+                            <span class="ticket-resumen-estado__dot" style="background:' . htmlspecialchars('#b8f4bb', ENT_QUOTES, 'UTF-8') . ';"></span>
+                            <div class="ticket-resumen-estado__body">
+                                <div class="ticket-resumen-estado__titulo">' . $areaTitulo . '</div>
+                                <div class="ticket-resumen-estado__detalle">' . $areaDetalle . '</div>
+                            </div>
+                        </div>
+                    </td>
                     <td class="text-center">
                         <div class="usuario-estado-wrap">
-                            ' . $stateLabel .
+                            <div class="ticket-resumen-estado ticket-resumen-estado--config ticket-resumen-estado--config-estado">
+                                <span class="ticket-resumen-estado__dot" style="background:' . htmlspecialchars($stateColor, ENT_QUOTES, 'UTF-8') . ';"></span>
+                                <div class="ticket-resumen-estado__body">
+                                    <div class="ticket-resumen-estado__titulo">' . $stateLabel . '</div>
+                                    <div class="ticket-resumen-estado__detalle">' . $stateDetail . '</div>
+                                </div>
+                            </div>' .
                             ($detalleEstado !== '' ? '<button type="button" class="usuario-estado-info" onclick="mostrarDetalleEstadoUsuario(\'' . htmlspecialchars($detalleEstado, ENT_QUOTES, 'UTF-8') . '\')" title="Ver detalle del estado">
                                 <i class="bi bi-question-lg"></i>
                             </button>' : '') . '

@@ -37,6 +37,18 @@ if ($db->num_rows($consulta) > 0) {
     $listaUsuario['correo_encargado'] = $row['correo_encargado'];
 }
 
+$st_colegio_actual = "SELECT id_colegio
+                      FROM usuario_colegio
+                      WHERE id_usuario = '$idUsuario' AND estado = 1
+                      ORDER BY fecha_asignacion DESC, id DESC";
+$consulta_colegio_actual = $db->consulta($st_colegio_actual);
+if ($db->num_rows($consulta_colegio_actual) > 0) {
+    $row_colegio_actual = $db->fetch_array($consulta_colegio_actual);
+    $listaUsuario['id_colegio'] = $row_colegio_actual['id_colegio'];
+} else {
+    $listaUsuario['id_colegio'] = '';
+}
+
 // Consulta para obtener todas las áreas de trabajo
 $st_areas = "SELECT id_area, nombre_area FROM area_trabajo";
 $consulta_areas = $db->consulta($st_areas);
@@ -53,8 +65,24 @@ if ($db->num_rows($consulta_areas) > 0) {
     }
 }
 
+// Consulta para obtener todos los colegios activos
+$st_colegios = "SELECT id_colegio, nom_colegio FROM colegio WHERE estado = 1 ORDER BY nom_colegio ASC";
+$consulta_colegios = $db->consulta($st_colegios);
+
+$colegios = [];
+
+if ($db->num_rows($consulta_colegios) > 0) {
+    while ($row_colegio = $db->fetch_array($consulta_colegios)) {
+        $colegios[] = [
+            'id' => $row_colegio['id_colegio'],
+            'nombre' => $row_colegio['nom_colegio']
+        ];
+    }
+}
+
 // Agregar las áreas de trabajo a los datos del usuario
 $listaUsuario['areas'] = $areas;
+$listaUsuario['colegios'] = $colegios;
 
 echo json_encode($listaUsuario); // Devuelve el arreglo con los datos del usuario y su área de trabajo
 ?>

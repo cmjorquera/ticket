@@ -67,13 +67,13 @@ $tituloPagina = 'Mantenimiento Tickets | Eliminar';
                                 <table id="tablaMantenimientoEliminar" class="table table-bordered table-hover align-middle">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
-                                            <th>Fecha / Hora</th>
-                                            <th>De</th>
-                                            <th>Asunto</th>
-                                            <th>Estado</th>
-                                            <th>Tecnico</th>
-                                            <th>Opciones</th>
+                                            <th class="col-id">ID</th>
+                                            <th class="col-fecha-hora">Fecha / Hora</th>
+                                            <th class="col-de">De</th>
+                                            <th class="col-asunto">Asunto</th>
+                                            <th class="col-estado">Estado</th>
+                                            <th class="col-tecnico">Tecnico</th>
+                                            <th class="col-opciones">Opciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -83,24 +83,38 @@ $tituloPagina = 'Mantenimiento Tickets | Eliminar';
                                                 $nombreTecnico = trim(($row['nombreTecnico'] ?? '') . ' ' . ($row['apellidoTecnico'] ?? ''));
                                                 $fechaCreada = !empty($row['fecha_creacion_inicio']) ? date('d-m-Y', strtotime($row['fecha_creacion_inicio'])) : '--';
                                                 $horaCreada = !empty($row['hora_creacion_inicio']) ? htmlspecialchars($row['hora_creacion_inicio']) : '--';
+                                                $estadoColor = htmlspecialchars($row['colorEstado'] ?? '#d9e4f0');
+                                                $estadoNombre = htmlspecialchars($row['nombreEstado'] ?? 'Sin estado');
                                             ?>
                                             <tr>
-                                                <td>#<?= (int)$row['id_ticket']; ?></td>
-                                                <td>
-                                                    <div class="ticket-maint-date">
-                                                        <strong><?= $fechaCreada; ?></strong>
-                                                        <span><?= $horaCreada; ?></span>
+                                                <td class="celda-id"><?= (int)$row['id_ticket']; ?></td>
+                                                <td class="celda-fecha-hora">
+                                                    <div class="ticket-fecha-hora">
+                                                        <span class="ticket-fecha-hora__fecha"><?= $fechaCreada; ?></span>
+                                                        <span class="ticket-fecha-hora__hora"><?= $horaCreada; ?></span>
                                                     </div>
                                                 </td>
-                                                <td><?= htmlspecialchars($nombreUsuario ?: 'Sin usuario'); ?></td>
-                                                <td><?= htmlspecialchars($row['asunto'] ?? 'Sin asunto'); ?></td>
-                                                <td>
-                                                    <span class="ticket-maint-badge" style="--estado-color: <?= htmlspecialchars($row['colorEstado'] ?? '#d9e4f0'); ?>">
-                                                        <?= htmlspecialchars($row['nombreEstado'] ?? 'Sin estado'); ?>
-                                                    </span>
+                                                <td class="celda-de"><?= htmlspecialchars($nombreUsuario ?: 'Sin usuario'); ?></td>
+                                                <td class="celda-asunto"><?= htmlspecialchars($row['asunto'] ?? 'Sin asunto'); ?></td>
+                                                <td class="celda-estado">
+                                                    <div class="ticket-resumen-estado">
+                                                        <span class="ticket-resumen-estado__dot" style="background-color: <?= $estadoColor; ?>;"></span>
+                                                        <div class="ticket-resumen-estado__body">
+                                                            <div class="ticket-resumen-estado__titulo"><?= $estadoNombre; ?></div>
+                                                            <div class="ticket-resumen-estado__detalle">Estado actual</div>
+                                                        </div>
+                                                    </div>
                                                 </td>
-                                                <td><?= htmlspecialchars($nombreTecnico ?: 'Sin tecnico'); ?></td>
-                                                <td>
+                                                <td class="celda-tecnico">
+                                                    <div class="ticket-resumen-estado ticket-resumen-estado--tecnico">
+                                                        <span class="ticket-resumen-estado__dot" style="background-color: <?= $estadoColor; ?>;"></span>
+                                                        <div class="ticket-resumen-estado__body">
+                                                            <div class="ticket-resumen-estado__titulo"><?= htmlspecialchars($nombreTecnico ?: 'Sin tecnico'); ?></div>
+                                                            <div class="ticket-resumen-estado__detalle">Tecnico asignado</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="celda-opciones">
                                                     <button type="button" class="btn btn-danger ticket-maint-delete-btn" onclick="abrirEliminarTicket(<?= (int)$row['id_ticket']; ?>)">
                                                         <i class="bi bi-trash3"></i>
                                                         <span>Eliminar</span>

@@ -421,9 +421,131 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  justify-content: center;
+  min-width: 128px;
   border-radius: 999px;
-  padding: 0.6rem 0.95rem;
+  padding: 0.72rem 1rem;
   font-weight: 700;
+}
+
+#tablaMantenimientoEliminar {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 0.92rem;
+}
+
+#tablaMantenimientoEliminar thead th {
+  background: #23272b;
+  color: #fff;
+  font-weight: 800;
+  white-space: nowrap;
+  border-color: #435466 !important;
+  vertical-align: middle;
+}
+
+#tablaMantenimientoEliminar tbody td {
+  background: #fff;
+  border-color: #dbe5f1 !important;
+  vertical-align: middle;
+}
+
+#tablaMantenimientoEliminar tbody tr:hover td {
+  background: #f8fbff;
+}
+
+#tablaMantenimientoEliminar .celda-id {
+  width: 58px;
+  min-width: 58px;
+  text-align: center;
+  font-weight: 700;
+  color: #17365d;
+}
+
+#tablaMantenimientoEliminar .celda-fecha-hora {
+  width: 120px;
+  min-width: 120px;
+}
+
+#tablaMantenimientoEliminar .celda-de {
+  width: 190px;
+  min-width: 160px;
+}
+
+#tablaMantenimientoEliminar .celda-asunto {
+  min-width: 360px;
+}
+
+#tablaMantenimientoEliminar .celda-estado {
+  width: 170px;
+  min-width: 170px;
+}
+
+#tablaMantenimientoEliminar .celda-tecnico {
+  width: 210px;
+  min-width: 210px;
+}
+
+#tablaMantenimientoEliminar .celda-opciones {
+  width: 170px;
+  min-width: 170px;
+}
+
+#tablaMantenimientoEliminar .ticket-fecha-hora {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+#tablaMantenimientoEliminar .ticket-fecha-hora__fecha {
+  font-weight: 700;
+  color: #17365d;
+}
+
+#tablaMantenimientoEliminar .ticket-fecha-hora__hora {
+  color: #667d98;
+  font-size: 0.82rem;
+}
+
+#tablaMantenimientoEliminar .ticket-resumen-estado {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 55px;
+  padding: 14px 16px;
+  border: 1px solid #d7e3ef;
+  border-radius: 18px;
+  background: #f8fbff;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.04);
+}
+
+#tablaMantenimientoEliminar .ticket-resumen-estado__dot {
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  border-radius: 999px;
+  margin-top: 6px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.95);
+}
+
+#tablaMantenimientoEliminar .ticket-resumen-estado__body {
+  min-width: 0;
+}
+
+#tablaMantenimientoEliminar .ticket-resumen-estado__titulo {
+  font-size: 0.92rem;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #0f2f57;
+  word-break: break-word;
+}
+
+#tablaMantenimientoEliminar .ticket-resumen-estado__detalle {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  color: #5b6b7f;
+  word-break: break-word;
 }
 
 .ticket-maint-modal-header {

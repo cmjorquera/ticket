@@ -81,6 +81,31 @@ function guardarColegioInicial($db, $idUsuario, $idColegio)
     $db->consulta($sqlColegio);
 }
 
+function actualizarColegioUsuario($db, $idUsuario, $idColegio)
+{
+    $idUsuario = (int)$idUsuario;
+    $idColegio = (int)$idColegio;
+
+    if ($idUsuario <= 0 || $idColegio <= 0) {
+        return false;
+    }
+
+    $db->consulta("UPDATE usuario_colegio SET estado = 0 WHERE id_usuario = '$idUsuario'");
+
+    $sqlExistente = "SELECT id FROM usuario_colegio WHERE id_usuario = '$idUsuario' AND id_colegio = '$idColegio' LIMIT 1";
+    $resExistente = $db->consulta($sqlExistente);
+    $fechaAsignacion = date('Y-m-d H:i:s');
+
+    if ($filaExistente = $db->fetch_assoc($resExistente)) {
+        $idRelacion = (int)$filaExistente['id'];
+        return (bool)$db->consulta("UPDATE usuario_colegio SET estado = 1, fecha_asignacion = '$fechaAsignacion' WHERE id = '$idRelacion'");
+    }
+
+    $sqlInsert = "INSERT INTO usuario_colegio (id_usuario, id_colegio, id_perfil, estado, fecha_asignacion)
+                  VALUES ('$idUsuario', '$idColegio', '1', '1', '$fechaAsignacion')";
+
+    return (bool)$db->consulta($sqlInsert);
+}
 $action = isset($_POST["action"]) ? $_POST["action"] : "";
 $db = new MySQL("", "", "");
 
@@ -207,16 +232,22 @@ switch ($action) {
         break;
 
     case 'modificarUsuario':
-        $userId = isset($_POST["userId"]) ? $_POST["userId"] : "";
-        $nombre = isset($_POST["nombre"]) ? $_POST["nombre"] : "";
-        $apellidoPaterno = isset($_POST["apellidoPaterno"]) ? $_POST["apellidoPaterno"] : "";
-        $apellidoMaterno = isset($_POST["apellidoMaterno"]) ? $_POST["apellidoMaterno"] : "";
-        $email = isset($_POST["email"]) ? $_POST["email"] : "";
-        $telefono = isset($_POST["telefono"]) ? $_POST["telefono"] : "";
-        $clave = isset($_POST["clave"]) ? $_POST["clave"] : "";
-        $anexo = isset($_POST["anexo"]) ? $_POST["anexo"] : "";
-        $areaTrabajo = isset($_POST["areaTrabajo"]) ? $_POST["areaTrabajo"] : "";
-        $sexo = isset($_POST["sexo"]) ? $_POST["sexo"] : "";
+        $userId = isset($_POST["userId"]) ? (int)$_POST["userId"] : 0;
+        $nombre = isset($_POST["nombre"]) ? $db->escape_string(trim($_POST["nombre"])) : "";
+        $apellidoPaterno = isset($_POST["apellidoPaterno"]) ? $db->escape_string(trim($_POST["apellidoPaterno"])) : "";
+        $apellidoMaterno = isset($_POST["apellidoMaterno"]) ? $db->escape_string(trim($_POST["apellidoMaterno"])) : "";
+        $email = isset($_POST["email"]) ? $db->escape_string(trim($_POST["email"])) : "";
+        $telefono = isset($_POST["telefono"]) ? $db->escape_string(trim($_POST["telefono"])) : "";
+        $clave = isset($_POST["clave"]) ? $db->escape_string($_POST["clave"]) : "";
+        $anexo = isset($_POST["anexo"]) ? $db->escape_string(trim($_POST["anexo"])) : "";
+        $areaTrabajo = isset($_POST["areaTrabajo"]) ? $db->escape_string(trim($_POST["areaTrabajo"])) : "";
+        $sexo = isset($_POST["sexo"]) ? $db->escape_string(trim($_POST["sexo"])) : "";
+        $idColegio = isset($_POST["idColegio"]) ? (int)$_POST["idColegio"] : 0;
+
+        if ($userId <= 0 || $nombre === "" || $apellidoPaterno === "" || $email === "" || $areaTrabajo === "" || $idColegio <= 0) {
+            echo json_encode(["success" => false, "message" => "Faltan datos obligatorios para actualizar el usuario."]);
+            break;
+        }
 
         $sql = "UPDATE usuarios SET 
                 nombre              ='$nombre',
@@ -232,12 +263,15 @@ switch ($action) {
 
         $resultado = $db->consulta($sql);
         if ($resultado) {
+            if (!actualizarColegioUsuario($db, $userId, $idColegio)) {
+                echo json_encode(["success" => false, "message" => "Usuario actualizado, pero no se pudo guardar el colegio."]);
+                break;
+            }
             echo json_encode(["success" => true, "message" => "Usuario actualizado correctamente."]);
         } else {
             echo json_encode(["success" => false, "message" => "Error al actualizar el usuario."]);
         }
         break;
-
     case 'bloquearUsuario':
         $idUsuario = isset($_POST["userId"]) ? $_POST["userId"] : "";
 
@@ -318,7 +352,8 @@ switch ($action) {
         break;
 
     default:
-        echo json_encode(["success" => false, "message" => "Acci¨®n no v¨¢lida."]);
+        echo json_encode(["success" => false, "message" => "Acciï¿½ï¿½n no vï¿½ï¿½lida."]);
         break;
 }
 ?>
+

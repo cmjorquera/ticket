@@ -3,6 +3,27 @@ function configuracionUrl(ruta) {
     return raiz + ruta.replace(/^\/+/, '');
 }
 
+function mostrarConfirmacionConfiguracion(titulo, mensaje, onClose) {
+    return Swal.fire({
+        title: `<div class="alert alert-dark" role="alert">${titulo}</div>`,
+        text: mensaje || '',
+        width: '570px',
+        padding: '40px',
+        icon: 'success',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        customClass: {
+            popup: 'cuerpo_modal_guardar'
+        },
+        willClose: () => {
+            if (typeof onClose === 'function') {
+                onClose();
+            }
+        }
+    });
+}
+
 function agregarUsuario() {
     $.ajax({
         url: configuracionUrl('modelos/rescatar/area_trabajo.php'),
@@ -331,7 +352,7 @@ function agregarUsuario() {
                                             }
                                         } catch (e) {}
 
-                                        Swal.fire('Guardado', mensaje, 'success');
+                                        mostrarConfirmacionConfiguracion('GUARDADO', mensaje);
                                     },
                                     error: function (xhr, status, error) {
                                         console.error('Error al guardar el usuario:', error);
@@ -404,16 +425,7 @@ function mostrarPermisos(userId) {
                 },
                 success: function (response) {
                     console.log("Permisos guardad   os: ", response);
-                    Swal.fire({
-                        title: '<div class="alert alert-dark" role="alert">PERMISOS GUARDADOS</div>',
-                        showConfirmButton: false,
-                        showCancelButton: false,
-                        timer: 2000, // 2000 milisegundos = 2 segundos
-                        timerProgressBar: true, // Muestra una barra de progreso que indica el tiempo restante
-                        customClass: {
-                            popup: 'cuerpo_modal_guardar'
-                        },
-                    });
+                    mostrarConfirmacionConfiguracion('PERMISOS GUARDADOS', '');
                 },
                 error: function (xhr, status, error) {
                     console.error("Error al guardar los permisos: ", status, error);
@@ -565,16 +577,7 @@ function openActivateModal(userId) {
                     return;
                 }
 
-                Swal.fire({
-                    icon: 'success',
-                    title: '<div class="alert alert-dark" role="alert">USUARIO ACTIVADO</div>',
-                    showConfirmButton: false,
-                    timer: 1800,
-                    timerProgressBar: true,
-                    customClass: {
-                        popup: 'cuerpo_modal_guardar'
-                    }
-                }).then(() => {
+                mostrarConfirmacionConfiguracion('USUARIO ACTIVADO', response.message || '', function () {
                     location.reload();
                 });
             },
@@ -657,16 +660,7 @@ function openDeactivateModal(userId) {
                             return;
                         }
 
-                        Swal.fire({
-                            icon: 'success',
-                            title: '<div class="alert alert-dark" role="alert">USUARIO BLOQUEADO</div>',
-                            showConfirmButton: false,
-                            timer: 1800,
-                            timerProgressBar: true,
-                            customClass: {
-                                popup: 'cuerpo_modal_guardar'
-                            }
-                        }).then(() => {
+                        mostrarConfirmacionConfiguracion('USUARIO BLOQUEADO', response.message || '', function () {
                             location.reload();
                         });
                     },
@@ -692,72 +686,94 @@ function modificarUsuario(userId) {
         data: { id: userId },
         success: function (data) {
             Swal.fire({
-                title: '<div class="alert alert-dark" role="alert">MODIFICAR USUARIO</div>',
+                title: '',
                 html: `
-                    <div class="alert alert-secondary" role="alert">
-                        <form class="row g-3" id="usuarioForm">
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Nombre">
-                                    <label for="nombre">Nombre</label>
+                    <div class="swal-usuario">
+                        <style>
+                            .swal-usuario { text-align: left; color: #1f2a44; }
+                            .swal-usuario__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.25rem; margin-bottom: 1.35rem; }
+                            .swal-usuario__title-wrap { flex: 1 1 auto; padding-top: 0.35rem; }
+                            .swal-usuario__title { margin: 0; font-size: 2rem; font-weight: 800; color: #1c2740; text-align: center; }
+                            .swal-usuario__college-card { min-width: 240px; max-width: 280px; display: flex; align-items: center; gap: 0.8rem; padding: 0.85rem 1rem; border: 1px solid #d9e4f2; border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%); box-shadow: 0 10px 24px rgba(31, 69, 123, 0.08); }
+                            .swal-usuario__college-logo, .swal-usuario__college-fallback { width: 54px; height: 54px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #d7e1ee; background: #fff; flex-shrink: 0; }
+                            .swal-usuario__college-logo { object-fit: contain; padding: 5px; }
+                            .swal-usuario__college-fallback { font-weight: 800; color: #31527d; background: #edf4fb; }
+                            .swal-usuario__college-name { font-size: 1.02rem; font-weight: 800; color: #1e2d47; line-height: 1.2; }
+                            .swal-usuario__college-meta { color: #6c7b91; font-size: 0.9rem; margin-top: 0.15rem; }
+                            .swal-usuario__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem 0.9rem; }
+                            .swal-usuario__field { display: grid; gap: 0.28rem; }
+                            .swal-usuario__label { font-size: 0.96rem; font-weight: 800; color: #1f2a44; margin-bottom: 0; }
+                            .swal-usuario__input, .swal-usuario__select { width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid #c7d4e5; background: #eef4ff; color: #1f2a44; padding: 0.72rem 0.9rem; font-size: 0.96rem; outline: none; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
+                            .swal-usuario__input:focus, .swal-usuario__select:focus { border-color: #4f83ff; box-shadow: 0 0 0 0.18rem rgba(79, 131, 255, 0.16); background: #f7faff; }
+                            @media (max-width: 900px) { .swal-usuario__header { flex-direction: column; } .swal-usuario__college-card { max-width: 100%; width: 100%; } .swal-usuario__grid { grid-template-columns: 1fr; } }
+                        </style>
+                        <div class="swal-usuario__header">
+                            <div class="swal-usuario__title-wrap">
+                                <h2 class="swal-usuario__title">Modificar usuario</h2>
+                            </div>
+                            <div class="swal-usuario__college-card">
+                                <img src="${configuracionUrl('img/colegios/colegio_0.png')}" alt="" class="swal-usuario__college-logo" id="colegioResumenLogoEditar"
+                                    onerror="this.style.display='none'; document.getElementById('colegioResumenFallbackEditar').style.display='inline-flex';">
+                                <span class="swal-usuario__college-fallback" id="colegioResumenFallbackEditar" style="display:none;">--</span>
+                                <div>
+                                    <div class="swal-usuario__college-name" id="colegioResumenNombreEditar">Selecciona un colegio</div>
+                                    <div class="swal-usuario__college-meta" id="colegioResumenMetaEditar">ID colegio: --</div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="apellidoPaterno" name="apellidoPaterno" placeholder="Apellido Paterno">
-                                    <label for="apellidoPaterno">Apellido Paterno</label>
-                                </div>
+                        </div>
+                        <form class="swal-usuario__grid" id="usuarioForm">
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="email">Email</label>
+                                <input type="email" class="swal-usuario__input" id="email" placeholder="usuario@correo.cl">
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="apellidoMaterno" name="apellidoMaterno" placeholder="Apellido Materno">
-                                    <label for="apellidoMaterno">Apellido Materno</label>
-                                </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="area_trabajo">Departamento</label>
+                                <select class="swal-usuario__select" id="area_trabajo" name="areaTrabajo">
+                                    <option value="">Seleccione Area de Trabajo</option>
+                                </select>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="email" name="email" placeholder="Email">
-                                    <label for="email">Email</label>
-                                </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="nombre">Nombre</label>
+                                <input type="text" class="swal-usuario__input" id="nombre" name="nombre" placeholder="Nombre">
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Telefono">
-                                    <label for="telefono">Telefono</label>
-                                </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="apellidoPaterno">Apellido paterno</label>
+                                <input type="text" class="swal-usuario__input" id="apellidoPaterno" name="apellidoPaterno" placeholder="Apellido paterno">
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <select class="form-control" id="area_trabajo" name="areaTrabajo">
-                                        <option value="">Seleccione Area de Trabajo</option>
-                                    </select>
-                                    <label for="area_trabajo">Area de Trabajo</label>
-                                </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="apellidoMaterno">Apellido materno</label>
+                                <input type="text" class="swal-usuario__input" id="apellidoMaterno" name="apellidoMaterno" placeholder="Apellido materno">
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="anexo" name="anexo" placeholder="Anexo">
-                                    <label for="anexo">Anexo</label>
-                                </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="id_colegio">Colegio</label>
+                                <select class="swal-usuario__select" id="id_colegio" name="idColegio">
+                                    <option value="">Seleccione Colegio</option>
+                                </select>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-floating mb-3">
-                                    <select class="form-control" id="sexo" name="sexo">
-                                        <option value="">Seleccione Sexo</option>
-                                        <option value="1">Masculino</option>
-                                        <option value="2">Femenino</option>
-                                    </select>
-                                    <label for="sexo">Sexo</label>
-                                </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="sexo">Sexo</label>
+                                <select class="swal-usuario__select" id="sexo" name="sexo">
+                                    <option value="">Seleccione Sexo</option>
+                                    <option value="1">Masculino</option>
+                                    <option value="2">Femenino</option>
+                                </select>
+                            </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="telefono">Telefono</label>
+                                <input type="text" class="swal-usuario__input" id="telefono" name="telefono" placeholder="Telefono">
+                            </div>
+                            <div class="swal-usuario__field">
+                                <label class="swal-usuario__label" for="anexo">Anexo</label>
+                                <input type="text" class="swal-usuario__input" id="anexo" name="anexo" placeholder="Anexo">
                             </div>
                         </form>
                     </div>
                 `,
                 showCancelButton: true,
-                width: '870px',
-                padding: '20px',
-                confirmButtonColor: '#5B8E4A',
-                cancelButtonColor: '#d33',
+                width: '980px',
+                padding: '24px',
+                confirmButtonColor: '#0b6aa2',
+                cancelButtonColor: '#e9edf3',
                 confirmButtonText: 'Guardar cambios',
                 cancelButtonText: 'Cancelar',
                 customClass: {
@@ -766,6 +782,31 @@ function modificarUsuario(userId) {
                     cancelButton: 'bt_activar_alumno'
                 },
                 didOpen: () => {
+                    const popup = Swal.getPopup();
+                    const colegioSelect = popup.querySelector('#id_colegio');
+                    const colegioNombre = popup.querySelector('#colegioResumenNombreEditar');
+                    const colegioMeta = popup.querySelector('#colegioResumenMetaEditar');
+                    const colegioLogo = popup.querySelector('#colegioResumenLogoEditar');
+                    const colegioFallback = popup.querySelector('#colegioResumenFallbackEditar');
+                    const confirmButton = popup.querySelector('.swal2-confirm');
+                    const cancelButton = popup.querySelector('.swal2-cancel');
+
+                    popup.style.borderRadius = '28px';
+                    popup.style.boxShadow = '0 28px 60px rgba(20, 42, 82, 0.20)';
+
+                    if (confirmButton) {
+                        confirmButton.style.borderRadius = '16px';
+                        confirmButton.style.padding = '0.9rem 1.3rem';
+                        confirmButton.style.fontWeight = '800';
+                    }
+
+                    if (cancelButton) {
+                        cancelButton.style.borderRadius = '16px';
+                        cancelButton.style.padding = '0.9rem 1.3rem';
+                        cancelButton.style.fontWeight = '700';
+                        cancelButton.style.color = '#1f2a44';
+                    }
+
                     $('#nombre').val(data.nombre || '');
                     $('#apellidoPaterno').val(data.apellido_paterno || '');
                     $('#apellidoMaterno').val(data.apellido_materno || '');
@@ -780,13 +821,42 @@ function modificarUsuario(userId) {
                         optionsHtml += `<option value="${area.id}"${selected}>${area.nombre_area}</option>`;
                     });
                     $('#area_trabajo').html(optionsHtml);
+
+                    let colegiosHtml = '<option value="">Seleccione Colegio</option>';
+                    (data.colegios || []).forEach((colegio) => {
+                        const selected = String(colegio.id) === String(data.id_colegio) ? ' selected' : '';
+                        colegiosHtml += `<option value="${colegio.id}"${selected}>${colegio.nombre}</option>`;
+                    });
+                    $('#id_colegio').html(colegiosHtml);
+
+                    function actualizarResumenColegioEditar() {
+                        const opcion = colegioSelect.options[colegioSelect.selectedIndex];
+                        const idColegio = opcion ? opcion.value : '';
+                        const nombre = opcion ? opcion.text : 'Selecciona un colegio';
+
+                        colegioNombre.textContent = idColegio ? nombre : 'Selecciona un colegio';
+                        colegioMeta.textContent = idColegio ? `ID colegio: ${idColegio}` : 'ID colegio: --';
+                        colegioFallback.textContent = idColegio || '--';
+
+                        if (idColegio) {
+                            colegioLogo.style.display = 'inline-flex';
+                            colegioLogo.src = configuracionUrl(`img/colegios/colegio_${idColegio}.png`);
+                        } else {
+                            colegioLogo.style.display = 'none';
+                            colegioFallback.style.display = 'inline-flex';
+                        }
+                    }
+
+                    actualizarResumenColegioEditar();
+                    $(colegioSelect).on('change', actualizarResumenColegioEditar);
                 },
                 preConfirm: () => {
                     const nombre = document.getElementById('nombre');
                     const apellidoPaterno = document.getElementById('apellidoPaterno');
                     const email = document.getElementById('email');
+                    const idColegio = document.getElementById('id_colegio');
 
-                    if (!validarCamposVacios(nombre, apellidoPaterno, email)) {
+                    if (!validarCamposVacios(nombre, apellidoPaterno, email, idColegio)) {
                         Swal.showValidationMessage('Por favor, complete los campos obligatorios en rojo.');
                         return false;
                     }
@@ -802,7 +872,8 @@ function modificarUsuario(userId) {
                         clave: '',
                         anexo: document.getElementById('anexo').value,
                         areaTrabajo: document.getElementById('area_trabajo').value,
-                        sexo: document.getElementById('sexo').value
+                        sexo: document.getElementById('sexo').value,
+                        idColegio: idColegio.value
                     };
                 }
             }).then((result) => {
@@ -821,19 +892,8 @@ function modificarUsuario(userId) {
                             return;
                         }
 
-                        Swal.fire({
-                            title: '<div class="alert alert-dark" role="alert">USUARIO ACTUALIZADO</div>',
-                            width: '570px',
-                            padding: '40px',
-                            icon: 'success',
-                            showConfirmButton: false,
-                            timer: 1800,
-                            customClass: {
-                                popup: 'cuerpo_modal_guardar'
-                            },
-                            willClose: () => {
-                                location.reload();
-                            }
+                        mostrarConfirmacionConfiguracion('USUARIO ACTUALIZADO', response.message || '', function () {
+                            location.reload();
                         });
                     },
                     error: function (xhr, status, error) {
@@ -882,15 +942,7 @@ function confirmarReenvioActivacion(userId, email) {
                     return;
                 }
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Correo reenviado',
-                    text: response.message || 'Correo de activacion reenviado correctamente.',
-                    confirmButtonText: 'Entendido',
-                    customClass: {
-                        popup: 'cuerpo_modal_guardar'
-                    }
-                });
+                mostrarConfirmacionConfiguracion('CORREO REENVIADO', response.message || 'Correo de activacion reenviado correctamente.');
             },
             error: function (xhr, status, error) {
                 console.error('Error al reenviar el correo de activacion:', error);
