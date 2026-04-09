@@ -18,7 +18,12 @@
                     </div>
                     <div class="card-body">
                         <p class="mb-3">Revisa el ticket dentro de este modulo antes de ejecutar una eliminacion administrativa.</p>
-                        <a href="mantenimiento_ticket_eliminar.php" class="btn btn-danger">Abrir modulo</a>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="mantenimiento_ticket_eliminar.php" class="btn btn-danger">Abrir modulo</a>
+                            <a href="mantenimiento_ticket_recuperar.php" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Listado de tickets eliminados
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
