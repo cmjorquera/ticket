@@ -49,9 +49,12 @@ $tituloPagina = 'Configuracion';
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-xl-12">
-                            <div class="card">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                    <h6 class="m-0 font-weight-bold text-primary">Configuracion</h6>
+                                </div>
                                 <div class="card-body pt-3">
-                                    <ul class="nav nav-tabs nav-tabs-bordered" role="tablist">
+                                    <ul class="nav nav-tabs" role="tablist">
                                         <li class="nav-item" role="presentation">
                                             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#usuarios-tab" aria-selected="true" role="tab">Usuarios</button>
                                         </li>
@@ -72,19 +75,26 @@ $tituloPagina = 'Configuracion';
                                         </div>
 
                                         <div class="tab-pane fade pt-3" id="configuracion-tab" role="tabpanel">
-                                            <form>
-                                                <div class="row mb-3"></div>
-                                                <div class="row mb-3">
-                                                    <?php echo $funciones->listaTecnicos(); ?>
+                                            <div class="card shadow mb-4">
+                                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                                                    <h6 class="m-0 font-weight-bold text-primary">Configuracion de Tecnicos y Categorias</h6>
                                                 </div>
-                                                <div class="text-center d-flex flex-wrap justify-content-center gap-2">
-                                                    <button type="button" class="btn btn-primary" onclick="guardarCambios()">Guardar</button>
-                                                    <button type="button" class="btn btn-primary" onclick="agregarCategoria()">Agregar Categorias</button>
-                                                    <button class="btn btn-primary" type="button" onclick="abrirModalAdministrarCategorias()">
-                                                        <i class="bi bi-gear-fill"></i> Administrar Categorias
-                                                    </button>
+                                                <div class="card-body">
+                                                    <form>
+                                                        <div class="row mb-3"></div>
+                                                        <div class="row mb-3">
+                                                            <?php echo $funciones->listaTecnicos(); ?>
+                                                        </div>
+                                                        <div class="text-center d-flex flex-wrap justify-content-center gap-2">
+                                                            <button type="button" class="btn btn-primary" onclick="guardarCambios()">Guardar</button>
+                                                            <button type="button" class="btn btn-primary" onclick="agregarCategoria()">Agregar Categorias</button>
+                                                            <button class="btn btn-primary" type="button" onclick="abrirModalAdministrarCategorias()">
+                                                                <i class="bi bi-gear-fill"></i> Administrar Categorias
+                                                            </button>
+                                                        </div>
+                                                    </form>
                                                 </div>
-                                            </form>
+                                            </div>
                                         </div>
 
                                         <div class="tab-pane fade pt-3" id="nuevoMenu-tab" role="tabpanel">

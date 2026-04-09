@@ -31,6 +31,7 @@ $correoUsuario     = $row['email'];
 $nombreUsuario     = $row['nombre'] . ' ' . $row['apellido_paterno'];
 $asuntoTicket      = $row['asunto'];
 $descripcionTicket = $row['descripcion_ticket'];
+$descripcionTicketLimpia = trim(html_entity_decode(strip_tags((string) $descripcionTicket), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
 
 // Obtener datos de proceso
 $sqlProceso = "SELECT fecha_creacion_inicio, hora_creacion_inicio,
@@ -72,7 +73,7 @@ $pdfContent = "
 <h2>Resumen del Ticket A00{$id_ticket}</h2>
 <p><strong>Usuario:</strong> {$nombreUsuario}</p>
 <p><strong>Asunto:</strong> {$asuntoTicket}</p>
-<p><strong>Descripción:</strong><br>{$descripcionTicket}</p>
+<p><strong>Descripción:</strong><br>' . nl2br(htmlspecialchars($descripcionTicketLimpia, ENT_QUOTES, 'UTF-8')) . '</p>
 
 <h3>Línea de Tiempo</h3>
 <table>
@@ -123,7 +124,7 @@ try {
     // Reemplazar variables en la plantilla (ajusta según lo que tengas en tu HTML)
     $mailBody = str_replace('{nombreUsuario}', htmlspecialchars($nombreUsuario), $mailBody);
     $mailBody = str_replace('{asunto}', htmlspecialchars($asuntoTicket), $mailBody);
-    $mailBody = str_replace('{descripcion}', htmlspecialchars($descripcionTicket), $mailBody);
+    $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars($descripcionTicketLimpia, ENT_QUOTES, 'UTF-8')), $mailBody);
     $mailBody = str_replace('{id_ticket}', htmlspecialchars($id_ticket), $mailBody);
 
     $mail->Body = $mailBody;

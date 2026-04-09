@@ -33,30 +33,17 @@ $tituloPagina = 'Mantenimiento Tickets | Fusionar';
                 </nav>
 
                 <div class="container-fluid">
-                    <div class="ticket-maint-page">
-                        <div class="ticket-maint-page__hero">
-                            <div>
-                                <div class="ticket-maint-page__eyebrow">Mantenimiento de tickets</div>
-                                <h1 class="ticket-maint-page__title">Fusionar tickets</h1>
-                                <p class="ticket-maint-page__text">
-                                    Dejé esta pagina lista como base separada para construir el flujo de fusion sin tocar modulos compartidos.
-                                </p>
-                            </div>
-                            <div class="ticket-maint-page__actions">
-                                <a href="index.php" class="btn btn-outline-primary ticket-maint-pill">
-                                    <i class="bi bi-arrow-left me-1"></i>Volver a permisos
-                                </a>
-                            </div>
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="m-0 font-weight-bold text-primary">Fusionar tickets</h6>
+                            <a href="index.php" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-arrow-left me-1"></i>Volver a permisos
+                            </a>
                         </div>
-
-                        <div class="ticket-maint-card">
-                            <div class="ticket-maint-empty">
-                                <div class="ticket-maint-empty__icon"><i class="bi bi-shuffle"></i></div>
-                                <h2>Modulo de fusion en preparacion</h2>
-                                <p>
-                                    El siguiente paso aqui sera mostrar dos buscadores de tickets, una vista comparativa
-                                    y la previsualizacion del impacto antes de unificar ambos casos.
-                                </p>
+                        <div class="card-body">
+                            <p class="mb-3">Esta pagina queda lista como base separada para construir el flujo de fusion sin tocar modulos compartidos.</p>
+                            <div class="alert alert-info mb-0">
+                                El siguiente paso aqui sera mostrar dos buscadores de tickets, una vista comparativa y la previsualizacion del impacto antes de unificar ambos casos.
                             </div>
                         </div>
                     </div>

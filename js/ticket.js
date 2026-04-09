@@ -4,6 +4,7 @@
 
           let campoUsuarioHTML = "";
           let selectCategoriasHTML = "";
+          let editorDescripcion = null;
         
           try {
             if (esAdmin) {
@@ -93,8 +94,9 @@
             
               <!-- Descripción en ancho completo -->
           <div class="mb-3">
-            <label for="descripcionTicket"><strong>Descripción:</strong></label>
-            <textarea class="form-control" id="descripcionTicket" rows="5" placeholder="Describe el problema..."></textarea>
+            <label for="descripcionTicketEditor"><strong>Descripción:</strong></label>
+            <div id="descripcionTicketEditor" style="height: 220px; background: #fff;"></div>
+            <input type="hidden" id="descripcionTicket">
           </div>
           </div>
         </form>
@@ -118,6 +120,31 @@
                     el.addEventListener("input", () => el.classList.remove("input-error"));
                     el.addEventListener("change", () => el.classList.remove("input-error"));
                   });
+
+                  if (window.Quill) {
+                    editorDescripcion = new Quill('#descripcionTicketEditor', {
+                      theme: 'snow',
+                      placeholder: 'Describe el problema...',
+                      modules: {
+                        toolbar: [
+                          [{ header: [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{ color: [] }, { background: [] }],
+                          [{ list: 'ordered' }, { list: 'bullet' }],
+                          [{ align: [] }],
+                          ['link', 'blockquote', 'code-block'],
+                          ['clean']
+                        ]
+                      }
+                    });
+
+                    editorDescripcion.on('text-change', () => {
+                      const descripcionInput = document.getElementById('descripcionTicket');
+                      if (!descripcionInput) return;
+                      descripcionInput.value = editorDescripcion.root.innerHTML;
+                      descripcionInput.classList.remove('input-error');
+                    });
+                  }
                 
                   const archivosInput   = document.getElementById("archivoTicket");
                   const contenedor      = document.getElementById("contenedorArchivos");
@@ -145,9 +172,17 @@
                 const asunto = document.getElementById('asuntoTicket');
                 const descripcion = document.getElementById('descripcionTicket');
                 const categoria = document.getElementById('selectCategoria');
+                const htmlDescripcion = editorDescripcion
+                  ? editorDescripcion.root.innerHTML
+                  : descripcion.value;
+                const textoDescripcion = editorDescripcion
+                  ? editorDescripcion.getText().trim()
+                  : descripcion.value.trim();
+
+                descripcion.value = htmlDescripcion;
         
                 let valido = true;
-                [asunto, descripcion, categoria].forEach(field => {
+                [asunto, categoria].forEach(field => {
                   if (!field.value.trim()) {
                     field.classList.add("input-error");
                     valido = false;
@@ -155,6 +190,21 @@
                     field.classList.remove("input-error");
                   }
                 });
+
+                if (!textoDescripcion) {
+                  descripcion.classList.add("input-error");
+                  const editorContenedor = document.querySelector('#descripcionTicketEditor .ql-container');
+                  if (editorContenedor) {
+                    editorContenedor.style.borderColor = '#e74a3b';
+                  }
+                  valido = false;
+                } else {
+                  descripcion.classList.remove("input-error");
+                  const editorContenedor = document.querySelector('#descripcionTicketEditor .ql-container');
+                  if (editorContenedor) {
+                    editorContenedor.style.borderColor = '';
+                  }
+                }
         
                 if (!valido) {
                   Swal.showValidationMessage('Debes completar todos los campos obligatorios');
@@ -165,7 +215,9 @@
             }).then(result => {
               if (result.isConfirmed || result.isDenied) {
                 const asunto        = document.getElementById('asuntoTicket').value.trim();
-                const descripcion   = document.getElementById('descripcionTicket').value.trim();
+                const descripcion   = editorDescripcion
+                  ? editorDescripcion.root.innerHTML
+                  : document.getElementById('descripcionTicket').value.trim();
                 const categoria     = document.getElementById('selectCategoria')?.value || '';
                 const data = {
                   usuarioId: idUsuarioSession,
@@ -1669,7 +1721,7 @@
                     <!-- FILA 1: Datos del ticket (izquierda) + Avances (derecha) -->
                     <div class="row g-3 ticket-modal-main">
                       <!-- Izquierda -->
-                      <div class="col-lg-8">
+                      <div class="col-lg-7">
                         <form class="text-start ticket-modal-form">
                           <div class="row g-2">
                             <div class="col-12 col-md-6">
@@ -1699,7 +1751,7 @@
                         </form>
                       </div>
                         <!-- Derecha: Avances del Técnico -->
-                     <div class="col-lg-4 d-flex flex-column ticket-modal-side" id="timelineContainer">
+                     <div class="col-lg-5 d-flex flex-column ticket-modal-side" id="timelineContainer">
                           <input type="hidden" id="ticketId" value="${id_ticket}">
                           <input type="hidden" id="idEstadoTicket" value="${id_estado}">
                           ${accionesHTML}
@@ -2643,14 +2695,14 @@
                 
                             <div class="col-12">
                               <label class="form-label"><strong>Descripción:</strong></label>
-                              <textarea class="form-control form-control-sm ticket-admin-descripcion ticket-modal-description" rows="6" readonly>${descripcion_ticket}</textarea>
+                              <div class="form-control form-control-sm ticket-admin-descripcion ticket-modal-description ticket-modal-description-html" style="height:auto;">${sanitizeHtmlTicket(descripcion_ticket)}</div>
                             </div>
                           </div>
                         </form>
                       </div>
             
                         <!-- Derecha: Avances del Técnico -->
-                        <div class="col-lg-4 d-flex flex-column ticket-modal-side" id="timelineContainer" class="mt-4 p-3 rounded">
+                        <div class="col-lg-5 d-flex flex-column ticket-modal-side" id="timelineContainer" class="mt-4 p-3 rounded">
                           <input type="hidden" id="ticketId" value="${id_ticket}">
                           <input type="hidden" id="idEstadoTicket" value="${id_estado}">
                             ${accionesHTML}  <!-- aquí se inyecta la card completa -->

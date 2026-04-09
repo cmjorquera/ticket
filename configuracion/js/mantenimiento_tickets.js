@@ -17,16 +17,18 @@ function construirResumenTicketMantenimiento(ticket, etiqueta) {
     }
 
     return `
-        <div class="ticket-admin-summary-card">
-            <h5>${escapeHtmlPermisos(etiqueta)} #${escapeHtmlPermisos(ticket.id_ticket)}</h5>
-            <div class="ticket-admin-summary-meta">
-                <span><strong>Asunto:</strong> ${escapeHtmlPermisos(ticket.asunto || 'Sin asunto')}</span>
-                <span><strong>Usuario:</strong> ${escapeHtmlPermisos(ticket.usuario || 'Sin usuario')}</span>
-                <span><strong>Tecnico:</strong> ${escapeHtmlPermisos(ticket.tecnico || 'Sin tecnico')}</span>
-                <span><strong>Estado:</strong> ${escapeHtmlPermisos(ticket.estado || 'Sin estado')}</span>
-                <span><strong>Categoria:</strong> ${escapeHtmlPermisos(ticket.categoria || 'Sin categoria')}</span>
-                <span><strong>Prioridad:</strong> ${escapeHtmlPermisos(ticket.prioridad || 'Sin prioridad')}</span>
-                <span><strong>Fecha:</strong> ${escapeHtmlPermisos(ticket.fecha || 'Sin fecha')}</span>
+        <div class="card shadow h-100">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">${escapeHtmlPermisos(etiqueta)} #${escapeHtmlPermisos(ticket.id_ticket)}</h6>
+            </div>
+            <div class="card-body d-flex flex-column gap-2">
+                <div><strong>Asunto:</strong> ${escapeHtmlPermisos(ticket.asunto || 'Sin asunto')}</div>
+                <div><strong>Usuario:</strong> ${escapeHtmlPermisos(ticket.usuario || 'Sin usuario')}</div>
+                <div><strong>Tecnico:</strong> ${escapeHtmlPermisos(ticket.tecnico || 'Sin tecnico')}</div>
+                <div><strong>Estado:</strong> ${escapeHtmlPermisos(ticket.estado || 'Sin estado')}</div>
+                <div><strong>Categoria:</strong> ${escapeHtmlPermisos(ticket.categoria || 'Sin categoria')}</div>
+                <div><strong>Prioridad:</strong> ${escapeHtmlPermisos(ticket.prioridad || 'Sin prioridad')}</div>
+                <div><strong>Fecha:</strong> ${escapeHtmlPermisos(ticket.fecha || 'Sin fecha')}</div>
             </div>
         </div>
     `;
@@ -34,20 +36,20 @@ function construirResumenTicketMantenimiento(ticket, etiqueta) {
 
 function construirImpactoTicketMantenimiento(items) {
     if (!Array.isArray(items) || items.length === 0) {
-        return '<div class="ticket-admin-alert is-warning">No se encontraron relaciones para este ticket.</div>';
+        return '<div class="alert alert-warning mb-0">No se encontraron relaciones para este ticket.</div>';
     }
 
     return `
-        <div class="ticket-admin-impact-list">
+        <div class="list-group">
             ${items.map((item) => `
-                <div class="ticket-admin-impact-item">
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
                     <div>
                         <strong>${escapeHtmlPermisos(item.tabla)}</strong>
-                        <span>${escapeHtmlPermisos(item.detalle || '')}</span>
+                        <div>${escapeHtmlPermisos(item.detalle || '')}</div>
                     </div>
-                    <div class="ticket-admin-impact-badge ${item.existe ? '' : 'is-missing'}">
+                    <span class="badge ${item.existe ? 'bg-secondary' : 'bg-warning text-dark'}">
                         ${item.existe ? escapeHtmlPermisos(item.total ?? 0) : 'No existe'}
-                    </div>
+                    </span>
                 </div>
             `).join('')}
         </div>
@@ -57,11 +59,11 @@ function construirImpactoTicketMantenimiento(items) {
 function construirAlertasMantenimiento(alertas) {
     const alertasValidas = Array.isArray(alertas) ? alertas.filter(Boolean) : [];
     if (alertasValidas.length === 0) {
-        return '<div class="ticket-admin-alert is-info">No se detectaron alertas adicionales para esta previsualizacion.</div>';
+        return '<div class="alert alert-info">No se detectaron alertas adicionales para esta previsualizacion.</div>';
     }
 
     return `
-        <div class="ticket-admin-alert is-warning">
+        <div class="alert alert-warning">
             ${alertasValidas.map((alerta) => `<div>${escapeHtmlPermisos(alerta)}</div>`).join('')}
         </div>
     `;
@@ -73,21 +75,36 @@ function renderPreviewFusion(data) {
         return;
     }
 
-    contenedor.classList.remove('is-hidden');
     contenedor.innerHTML = `
-        <div class="ticket-admin-preview-title">Previsualizacion de fusion</div>
-        <div class="ticket-admin-summary-grid">
-            ${construirResumenTicketMantenimiento(data?.tickets?.principal, 'Ticket principal')}
-            ${construirResumenTicketMantenimiento(data?.tickets?.secundario, 'Ticket secundario')}
-        </div>
-        <div class="ticket-admin-summary-grid mt-3">
-            <div class="ticket-admin-summary-card">
-                <h5>Impacto ticket principal</h5>
-                ${construirImpactoTicketMantenimiento(data?.impacto?.principal)}
+        <h6 class="font-weight-bold text-primary mb-3">Previsualizacion de fusion</h6>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                ${construirResumenTicketMantenimiento(data?.tickets?.principal, 'Ticket principal')}
             </div>
-            <div class="ticket-admin-summary-card">
-                <h5>Impacto ticket secundario</h5>
-                ${construirImpactoTicketMantenimiento(data?.impacto?.secundario)}
+            <div class="col-md-6 mb-3">
+                ${construirResumenTicketMantenimiento(data?.tickets?.secundario, 'Ticket secundario')}
+            </div>
+        </div>
+        <div class="row mt-1">
+            <div class="col-md-6 mb-3">
+                <div class="card shadow h-100">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Impacto ticket principal</h6>
+                    </div>
+                    <div class="card-body">
+                        ${construirImpactoTicketMantenimiento(data?.impacto?.principal)}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card shadow h-100">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Impacto ticket secundario</h6>
+                    </div>
+                    <div class="card-body">
+                        ${construirImpactoTicketMantenimiento(data?.impacto?.secundario)}
+                    </div>
+                </div>
             </div>
         </div>
         ${construirAlertasMantenimiento(data?.alertas)}
@@ -100,14 +117,21 @@ function renderPreviewEliminar(data) {
         return;
     }
 
-    contenedor.classList.remove('is-hidden');
     contenedor.innerHTML = `
-        <div class="ticket-admin-preview-title">Previsualizacion de eliminacion</div>
-        <div class="ticket-admin-summary-grid">
-            ${construirResumenTicketMantenimiento(data?.tickets?.objetivo, 'Ticket objetivo')}
-            <div class="ticket-admin-summary-card">
-                <h5>Impacto del ticket</h5>
-                ${construirImpactoTicketMantenimiento(data?.impacto?.objetivo)}
+        <h6 class="font-weight-bold text-primary mb-3">Previsualizacion de eliminacion</h6>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                ${construirResumenTicketMantenimiento(data?.tickets?.objetivo, 'Ticket objetivo')}
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card shadow h-100">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Impacto del ticket</h6>
+                    </div>
+                    <div class="card-body">
+                        ${construirImpactoTicketMantenimiento(data?.impacto?.objetivo)}
+                    </div>
+                </div>
             </div>
         </div>
         ${construirAlertasMantenimiento(data?.alertas)}
@@ -120,8 +144,7 @@ function mostrarErrorPreviewMantenimiento(contenedorId, mensaje) {
         return;
     }
 
-    contenedor.classList.remove('is-hidden');
-    contenedor.innerHTML = `<div class="ticket-admin-alert is-warning">${escapeHtmlPermisos(mensaje)}</div>`;
+    contenedor.innerHTML = `<div class="alert alert-warning mb-0">${escapeHtmlPermisos(mensaje)}</div>`;
 }
 
 function solicitarPreviewMantenimiento(payload, onSuccess, contenedorErrorId) {

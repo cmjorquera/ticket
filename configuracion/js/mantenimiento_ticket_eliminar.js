@@ -26,20 +26,20 @@ function abrirEliminarTicket(idTicket) {
 
 function renderizarImpactoEliminar(items) {
     if (!Array.isArray(items) || items.length === 0) {
-        return '<div class="ticket-maint-alert">No se encontraron relaciones para este ticket.</div>';
+        return '<div class="alert alert-warning mb-0">No se encontraron relaciones para este ticket.</div>';
     }
 
     return `
-        <div class="ticket-maint-impact-list">
+        <div class="list-group">
             ${items.map((item) => `
-                <div class="ticket-maint-impact-item">
+                <div class="list-group-item d-flex justify-content-between align-items-center gap-3">
                     <div>
                         <strong>${escapeHtmlEliminar(item.tabla)}</strong>
-                        <span>${escapeHtmlEliminar(item.detalle || '')}</span>
+                        <div>${escapeHtmlEliminar(item.detalle || '')}</div>
                     </div>
-                    <div class="ticket-maint-impact-badge">
+                    <span class="badge bg-secondary">
                         ${item.existe ? escapeHtmlEliminar(item.total ?? 0) : 'No existe'}
-                    </div>
+                    </span>
                 </div>
             `).join('')}
         </div>
@@ -67,8 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const motivo = document.getElementById('ticketDeleteMotivo')?.value || '';
 
             if (!ticketId) {
-                preview.classList.add('is-visible');
-                preview.innerHTML = '<div class="ticket-maint-alert">Debes indicar el ticket que deseas revisar.</div>';
+                preview.innerHTML = '<div class="alert alert-warning mb-0">Debes indicar el ticket que deseas revisar.</div>';
                 return;
             }
 
@@ -84,38 +83,47 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 success: function (response) {
                     if (!response || !response.success) {
-                        preview.classList.add('is-visible');
-                        preview.innerHTML = `<div class="ticket-maint-alert">${escapeHtmlEliminar(response?.message || 'No se pudo revisar el ticket.')}</div>`;
+                        preview.innerHTML = `<div class="alert alert-warning mb-0">${escapeHtmlEliminar(response?.message || 'No se pudo revisar el ticket.')}</div>`;
                         return;
                     }
 
                     const ticket = response?.tickets?.objetivo || {};
                     const alertas = Array.isArray(response?.alertas) ? response.alertas.filter(Boolean) : [];
 
-                    preview.classList.add('is-visible');
                     preview.innerHTML = `
-                        <div class="ticket-maint-preview-grid">
-                            <div class="ticket-maint-summary-card">
-                                <h6>Ticket seleccionado #${escapeHtmlEliminar(ticket.id_ticket || '')}</h6>
-                                <ul>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card shadow h-100">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Ticket seleccionado #${escapeHtmlEliminar(ticket.id_ticket || '')}</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="mb-0">
                                     <li><strong>Asunto:</strong> ${escapeHtmlEliminar(ticket.asunto || 'Sin asunto')}</li>
                                     <li><strong>Usuario:</strong> ${escapeHtmlEliminar(ticket.usuario || 'Sin usuario')}</li>
                                     <li><strong>Estado:</strong> ${escapeHtmlEliminar(ticket.estado || 'Sin estado')}</li>
                                     <li><strong>Categoria:</strong> ${escapeHtmlEliminar(ticket.categoria || 'Sin categoria')}</li>
                                     <li><strong>Fecha:</strong> ${escapeHtmlEliminar(ticket.fecha || 'Sin fecha')}</li>
-                                </ul>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="ticket-maint-summary-card">
-                                <h6>Impacto relacionado</h6>
-                                ${renderizarImpactoEliminar(response?.impacto?.objetivo)}
+                            <div class="col-md-6 mb-3">
+                                <div class="card shadow h-100">
+                                    <div class="card-header py-3">
+                                        <h6 class="m-0 font-weight-bold text-primary">Impacto relacionado</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        ${renderizarImpactoEliminar(response?.impacto?.objetivo)}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        ${alertas.length ? `<div class="ticket-maint-alert">${alertas.map((item) => `<div>${escapeHtmlEliminar(item)}</div>`).join('')}</div>` : ''}
+                        ${alertas.length ? `<div class="alert alert-warning">${alertas.map((item) => `<div>${escapeHtmlEliminar(item)}</div>`).join('')}</div>` : ''}
                     `;
                 },
                 error: function () {
-                    preview.classList.add('is-visible');
-                    preview.innerHTML = '<div class="ticket-maint-alert">Ocurrio un error al revisar este ticket.</div>';
+                    preview.innerHTML = '<div class="alert alert-warning mb-0">Ocurrio un error al revisar este ticket.</div>';
                 }
             });
         });

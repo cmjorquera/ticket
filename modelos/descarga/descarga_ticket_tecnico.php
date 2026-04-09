@@ -47,6 +47,8 @@ if (!$ticket) {
     die("Ticket no encontrado.");
 }
 
+$descripcionLimpia = trim(html_entity_decode(strip_tags((string) ($ticket['descripcion_ticket'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
 // Crear Excel
 $spreadsheet = new Spreadsheet();
 $sheet = $spreadsheet->getActiveSheet();
@@ -63,7 +65,7 @@ $sheet->setCellValue('A4', 'Asunto');
 $sheet->setCellValue('B4', $ticket['asunto']);
 
 $sheet->setCellValue('A5', 'Descripción');
-$sheet->setCellValue('B5', $ticket['descripcion_ticket']);
+$sheet->setCellValue('B5', $descripcionLimpia);
 
 $sheet->setCellValue('A6', 'Creado');
 $sheet->setCellValue('B6', $ticket['fecha_creacion_inicio'] . ' ' . $ticket['hora_creacion_inicio']);
@@ -103,7 +105,7 @@ $res2 = $bd->consulta($sql2);
 $fila = 17;
 while ($avance = $bd->fetch_assoc($res2)) {
     $sheet->setCellValue("A$fila", $avance['fecha_avance'] . ' ' . $avance['hora_avance']);
-    $sheet->setCellValue("B$fila", $avance['accion']);
+    $sheet->setCellValue("B$fila", trim(html_entity_decode(strip_tags((string) ($avance['accion'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
     $fila++;
 }
 

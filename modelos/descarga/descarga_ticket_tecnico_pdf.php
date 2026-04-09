@@ -39,6 +39,8 @@ if (!$ticket) {
     die("Ticket no encontrado.");
 }
 
+$descripcionLimpia = nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) ($ticket['descripcion_ticket'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8'));
+
 // Avances técnicos
 $sql2 = "SELECT fecha_avance, hora_avance, accion 
          FROM avance_tecnicos 
@@ -52,7 +54,7 @@ $html .= '<table border="1" cellpadding="5" cellspacing="0" width="100%">';
 
 $html .= '<tr><td><strong>ID Ticket</strong></td><td>' . $ticket['id_ticket'] . '</td></tr>';
 $html .= '<tr><td><strong>Asunto</strong></td><td>' . $ticket['asunto'] . '</td></tr>';
-$html .= '<tr><td><strong>Descripción</strong></td><td>' . $ticket['descripcion_ticket'] . '</td></tr>';
+$html .= '<tr><td><strong>Descripción</strong></td><td>' . $descripcionLimpia . '</td></tr>';
 $html .= '<tr><td><strong>Usuario</strong></td><td>' . $ticket['nombre_usuario'] . ' ' . $ticket['ape_usuario'] . '</td></tr>';
 $html .= '<tr><td><strong>Técnico</strong></td><td>' . $ticket['nombre_tecnico'] . ' ' . $ticket['ape_tecnico'] . '</td></tr>';
 $html .= '<tr><td><strong>Categoría</strong></td><td>' . $ticket['nombre_categoria'] . '</td></tr>';
@@ -70,7 +72,7 @@ $html .= '<thead><tr><th>Fecha y Hora</th><th>Detalle</th></tr></thead><tbody>';
 
 while ($avance = $bd->fetch_assoc($res2)) {
     $fecha = $avance['fecha_avance'] . ' ' . $avance['hora_avance'];
-    $accion = htmlspecialchars($avance['accion']);
+    $accion = nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) ($avance['accion'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8'));
     $html .= "<tr><td>$fecha</td><td>$accion</td></tr>";
 }
 $html .= '</tbody></table>';

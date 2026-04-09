@@ -184,6 +184,17 @@
   max-height: 138px;
   resize: none !important;
 }
+.modal-ticket-tecnico .ticket-modal-description-html {
+  min-height: 148px;
+  max-height: 260px;
+  overflow-y: auto;
+  white-space: normal;
+}
+.modal-ticket-tecnico .ticket-modal-description-html p,
+.modal-ticket-tecnico .ticket-modal-description-html ol,
+.modal-ticket-tecnico .ticket-modal-description-html ul {
+  margin-bottom: .5rem;
+}
 .modal-ticket-tecnico #mensajeUsuario,
 .modal-ticket-tecnico #comentarioFinal {
   min-height: 88px;
@@ -192,6 +203,17 @@
 }
 .modal-ticket-tecnico #timelineContainer {
   gap: .45rem;
+}
+.modal-ticket-tecnico .card-avances {
+  width: 100%;
+  min-width: 420px;
+}
+.modal-ticket-tecnico .ticket-admin-avance-editor .ql-editor {
+  min-height: 96px;
+}
+.modal-ticket-tecnico .ticket-admin-avance-editor .ql-toolbar,
+.modal-ticket-tecnico .ticket-admin-avance-editor .ql-container {
+  background: #fff;
 }
 .modal-ticket-tecnico #lineaTiempoDinamica {
   margin-top: 0 !important;

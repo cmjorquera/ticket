@@ -1,18 +1,15 @@
-<div class="row mb-6">
-    <div class="container mt-4">
-        <div class="usuarios-panel">
-            <div class="usuarios-panel__header">
-                <div>
-                    <h5 class="usuarios-panel__title">Tabla usuarios</h5>
-                    <p class="usuarios-panel__text">Administra usuarios y define qué menú puede ver cada cuenta.</p>
-                </div>
-                <a href="#" class="btn btn-primary usuarios-panel__cta" id="buttonAgregarTicket" onclick="agregarUsuario()">
-                    <i class="bi bi-person-plus-fill me-2"></i>Agregar usuario
-                </a>
-            </div>
-            <div class="usuarios-panel__body">
-                <?php echo $funciones->listaUsuarios(); ?>
-            </div>
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h6 class="m-0 font-weight-bold text-primary">Tabla usuarios</h6>
+            <p class="mb-0 text-muted">Administra usuarios y define qué menu puede ver cada cuenta.</p>
         </div>
+
+        <a href="#" class="btn btn-primary" id="buttonAgregarTicket" onclick="agregarUsuario()">
+            <i class="bi bi-person-plus-fill me-2"></i>Agregar usuario
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <?php echo $funciones->listaUsuarios(); ?>
     </div>
 </div>
