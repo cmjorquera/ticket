@@ -133,6 +133,14 @@ $tituloPagina = 'Mantenimiento Tickets | Eliminar';
                         </div>
                     </div>
                 </div>
+                <div class="modal-footer ticket-delete-modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cerrar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminarTicket" disabled>
+                        <i class="bi bi-trash3 me-1"></i>Eliminar ticket
+                    </button>
+                </div>
             </div>
         </div>
     </div>

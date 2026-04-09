@@ -846,6 +846,7 @@
             const apePaternoUsuario    = data.apePaternoUsuario     || "";
             const asunto               = data.asunto                || "";
             const descripcion          = data.descripcion_ticket    || "";
+            const descripcionLimpia    = limpiarTextoTicket(descripcion);
             
             const nombreTecnico        = data.nombreTecnico        || "";
             const apePaternoTecnico    = data.apePaternoTecnico   || "";
@@ -1024,7 +1025,7 @@
                   
                   
                    const ta = document.getElementById('descTicket');
-                  if (ta) ta.value = descripcion; // tildes/ñ OK
+                  if (ta) ta.value = descripcionLimpia; // tildes/ñ OK
                   
                 // Popovers
                 [].slice.call(document.querySelectorAll("[data-bs-toggle='popover']"))
@@ -1745,7 +1746,7 @@
                 
                             <div class="col-12">
                               <label class="form-label"><strong>Descripción:</strong></label>
-                              <textarea class="form-control form-control-sm ticket-modal-description" rows="6" disabled>${descripcion_ticket}</textarea>
+                              <textarea class="form-control form-control-sm ticket-modal-description" rows="6" disabled>${limpiarTextoTicket(descripcion_ticket)}</textarea>
                             </div>
                           </div>
                         </form>
@@ -2038,6 +2039,99 @@
           .replace(/'/g, "&#39;");
       }
 
+  function sanitizeHtmlTicket(html = "") {
+        const template = document.createElement("template");
+        template.innerHTML = String(html || "");
+
+        const allowedTags = new Set([
+          "P", "BR", "STRONG", "B", "EM", "I", "U", "S",
+          "OL", "UL", "LI", "A", "BLOCKQUOTE", "CODE", "PRE",
+          "SPAN", "DIV", "H1", "H2", "H3"
+        ]);
+
+        const allowedAttrs = {
+          A: new Set(["href", "target", "rel"])
+        };
+
+        const limpiarNodo = (node) => {
+          if (node.nodeType === Node.TEXT_NODE) return;
+
+          if (node.nodeType !== Node.ELEMENT_NODE) {
+            node.remove();
+            return;
+          }
+
+          if (!allowedTags.has(node.tagName)) {
+            const parent = node.parentNode;
+            while (node.firstChild) {
+              parent.insertBefore(node.firstChild, node);
+            }
+            node.remove();
+            return;
+          }
+
+          [...node.attributes].forEach((attr) => {
+            const permitidos = allowedAttrs[node.tagName];
+            const nombre = attr.name.toLowerCase();
+
+            if (!permitidos || !permitidos.has(attr.name)) {
+              node.removeAttribute(attr.name);
+              return;
+            }
+
+            if (node.tagName === "A" && nombre === "href") {
+              const href = (node.getAttribute("href") || "").trim();
+              if (!/^(https?:|mailto:|tel:|#)/i.test(href)) {
+                node.removeAttribute("href");
+              }
+            }
+          });
+
+          [...node.childNodes].forEach(limpiarNodo);
+        };
+
+        [...template.content.childNodes].forEach(limpiarNodo);
+        return template.innerHTML;
+      }
+
+  function limpiarTextoTicket(html = "") {
+        const template = document.createElement("template");
+        template.innerHTML = String(html || "");
+
+        template.content.querySelectorAll("br").forEach((node) => {
+          node.replaceWith("\n");
+        });
+
+        template.content.querySelectorAll("p, div, li").forEach((node) => {
+          if (!node.textContent) {
+            return;
+          }
+
+          if (!node.textContent.endsWith("\n")) {
+            node.appendChild(document.createTextNode("\n"));
+          }
+        });
+
+        const texto = template.content.textContent || "";
+        return texto.replace(/\n{3,}/g, "\n\n").trim();
+      }
+
+  function obtenerMetaAvanceTicket(html = "") {
+        const template = document.createElement("template");
+        template.innerHTML = String(html || "");
+
+        const autorNode = template.content.querySelector("[data-avance-autor]");
+        const autor = autorNode
+          ? (autorNode.getAttribute("data-avance-autor") || "").trim()
+          : "";
+        const contenido = autorNode ? autorNode.innerHTML : String(html || "");
+
+        return {
+          autor: autor || "Registro del sistema",
+          contenido: sanitizeHtmlTicket(contenido)
+        };
+      }
+
   function obtenerFechaHoraLocal() {
         const ahora = new Date();
         const pad = (numero) => String(numero).padStart(2, "0");
@@ -2229,6 +2323,7 @@
             acciones.forEach((a) => {
               const avance = normalizarAccionAvance(a);
               const texto = avance.accion;
+              const metaAvance = obtenerMetaAvanceTicket(texto);
               const esCritico =
                 texto.includes("Ticket Finalizado") ||
                 texto.includes("Inicio Ticket");
@@ -2241,10 +2336,11 @@
                     data-hora="${escapeHTMLTicket(avance.hora_avance)}">
                   <div class="timeline-dot"></div>
                   <div class="timeline-content">
+                    <div class="timeline-author">${escapeHTMLTicket(metaAvance.autor)}</div>
                     <div class="timeline-time">
                       <strong>${escapeHTMLTicket(avance.fecha_avance)} (${escapeHTMLTicket(avance.hora_avance)})</strong>
                     </div>
-                    <div class="timeline-text">${escapeHTMLTicket(texto)}</div>
+                    <div class="timeline-text">${metaAvance.contenido}</div>
                   </div>
                 </li>`;
             });
@@ -2674,7 +2770,7 @@
                     <!-- FILA 1: Datos del ticket (izquierda) + Avances (derecha) -->
                     <div class="row g-3 ticket-modal-main">
                       <!-- Izquierda -->
-                      <div class="col-lg-8">
+                      <div class="col-lg-7">
                         <form class="text-start ticket-modal-form">
                           <div class="row g-2">
                             <div class="col-12 col-md-6">
@@ -2702,7 +2798,7 @@
                       </div>
             
                         <!-- Derecha: Avances del Técnico -->
-                        <div class="col-lg-5 d-flex flex-column ticket-modal-side" id="timelineContainer" class="mt-4 p-3 rounded">
+                        <div class="col-lg-5 d-flex flex-column ticket-modal-side mt-4 p-3 rounded" id="timelineContainer">
                           <input type="hidden" id="ticketId" value="${id_ticket}">
                           <input type="hidden" id="idEstadoTicket" value="${id_estado}">
                             ${accionesHTML}  <!-- aquí se inyecta la card completa -->

@@ -376,6 +376,34 @@ label.btn input[type="file"] {
         /* Space between image and text */
     }
 
+    #idDatosPersonales {
+        max-width: 100%;
+    }
+
+    #idDatosPersonales .nav-link {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        max-width: 100%;
+    }
+
+    .topbar-user-name {
+        display: inline-block;
+        line-height: 1.15;
+        text-align: right;
+        white-space: normal;
+        word-break: break-word;
+        max-width: 220px;
+        margin-right: 0 !important;
+    }
+
+    @media (max-width: 767.98px) {
+        .topbar-user-name {
+            display: none !important;
+        }
+    }
+
 
 
 

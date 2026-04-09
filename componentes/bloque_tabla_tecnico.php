@@ -1,20 +1,6 @@
-<?php
-$tecnicosFiltroIds = [6, 7, 8, 42];
-$consultaTecnicosFiltro = new MySQL("", "", "");
-$sqlTecnicosFiltro = "SELECT id, nombre, apellido_paterno
-                      FROM usuarios
-                      WHERE id IN (" . implode(',', array_map('intval', $tecnicosFiltroIds)) . ")
-                      ORDER BY FIELD(id, " . implode(',', array_map('intval', $tecnicosFiltroIds)) . ")";
-$resultadoTecnicosFiltro = $consultaTecnicosFiltro->consulta($sqlTecnicosFiltro);
-$tecnicosFiltroTecnico = [];
-while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosFiltro)) {
-    $tecnicosFiltroTecnico[] = $tecnicoFiltro;
-}
-?>
-
 <div class="ticket-admin-filtros px-3 pt-3">
     <div class="row g-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label for="filtroEstadoTecnico" class="form-label fw-semibold text-muted mb-1">Estado</label>
             <select id="filtroEstadoTecnico" class="form-select form-select-sm">
                 <option value="">Todos</option>
@@ -25,23 +11,11 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
                 <option value="Cerrado">Cerrado</option>
             </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label for="filtroFechaTecnico" class="form-label fw-semibold text-muted mb-1">Fecha creación</label>
             <input type="date" id="filtroFechaTecnico" class="form-control form-control-sm">
         </div>
-        <div class="col-md-3">
-            <label for="filtroTecnicoAsignado" class="form-label fw-semibold text-muted mb-1">Técnico</label>
-            <select id="filtroTecnicoAsignado" class="form-select form-select-sm">
-                <option value="">Todos</option>
-                <option value="__sin_asignar__">Sin asignar</option>
-                <?php foreach ($tecnicosFiltroTecnico as $tecnicoFiltro): ?>
-                    <option value="<?= (int) $tecnicoFiltro['id']; ?>">
-                        <?= htmlspecialchars(trim(($tecnicoFiltro['nombre'] ?? '') . ' ' . ($tecnicoFiltro['apellido_paterno'] ?? ''))); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label for="filtroFechaRespuestaTecnico" class="form-label fw-semibold text-muted mb-1">Fecha respuesta</label>
             <input type="date" id="filtroFechaRespuestaTecnico" class="form-control form-control-sm">
         </div>
@@ -259,12 +233,10 @@ if (!window.tecnicoTableFiltersSearchRegistered) {
 
         const estadoFiltro = ($('#filtroEstadoTecnico').val() || '').trim().toLowerCase();
         const fechaFiltro = ($('#filtroFechaTecnico').val() || '').trim();
-        const tecnicoFiltro = ($('#filtroTecnicoAsignado').val() || '').trim();
         const fechaRespuestaFiltro = ($('#filtroFechaRespuestaTecnico').val() || '').trim();
 
         const estadoFila = (rowNode.dataset.estado || '').trim().toLowerCase();
         const fechaFila = (rowNode.dataset.fechaCreacion || '').trim();
-        const tecnicoFila = (rowNode.dataset.tecnicoId || '').trim();
         const fechaRespuestaFila = (rowNode.dataset.fechaRespuesta || '').trim();
 
         if (estadoFiltro && estadoFila !== estadoFiltro) {
@@ -273,15 +245,6 @@ if (!window.tecnicoTableFiltersSearchRegistered) {
 
         if (fechaFiltro && fechaFila !== fechaFiltro) {
             return false;
-        }
-
-        if (tecnicoFiltro) {
-            if (tecnicoFiltro === '__sin_asignar__' && tecnicoFila !== '') {
-                return false;
-            }
-            if (tecnicoFiltro !== '__sin_asignar__' && tecnicoFila !== tecnicoFiltro) {
-                return false;
-            }
         }
 
         if (fechaRespuestaFiltro && fechaRespuestaFila !== fechaRespuestaFiltro) {
@@ -305,7 +268,7 @@ function configurarFiltrosTablaTecnico(dataTableTecnico) {
         return;
     }
 
-    $('#filtroEstadoTecnico, #filtroFechaTecnico, #filtroTecnicoAsignado, #filtroFechaRespuestaTecnico')
+    $('#filtroEstadoTecnico, #filtroFechaTecnico, #filtroFechaRespuestaTecnico')
         .off('.tecnicoFilters')
         .on('change.tecnicoFilters input.tecnicoFilters', function () {
             dataTableTecnico.draw();

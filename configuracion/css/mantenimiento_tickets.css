@@ -10,3 +10,38 @@
 #ticketDeletePreview:empty {
     display: none;
 }
+
+#modalEliminarTicketMantenimiento .modal-body {
+    padding-bottom: 1rem !important;
+}
+
+.ticket-delete-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem 1.5rem;
+}
+
+#ticketDeletePreview .list-group-item {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#ticketDeletePreview .list-group-item > div:first-child {
+    min-width: 0;
+}
+
+#ticketDeletePreview .badge {
+    min-width: 72px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1.1;
+    padding: 0.45rem 0.65rem;
+    font-variant-numeric: tabular-nums;
+}

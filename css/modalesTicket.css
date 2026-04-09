@@ -206,7 +206,7 @@
 }
 .modal-ticket-tecnico .card-avances {
   width: 100%;
-  min-width: 420px;
+  min-width: 0;
 }
 .modal-ticket-tecnico .ticket-admin-avance-editor .ql-editor {
   min-height: 96px;
