@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 include("../../class/conexion.php");
 date_default_timezone_set('America/Santiago');
@@ -115,7 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mailBody = str_replace('{hora}', htmlspecialchars($hora), $mailBody);
             $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
             $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-            $mailBody = str_replace('{descripcion}', htmlspecialchars($descripcion_ticket), $mailBody);
+            $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
             $mailBody = str_replace('{nombre_tecnico}', htmlspecialchars($nombreTecnicoCompleto), $mailBody);
             $mail->Body = $mailBody;
 

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
@@ -134,7 +134,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'ingresar_ticket') {
                             $body = str_replace('{hora}', htmlspecialchars($hora), $body);
                             $body = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $body);
                             $body = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $body);
-                            $body = str_replace('{descripcion}', htmlspecialchars($descripcion_ticket), $body);
+                            $body = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $body);
                             $mail->Body = $body;
                             $mail->send();
 
@@ -158,7 +158,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'ingresar_ticket') {
                                     $bodyTec = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $bodyTec);
                                     $bodyTec = str_replace('{nombreTecnicoCompleto}', htmlspecialchars($nombreTecnicoCompleto), $bodyTec);
                                     $bodyTec = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $bodyTec);
-                                    $bodyTec = str_replace('{descripcion}', htmlspecialchars($descripcion_ticket), $bodyTec);
+                                    $bodyTec = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $bodyTec);
                                     $mail->Body = $bodyTec;
                                     $mail->send();
                                 }

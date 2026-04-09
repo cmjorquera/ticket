@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include("../../class/conexion.php");
 date_default_timezone_set('America/Santiago');
 require_once("../../class/PHPMailer/src/PHPMailer.php");
@@ -94,7 +94,7 @@ if ($nuevoEstado == 5) {
             $mailBody = str_replace('{hora}', $horaCierre, $mailBody);
             $mailBody = str_replace('{nombreUsarioCompleto}', $nombreUsarioCompleto, $mailBody);
             $mailBody = str_replace('{asunto}', $asunto_ticket, $mailBody);
-            $mailBody = str_replace('{descripcion}', $descripcion_ticket, $mailBody);
+            $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
             $mailBody = str_replace('{nombre_tecnico}', $nombreTecnicoCompleto, $mailBody);
             $mailBody = str_replace('{fecha_creacion_inicio}', $fecha_creacion_inicio, $mailBody);
             $mailBody = str_replace('{hora_creacion_inicio}', $hora_creacion_inicio, $mailBody);

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * modelos/guardar/guardar_ticket_sin_tecnico.php
  * Crea ticket categoría=10 (sin técnico) + envía correos a usuario y administradores.
@@ -153,7 +153,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'ingresar_ticket') {
                     $body = str_replace('{hora}', htmlspecialchars($hora), $body);
                     $body = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $body);
                     $body = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $body);
-                    $body = str_replace('{descripcion}', htmlspecialchars($descripcion_ticket), $body);
+                    $body = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $body);
 
                     $mail->Body = $body;
 
@@ -214,7 +214,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'ingresar_ticket') {
                         // Para admins no hay técnico asignado:
                         $bodyAdmins = str_replace('{nombreTecnicoCompleto}', '-', $bodyAdmins);
                         $bodyAdmins = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $bodyAdmins);
-                        $bodyAdmins = str_replace('{descripcion}', htmlspecialchars($descripcion_ticket), $bodyAdmins);
+                        $bodyAdmins = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $bodyAdmins);
 
                         $mail->Body = $bodyAdmins;
 

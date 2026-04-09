@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * modelos/guardar/asignar_tecnico_ticket.php
  * Actualiza prioridad, técnico, comentario, estado y categoría de un ticket,
@@ -140,7 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $bodyTec = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto ?: 'Usuario'), $bodyTec);
                         $bodyTec = str_replace('{nombreTecnicoCompleto}', htmlspecialchars($nombreTecnicoCompleto ?: 'Técnico'), $bodyTec);
                         $bodyTec = str_replace('{asunto}', htmlspecialchars($rowT['asunto'] ?? ''), $bodyTec);
-                        $bodyTec = str_replace('{descripcion}', htmlspecialchars($rowT['descripcion_ticket'] ?? ''), $bodyTec);
+                        $bodyTec = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) ($rowT['descripcion_ticket'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $bodyTec);
 
                         $mail->Body = $bodyTec;
 

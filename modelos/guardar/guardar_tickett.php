@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
@@ -120,7 +120,7 @@ if (isset($_POST['accion'])) {
                                 $mailBody = str_replace('{hora}', htmlspecialchars($hora), $mailBody);
                                 $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
                                 $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-                                $mailBody = str_replace('{descripcion}', htmlspecialchars($descripcion_ticket), $mailBody);
+                                $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
                                 $mail->Body = $mailBody;
                                 $mail->send();
 
@@ -144,7 +144,7 @@ if (isset($_POST['accion'])) {
                                         $mailBodyTecnico = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBodyTecnico);
                                         $mailBodyTecnico = str_replace('{nombreTecnicoCompleto}', htmlspecialchars($nombreTecnicoCompleto), $mailBodyTecnico);
                                         $mailBodyTecnico = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBodyTecnico);
-                                        $mailBodyTecnico = str_replace('{descripcion}', htmlspecialchars($descripcion_ticket), $mailBodyTecnico);
+                                        $mailBodyTecnico = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBodyTecnico);
                                         $mail->Body = $mailBodyTecnico;
                                         $mail->send();
                                     }
