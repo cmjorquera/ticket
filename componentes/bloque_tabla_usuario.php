@@ -23,6 +23,7 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
                 <option value="En proceso">En proceso</option>
                 <option value="Terminado">Terminado</option>
                 <option value="Borrador">Borrador</option>
+                <option value="Demorado">Atrasado</option>
                 <option value="Cerrado">Cerrado</option>
             </select>
         </div>
@@ -283,12 +284,17 @@ if (!window.usuarioTableFiltersSearchRegistered) {
             return true;
         }
 
-        const estadoFiltro = ($('#filtroEstadoUsuario').val() || '').trim().toLowerCase();
+        const normalizarEstadoFiltro = (estado) => {
+            const estadoNormalizado = (estado || '').trim().toLowerCase();
+            return estadoNormalizado === 'atrasado' ? 'demorado' : estadoNormalizado;
+        };
+
+        const estadoFiltro = normalizarEstadoFiltro($('#filtroEstadoUsuario').val());
         const fechaFiltro = ($('#filtroFechaUsuario').val() || '').trim();
         const tecnicoFiltro = ($('#filtroTecnicoUsuario').val() || '').trim();
         const fechaRespuestaFiltro = ($('#filtroFechaRespuestaUsuario').val() || '').trim();
 
-        const estadoFila = (rowNode.dataset.estado || '').trim().toLowerCase();
+        const estadoFila = normalizarEstadoFiltro(rowNode.dataset.estado || '');
         const fechaFila = (rowNode.dataset.fechaCreacion || '').trim();
         const tecnicoFila = (rowNode.dataset.tecnicoId || '').trim();
         const fechaRespuestaFila = (rowNode.dataset.fechaRespuesta || '').trim();

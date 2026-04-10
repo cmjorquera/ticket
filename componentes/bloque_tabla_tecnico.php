@@ -7,7 +7,7 @@
                 <option value="Asignado">Asignado</option>
                 <option value="En proceso">En proceso</option>
                 <option value="Terminado">Terminado</option>
-                <option value="Atrasado">Atrasado</option>
+                <option value="Demorado">Atrasado</option>
                 <option value="Cerrado">Cerrado</option>
             </select>
         </div>
@@ -59,13 +59,28 @@
                 if ($resultado->num_rows > 0) {
                     while ($row = $resultado->fetch_array()) {
                         $nombreUsuarioProblema = trim(($row['nombreUsuario'] ?? '') . ' ' . ($row['apellidoUsuario'] ?? ''));
-                        $diasRestantes = (int) ($row['dias_administrador_estima'] ?? 0);
+                        $totalDiasProceso = (int) ($row['dias_administrador_estima'] ?? 0);
+                        $diasTranscurridosProceso = 0;
+                        $diasRestantes = $totalDiasProceso;
+                        $tieneRangoProceso = false;
 
-                        if ((int) $row['id_estado'] === 3 && !empty($row['fecha_creacion_inicio'])) {
+                        if (
+                            $totalDiasProceso > 0 &&
+                            !empty($row['fecha_creacion_inicio']) &&
+                            $row['fecha_creacion_inicio'] !== '0000-00-00' &&
+                            !empty($row['fecha_estimada_admin']) &&
+                            $row['fecha_estimada_admin'] !== '0000-00-00'
+                        ) {
+                            $tieneRangoProceso = true;
                             $fechaCreacion = new DateTime($row['fecha_creacion_inicio']);
-                            $fechaActual = new DateTime();
-                            $diasPasados = $fechaActual->diff($fechaCreacion)->days;
-                            $diasRestantes = max(0, $diasRestantes - $diasPasados);
+                            $fechaActual = new DateTime(date('Y-m-d'));
+                            if ($fechaActual < $fechaCreacion) {
+                                $diasTranscurridosProceso = 0;
+                            } else {
+                                $diasTranscurridosProceso = $fechaActual->diff($fechaCreacion)->days;
+                            }
+                            $diasTranscurridosProceso = min($totalDiasProceso, $diasTranscurridosProceso);
+                            $diasRestantes = max(0, $totalDiasProceso - $diasTranscurridosProceso);
                         }
 
                         $fechaCreada = !empty($row['fecha_creacion_inicio']) && $row['fecha_creacion_inicio'] !== '0000-00-00'
@@ -84,16 +99,14 @@
 
                         $diasTitulo = '';
                         $diasDetalle = '';
-                        if ((int) $row['id_estado'] === 3) {
-                            if ($diasRestantes <= 1) {
-                                $diasTitulo = 'Debes terminar hoy';
-                                $diasDetalle = 'Vence hoy';
+                        if (in_array((int) $row['id_estado'], [2, 3], true) && $tieneRangoProceso) {
+                            $diasTitulo = htmlspecialchars((string) $diasTranscurridosProceso) . ' de ' . htmlspecialchars((string) $totalDiasProceso) . ' dias';
+                            if ($diasRestantes === 1) {
+                                $diasDetalle = 'Te queda 1 dia';
                             } elseif ($diasRestantes > 1) {
-                                $diasTitulo = htmlspecialchars((string) $diasRestantes) . ' dias';
-                                $diasDetalle = 'Tiempo restante';
+                                $diasDetalle = 'Te quedan ' . htmlspecialchars((string) $diasRestantes) . ' dias';
                             } else {
-                                $diasTitulo = 'Sin plazo activo';
-                                $diasDetalle = 'No disponible';
+                                $diasDetalle = 'Plazo cumplido';
                             }
                         } elseif ((int) $row['id_estado'] === 5) {
                             if (!empty($row['tieneCalificacion'])) {
@@ -107,11 +120,11 @@
                             $diasTitulo = 'Debes comenzar';
                             $diasDetalle = 'Pendiente inicio';
                         } else {
-                            if ((int) $row['dias_administrador_estima'] === 0) {
+                            if ($totalDiasProceso === 0) {
                                 $diasTitulo = '00-00-0000';
                                 $diasDetalle = 'Sin plazo definido';
                             } else {
-                                $diasTitulo = htmlspecialchars((string) $row['dias_administrador_estima']) . ' dias';
+                                $diasTitulo = htmlspecialchars((string) $totalDiasProceso) . ' dias';
                                 $diasDetalle = 'Dias estimados';
                             }
                         }
@@ -232,11 +245,16 @@ if (!window.tecnicoTableFiltersSearchRegistered) {
             return true;
         }
 
-        const estadoFiltro = ($('#filtroEstadoTecnico').val() || '').trim().toLowerCase();
+        const normalizarEstadoFiltro = (estado) => {
+            const estadoNormalizado = (estado || '').trim().toLowerCase();
+            return estadoNormalizado === 'atrasado' ? 'demorado' : estadoNormalizado;
+        };
+
+        const estadoFiltro = normalizarEstadoFiltro($('#filtroEstadoTecnico').val());
         const fechaFiltro = ($('#filtroFechaTecnico').val() || '').trim();
         const fechaRespuestaFiltro = ($('#filtroFechaRespuestaTecnico').val() || '').trim();
 
-        const estadoFila = (rowNode.dataset.estado || '').trim().toLowerCase();
+        const estadoFila = normalizarEstadoFiltro(rowNode.dataset.estado || '');
         const fechaFila = (rowNode.dataset.fechaCreacion || '').trim();
         const fechaRespuestaFila = (rowNode.dataset.fechaRespuesta || '').trim();
 

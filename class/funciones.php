@@ -1857,6 +1857,19 @@ function cabezera()
     
         return $colores;
     }
+
+    public function actualizarTicketsDemoradosAutomaticamente()
+    {
+        $bdato = new MySQL("", "", "");
+        $sql = "UPDATE tickets t
+                INNER JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+                SET t.id_estado = 7
+                WHERE t.id_estado IN (2, 3)
+                  AND pt.fecha_estimada_admin IS NOT NULL
+                  AND pt.fecha_estimada_admin <> '0000-00-00'
+                  AND pt.fecha_estimada_admin < CURDATE()";
+        $bdato->guardar($sql);
+    }
     
     
             

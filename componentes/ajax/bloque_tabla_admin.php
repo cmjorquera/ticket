@@ -19,7 +19,7 @@ if (!$idUsuarioSession) {
 $GLOBALS['estadoTicketFiltro'] = $estado;
 $GLOBALS['ticketAdminColorColumn'] = isset($_POST['vista']) && $_POST['vista'] === 'ticket_admin';
 // Lógica principal: cargar la tabla con filtro si aplica
-include("../../componentes/bloque_tabla_admin.php");
+include("../../componentes/bloque_tabla_adminn.php");
 
 
 

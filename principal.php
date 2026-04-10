@@ -15,6 +15,7 @@
     $AreaTrabajo        = htmlspecialchars($_SESSION['id_area_trabajo']);
     $idPagActual        = "8";
     $contadorPasos = 10;
+    $funciones->actualizarTicketsDemoradosAutomaticamente();
     
     // Obtener alertas de cumpleaños y tickets
     // $alertas    = $funciones->alertaModal($idUsuarioSession);
@@ -504,7 +505,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                         <div class="perfil-side-tabs">
                             <?php foreach ($perfilesDashboardDisponibles as $perfilTab): ?>
                                 <a class="perfil-side-tab <?= $perfilDashboardInicial === $perfilTab['key'] ? 'is-active' : ''; ?>"
-                                   href="principal_2.php?vista_perfil=<?= urlencode($perfilTab['key']) ?>">
+                                   href="principal.php?vista_perfil=<?= urlencode($perfilTab['key']) ?>">
                                     <span class="perfil-side-tab-icon">
                                         <i class="bi <?= $perfilTab['icon'] ?>"></i>
                                     </span>
@@ -761,7 +762,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                     <div id="contenedorAdmin"
                                         style="display: <?= ($perfilDashboardInicial == 'admin') ? 'block' : 'none'; ?>;">
                                         <?php $GLOBALS['ticketAdminColorColumn'] = true; ?>
-                                        <?php  include("componentes/bloque_tabla_admin.php") ?>
+                                        <?php  include("componentes/bloque_tabla_adminn.php") ?>
                                     </div>
                                 </div>
                             </div>
@@ -964,26 +965,60 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             if (perfilNormalizado === "usuario" || perfilNormalizado === "tecnico") {
                 url += `&idUsuario=${idUsuarioSession}`;
             }
+            url += `&_=${Date.now()}`;
 
             fetch(url)
                 .then(res => res.json())
                 .then(async data => {
                     await esperarMinimoCarga(inicioCarga);
-                    const todosLosEstados = ["Recibido", "Asignado", "En proceso", "Terminado", "Borrador",
-                        "Atrasado", "Cerrado"
+                    const estadosOrdenados = [{
+                            id: 1,
+                            etiqueta: "Recibido"
+                        },
+                        {
+                            id: 2,
+                            etiqueta: "Asignado"
+                        },
+                        {
+                            id: 3,
+                            etiqueta: "En proceso"
+                        },
+                        {
+                            id: 5,
+                            etiqueta: "Terminado"
+                        },
+                        {
+                            id: 4,
+                            etiqueta: "Borrador"
+                        },
+                        {
+                            id: 7,
+                            etiqueta: "Demorado"
+                        },
+                        {
+                            id: 6,
+                            etiqueta: "Cerrado"
+                        }
                     ];
                     const datosMapeados = {};
-                    todosLosEstados.forEach(e => {
-                        datosMapeados[e] = {
+                    estadosOrdenados.forEach(({
+                        id,
+                        etiqueta
+                    }) => {
+                        datosMapeados[id] = {
+                            etiqueta,
                             cantidad: 0,
                             color: 'rgba(200, 200, 200, 0.3)'
                         };
                     });
 
                     data.forEach(item => {
-                        if (datosMapeados[item.estado]) {
-                            datosMapeados[item.estado].cantidad = parseInt(item.cantidad_tickets) || 0;
-                            datosMapeados[item.estado].color = item.color_estado ||
+                        const idEstado = parseInt(item.id_estado, 10);
+                        if (datosMapeados[idEstado]) {
+                            datosMapeados[idEstado].etiqueta = item.estado || datosMapeados[idEstado]
+                                .etiqueta;
+                            datosMapeados[idEstado].cantidad = parseInt(item.cantidad_tickets, 10) || 0;
+                            datosMapeados[idEstado].color = item.color_estado ||
                                 'rgba(54, 162, 235, 0.5)';
                         }
                     });
@@ -1002,8 +1037,15 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                         return;
                     }
 
-                    const cantidades = todosLosEstados.map(e => datosMapeados[e].cantidad);
-                    const colores = todosLosEstados.map(e => datosMapeados[e].color);
+                    const etiquetas = estadosOrdenados.map(({
+                        id
+                    }) => datosMapeados[id].etiqueta);
+                    const cantidades = estadosOrdenados.map(({
+                        id
+                    }) => datosMapeados[id].cantidad);
+                    const colores = estadosOrdenados.map(({
+                        id
+                    }) => datosMapeados[id].color);
                     const maxValor = Math.max(...cantidades, 10);
 
                     contenedor.innerHTML = '<canvas id="canvasGraficoTicket" height="350"></canvas>';
@@ -1017,7 +1059,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     canvas.chart = new Chart(ctx, {
                         type: 'bar',
                         data: {
-                            labels: todosLosEstados,
+                            labels: etiquetas,
                             datasets: [{
                                 label: "Cantidad de Tickets",
                                 data: cantidades,

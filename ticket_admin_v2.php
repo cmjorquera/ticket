@@ -83,7 +83,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                         <div class="card-body" id="contenedorTablaAdmin">
                             <?php
                                 $GLOBALS['ticketAdminColorColumn'] = true;
-                                include('componentes/bloque_tabla_admin.php');
+                                include('componentes/bloque_tabla_adminn.php');
                             ?>
                         </div>
                     </div>
@@ -373,7 +373,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             actualizacionTablaEnCurso = true;
             const datos = { idUsuarioSession: <?= (int) $_SESSION['id']; ?>, vista: 'ticket_admin' };
             if (filtroActivo && estadoFiltrado !== null) datos.estado = estadoFiltrado;
-            $.post('componentes/ajax/bloque_tabla_admin.php', datos, function (data) {
+            $.post('componentes/ajax/bloque_tabla_adminn.php', datos, function (data) {
                 const nuevasFilas = $('<div>').html(data).find('#dataTableAdministrador tbody').html();
                 const htmlNormalizado = (nuevasFilas || '').replace(/\s+/g, ' ').trim();
                 if (ultimaTablaAdminHtml !== htmlNormalizado) {
@@ -406,7 +406,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
             }
             const datos = { idUsuarioSession: <?= (int) $_SESSION['id']; ?>, vista: 'ticket_admin' };
             if (filtroActivo && estadoFiltrado !== null) datos.estado = estadoFiltrado;
-            $.post('componentes/ajax/bloque_tabla_admin.php', datos, function (data) {
+            $.post('componentes/ajax/bloque_tabla_adminn.php', datos, function (data) {
                 const nuevasFilas = $('<div>').html(data).find('#dataTableAdministrador tbody').html();
                 inicializarTablaAdmin();
                 const filasNuevas = $('<table><tbody>' + nuevasFilas + '</tbody></table>').find('tbody tr').toArray();

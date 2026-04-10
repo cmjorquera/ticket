@@ -1,7 +1,12 @@
 <?php
 session_start();
 require_once 'class/conexion.php';
+require_once 'class/funciones.php';
 $bdato = new MySQL("", "", "");
+$funciones = new Funciones();
+
+// Evita que el gráfico por categoría trabaje con estados demorados desactualizados.
+$funciones->actualizarTicketsDemoradosAutomaticamente();
 
 $idUsuarioSession = $_SESSION['id'];
 $perfilSolicitado = $_GET['perfil'] ?? 'auto';
@@ -74,6 +79,11 @@ foreach ($estados as $estado) {
     }
     $series[] = ['name' => $estado, 'data' => $data];
 }
+
+header('Content-Type: application/json');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 echo json_encode([
     'series' => $series,

@@ -1,0 +1,40 @@
+Distribucion de tablas - modulo licenciamiento
+===============================================
+
+1. software_catalogo
+- Registro principal de programas y licencias.
+- Guarda nombre, version, cantidad, licenciamiento, pagado por, costo, proveedor y observaciones.
+
+2. software_datos_almacenamiento
+- Guarda los datos asociados al almacenamiento o custodia del software.
+- Permite multiples filas por software.
+- Campos practicos:
+  - nombre_contacto
+  - rut_contacto
+  - email_contacto
+  - otros_datos
+
+3. software_historial
+- Guarda la trazabilidad basica del registro.
+- Ejemplos: creacion, actualizacion, baja_logica.
+
+4. sitios_web_catalogo
+- Guarda sitios web, apps o clientes.
+- Campos clave:
+  - nombre_sitio
+  - tipo_sitio
+  - url_sitio
+  - proveedor_hosting
+  - estado_sitio
+  - observaciones
+
+Relaciones
+----------
+- software_catalogo.id_colegio -> colegio.id_colegio
+- software_datos_almacenamiento.id_software -> software_catalogo.id_software
+- software_historial.id_software -> software_catalogo.id_software
+- sitios_web_catalogo.id_colegio -> colegio.id_colegio
+
+Archivo SQL
+-----------
+- licenciamiento/views/sql_sugerido_inventario_software.sql

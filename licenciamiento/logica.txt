@@ -1,0 +1,86 @@
+Logica del modulo licenciamiento
+===================================
+
+- La portada principal es `licenciamiento/index.php`.
+- El modulo se divide en dos partes:
+  - software y licencias
+  - sitios web, apps y clientes
+- Tambien incluye consultas rapidas, ficha QR, exportacion PDF y catalogos auxiliares.
+
+Software
+--------
+- Cada registro se guarda en `software_catalogo`.
+- Puede tener multiples filas asociadas en `software_datos_almacenamiento`.
+- Puede asociarse a multiples datos sensibles mediante `software_datos_sensibles_rel`.
+- Puede asociarse a uno o varios tipos de usuario mediante `software_tipo_usuario_rel`.
+- Se usa para guardar:
+  - nombre
+  - version
+  - cantidad
+  - licenciamiento
+  - pagado por
+  - costo
+  - proveedor
+  - referencia
+  - observaciones
+- Los tipos de usuario que ocupan el software se obtienen desde `inventario_software_tipo_usuario`.
+- Ejemplos:
+  - Colaborador
+  - Alumno
+  - Proveedor
+  - Otro
+- Un mismo software puede quedar asociado a:
+  - un solo tipo de usuario
+  - varios tipos a la vez
+  - por ejemplo `Colaborador` y `Alumno`
+
+Datos sensibles
+---------------
+- El catalogo de datos sensibles se guarda en `inventario_software_datos_sensibles`.
+- La relacion entre software y dato sensible se guarda en `software_datos_sensibles_rel`.
+- Un software puede manejar uno o varios datos sensibles.
+- Ejemplos:
+  - RUT
+  - Nombre completo
+  - Email
+  - Telefono
+  - Direccion
+
+Sitios web
+----------
+- Cada registro se guarda en `sitios_web_catalogo`.
+- El tipo puede ser:
+  - Web
+  - App
+  - Cliente
+
+Flujo base
+----------
+- `registrar_software.php` crea software.
+- `editar_software.php` actualiza software.
+- `ver_software.php` muestra ficha.
+- `ficha_qr.php` muestra la ficha rapida para QR.
+- `descargar_pdf.php` exporta listados, consultas y fichas PDF.
+- `registrar_sitio_web.php` crea sitios.
+- `editar_sitio_web.php` actualiza sitios.
+- `ver_sitio_web.php` muestra ficha.
+- Los listados de la portada cargan por AJAX.
+- `consulta_nueva.php` permite consultar:
+  - por software
+  - por colegio
+  - por dato sensible
+
+Tablas principales del modulo
+-----------------------------
+- `software_catalogo`
+- `software_datos_almacenamiento`
+- `software_historial`
+- `inventario_software_datos_sensibles`
+- `software_datos_sensibles_rel`
+- `inventario_software_tipo_usuario`
+- `software_tipo_usuario_rel`
+- `sitios_web_catalogo`
+
+Paso siguiente recomendado
+-------------------------
+- Ejecutar el SQL sugerido del modulo para habilitar la persistencia.
