@@ -28,6 +28,18 @@ date_default_timezone_set('America/Santiago');
 $db        = new MySQL("", "", "");
 $funciones = new Funciones();
 
+function renderDescripcionTicketHtmlCorreo($html) {
+    $html = (string)($html ?? '');
+    $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $permitidas = '<p><br><ol><ul><li><strong><b><em><i><u><s><blockquote><code><pre><h1><h2><h3><a>';
+    $html = strip_tags($html, $permitidas);
+    $html = preg_replace('/\s+on\w+\s*=\s*("|\').*?\1/iu', '', $html);
+    $html = preg_replace('/\sstyle\s*=\s*("|\').*?\1/iu', '', $html);
+    $html = preg_replace('/\s(href)\s*=\s*("|\')\s*javascript:.*?\2/iu', '', $html);
+    $html = trim((string)$html);
+    return $html !== '' ? $html : 'Sin descripción';
+}
+
 if (isset($_POST['accion']) && $_POST['accion'] === 'ingresar_ticket') {
 
     $id_usuario_session = isset($_POST['usuarioId']) ? intval($_POST['usuarioId']) : 0;
@@ -153,7 +165,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'ingresar_ticket') {
                     $body = str_replace('{hora}', htmlspecialchars($hora), $body);
                     $body = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $body);
                     $body = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $body);
-                    $body = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $body);
+                    $body = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $body);
 
                     $mail->Body = $body;
 
@@ -214,7 +226,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'ingresar_ticket') {
                         // Para admins no hay técnico asignado:
                         $bodyAdmins = str_replace('{nombreTecnicoCompleto}', '-', $bodyAdmins);
                         $bodyAdmins = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $bodyAdmins);
-                        $bodyAdmins = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $bodyAdmins);
+                        $bodyAdmins = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $bodyAdmins);
 
                         $mail->Body = $bodyAdmins;
 

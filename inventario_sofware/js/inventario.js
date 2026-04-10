@@ -187,16 +187,19 @@
             pagingType: 'simple_numbers',
             dom: "<'row align-items-center mb-3'<'col-md-6'i><'col-md-6 text-md-end'p>>rt<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
             language: { url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json' },
+            createdRow: function (row) {
+                $(row).addClass('fila-ticket-admin-compacta');
+            },
             columns: [
-                { data: 'id_software' },
-                { data: null, render: row => `<div class="fw-semibold">${escapeHtml(row.nombre_software)}</div><small class="text-muted">${escapeHtml(row.proveedor || '')}</small>` },
-                { data: 'nom_colegio', render: escapeHtml },
-                { data: 'version_software', render: data => escapeHtml(data || '-') },
-                { data: 'cantidad_licencias' },
-                { data: 'tipo_licenciamiento', render: escapeHtml },
-                { data: 'pagado_por', render: escapeHtml },
-                { data: 'responsable', render: data => escapeHtml(data || 'Sin asignar') },
-                { data: null, orderable: false, searchable: false, render: row => `<div class="inv-action-buttons d-flex flex-wrap gap-2"><a href="ver_software.php?id_software=${parseInt(row.id_software, 10)}" class="btn btn-sm inv-btn-action inv-btn-view"><i class="bi bi-eye"></i></a><a href="editar_software.php?id_software=${parseInt(row.id_software, 10)}" class="btn btn-sm inv-btn-action inv-btn-edit"><i class="bi bi-pencil"></i></a><button type="button" class="btn btn-sm inv-btn-action inv-btn-delete btnEliminarSoftware" data-id="${parseInt(row.id_software, 10)}"><i class="bi bi-trash"></i></button></div>` }
+                { data: 'id_software', className: 'celda-id' },
+                { data: null, className: 'celda-asunto', render: row => `<div class="fw-semibold">${escapeHtml(row.nombre_software)}</div><small class="text-muted">${escapeHtml(row.proveedor || '')}</small>` },
+                { data: 'nom_colegio', className: 'celda-de', render: escapeHtml },
+                { data: 'version_software', className: 'celda-fecha-hora', render: data => escapeHtml(data || '-') },
+                { data: 'cantidad_licencias', className: 'celda-estado' },
+                { data: 'tipo_licenciamiento', className: 'celda-fecha-respuesta', render: escapeHtml },
+                { data: 'pagado_por', className: 'celda-dias-restantes', render: escapeHtml },
+                { data: 'responsable', className: 'celda-tecnico', render: data => escapeHtml(data || 'Sin asignar') },
+                { data: null, className: 'celda-opciones', orderable: false, searchable: false, render: row => `<div class="inv-action-buttons d-flex flex-wrap gap-2"><a href="ver_software.php?id_software=${parseInt(row.id_software, 10)}" class="btn btn-sm inv-btn-action inv-btn-view"><i class="bi bi-eye"></i></a><a href="editar_software.php?id_software=${parseInt(row.id_software, 10)}" class="btn btn-sm inv-btn-action inv-btn-edit"><i class="bi bi-pencil"></i></a><button type="button" class="btn btn-sm inv-btn-action inv-btn-delete btnEliminarSoftware" data-id="${parseInt(row.id_software, 10)}"><i class="bi bi-trash"></i></button></div>` }
             ]
         });
         loadSoftware();
@@ -216,15 +219,18 @@
             pagingType: 'simple_numbers',
             dom: "<'row align-items-center mb-3'<'col-md-6'i><'col-md-6 text-md-end'p>>rt<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
             language: { url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json' },
+            createdRow: function (row) {
+                $(row).addClass('fila-ticket-admin-compacta');
+            },
             columns: [
-                { data: 'id_sitio' },
-                { data: 'nombre_sitio', render: escapeHtml },
-                { data: 'nom_colegio', render: escapeHtml },
-                { data: 'tipo_sitio', render: escapeHtml },
-                { data: 'url_sitio', render: data => `<span class="inv-url-cell">${escapeHtml(data || '-')}</span>` },
-                { data: 'estado_sitio', render: escapeHtml },
-                { data: 'responsable', render: data => escapeHtml(data || 'Sin asignar') },
-                { data: null, orderable: false, searchable: false, render: row => `<div class="inv-action-buttons d-flex flex-wrap gap-2"><a href="ver_sitio_web.php?id_sitio=${parseInt(row.id_sitio, 10)}" class="btn btn-sm inv-btn-action inv-btn-view"><i class="bi bi-eye"></i></a><a href="editar_sitio_web.php?id_sitio=${parseInt(row.id_sitio, 10)}" class="btn btn-sm inv-btn-action inv-btn-edit"><i class="bi bi-pencil"></i></a><button type="button" class="btn btn-sm inv-btn-action inv-btn-delete btnEliminarSitio" data-id="${parseInt(row.id_sitio, 10)}"><i class="bi bi-trash"></i></button></div>` }
+                { data: 'id_sitio', className: 'celda-id' },
+                { data: 'nombre_sitio', className: 'celda-asunto', render: escapeHtml },
+                { data: 'nom_colegio', className: 'celda-de', render: escapeHtml },
+                { data: 'tipo_sitio', className: 'celda-fecha-hora', render: escapeHtml },
+                { data: 'url_sitio', className: 'celda-dias-restantes', render: data => `<span class="inv-url-cell">${escapeHtml(data || '-')}</span>` },
+                { data: 'estado_sitio', className: 'celda-estado', render: escapeHtml },
+                { data: 'responsable', className: 'celda-tecnico', render: data => escapeHtml(data || 'Sin asignar') },
+                { data: null, className: 'celda-opciones', orderable: false, searchable: false, render: row => `<div class="inv-action-buttons d-flex flex-wrap gap-2"><a href="ver_sitio_web.php?id_sitio=${parseInt(row.id_sitio, 10)}" class="btn btn-sm inv-btn-action inv-btn-view"><i class="bi bi-eye"></i></a><a href="editar_sitio_web.php?id_sitio=${parseInt(row.id_sitio, 10)}" class="btn btn-sm inv-btn-action inv-btn-edit"><i class="bi bi-pencil"></i></a><button type="button" class="btn btn-sm inv-btn-action inv-btn-delete btnEliminarSitio" data-id="${parseInt(row.id_sitio, 10)}"><i class="bi bi-trash"></i></button></div>` }
             ]
         });
         loadSitios();

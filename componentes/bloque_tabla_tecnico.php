@@ -175,7 +175,7 @@
                                 </div>
                             </td>
                             <td class="celda-opciones">
-                                <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1" style="min-width: 180px;">
+                                <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1">
                                     <a href="#" class="btn btn-primary btn-icon-split me-2" onclick="modalTicketTecnico('<?= (int) $row['id_ticket']; ?>')" title="Ver ticket">
                                         <i class="bi bi-eye"></i>
                                     </a>
@@ -206,6 +206,7 @@
                                             <i class="fas fa-star text-warning"></i>
                                         </a>
                                     <?php endif; ?>
+
                                 </div>
                             </td>
                         </tr>

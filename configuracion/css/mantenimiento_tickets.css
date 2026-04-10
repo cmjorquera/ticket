@@ -2,9 +2,42 @@
     width: 100% !important;
 }
 
+#tablaMantenimientoRecuperar {
+    width: 100% !important;
+}
+
 #tablaMantenimientoEliminar th,
-#tablaMantenimientoEliminar td {
+#tablaMantenimientoEliminar td,
+#tablaMantenimientoRecuperar th,
+#tablaMantenimientoRecuperar td {
     vertical-align: middle;
+}
+
+#tablaMantenimientoEliminar th.col-id,
+#tablaMantenimientoRecuperar th.col-id {
+    width: 60px !important;
+    min-width: 60px !important;
+}
+
+#tablaMantenimientoEliminar th.col-fecha-hora,
+#tablaMantenimientoEliminar td.celda-fecha-hora,
+#tablaMantenimientoRecuperar th.col-fecha-hora,
+#tablaMantenimientoRecuperar td.celda-fecha-hora {
+    width: 130px !important;
+    min-width: 130px !important;
+}
+
+#tablaMantenimientoEliminar th.col-opciones,
+#tablaMantenimientoEliminar td.celda-opciones,
+#tablaMantenimientoRecuperar th.col-opciones,
+#tablaMantenimientoRecuperar td.celda-opciones {
+    width: 120px !important;
+    min-width: 120px !important;
+}
+
+#tablaMantenimientoEliminar td.celda-opciones,
+#tablaMantenimientoRecuperar td.celda-opciones {
+    white-space: nowrap;
 }
 
 #ticketDeletePreview:empty {

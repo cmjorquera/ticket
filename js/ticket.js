@@ -1746,7 +1746,7 @@
                 
                             <div class="col-12">
                               <label class="form-label"><strong>Descripción:</strong></label>
-                              <textarea class="form-control form-control-sm ticket-modal-description" rows="6" disabled>${limpiarTextoTicket(descripcion_ticket)}</textarea>
+                              <div class="form-control form-control-sm ticket-modal-description ticket-modal-description-html" style="height:auto; min-height: 120px;">${sanitizeHtmlTicket(descripcion_ticket)}</div>
                             </div>
                           </div>
                         </form>

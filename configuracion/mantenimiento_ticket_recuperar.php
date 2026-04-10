@@ -50,8 +50,8 @@ $tituloPagina = 'Mantenimiento Tickets | Eliminados';
                             <p class="mb-4">Listado de tickets con estado eliminado. Puedes recuperar un ticket para devolverlo al estado activo.</p>
 
                             <div class="table-responsive">
-                                <table id="tablaMantenimientoRecuperar" class="table table-bordered table-hover align-middle">
-                                    <thead>
+                                <table id="tablaMantenimientoRecuperar" class="table table-bordered table-hover table-striped align-middle">
+                                    <thead class="table-dark">
                                         <tr>
                                             <th class="col-id">ID</th>
                                             <th class="col-fecha-hora">Fecha / Hora</th>
@@ -71,14 +71,35 @@ $tituloPagina = 'Mantenimiento Tickets | Eliminados';
                                                 $horaCreada = !empty($row['hora_creacion_inicio']) ? htmlspecialchars($row['hora_creacion_inicio']) : '--';
                                                 $estadoNombre = htmlspecialchars($row['nombreEstado'] ?? 'Sin estado');
                                             ?>
-                                            <tr>
-                                                <td><?= (int)$row['id_ticket']; ?></td>
-                                                <td><?= $fechaCreada . ' ' . $horaCreada; ?></td>
-                                                <td><?= htmlspecialchars($nombreUsuario ?: 'Sin usuario'); ?></td>
-                                                <td><?= htmlspecialchars($row['asunto'] ?? 'Sin asunto'); ?></td>
-                                                <td><?= $estadoNombre; ?></td>
-                                                <td><?= htmlspecialchars($nombreTecnico ?: 'Sin tecnico'); ?></td>
-                                                <td>
+                                            <tr class="fila-ticket-admin-compacta">
+                                                <td class="celda-id"><?= (int)$row['id_ticket']; ?></td>
+                                                <td class="celda-fecha-hora">
+                                                    <div class="ticket-fecha-hora">
+                                                        <div class="ticket-fecha-hora__fecha"><?= $fechaCreada; ?></div>
+                                                        <div class="ticket-fecha-hora__hora"><?= $horaCreada; ?></div>
+                                                    </div>
+                                                </td>
+                                                <td class="celda-de"><?= htmlspecialchars($nombreUsuario ?: 'Sin usuario'); ?></td>
+                                                <td class="celda-asunto"><?= htmlspecialchars($row['asunto'] ?? 'Sin asunto'); ?></td>
+                                                <td class="celda-estado">
+                                                    <div class="ticket-resumen-estado">
+                                                        <span class="ticket-resumen-estado__dot" style="background-color: <?= htmlspecialchars($row['colorEstado'] ?? '#cbd5e1'); ?>;"></span>
+                                                        <div class="ticket-resumen-estado__body">
+                                                            <div class="ticket-resumen-estado__titulo"><?= $estadoNombre; ?></div>
+                                                            <div class="ticket-resumen-estado__detalle">Estado actual</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="celda-tecnico">
+                                                    <div class="ticket-resumen-estado">
+                                                        <span class="ticket-resumen-estado__dot" style="background-color: <?= htmlspecialchars($row['colorEstado'] ?? '#cbd5e1'); ?>;"></span>
+                                                        <div class="ticket-resumen-estado__body">
+                                                            <div class="ticket-resumen-estado__titulo"><?= htmlspecialchars($nombreTecnico ?: 'Sin tecnico'); ?></div>
+                                                            <div class="ticket-resumen-estado__detalle">Responsable</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td class="celda-opciones">
                                                     <button type="button" class="btn btn-success btn-sm" onclick="recuperarTicket(<?= (int)$row['id_ticket']; ?>, '<?= htmlspecialchars(addslashes($row['asunto'] ?? 'Sin asunto')); ?>')">
                                                         <i class="bi bi-arrow-counterclockwise me-1"></i>Recuperar
                                                     </button>

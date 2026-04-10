@@ -113,6 +113,34 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                 let asunto = data.asunto || 'Sin asunto';
                 let descripcion_ticket = data.descripcion_ticket || 'Sin descripcion';
                 let nombre_categoria = data.nombre_categoria || 'Sin categoria';
+                const descripcion_ticket_render = sanitizarDescripcionHtml(descripcion_ticket);
+                function sanitizarDescripcionHtml(html) {
+                    const permitidas = new Set(['BR', 'P', 'OL', 'UL', 'LI', 'B', 'STRONG', 'I', 'EM', 'U']);
+                    const contenedor = document.createElement('div');
+                    contenedor.innerHTML = String(html || '');
+                    const limpiarNodo = (nodo) => {
+                        if (nodo.nodeType === Node.TEXT_NODE) return;
+                        if (nodo.nodeType !== Node.ELEMENT_NODE) {
+                            nodo.remove();
+                            return;
+                        }
+                        const etiqueta = nodo.tagName;
+                        const hijos = Array.from(nodo.childNodes);
+                        hijos.forEach(limpiarNodo);
+                        if (!permitidas.has(etiqueta)) {
+                            const padre = nodo.parentNode;
+                            while (nodo.firstChild) {
+                                padre.insertBefore(nodo.firstChild, nodo);
+                            }
+                            padre.removeChild(nodo);
+                            return;
+                        }
+                        Array.from(nodo.attributes).forEach(attr => nodo.removeAttribute(attr.name));
+                    };
+                    Array.from(contenedor.childNodes).forEach(limpiarNodo);
+                    const limpio = contenedor.innerHTML.trim();
+                    return limpio || 'Sin descripcion';
+                }
                 $.ajax({
                     url: 'modelos/rescatar/tecnicos.php',
                     type: 'POST',
@@ -134,7 +162,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                                 $('#badgeResponsable').removeClass('d-none').html(`<i class='fas fa-user'></i> ${nombreSeleccionado}`);
                             });
                         }, 100);
-                        const html = `<div class="contenedor-badges d-flex gap-2 justify-content-center mb-3 flex-wrap"><span class="insignia_ticket bg-primary text-white"><i class="fas fa-layer-group"></i> ${nombre_categoria}</span><span id="badgeResponsable" class="insignia_ticket bg-success text-white d-none"><i class="fas fa-user"></i> Tecnico</span></div><form class="row g-3"><div class="col-md-6"><div class="form-floating mb-3"><input type="text" class="form-control" id="nombreUsuarioProblema" value="${nombreUsuario} ${apePaternoUsuario}" disabled><label for="nombreUsuarioProblema">De</label></div></div><div class="col-md-6"><div class="form-floating mb-3"><input type="text" class="form-control" id="asuntoTicket" value="${asunto}" disabled><label for="asuntoTicket">Asunto</label></div></div><div class="col-md-6"><div class="form-floating mb-3"><select class="form-select" id="categoriaTicket"><option value="">Cargando categorias...</option></select><label for="categoriaTicket">Categoria</label></div></div><div class="col-md-6"><div id="contenedorAvatares" class="d-flex flex-wrap gap-3 justify-content-start p-2" style="max-height:100px;overflow-y:auto;"></div></div><div class="col-md-12"><div class="form-floating mb-3"><textarea class="form-control" id="descripcionTicket" disabled style="height:120px;">${descripcion_ticket}</textarea><label for="descripcionTicket">Descripcion</label></div></div><div class="col-md-12"><div class="form-floating"><textarea class="form-control" id="comentarioTicket" placeholder="Comentario al Tecnico" style="height:120px;"></textarea><label for="comentarioTicket">Comentario al Tecnico</label></div></div><input type="hidden" id="tecnicoSeleccionado"></form>`;
+                        const html = `<div class="contenedor-badges d-flex gap-2 justify-content-center mb-3 flex-wrap"><span class="insignia_ticket bg-primary text-white"><i class="fas fa-layer-group"></i> ${nombre_categoria}</span><span id="badgeResponsable" class="insignia_ticket bg-success text-white d-none"><i class="fas fa-user"></i> Tecnico</span></div><form class="row g-3"><div class="col-md-6"><div class="form-floating mb-3"><input type="text" class="form-control" id="nombreUsuarioProblema" value="${nombreUsuario} ${apePaternoUsuario}" disabled><label for="nombreUsuarioProblema">De</label></div></div><div class="col-md-6"><div class="form-floating mb-3"><input type="text" class="form-control" id="asuntoTicket" value="${asunto}" disabled><label for="asuntoTicket">Asunto</label></div></div><div class="col-md-6"><div class="form-floating mb-3"><select class="form-select" id="categoriaTicket"><option value="">Cargando categorias...</option></select><label for="categoriaTicket">Categoria</label></div></div><div class="col-md-6"><div id="contenedorAvatares" class="d-flex flex-wrap gap-3 justify-content-start p-2" style="max-height:100px;overflow-y:auto;"></div></div><div class="col-md-12"><div class="mb-3"><label for="descripcionTicketRender" class="form-label">Descripcion</label><div class="form-control" id="descripcionTicketRender" style="height:120px;overflow-y:auto;"></div></div></div><div class="col-md-12"><div class="form-floating"><textarea class="form-control" id="comentarioTicket" placeholder="Comentario al Tecnico" style="height:120px;"></textarea><label for="comentarioTicket">Comentario al Tecnico</label></div></div><input type="hidden" id="tecnicoSeleccionado"></form>`;
                         Swal.fire({
                             title: '<div class="alert alert-dark">ASIGNAR TECNICO</div>',
                             html: html,
@@ -144,6 +172,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                             width: '1000px',
                             customClass: { popup: 'cuerpo_modal_guardar', confirmButton: 'bt_crear', cancelButton: 'bt_eliminar' },
                             didOpen: () => {
+                                $('#descripcionTicketRender').html(descripcion_ticket_render);
                                 $.ajax({
                                     url: 'modelos/rescatar/categoria_de_ticket.php',
                                     type: 'POST',

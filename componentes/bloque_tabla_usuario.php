@@ -222,7 +222,7 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
                             </div>
                         </td>
                         <td class="celda-opciones">
-                            <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1" style="min-width: 180px;">
+                            <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1">
                                 <?php if ((int) $row['id_estado'] === 4): ?>
                                     <a href="#" class="btn btn-primary btn-icon-split" onclick="ticketBorrador('<?= (int) $row['id_ticket']; ?>')">
                                         <i class="bi bi-eye"></i>
@@ -258,6 +258,7 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
                                         <i class="fas fa-star text-warning"></i>
                                     </a>
                                 <?php endif; ?>
+
                             </div>
                         </td>
                     </tr>

@@ -6,9 +6,9 @@
         </button>
     </div>
     <div class="card-body">
-        <div class="alert alert-warning mb-4">
+        <!-- <div class="alert alert-warning mb-4">
             <strong>Importante:</strong> estas operaciones no son cosmeticas. Antes de ejecutarlas, conviene dejar un motivo registrado, mostrar una previsualizacion del impacto y exigir confirmacion explicita del administrador.
-        </div>
+        </div> -->
 
         <div class="row">
             <div class="col-md-6 mb-4">

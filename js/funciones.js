@@ -103,6 +103,52 @@ function soloLetras(evento) {
     }
 }
 
+function sanitizeHtmlTicketLegacy(html = "") {
+    const template = document.createElement("template");
+    template.innerHTML = String(html || "");
+
+    const allowedTags = new Set([
+        "P", "BR", "STRONG", "B", "EM", "I", "U", "S",
+        "OL", "UL", "LI", "A", "BLOCKQUOTE", "CODE", "PRE",
+        "SPAN", "DIV", "H1", "H2", "H3"
+    ]);
+    const allowedAttrs = { A: new Set(["href", "target", "rel"]) };
+
+    const cleanNode = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) return;
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            node.remove();
+            return;
+        }
+        if (!allowedTags.has(node.tagName)) {
+            const parent = node.parentNode;
+            while (node.firstChild) parent.insertBefore(node.firstChild, node);
+            node.remove();
+            return;
+        }
+
+        [...node.attributes].forEach((attr) => {
+            const allowed = allowedAttrs[node.tagName];
+            const name = attr.name.toLowerCase();
+            if (!allowed || !allowed.has(attr.name)) {
+                node.removeAttribute(attr.name);
+                return;
+            }
+            if (node.tagName === "A" && name === "href") {
+                const href = (node.getAttribute("href") || "").trim();
+                if (!/^(https?:|mailto:|tel:|#)/i.test(href)) {
+                    node.removeAttribute("href");
+                }
+            }
+        });
+
+        [...node.childNodes].forEach(cleanNode);
+    };
+
+    [...template.content.childNodes].forEach(cleanNode);
+    return template.innerHTML;
+}
+
 
 
 // Agregar eventos de escucha para el movimiento del mouse y la interacción del usuario
@@ -2232,7 +2278,7 @@ function verTicket(id) {
 
                 var problemaHTML = id_estado == 4 ?
                     `<textarea class="form-control" placeholder="Describe el problema aquí" id="problema" style="height: 100px;">${descripcion_ticket}</textarea>` :
-                    `<textarea class="form-control" placeholder="Describe el problema aquí" id="problema" style="height: 100px;" disabled>${descripcion_ticket}</textarea>`;
+                    `<div class="form-control" id="problema" style="height: 100px; overflow-y: auto;">${sanitizeHtmlTicketLegacy(descripcion_ticket)}</div>`;
 
                 var categoriaHTML = id_estado == 4 ?
                     `<select class="form-control" id="categoria"></select>` :
@@ -2663,9 +2709,9 @@ function asignacio3nTecnico(id_tecnico, id_ticket) {
                                             </div>
                                         </div>
                                         <div class="col-12">
-                                            <div class="form-floating">
-                                                <textarea class="form-control" placeholder="Address" id="floatingTextarea" disabled style="height: 100px;">${descripcion_ticket}</textarea>
-                                                <label for="floatingTextarea">Problema</label>
+                                            <div class="mb-3">
+                                                <label for="floatingTextarea" class="form-label">Problema</label>
+                                                <div class="form-control" id="floatingTextarea" style="height: 100px; overflow-y: auto;">${sanitizeHtmlTicketLegacy(descripcion_ticket)}</div>
                                             </div>
                                         </div>
                                     </form>
@@ -3239,9 +3285,9 @@ function verTicketAdministrador(id) {
                                                 </div>
                                             </div>
                                             <div class="col-12">
-                                                <div class="form-floating">
-                                                    <textarea class="form-control" placeholder="Address" id="descripcionTicket" style="height: 100px;" disabled>${descripcion_ticket}</textarea>
-                                                    <label for="descripcionTicket">Problema</label>
+                                                <div class="mb-3">
+                                                    <label for="descripcionTicket" class="form-label">Problema</label>
+                                                    <div class="form-control" id="descripcionTicket" style="height: 100px; overflow-y: auto;">${sanitizeHtmlTicketLegacy(descripcion_ticket)}</div>
                                                 </div>
                                             </div>
                                         </form>
@@ -5395,6 +5441,122 @@ function mostrarListado(tipo) {
         error: function () {
           $('#contenidoOffcanvasAsunto').html('<div class="text-danger">Error al cargar la información</div>');
         }
+      });
+    }
+
+    function eliminarTicketDesdeMenu(idTicket) {
+      const ticketId = Number(idTicket || 0);
+      if (!ticketId) {
+        Swal.fire('Error', 'Ticket inválido.', 'error');
+        return;
+      }
+
+      Swal.fire({
+        title: '<div class="alert alert-dark" role="alert">Eliminar ticket</div>',
+        text: `¿Seguro que deseas eliminar el ticket #${ticketId}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+          popup: 'cuerpo_modal_guardar',
+          confirmButton: 'btn-modal-eliminar'
+        }
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+          url: 'modelos/eliminar/eliminar_ticket.php',
+          type: 'POST',
+          dataType: 'json',
+          data: { id: ticketId },
+          success: function (resp) {
+            if (resp && resp.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Ticket eliminado',
+                timer: 1500,
+                showConfirmButton: false,
+                customClass: { popup: 'cuerpo_modal_guardar' }
+              }).then(() => window.location.reload());
+              return;
+            }
+
+            Swal.fire('Error', (resp && (resp.message || resp.error)) || 'No se pudo eliminar el ticket.', 'error');
+          },
+          error: function () {
+            Swal.fire('Error', 'Error de red al eliminar ticket.', 'error');
+          }
+        });
+      });
+    }
+
+    function fusionarTicketDesdeMenu(ticketPrincipal) {
+      const principal = Number(ticketPrincipal || 0);
+      if (!principal) {
+        Swal.fire('Error', 'Ticket principal inválido.', 'error');
+        return;
+      }
+
+      Swal.fire({
+        title: '<div class="alert alert-dark" role="alert">Fusionar ticket</div>',
+        input: 'number',
+        inputLabel: `Ingresa el ID del ticket que quieres fusionar con #${principal}`,
+        inputPlaceholder: 'ID ticket secundario',
+        showCancelButton: true,
+        confirmButtonText: 'Previsualizar',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+          popup: 'cuerpo_modal_guardar',
+          confirmButton: 'bt_crear'
+        },
+        inputValidator: (value) => {
+          const sec = Number(value || 0);
+          if (!sec) return 'Debes ingresar un ID válido.';
+          if (sec === principal) return 'Debe ser un ticket distinto al principal.';
+          return null;
+        }
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        const secundario = Number(result.value || 0);
+
+        $.ajax({
+          url: 'modelos/rescatar/ticket_mantenimiento_preview.php',
+          type: 'POST',
+          dataType: 'json',
+          data: {
+            accion: 'fusionar',
+            ticket_principal: principal,
+            ticket_secundario: secundario
+          },
+          success: function (resp) {
+            if (!resp || !resp.success) {
+              Swal.fire('Error', (resp && resp.message) || 'No se pudo cargar previsualización.', 'error');
+              return;
+            }
+
+            const p = (resp.tickets && resp.tickets.principal) || {};
+            const s = (resp.tickets && resp.tickets.secundario) || {};
+            Swal.fire({
+              title: '<div class="alert alert-dark" role="alert">Previsualización de fusión</div>',
+              html: `
+                <div class="text-start">
+                  <p><strong>Principal:</strong> #${p.id_ticket || principal} - ${p.asunto || ''}</p>
+                  <p><strong>Secundario:</strong> #${s.id_ticket || secundario} - ${s.asunto || ''}</p>
+                  <p class="text-muted mb-0">La opción de menú ya está habilitada. Si quieres, te implemento la fusión definitiva en base de datos en el siguiente paso.</p>
+                </div>
+              `,
+              confirmButtonText: 'Entendido',
+              customClass: {
+                popup: 'cuerpo_modal_guardar',
+                confirmButton: 'bt_crear'
+              }
+            });
+          },
+          error: function () {
+            Swal.fire('Error', 'Error de red al previsualizar fusión.', 'error');
+          }
+        });
       });
     }
     

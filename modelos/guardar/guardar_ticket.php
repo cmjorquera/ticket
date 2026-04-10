@@ -43,6 +43,18 @@ function buscarIdentificador($bd, $tabla, $columna, $identificador) {
     }
 }
 
+function renderDescripcionTicketHtmlCorreo($html) {
+    $html = (string)($html ?? '');
+    $html = html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $permitidas = '<p><br><ol><ul><li><strong><b><em><i><u><s><blockquote><code><pre><h1><h2><h3><a>';
+    $html = strip_tags($html, $permitidas);
+    $html = preg_replace('/\s+on\w+\s*=\s*("|\').*?\1/iu', '', $html);
+    $html = preg_replace('/\sstyle\s*=\s*("|\').*?\1/iu', '', $html);
+    $html = preg_replace('/\s(href)\s*=\s*("|\')\s*javascript:.*?\2/iu', '', $html);
+    $html = trim((string)$html);
+    return $html !== '' ? $html : 'Sin descripción';
+}
+
 // Conectar a la base de datos
 $db = new MySQL("", "", "");
 
@@ -177,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $mailBody = str_replace('{hora}', htmlspecialchars($hora), $mailBody);
                                 $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
                                 $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-                                $descripcionCorreo = nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8'));
+                                $descripcionCorreo = renderDescripcionTicketHtmlCorreo($descripcion_ticket);
                                 $mailBody = str_replace('{descripcion}', $descripcionCorreo, $mailBody);
                                 $mail->Body = $mailBody;
         
@@ -346,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $mailBodyTecnico = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsuarioCompleto), $mailBodyTecnico);
                         $mailBodyTecnico = str_replace('{nombreTecnicoCompleto}', htmlspecialchars($nombreTecnicoCompleto), $mailBodyTecnico);
                         $mailBodyTecnico = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBodyTecnico);
-                        $descripcionCorreoBorrador = nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8'));
+                        $descripcionCorreoBorrador = renderDescripcionTicketHtmlCorreo($descripcion_ticket);
                         $mailBodyTecnico = str_replace('{descripcion}', $descripcionCorreoBorrador, $mailBodyTecnico);
                         $mail->Body = $mailBodyTecnico;
             
@@ -443,7 +455,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $mailBody = str_replace('{hora}', htmlspecialchars(date('H:i:s')), $mailBody);
                                     $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
                                     $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-                                    $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
+                                    $mailBody = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $mailBody);
                                     $mail->Body = $mailBody;
                 
                                     $mail->send();
@@ -476,7 +488,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         $mailBodyTecnico = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBodyTecnico);
                                         $mailBodyTecnico = str_replace('{nombreTecnicoCompleto}', htmlspecialchars($nombreTecnicoCompleto), $mailBodyTecnico);
                                         $mailBodyTecnico = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBodyTecnico);
-                                        $mailBodyTecnico = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBodyTecnico);
+                                        $mailBodyTecnico = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $mailBodyTecnico);
                                         $mail->Body = $mailBodyTecnico;
                 
                                         $mail->send();
@@ -588,7 +600,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $mailBody = str_replace('{hora}', htmlspecialchars($hora), $mailBody);
                         $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
                         $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-                        $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
+                        $mailBody = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $mailBody);
                         $mailBody = str_replace('{nombre_tecnico}', htmlspecialchars($nombreTecnicoCompleto), $mailBody);
                         $mailBody = str_replace('{comentarioTecnicoFinal}', htmlspecialchars($comentarioTecnicoFinal), $mailBody);
 
@@ -743,7 +755,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     $mailBody = str_replace('{hora}', htmlspecialchars($hora_actual), $mailBody);
                                     $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
                                     $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-                                    $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
+                                    $mailBody = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $mailBody);
                                     $mail->Body = $mailBody;
                     
                                     $mail->send();
@@ -789,7 +801,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         $mailBodyTecnico = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBodyTecnico);
                                         $mailBodyTecnico = str_replace('{nombreTecnicoCompleto}', htmlspecialchars($nombreTecnicoCompleto), $mailBodyTecnico);
                                         $mailBodyTecnico = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBodyTecnico);
-                                        $mailBodyTecnico = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBodyTecnico);
+                                        $mailBodyTecnico = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $mailBodyTecnico);
                                         $mail->Body = $mailBodyTecnico;
                     
                                         $mail->send();
@@ -925,7 +937,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $mailBody = str_replace('{hora}', htmlspecialchars($hora), $mailBody);
                                 $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
                                 $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-                                $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
+                                $mailBody = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $mailBody);
                                 $mailBody = str_replace('{nombre_tecnico}', htmlspecialchars($nombreTecnicoCompleto), $mailBody);
                                 $mail->Body = $mailBody;
                     
@@ -1072,7 +1084,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mailBody = str_replace('{hora}', htmlspecialchars($horaCierre), $mailBody);
                     $mailBody = str_replace('{nombreUsarioCompleto}', htmlspecialchars($nombreUsarioCompleto), $mailBody);
                     $mailBody = str_replace('{asunto}', htmlspecialchars($asunto_ticket), $mailBody);
-                    $mailBody = str_replace('{descripcion}', nl2br(htmlspecialchars(trim(html_entity_decode(strip_tags((string) $descripcion_ticket), ENT_QUOTES | ENT_HTML5, 'UTF-8')), ENT_QUOTES, 'UTF-8')), $mailBody);
+                    $mailBody = str_replace('{descripcion}', renderDescripcionTicketHtmlCorreo($descripcion_ticket), $mailBody);
                     $mailBody = str_replace('{nombre_tecnico}', htmlspecialchars($nombreTecnicoCompleto), $mailBody);
                     $mailBody = str_replace('{fecha_creacion_inicio}', htmlspecialchars($fecha_creacion_inicio), $mailBody);
                     $mailBody = str_replace('{hora_creacion_inicio}', htmlspecialchars($hora_creacion_inicio), $mailBody);

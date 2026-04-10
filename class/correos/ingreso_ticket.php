@@ -101,9 +101,9 @@
                                 <p style="margin:0 0 8px;font-size:13px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:#2f5cb8;">
                                     Descripcion
                                 </p>
-                                <p style="margin:0;color:#4a596d;font-size:15px;line-height:1.75;">
+                                <div style="margin:0;color:#4a596d;font-size:15px;line-height:1.75;">
                                     {descripcion}
-                                </p>
+                                </div>
                             </div>
                         </td>
                     </tr>

@@ -272,7 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                             
                                                     <!--BOTONES-->
                                                     <td class="p-2 celda-opciones" style="<?= $estiloCelda ?>">
-                                                      <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1" style="min-width: 180px;">                                                               
+                                                      <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1 position-relative pe-4">                                                               
                                                       <a href="#" class="btn btn-primary btn-icon-split me-2" id="idVerTicket" onclick="modalTicketAdministrativo('<?= $row['id_ticket']; ?>')" data-bs-toggle="popover" data-bs-placement="top">                                                         
                                                                         <i class="bi bi-eye"></i>
                                                                     </a>
@@ -303,6 +303,24 @@ document.addEventListener("DOMContentLoaded", function () {
                                                                     </a>
                                                                     
                                                             <?php } ?>
+
+                                                            <div class="dropdown position-absolute top-0 end-0">
+                                                                <button class="btn btn-outline-secondary btn-sm px-2 py-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Más opciones" style="line-height: 1.1;">
+                                                                    <i class="bi bi-three-dots"></i>
+                                                                </button>
+                                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                                    <li>
+                                                                        <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); eliminarTicketDesdeMenu(<?= (int) $row['id_ticket']; ?>);">
+                                                                            <i class="bi bi-trash me-2"></i>Eliminar
+                                                                        </a>
+                                                                    </li>
+                                                                    <li>
+                                                                        <a class="dropdown-item" href="#" onclick="event.preventDefault(); fusionarTicketDesdeMenu(<?= (int) $row['id_ticket']; ?>);">
+                                                                            <i class="bi bi-intersect me-2"></i>Fusionar
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
                                                             </div>
                                                         </td>
                                                 </tr>
@@ -330,6 +348,40 @@ document.addEventListener("DOMContentLoaded", function () {
       let asunto = data.asunto || 'Sin asunto';
       let descripcion_ticket = data.descripcion_ticket || 'Sin descripción';
       let nombre_categoria = data.nombre_categoria || 'Sin categoría';
+      const descripcion_ticket_render = sanitizarDescripcionHtml(descripcion_ticket);
+
+      function sanitizarDescripcionHtml(html) {
+        const permitidas = new Set(['BR', 'P', 'OL', 'UL', 'LI', 'B', 'STRONG', 'I', 'EM', 'U']);
+        const contenedor = document.createElement('div');
+        contenedor.innerHTML = String(html || '');
+
+        const limpiarNodo = (nodo) => {
+          if (nodo.nodeType === Node.TEXT_NODE) return;
+          if (nodo.nodeType !== Node.ELEMENT_NODE) {
+            nodo.remove();
+            return;
+          }
+
+          const etiqueta = nodo.tagName;
+          const hijos = Array.from(nodo.childNodes);
+          hijos.forEach(limpiarNodo);
+
+          if (!permitidas.has(etiqueta)) {
+            const padre = nodo.parentNode;
+            while (nodo.firstChild) {
+              padre.insertBefore(nodo.firstChild, nodo);
+            }
+            padre.removeChild(nodo);
+            return;
+          }
+
+          Array.from(nodo.attributes).forEach(attr => nodo.removeAttribute(attr.name));
+        };
+
+        Array.from(contenedor.childNodes).forEach(limpiarNodo);
+        const limpio = contenedor.innerHTML.trim();
+        return limpio || 'Sin descripción';
+      }
 
       $.ajax({
         url: "modelos/rescatar/tecnicos.php",
@@ -397,9 +449,9 @@ document.addEventListener("DOMContentLoaded", function () {
               </div>
 
               <div class="col-md-12">
-                <div class="form-floating mb-3">
-                  <textarea class="form-control" id="descripcionTicket" disabled style="height: 120px;">${descripcion_ticket}</textarea>
-                  <label for="descripcionTicket">Descripción</label>
+                <div class="mb-3">
+                  <label for="descripcionTicketRender" class="form-label">Descripción</label>
+                  <div class="form-control" id="descripcionTicketRender" style="height: 120px; overflow-y: auto;"></div>
                 </div>
               </div>
               <div class="col-md-12">
@@ -426,6 +478,7 @@ document.addEventListener("DOMContentLoaded", function () {
             },
 
             didOpen: () => {
+              $('#descripcionTicketRender').html(descripcion_ticket_render);
               $.ajax({
                 url: "modelos/rescatar/categoria_de_ticket.php",
                 type: "POST",
