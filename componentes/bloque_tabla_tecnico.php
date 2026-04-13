@@ -23,8 +23,7 @@
 </div>
 
 <div class="table-responsive mt-3">
-    <div class="table-responsive">
-        <table id="tablaTecnicoTicketAsignados" class="table table-bordered table-hover table-striped">
+        <table id="tablaTecnicoTicketAsignados" class="table table-bordered table-hover table-striped w-100">
             <thead class="table-dark">
                 <tr>
                     <th class="col-id">ID</th>
@@ -189,7 +188,7 @@
                             </td>
                             <td class="celda-opciones">
                                 <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1">
-                                    <a href="#" class="btn btn-primary btn-icon-split me-2" onclick="modalTicketTecnico('<?= (int) $row['id_ticket']; ?>')" title="Ver ticket">
+                                    <a href="#" class="btn btn-primary btn-icon-split me-2" onclick="modalTicketUsuario('<?= (int) $row['id_ticket']; ?>')" title="Ver ticket">
                                         <i class="bi bi-eye"></i>
                                     </a>
 
@@ -229,7 +228,6 @@
                 ?>
             </tbody>
         </table>
-    </div>
 </div>
 
 <script>
@@ -299,13 +297,23 @@ function configurarFiltrosTablaTecnico(dataTableTecnico) {
 
 $(document).on('init.dt', function (event, settings) {
     if (settings && settings.nTable && settings.nTable.id === 'tablaTecnicoTicketAsignados') {
-        configurarFiltrosTablaTecnico(new $.fn.dataTable.Api(settings));
+        const dataTableTecnico = new $.fn.dataTable.Api(settings);
+        configurarFiltrosTablaTecnico(dataTableTecnico);
+        dataTableTecnico.columns.adjust();
+        if (dataTableTecnico.responsive) {
+            dataTableTecnico.responsive.recalc();
+        }
     }
 });
 
 $(function () {
     if ($.fn.DataTable.isDataTable('#tablaTecnicoTicketAsignados')) {
-        configurarFiltrosTablaTecnico($('#tablaTecnicoTicketAsignados').DataTable());
+        const dataTableTecnico = $('#tablaTecnicoTicketAsignados').DataTable();
+        configurarFiltrosTablaTecnico(dataTableTecnico);
+        dataTableTecnico.columns.adjust();
+        if (dataTableTecnico.responsive) {
+            dataTableTecnico.responsive.recalc();
+        }
     }
 });
 </script>

@@ -2653,33 +2653,10 @@
               </div>
             `;
 
-              // Determinar el texto del botón y la acción según el estado:
-              // id_estado == 2
-              // id_estado == 3 
-              // id_estado == 5 
-              let confirmButtonText = "";
-              let preConfirmAction = null;
-              
-              if (id_estado == 2) {
-                confirmButtonText = "COMENZAR TICKET";
-                preConfirmAction = () =>
-                  $.ajax({
-                    url: "modelos/guardar/guardar_ticket.php",
-                    type: "POST",
-                    data: { id: id_ticket, accion: "comenzar_proceso" }
-                  });
-              } else if (id_estado == 3) {
-                confirmButtonText = "FINALIZAR";
-                preConfirmAction = () =>
-                  $.ajax({
-                    url: "modelos/guardar/guardar_ticket.php",
-                    type: "POST",
-                    data: { id: id_ticket, accion: "terminar_proceso" }
-                  });
-                } else if (id_estado == 4 || id_estado == 5 || id_estado == 6) {
-                  confirmButtonText = "CERRAR";
-                  preConfirmAction = () => Promise.resolve(); // No hace nada
-                }         
+              // En la vista administrativa este modal es solo de lectura.
+              // El administrador no inicia ni finaliza tickets desde aqui.
+              const confirmButtonText = "Cerrar";
+              const preConfirmAction = () => Promise.resolve();
           
               // Se incorpora el timeline de acciones obtenido de construirAccionesHTML
               // (en este ejemplo se muestra debajo del timeline principal)
@@ -2899,35 +2876,7 @@
                 
               }).then((result) => {
                 if (result.isConfirmed) {
-                  if (id_estado == 4 || id_estado == 5 || id_estado == 6) {
-                    return; // Solo cerrar modal
-                  }
-              
-                  let mensaje = "";
-                  // let mensaje2 = "";
-    
-              
-                  if (id_estado == 2) {
-                    mensaje = "COMENZANDO TICKET";
-                    // mensaje2 ='<p>El ticket fue comenzado  exitosamente.</p>'
-                  } else if (id_estado == 3) {
-                    mensaje = "TICKET FINALIZADO CON ÉXITO";
-                      // mensaje2 ='<p>El ticket fue cerrado exitosamente.</p>'
-                  }
-              
-                  Swal.fire({
-                    title: `<div class="alert alert-dark">${mensaje}</div>`,
-                      // html: `${mensaje2}`,
-                    icon: "success",
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true,
-                    allowOutsideClick: false,
-                    customClass: {
-                      popup: "cuerpo_modal_guardar",
-                      confirmButton: "btn btn-primary"
-                    }
-                  }).then(() => location.reload());
+                  return;
                 }
               }).catch((error) => {
                 console.error("Error:", error);

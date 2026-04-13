@@ -5500,63 +5500,17 @@ function mostrarListado(tipo) {
 
       Swal.fire({
         title: '<div class="alert alert-dark" role="alert">Fusionar ticket</div>',
-        input: 'number',
-        inputLabel: `Ingresa el ID del ticket que quieres fusionar con #${principal}`,
-        inputPlaceholder: 'ID ticket secundario',
-        showCancelButton: true,
-        confirmButtonText: 'Previsualizar',
-        cancelButtonText: 'Cancelar',
+        html: `
+          <div class="text-start">
+            <p class="mb-0">Estamos trabajando para trabajar en esta funcionalidad.</p>
+          </div>
+        `,
+        showCancelButton: false,
+        confirmButtonText: 'Cerrar',
         customClass: {
           popup: 'cuerpo_modal_guardar',
-          confirmButton: 'bt_crear'
-        },
-        inputValidator: (value) => {
-          const sec = Number(value || 0);
-          if (!sec) return 'Debes ingresar un ID válido.';
-          if (sec === principal) return 'Debe ser un ticket distinto al principal.';
-          return null;
+          confirmButton: 'btn-modal-eliminar'
         }
-      }).then((result) => {
-        if (!result.isConfirmed) return;
-        const secundario = Number(result.value || 0);
-
-        $.ajax({
-          url: 'modelos/rescatar/ticket_mantenimiento_preview.php',
-          type: 'POST',
-          dataType: 'json',
-          data: {
-            accion: 'fusionar',
-            ticket_principal: principal,
-            ticket_secundario: secundario
-          },
-          success: function (resp) {
-            if (!resp || !resp.success) {
-              Swal.fire('Error', (resp && resp.message) || 'No se pudo cargar previsualización.', 'error');
-              return;
-            }
-
-            const p = (resp.tickets && resp.tickets.principal) || {};
-            const s = (resp.tickets && resp.tickets.secundario) || {};
-            Swal.fire({
-              title: '<div class="alert alert-dark" role="alert">Previsualización de fusión</div>',
-              html: `
-                <div class="text-start">
-                  <p><strong>Principal:</strong> #${p.id_ticket || principal} - ${p.asunto || ''}</p>
-                  <p><strong>Secundario:</strong> #${s.id_ticket || secundario} - ${s.asunto || ''}</p>
-                  <p class="text-muted mb-0">La opción de menú ya está habilitada. Si quieres, te implemento la fusión definitiva en base de datos en el siguiente paso.</p>
-                </div>
-              `,
-              confirmButtonText: 'Entendido',
-              customClass: {
-                popup: 'cuerpo_modal_guardar',
-                confirmButton: 'bt_crear'
-              }
-            });
-          },
-          error: function () {
-            Swal.fire('Error', 'Error de red al previsualizar fusión.', 'error');
-          }
-        });
       });
     }
     

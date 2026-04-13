@@ -774,7 +774,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasAsunto" aria-labelledby="offcanvasAsuntoLabel">
   <div class="offcanvas-header bg-light border-bottom shadow-sm" style="background-color: #f5f7fa;">
     <h5 class="offcanvas-title text-primary fw-bold" id="offcanvasAsuntoLabel">
-      <i class="bi bi-chat-left-text me-2"></i>Detalle del Asunto
+      <i class="bi bi-chat-left-text me-2"></i>
     </h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
   </div>

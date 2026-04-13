@@ -365,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                                 </button>
                                                             <?php } ?>
 
-                                                            <div class="filter" style="position: absolute; top: 2px; right: 4px; margin: 0;">
+                                                            <div class="filter" style="position: absolute; top: -6px; right: 4px; margin: 0;">
                                                                 <a class="icon" href="#" data-bs-toggle="dropdown" aria-expanded="false" title="Más opciones" style="padding-right: 0; padding-bottom: 0; display: inline-flex; align-items: flex-start; justify-content: flex-end;">
                                                                     <i class="bi bi-three-dots"></i>
                                                                 </a>
