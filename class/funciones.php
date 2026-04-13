@@ -2594,6 +2594,7 @@ WHERE t.id_usuario = '$idUsuarioSession'
                     pt.fecha_termino_ticket,
                     pt.hora_termino_ticket,
                     ct.id_ticket AS tieneCalificacion,
+                    ct.id_calificacion AS calificacionEstrellas,
                     (SELECT COUNT(*) FROM archivos_adjuntos_ticket WHERE id_ticket = t.id_ticket) AS cantidadArchivos,
                     COUNT(c.id) AS cantidadConversaciones
                 FROM tickets t

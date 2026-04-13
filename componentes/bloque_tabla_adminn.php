@@ -61,7 +61,6 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
                                                     <th class="col-asunto">ASUNTO</th>
                                                     <th class="col-tecnico">TECNICO</th>
                                                     <th class="col-fecha-respuesta">FECHA RESPUESTA</th>
-                                                    <th class="col-dias-restantes">DIAS RESTANTES</th>
                                                     <th class="col-calificacion">CALIFICACION</th> 
                                                     <th class="col-opciones">OPCIONES</th>
                                                 </tr>
@@ -182,12 +181,33 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     <!--FECHA DE ACCION-->
                                                        <td class="celda-fecha-respuesta" style="<?= $estiloCelda ?>">
                                                               <?php 
+                                                                $idEstado = (int) $row['id_estado'];
                                                                 $fechaRespuestaTitulo = (!empty($row['fecha_estimada_admin']) && $row['fecha_estimada_admin'] !== '0000-00-00')
                                                                     ? date('d-m-Y', strtotime($row['fecha_estimada_admin']))
                                                                     : '00-00-0000';
-                                                                $fechaRespuestaDetalle = (!empty($row['fecha_estimada_admin']) && $row['fecha_estimada_admin'] !== '0000-00-00')
-                                                                    ? 'Fecha estimada'
-                                                                    : 'Sin fecha definida';
+                                                                $fechaRespuestaSubtitulo = 'Sin fecha definida';
+
+                                                                if (in_array($idEstado, [2, 3, 7], true) && $tieneRangoProceso) {
+                                                                    $fechaRespuestaSubtitulo = htmlspecialchars((string) $diasTranscurridosProceso) . ' de ' . htmlspecialchars((string) $totalDiasProceso) . ' dias';
+                                                                    if ($diasRestantes === 1) {
+                                                                        $fechaRespuestaSubtitulo .= ' | Al tecnico le queda 1 dia';
+                                                                    } elseif ($diasRestantes > 1) {
+                                                                        $fechaRespuestaSubtitulo .= ' | Al tecnico le quedan ' . htmlspecialchars((string) $diasRestantes) . ' dias';
+                                                                    } else {
+                                                                        $fechaRespuestaSubtitulo .= ' | Plazo cumplido';
+                                                                    }
+                                                                } elseif ($idEstado === 2) {
+                                                                    $fechaRespuestaSubtitulo = 'Pendiente inicio';
+                                                                } elseif ($idEstado === 5) {
+                                                                    $fechaRespuestaSubtitulo = (!empty($row['fecha_estimada_admin']) && $row['fecha_estimada_admin'] !== '0000-00-00')
+                                                                        ? 'Fecha estimada'
+                                                                        : 'Sin fecha definida';
+                                                                } elseif ($totalDiasProceso == 0) {
+                                                                    $fechaRespuestaSubtitulo = 'Sin plazo definido';
+                                                                } else {
+                                                                    $fechaRespuestaSubtitulo = 'Dias configurados';
+                                                                }
+                                                                $fechaRespuestaDetalle = $fechaRespuestaSubtitulo;
                                                                 echo '<div class="ticket-resumen-estado">
                                                                         <span class="ticket-resumen-estado__dot" style="background-color: ' . htmlspecialchars($row['colorEstado']) . ';"></span>
                                                                         <div class="ticket-resumen-estado__body">
@@ -198,72 +218,6 @@ document.addEventListener("DOMContentLoaded", function () {
                                                                 ?>
 
                                                             </td>
-                                                        
-                                                    <!--FECHA DE RESPUESTA-->
-                                                    <td class="celda-dias-restantes" style="<?= $estiloCelda ?>">
-                                                        <?php 
-                                                            $idEstado           = $row['id_estado'];
-                                                            $idTicket           = $row['id_ticket'];
-                                                            $usuarioCalifico    = $row['tieneCalificacion'];
-                                                            $diasTitulo = '';
-                                                            $diasDetalle = '';
-                                                            if (in_array((int) $row['id_estado'], [2, 3, 7], true) && $tieneRangoProceso) {
-                                                                $diasTitulo = htmlspecialchars((string) $diasTranscurridosProceso) . ' de ' . htmlspecialchars((string) $totalDiasProceso) . ' dias';
-                                                                if ($diasRestantes === 1) {
-                                                                    $diasDetalle = 'Al tecnico le queda 1 dia';
-                                                                } elseif ($diasRestantes > 1) {
-                                                                    $diasDetalle = 'Al tecnico le quedan ' . htmlspecialchars((string) $diasRestantes) . ' dias';
-                                                                } else {
-                                                                    $diasDetalle = 'Plazo cumplido';
-                                                                }
-                                                            
-                                                            } elseif ($idEstado == 5) {
-                                                                if ($usuarioCalifico == 1) {
-                                                                    $diasTitulo = 'Usuario califico';
-                                                                    $diasDetalle = 'Ticket terminado';
-                                                                } else {
-                                                                    $diasTitulo = 'Esperando calificacion';
-                                                                    $diasDetalle = 'Pendiente usuario';
-                                                                }
-                                                            } elseif ($idEstado == 5) {
-                                                                     $idContenedor = 'estrellas_' . $idTicket;
-                                                                        echo '<div class="d-flex align-items-center justify-content-between gap-2">';
-                                                                    
-                                                                        // Estrellas (JS rellena dinámicamente)
-                                                                        echo '<div id="' . $idContenedor . '"></div>';
-                                                                        echo "<script>mostrarEstrellas($idTicket, '$idContenedor');</script>";
-                                                                    
-                                                                        // Botón con ícono (tooltip opcional)
-                                                                        echo '<button class="btn btn-sm btn-primary" onclick="calificarTicket(' . $idTicket . ')" title="Ver Comentario">';
-                                                                        echo '<i class="fas fa-comment-dots"></i>'; // puedes cambiarlo por fa-eye, fa-info-circle, etc.
-                                                                        echo '</button>';
-                                                                    
-                                                                        echo '</div>';
-                                                                    
-                                                                        echo '</div>';
-                                                                            } elseif ($idEstado == 2) {
-                                                                        $diasTitulo = 'Tecnico no ha comenzado';
-                                                                        $diasDetalle = 'Pendiente inicio';
-                                                                            } else {
-                                                                                if ($totalDiasProceso == 0) {
-                                                                                    $diasTitulo = '00-00-0000';
-                                                                                    $diasDetalle = 'Sin plazo definido';
-                                                                                        } else {
-                                                                                    $diasTitulo = htmlspecialchars((string) $totalDiasProceso);
-                                                                                    $diasDetalle = 'Dias configurados';
-                                                                                }
-                                                                            }
-                                                            if ($diasTitulo !== '') {
-                                                                echo '<div class="ticket-resumen-estado">
-                                                                        <span class="ticket-resumen-estado__dot" style="background-color: ' . htmlspecialchars($row['colorEstado']) . ';"></span>
-                                                                        <div class="ticket-resumen-estado__body">
-                                                                            <div class="ticket-resumen-estado__titulo">' . $diasTitulo . '</div>
-                                                                            <div class="ticket-resumen-estado__detalle">' . $diasDetalle . '</div>
-                                                                        </div>
-                                                                      </div>';
-                                                            }
-                                                                        ?>
-                                                    </td>
 
                                                     <!--CALIFICACION-->
                                                     <td class="celda-calificacion" style="<?= $estiloCelda ?>">
@@ -379,6 +333,12 @@ document.addEventListener("DOMContentLoaded", function () {
                                                                         <a class="dropdown-item" href="#" onclick="event.preventDefault(); fusionarTicketDesdeMenu(<?= (int) $row['id_ticket']; ?>);">
                                                                             <i class="bi bi-intersect me-2"></i>Fusionar
                                                                         </a>
+                                                                    </li>
+                                                                     <li>
+                                                                       <!-- <a class="dropdown-item" href="estadistica/vida_ticket.php?id_ticket=<?= (int)$row['id_ticket']; ?>"> -->
+                                                                          <a class="dropdown-item" href="estadistica/vida_ticket.php?>">
+                                                                          <i class="bi bi-intersect me-2"></i>Historial del Ticket
+                                                                      </a>
                                                                     </li>
                                                                 </ul>
                                                             </div>

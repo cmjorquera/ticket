@@ -379,6 +379,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo "Error al guardar el proceso del ticket.";
                 }
                 break;
+
+        case 'actualizar_fecha_demorado':
+                    $id_ticket = isset($_POST['id']) ? intval($_POST['id']) : 0;
+                    $fecha_resolucion = isset($_POST['fecha_estimada']) ? trim((string) $_POST['fecha_estimada']) : '';
+                    $diasResolucion = isset($_POST['dias_estimados']) ? intval($_POST['dias_estimados']) : 0;
+                    $motivoReprogramacion = isset($_POST['motivo_reprogramacion']) ? trim((string) $_POST['motivo_reprogramacion']) : '';
+
+                    if ($id_ticket <= 0 || $fecha_resolucion === '') {
+                        echo json_encode(['status' => 'error', 'message' => 'Faltan datos para actualizar la fecha estimada.']);
+                        break;
+                    }
+
+                    $fecha = date("Y-m-d");
+                    $hora = date("H:i:s");
+                    $motivoSeguro = $db->escape_string($motivoReprogramacion);
+
+                    $sql = "UPDATE `proceso_tickets` SET
+                            `fecha_estimada_admin` = '$fecha_resolucion',
+                            `dias_estimada_admin` = '$diasResolucion'
+                            WHERE `id_ticket` = '$id_ticket'";
+                    $result = $db->guardar($sql);
+
+                    $sql1 = "UPDATE `tickets` SET
+                             `id_estado` = '3'
+                             WHERE `id_ticket` = '$id_ticket'";
+                    $result1 = $db->guardar($sql1);
+
+                    $accionAvance = "Nueva fecha estimada: $fecha_resolucion";
+                    if ($diasResolucion > 0) {
+                        $accionAvance .= " ($diasResolucion dias)";
+                    }
+                    if ($motivoSeguro !== '') {
+                        $accionAvance .= " - Motivo: $motivoSeguro";
+                    }
+
+                    $sql2 = "INSERT INTO `avance_tecnicos`(`id_ticket`, `accion`, `fecha_avance`, `hora_avance`)
+                             VALUES ('$id_ticket', '" . $db->escape_string($accionAvance) . "', '$fecha', '$hora')";
+                    $result2 = $db->guardar($sql2);
+
+                    if ($result && $result1 && $result2) {
+                        echo json_encode(['status' => 'success', 'message' => 'La fecha estimada fue actualizada correctamente.']);
+                    } else {
+                        echo json_encode(['status' => 'error', 'message' => 'No se pudo actualizar la fecha estimada.']);
+                    }
+                    break;
             
         case 'modificar_borrador':
                     $id_ticket          = isset($_POST['id']) ? intval($_POST['id']) : 0;

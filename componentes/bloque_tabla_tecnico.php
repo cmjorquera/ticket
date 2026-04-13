@@ -32,7 +32,7 @@
                     <th class="col-asunto">ASUNTO</th>
                     <th class="col-estado">ESTADO</th>
                     <th class="col-fecha-respuesta">FECHA RESPUESTA</th>
-                    <th class="col-dias-restantes">DIAS RESTANTES</th>
+                    <th class="col-calificacion">CALIFICACION</th>
                     <th class="col-opciones">OPCIONES</th>
                 </tr>
             </thead>
@@ -127,6 +127,37 @@
                                 $diasDetalle = 'Dias estimados';
                             }
                         }
+
+                        $calificacionTitulo = '';
+                        $calificacionDetalle = '';
+                        if ((int) $row['id_estado'] === 5) {
+                            if (!empty($row['tieneCalificacion'])) {
+                                $calificacionTitulo = 'Usuario califico';
+                                $calificacionDetalle = 'Ticket terminado';
+                            } else {
+                                $calificacionTitulo = 'Esperando calificacion';
+                                $calificacionDetalle = 'Pendiente usuario';
+                            }
+                        } elseif ((int) $row['id_estado'] === 2) {
+                            $calificacionTitulo = 'Tecnico asignado';
+                            $calificacionDetalle = 'Pendiente inicio';
+                        } elseif ((int) $row['id_estado'] === 3) {
+                            $calificacionTitulo = 'En proceso';
+                            $calificacionDetalle = 'Trabajo del tecnico';
+                        } elseif ((int) $row['id_estado'] === 7) {
+                            $calificacionTitulo = 'Ticket demorado';
+                            $calificacionDetalle = 'Fuera de plazo';
+                        } elseif ((int) $row['id_estado'] === 6) {
+                            $calificacionTitulo = 'Cerrado';
+                            $calificacionDetalle = 'Proceso finalizado';
+                        }
+
+                        if ((int) $row['id_estado'] !== 5 && $diasTitulo !== '') {
+                            $fechaRespuestaDetalle = $diasTitulo;
+                            if ($diasDetalle !== '') {
+                                $fechaRespuestaDetalle .= ' | ' . $diasDetalle;
+                            }
+                        }
                         $fechaCreacionIso = !empty($row['fecha_creacion_inicio']) && $row['fecha_creacion_inicio'] !== '0000-00-00'
                             ? date('Y-m-d', strtotime($row['fecha_creacion_inicio']))
                             : '';
@@ -177,14 +208,23 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="celda-dias-restantes">
-                                <div class="ticket-resumen-estado">
-                                    <span class="ticket-resumen-estado__dot" style="background-color: <?= htmlspecialchars($row['colorEstado']); ?>;"></span>
-                                    <div class="ticket-resumen-estado__body">
-                                        <div class="ticket-resumen-estado__titulo"><?= $diasTitulo; ?></div>
-                                        <div class="ticket-resumen-estado__detalle"><?= htmlspecialchars($diasDetalle); ?></div>
+                            <td class="celda-calificacion">
+                                <?php if ((int) $row['id_estado'] === 5 && !empty($row['tieneCalificacion'])): ?>
+                                    <?php $calificacionEstrellas = (int) ($row['calificacionEstrellas'] ?? 0); ?>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <?php for ($i = 1; $i <= 4; $i++): ?>
+                                            <i class="fa fa-star <?= $i <= $calificacionEstrellas ? 'text-warning' : 'text-secondary'; ?>" style="font-size: 20px; margin: 0 1px;"></i>
+                                        <?php endfor; ?>
                                     </div>
-                                </div>
+                                <?php else: ?>
+                                    <div class="ticket-resumen-estado">
+                                        <span class="ticket-resumen-estado__dot" style="background-color: <?= htmlspecialchars($row['colorEstado']); ?>;"></span>
+                                        <div class="ticket-resumen-estado__body">
+                                            <div class="ticket-resumen-estado__titulo"><?= htmlspecialchars($calificacionTitulo); ?></div>
+                                            <div class="ticket-resumen-estado__detalle"><?= htmlspecialchars($calificacionDetalle); ?></div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                             <td class="celda-opciones">
                                 <div class="d-flex flex-nowrap align-items-center justify-content-start gap-1">
@@ -210,6 +250,15 @@
                                             <span class="position-absolute top-0 start-90 translate-middle badge rounded-pill bg-danger">
                                                 <?= (int) $row['cantidadArchivos']; ?>
                                             </span>
+                                        </button>
+                                    <?php endif; ?>
+
+                                    <?php if ((int) $row['id_estado'] === 7): ?>
+                                        <button type="button"
+                                            class="btn btn-warning position-relative me-1"
+                                            onclick="reprogramarFechaTicketDemorado('<?= (int) $row['id_ticket']; ?>', '<?= htmlspecialchars($fechaRespuestaIso); ?>')"
+                                            title="Actualizar fecha estimada">
+                                            <i class="bi bi-calendar-event"></i>
                                         </button>
                                     <?php endif; ?>
 

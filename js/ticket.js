@@ -1589,7 +1589,7 @@
                     });
                   };
                 }
-                else if (id_estado == 3) {
+                else if (id_estado == 3 || id_estado == 7) {
                   confirmButtonText = "TERMINAR TICKET";
                   preConfirmAction = () => {
                     // Lee el mensaje del textarea si existe
@@ -1634,6 +1634,9 @@
                 else if (id_estado == 4 || id_estado == 5 || id_estado == 6) {
                   confirmButtonText = "CERRAR";
                   preConfirmAction = () => Promise.resolve(); // No hace nada
+                } else {
+                  confirmButtonText = "CERRAR";
+                  preConfirmAction = () => Promise.resolve();
                 }         
           
           // Se incorpora el timeline de acciones obtenido de construirAccionesHTML
@@ -1650,7 +1653,7 @@
         // UNICA constante para ambos casos (id_estado 3 y 5)
         const mensajeUsuarioHTML = (() => {
           // Caso 1: EN PROCESO (id_estado == 3) → textarea editable
-          if (+id_estado === 3) {
+          if (+id_estado === 3 || +id_estado === 7) {
             return `
               <div class="row mt-3">
                 <div class="col-12">
@@ -1949,7 +1952,7 @@
               if (id_estado == 2) {
                 mensaje = "COMENZANDO TICKET";
                 // mensaje2 ='<p>El ticket fue comenzado  exitosamente.</p>'
-              } else if (id_estado == 3) {
+              } else if (id_estado == 3 || id_estado == 7) {
                 mensaje = "TICKET TERNMINADO CON ÉXITO";
                   // mensaje2 ='<p>El ticket fue cerrado exitosamente.</p>'
               }
@@ -2401,6 +2404,100 @@
     
     function exportarTicketAPDF(id_ticket) {
       window.open(`modelos/descarga/descarga_ticket_tecnico_pdf.php?id=${id_ticket}`, '_blank');
+    }
+
+    function reprogramarFechaTicketDemorado(id_ticket, fechaActual = "") {
+      const fechaActualTexto = (fechaActual || "").trim() !== "" ? fechaActual : "Sin fecha definida";
+
+      Swal.fire({
+        title: '<div class="alert alert-dark">Actualizar fecha estimada</div>',
+        html: `
+          <div class="text-start">
+            <div class="mb-3">
+              <label class="form-label"><strong>Fecha estimada actual:</strong></label>
+              <input type="text" class="form-control" value="${fechaActualTexto}" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label"><strong>Nueva fecha estimada:</strong></label>
+              <input type="date" class="form-control" id="nuevaFechaEstimadaDemorada">
+            </div>
+            <div class="mb-0">
+              <label class="form-label"><strong>Detalle o motivo:</strong></label>
+              <textarea class="form-control" id="motivoFechaEstimadaDemorada" rows="3" placeholder="Escribe una observación breve para esta nueva fecha..."></textarea>
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Guardar fecha',
+        cancelButtonText: 'Cancelar',
+        allowOutsideClick: false,
+        customClass: {
+          popup: 'cuerpo_modal_guardar',
+          confirmButton: 'bt_crear',
+          cancelButton: 'bt_eliminar'
+        },
+        didOpen: () => {
+          const inputFecha = document.getElementById('nuevaFechaEstimadaDemorada');
+          if (inputFecha) {
+            inputFecha.min = new Date().toLocaleDateString('en-CA');
+          }
+        },
+        preConfirm: () => {
+          const inputFecha = document.getElementById('nuevaFechaEstimadaDemorada');
+          const inputMotivo = document.getElementById('motivoFechaEstimadaDemorada');
+          const nuevaFecha = inputFecha ? (inputFecha.value || '').trim() : '';
+          const motivo = inputMotivo ? (inputMotivo.value || '').trim() : '';
+
+          if (!nuevaFecha) {
+            Swal.showValidationMessage('Debes seleccionar una nueva fecha estimada.');
+            return false;
+          }
+
+          const hoy = new Date();
+          hoy.setHours(0, 0, 0, 0);
+          const fechaSeleccionada = new Date(`${nuevaFecha}T00:00:00`);
+          const diasEstimados = Math.round((fechaSeleccionada - hoy) / (1000 * 60 * 60 * 24));
+
+          if (diasEstimados < 0) {
+            Swal.showValidationMessage('La nueva fecha no puede ser anterior a hoy.');
+            return false;
+          }
+
+          return $.ajax({
+            url: "modelos/guardar/guardar_ticket.php",
+            type: "POST",
+            dataType: "json",
+            data: {
+              accion: "actualizar_fecha_demorado",
+              id: id_ticket,
+              fecha_estimada: nuevaFecha,
+              dias_estimados: diasEstimados,
+              motivo_reprogramacion: motivo
+            }
+          });
+        }
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        const resp = result.value || {};
+        if (resp.status === 'success' || resp.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Fecha actualizada',
+            text: resp.message || 'La nueva fecha estimada se guardó correctamente.',
+            timer: 2200,
+            showConfirmButton: false,
+            customClass: {
+              popup: 'cuerpo_modal_guardar'
+            }
+          }).then(() => location.reload());
+          return;
+        }
+
+        Swal.fire('Error', resp.message || 'No se pudo actualizar la fecha estimada.', 'error');
+      }).catch(() => {
+        Swal.fire('Error', 'No se pudo actualizar la fecha estimada.', 'error');
+      });
     }
     
         

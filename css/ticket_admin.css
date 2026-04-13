@@ -226,8 +226,8 @@
 
 #dataTableAdministrador th.col-calificacion,
 #dataTableAdministrador td.celda-calificacion {
-    width: 90px !important;
-    min-width: 90px !important;
+    width: 150px !important;
+    min-width: 150px !important;
 }
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario, #tablaSoftware, #tablaSitios) th.col-opciones,
@@ -327,9 +327,15 @@
     min-width: 96px !important;
 }
 
+#tablaTecnicoTicketAsignados th.col-calificacion,
+#tablaTecnicoTicketAsignados td.celda-calificacion {
+    width: 150px !important;
+    min-width: 150px !important;
+}
+
 #tablaTecnicoTicketAsignados td.celda-estado .ticket-resumen-estado,
 #tablaTecnicoTicketAsignados td.celda-fecha-respuesta .ticket-resumen-estado,
-#tablaTecnicoTicketAsignados td.celda-dias-restantes .ticket-resumen-estado {
+#tablaTecnicoTicketAsignados td.celda-calificacion .ticket-resumen-estado {
     min-height: 55px !important;
 }
 
@@ -376,8 +382,14 @@
 
 #dataTableAdministrador th.col-opciones,
 #dataTableAdministrador td.celda-opciones {
-    width: 118px !important;
-    min-width: 118px !important;
+    width: 104px !important;
+    min-width: 104px !important;
+}
+
+#dataTableAdministrador th.col-fecha-respuesta,
+#dataTableAdministrador td.celda-fecha-respuesta {
+    width: 190px !important;
+    min-width: 190px !important;
 }
 
 #tablaUsuario td.celda-estado .ticket-resumen-estado,

@@ -5502,7 +5502,7 @@ function mostrarListado(tipo) {
         title: '<div class="alert alert-dark" role="alert">Fusionar ticket</div>',
         html: `
           <div class="text-start">
-            <p class="mb-0">Estamos trabajando para trabajar en esta funcionalidad.</p>
+            <p class="mb-0">Estamos trabajando en la implementación de esta funcionalidad..</p>
           </div>
         `,
         showCancelButton: false,
