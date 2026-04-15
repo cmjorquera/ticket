@@ -323,11 +323,34 @@ if (!window.tecnicoTableFiltersSearchRegistered) {
     window.tecnicoTableFiltersSearchRegistered = true;
 }
 
+const _TECNICO_FILTRO_KEY = 'filtrosTablaTecnico';
+
+function guardarFiltrosTecnico() {
+    sessionStorage.setItem(_TECNICO_FILTRO_KEY, JSON.stringify({
+        estado:        $('#filtroEstadoTecnico').val()          || '',
+        fecha:         $('#filtroFechaTecnico').val()           || '',
+        fechaResp:     $('#filtroFechaRespuestaTecnico').val()  || ''
+    }));
+}
+
+function restaurarFiltrosTecnico() {
+    try {
+        const guardado = sessionStorage.getItem(_TECNICO_FILTRO_KEY);
+        if (!guardado) return;
+        const f = JSON.parse(guardado);
+        if (f.estado)    $('#filtroEstadoTecnico').val(f.estado);
+        if (f.fecha)     $('#filtroFechaTecnico').val(f.fecha);
+        if (f.fechaResp) $('#filtroFechaRespuestaTecnico').val(f.fechaResp);
+    } catch (e) {}
+}
+
 function configurarFiltrosTablaTecnico(dataTableTecnico) {
     const $tabla = $('#tablaTecnicoTicketAsignados');
     if (!$tabla.length || !dataTableTecnico) {
         return;
     }
+
+    restaurarFiltrosTecnico();
 
     if ($tabla.data('tecnico-filters-bound') === '1') {
         dataTableTecnico.draw();
@@ -337,6 +360,7 @@ function configurarFiltrosTablaTecnico(dataTableTecnico) {
     $('#filtroEstadoTecnico, #filtroFechaTecnico, #filtroFechaRespuestaTecnico')
         .off('.tecnicoFilters')
         .on('change.tecnicoFilters input.tecnicoFilters', function () {
+            guardarFiltrosTecnico();
             dataTableTecnico.draw();
         });
 

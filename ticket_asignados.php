@@ -106,7 +106,7 @@ $versionTicketJs = @filemtime(__DIR__ . '/js/ticket.js') ?: time();
                 <div class="container-fluid">
                     <div class="contenedor-estados-ticket" id="idContenedoresEstadosTicket">
                         <?php
-                            $funciones->contenedorTicketRecibidos($idUsuarioSession, $idPagActual);
+                            // $funciones->contenedorTicketRecibidos($idUsuarioSession, $idPagActual);
                             $funciones->contenedorTicketAsignados($idUsuarioSession, $idPagActual);
                             $funciones->contenedorTicketEnProceso($idUsuarioSession, $idPagActual);
                             $funciones->contenedorTicketTerminados($idUsuarioSession, $idPagActual);

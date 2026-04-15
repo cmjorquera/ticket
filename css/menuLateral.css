@@ -626,3 +626,11 @@
         min-height: auto;
     }
 }
+
+/* Suppress transitions on initial page load to prevent sidebar flicker */
+.sidebar-classic.sidebar-no-transition,
+.sidebar-classic.sidebar-no-transition *,
+.sidebar-v2.sidebar-no-transition,
+.sidebar-v2.sidebar-no-transition * {
+    transition: none !important;
+}

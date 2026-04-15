@@ -405,17 +405,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
 <!-- container para ver los el char de conversacion -->
 <div id="offcanvasContainerTicket"></div>
 <div id="offcanvasContainer"></div>
-<style>
-/*#bi {*/
-/*  position: fixed;*/
-/*  bottom: 20px;*/
-/*  right: 20px;*/
-/*  z-index: 9999;*/
-/*  width: 50px;*/
-/*  height: 50px;*/
-/*  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);*/
-/*}*/
-</style>
+
 <body id="page-top">
     <div id="wrapper">
         <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
@@ -517,7 +507,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     <?php endif; ?>
                     <div id="contenedorEstadosUsuario" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'usuario') ? 'grid' : 'none'; ?>;">
                         <?php
-                            $funciones->contenedorTicketRecibidos($idUsuarioSession, 3);
+                            // $funciones->contenedorTicketRecibidos($idUsuarioSession, 3);
                             $funciones->contenedorTicketAsignados($idUsuarioSession, 3);
                             $funciones->contenedorTicketEnProceso($idUsuarioSession, 3);
                             $funciones->contenedorTicketTerminados($idUsuarioSession, 3);
@@ -526,7 +516,7 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                     </div>
                     <div id="contenedorEstadosTecnico" class="contenedor-estados-ticket" style="display: <?= ($perfilDashboardInicial === 'tecnico') ? 'grid' : 'none'; ?>;">
                         <?php
-                            $funciones->contenedorTicketRecibidos($idUsuarioSession, 5);
+                            // $funciones->contenedorTicketRecibidos($idUsuarioSession, 5);
                             $funciones->contenedorTicketAsignados($idUsuarioSession, 5);
                             $funciones->contenedorTicketEnProceso($idUsuarioSession, 5);
                             $funciones->contenedorTicketTerminados($idUsuarioSession, 5);
@@ -707,7 +697,10 @@ var idUsuarioSession = <?php echo json_encode($idUsuarioSession); ?>;
                         <!-- Contenedor Listado de Tickets -->
                         <div class="col-12">
                             <div class="card shadow mb-4 px-0 dashboard-loading-card" data-step=12>
+
+                            
                                 <div class="card-body">
+                                    
                                     <div class="d-flex justify-content-between align-items-center px-3 mt-2">
                                         <h6 class="m-0 font-weight-bold text-primary">Listado de Tickets</h6>
                                             <?php

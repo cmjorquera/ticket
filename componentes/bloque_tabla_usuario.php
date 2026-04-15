@@ -13,41 +13,49 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
 ?>
 
 <div class="ticket-admin-filtros px-3 pt-3">
-    <div class="row g-3">
+
+    <div class="row g-3 align-items-end">
+
         <div class="col-md-3">
             <label for="filtroEstadoUsuario" class="form-label fw-semibold text-muted mb-1">Estado</label>
             <select id="filtroEstadoUsuario" class="form-select form-select-sm">
                 <option value="">Todos</option>
-                <option value="Recibido">Recibido</option>
                 <option value="Asignado">Asignado</option>
                 <option value="En proceso">En proceso</option>
                 <option value="Terminado">Terminado</option>
                 <option value="Borrador">Borrador</option>
                 <option value="Demorado">Atrasado</option>
-                <option value="Cerrado">Cerrado</option>
             </select>
         </div>
+
         <div class="col-md-3">
             <label for="filtroFechaUsuario" class="form-label fw-semibold text-muted mb-1">Fecha creación</label>
             <input type="date" id="filtroFechaUsuario" class="form-control form-control-sm">
         </div>
-        <div class="col-md-3">
-            <label for="filtroTecnicoUsuario" class="form-label fw-semibold text-muted mb-1">Técnico</label>
-            <select id="filtroTecnicoUsuario" class="form-select form-select-sm">
-                <option value="">Todos</option>
-                <option value="__sin_asignar__">Sin asignar</option>
-                <?php foreach ($tecnicosFiltroUsuario as $tecnicoFiltro): ?>
-                    <option value="<?= (int) $tecnicoFiltro['id']; ?>">
-                        <?= htmlspecialchars(trim(($tecnicoFiltro['nombre'] ?? '') . ' ' . ($tecnicoFiltro['apellido_paterno'] ?? ''))); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+
         <div class="col-md-3">
             <label for="filtroFechaRespuestaUsuario" class="form-label fw-semibold text-muted mb-1">Fecha respuesta</label>
             <input type="date" id="filtroFechaRespuestaUsuario" class="form-control form-control-sm">
         </div>
+
+        <div class="col-md-3 text-end">
+            <button 
+                id="buttonAgregarTicket"
+                onclick="crearTicketGuadalupe(<?php echo (int) $idUsuarioSession; ?>)"
+                class="btn btn-primary"
+                style="
+                    padding:8px 18px;
+                    font-weight:500;
+                    border-radius:8px;
+                    box-shadow:0 3px 8px rgba(0,0,0,0.15);
+                "
+                data-intro="Aca puedes agregar un nuevo ticket al sistema">
+                Agregar ticket
+            </button>
+        </div>
+
     </div>
+
 </div>
 
 <div class="table-responsive mt-3"

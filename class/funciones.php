@@ -858,6 +858,21 @@ public function menuLateral2($idUsuarioSession, $idPagActual)
 
     echo "<link rel='stylesheet' href='{$menuLateralCss}'>
     <aside class='navbar-nav sidebar sidebar-classic' id='accordionSidebarClassic'>
+    <script>
+    (function(){
+        var s = document.getElementById('accordionSidebarClassic');
+        if (!s) return;
+        if (localStorage.getItem('menuLateral2Collapsed') === '1') {
+            s.classList.add('is-collapsed');
+        }
+        s.classList.add('sidebar-no-transition');
+        requestAnimationFrame(function(){
+            requestAnimationFrame(function(){
+                s.classList.remove('sidebar-no-transition');
+            });
+        });
+    })();
+    </script>
         <a class='menuLateralClassic-brand' href='{$urlPrincipal}'>
             <img src='{$logoSistema}' alt='Logo administrador'>
             <div class='menuLateralClassic-brand-copy'>
