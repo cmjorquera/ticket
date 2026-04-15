@@ -1,106 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Ticket sin tecnico</title>
+    <link rel="stylesheet" href="https://acceso.seduc.cl/css/correos/estilo_correos.css">
 </head>
-
 <body>
-    <div style="width: 600px; margin: 0 auto;">
-        <div style="width: 600px;"><img alt="Seduc"
-                src="https://www.siae.cl/email/archivos/1FiVR9m09zWTnZ4IdW1g/header_siae_seduc.png"
-                style="width:600px" /></div>
+    <div class="mail-shell">
+        <div class="mail-frame">
+            <img alt="Seduc" class="mail-header-image" src="https://www.siae.cl/email/archivos/1FiVR9m09zWTnZ4IdW1g/header_siae_seduc.png">
+            <div class="mail-stripes"></div>
 
-        <div style="width: 50%;background-color:#3A913F;height: 4px; float: left">&nbsp;</div>
-        <div style="width: 25%;background-color:#EAAA00;height: 4px; float: left">&nbsp;</div>
-        <div style="width: 25%;background-color:#005587;height: 4px; float: left">&nbsp;</div>
+            <div class="mail-card">
+                <div style="text-align:center;">
+                    <span class="mail-badge">Alerta de Asignacion</span>
+                    <h1 class="mail-title">Ticket pendiente de tecnico</h1>
+                    <div class="mail-divider"></div>
+                    <div class="mail-intro">
+                        El usuario <strong>{nombreUsarioCompleto}</strong> ingreso una nueva solicitud y aun no tiene tecnico asignado. Se requiere gestion administrativa.
+                    </div>
+                    <span class="mail-chip">N° de Ticket: <strong>A-0{codigo}</strong></span>
+                </div>
 
+                <div class="mail-alert">
+                    Se recomienda asignar un tecnico a la brevedad para evitar retrasos en la atencion.
+                </div>
 
-        <div
-            style="padding: 5px; margin-top: 5px; font-family:arial,helvetica,sans-serif; color:#474d58; font-size:14px">
-            
-            <table style="width:100%;border-spacing:10px 20px;border-radius:20px;background-color:#ffffff">
-              <thead>
-                <tr>
-                  <th style="text-align:center;padding-bottom:25px" colspan="4">
-                    <p style="font-size:22px;margin-bottom:0;margin-top:15px;font-weight:bold">
-                      ¡Nueva solicitud de soporte!<br>
-                      El usuario <span style="color:#1f2c4b;font-weight:700">{nombreUsarioCompleto}</span> reportó un problema.
-                    </p>
-                    <hr style="width:60px;border:2px solid #ccff5f">
-                    <p style="margin:0;font-size:15px">
-                      Se requiere <strong>asignar un técnico</strong> para gestionar este ticket.
-                    </p>
-                    <br>
-                    <span
-                      style="background:#1f2c4b;padding:10px 30px;border-radius:20px;color:#ccff5f;font-size:15px;text-transform:uppercase;font-weight:normal">
-                      N° de Ticket: <span style="font-weight:bold">A-0{codigo}</span>
-                    </span><br><br>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="text-align:center;width:15%">
-                    <img alt="time" width="25" src="https://qa.seduc.cl/sistema/sistema_ticket/imagenes/clock.png">
-                  </td>
-                  <td style="font-size:14px;text-align:left;">
-                    <p style="margin:0;text-transform:uppercase;font-weight:bold">Hora de Ingreso</p>
-                    <p style="margin-top:0">{hora}</p>
-                  </td>
-                  <td style="text-align:center;width:15%">
-                    <img alt="date" width="25" src="https://qa.seduc.cl/sistema/sistema_ticket/imagenes/calendar.png">
-                  </td>
-                  <td style="font-size:14px;text-align:left;">
-                    <p style="margin:0;text-transform:uppercase;font-weight:bold">Fecha</p>
-                    <p style="margin-top:0">{fecha}</p>
-                  </td>
-                </tr>
-            
-                <tr>
-                  <td colspan="4" style="text-align:center;">
-                    <img alt="subject" width="25"
-                         src="https://qa.seduc.cl/sistema/sistema_ticket/imagenes/briefcase.png">
-                    <p style="margin:0;text-transform:uppercase;font-weight:bold">Asunto</p>
-                    <p style="margin-top:0">{asunto}</p>
-                  </td>
-                </tr>
-            
-                <tr>
-                  <td colspan="4" style="text-align:center;">
-                    <img alt="description" width="25"
-                         src="https://qa.seduc.cl/sistema/sistema_ticket/imagenes/job-description.png">
-                    <p style="margin:0;text-transform:uppercase;font-weight:bold">Descripción</p>
-                    <p style="margin-top:0">{descripcion}</p>
-                  </td>
-                </tr>
-            
-                <!-- (Opcional) CTA al panel -->
-                
-                <tr>
-                  <td colspan="4" style="text-align:center;padding-top:10px">
-                    <a href="https://www.acceso.seduc.cl/" 
-                       style="background:#1f2c4b;color:#ccff5f;text-decoration:none;padding:10px 18px;border-radius:8px;display:inline-block;">
-            Ir
-                                al Sistema        </a>
-                  </td>
-                </tr>
-                
-              </tbody>
-            </table>
+                <table class="mail-grid" role="presentation">
+                    <tr>
+                        <td width="50%">
+                            <div class="mail-panel mail-panel-accent-green">
+                                <p class="mail-panel-title green">Hora de ingreso</p>
+                                <p class="mail-panel-text">{hora}</p>
+                            </div>
+                        </td>
+                        <td width="50%">
+                            <div class="mail-panel mail-panel-accent-blue">
+                                <p class="mail-panel-title blue">Fecha</p>
+                                <p class="mail-panel-text">{fecha}</p>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
 
-            
-        </div>
+                <div class="mail-highlight gold">
+                    <p class="mail-panel-title gold">Asunto</p>
+                    <p class="mail-panel-text">{asunto}</p>
+                </div>
 
+                <div class="mail-section">
+                    <div class="mail-highlight">
+                        <p class="mail-panel-title blue">Descripcion</p>
+                        <p class="mail-panel-text">{descripcion}</p>
+                    </div>
+                </div>
 
-        <div>
-            <hr />
-            <img alt="pie" src="https://www.siae.cl/email/archivos/IuNYrJlxxZN9U0v254lx/Footer_colegios.png"
-                style="max-width:100%; width:600px" />
+                <div class="mail-cta-wrap">
+                    <p class="mail-text">Ingresa al sistema para revisar el ticket y realizar la asignacion correspondiente.</p>
+                    <a class="mail-button" href="https://www.acceso.seduc.cl/">Ir al Sistema</a>
+                </div>
+            </div>
+
+            <img alt="Colegios SEDUC" class="mail-footer-image" src="https://www.siae.cl/email/archivos/IuNYrJlxxZN9U0v254lx/Footer_colegios.png">
         </div>
     </div>
 </body>
-
 </html>

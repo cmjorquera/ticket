@@ -51,6 +51,22 @@
     border-collapse: separate !important;
     border-spacing: 0 !important;
     font-size: 0.82rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed;
+}
+
+.ticket-admin-table-wrap,
+.ticket-admin-table-wrap .dataTables_wrapper,
+.ticket-admin-table-wrap .dataTables_scroll,
+.ticket-admin-table-wrap .dataTables_scrollHead,
+.ticket-admin-table-wrap .dataTables_scrollBody {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.ticket-admin-table-wrap .dataTables_wrapper {
+    overflow-x: auto;
 }
 
 :is(#dataTableAdministrador, #tablaTecnicoTicketAsignados, #tablaUsuario, #tablaSoftware, #tablaSitios) thead th {

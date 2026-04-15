@@ -4,130 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ticket Ingresado</title>
+    <link rel="stylesheet" href="https://acceso.seduc.cl/css/correos/estilo_correos.css">
 </head>
-<body style="margin:0;padding:0;background-color:#dfe5ef;font-family:Arial,Helvetica,sans-serif;">
-    <div style="width:760px;margin:0 auto;background-color:#dfe5ef;">
-        <div style="width:760px;text-align:center;padding-top:10px;">
-            <img alt="Seduc" src="https://www.siae.cl/email/archivos/1FiVR9m09zWTnZ4IdW1g/header_siae_seduc.png" style="width:760px;max-width:100%;border-radius:18px 18px 0 0;display:block;">
-        </div>
+<body>
+    <div class="mail-shell">
+        <div class="mail-frame">
+            <img alt="Seduc" class="mail-header-image" src="https://www.siae.cl/email/archivos/1FiVR9m09zWTnZ4IdW1g/header_siae_seduc.png">
+            <div class="mail-stripes"></div>
 
-        <div style="width:50%;background-color:#3A913F;height:4px;float:left;">&nbsp;</div>
-        <div style="width:25%;background-color:#EAAA00;height:4px;float:left;">&nbsp;</div>
-        <div style="width:25%;background-color:#005587;height:4px;float:left;">&nbsp;</div>
-        <div style="clear:both;"></div>
+            <div class="mail-card">
+                <div style="text-align:center;">
+                    <span class="mail-badge">Ticket Ingresado</span>
+                    <h1 class="mail-title">Ticket ingresado exitosamente</h1>
+                    <div class="mail-divider"></div>
+                    <div class="mail-intro">
+                        Hola <strong>{nombreUsarioCompleto}</strong>, tu solicitud fue registrada correctamente. Aqui puedes revisar los datos principales del requerimiento ingresado.
+                    </div>
+                    <span class="mail-chip">N° de Ticket: <strong>A-0{codigo}</strong></span>
+                </div>
 
-        <div style="padding:8px 0 0;font-family:Arial,Helvetica,sans-serif;color:#474d58;font-size:14px;">
-            <table style="width:100%;border-spacing:10px 10px;border-radius:22px;background-color:#f7f9fc;text-align:center;padding:6px 0 14px;">
-                <thead>
+                <table class="mail-grid" role="presentation">
                     <tr>
-                        <th style="text-align:center;padding:10px 20px 4px;" colspan="4">
-                            <div style="display:inline-block;background:linear-gradient(90deg,#3A913F 0%,#EAAA00 52%,#005587 100%);padding:1px;border-radius:20px;margin-bottom:10px;">
-                                <span style="display:block;background:#f7f9fc;border-radius:20px;padding:7px 18px;color:#2f5b9c;font-size:11px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;">
-                                    Ticket Ingresado
-                                </span>
+                        <td width="50%">
+                            <div class="mail-panel mail-panel-accent-green">
+                                <p class="mail-panel-title green">Hora de ingreso</p>
+                                <p class="mail-panel-text">{hora}</p>
                             </div>
-
-                            <p style="font-size:29px;line-height:1.15;margin:0 0 8px;font-weight:bold;color:#2a4f8f;">
-                                Ticket ingresado exitosamente
-                            </p>
-                            <hr style="width:72px;border:2px solid #EAAA00;margin:0 auto 12px;">
-
-                            <div style="display:inline-block;background:#1f2c4b;padding:10px 22px;border-radius:22px;color:#ffffff;font-size:14px;font-weight:normal;">
-                                N° de Ticket:
-                                <span style="font-weight:bold;color:#ccff5f;">A-0{codigo}</span>
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr>
-                        <td colspan="4" style="padding:0 22px 2px;text-align:left;">
-                            <p style="margin:0;color:#26384f;font-size:15px;line-height:1.7;">
-                                Hola <strong>{nombreUsarioCompleto}</strong>,
-                            </p>
                         </td>
-                    </tr>
-
-                    <tr>
-                        <td colspan="4" style="padding:0 22px;text-align:left;">
-                            <div style="background:linear-gradient(135deg,#eaf4ec 0%,#eef3fb 65%,#fff7e6 100%);border:1px solid #d7dfec;border-radius:16px;padding:12px 16px;">
-                                <p style="margin:0;color:#33445a;font-size:15px;line-height:1.7;">
-                                    Tu solicitud fue registrada correctamente. Aqui puedes revisar los datos principales del requerimiento ingresado.
-                                </p>
+                        <td width="50%">
+                            <div class="mail-panel mail-panel-accent-blue">
+                                <p class="mail-panel-title blue">Fecha</p>
+                                <p class="mail-panel-text">{fecha}</p>
                             </div>
                         </td>
                     </tr>
+                </table>
 
-                    <tr>
-                        <td style="width:50%;padding:0 8px 0 22px;vertical-align:top;" colspan="2">
-                            <div style="background-color:#ffffff;border:1px solid #dbe3f0;border-top:4px solid #3A913F;border-radius:16px;padding:14px 16px;text-align:left;min-height:92px;">
-                                <p style="margin:0 0 8px;font-size:13px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:#3A913F;">
-                                    Hora de ingreso
-                                </p>
-                                <p style="margin:0;color:#4a596d;font-size:15px;line-height:1.7;">
-                                    {hora}
-                                </p>
-                            </div>
-                        </td>
-                        <td style="width:50%;padding:0 22px 0 8px;vertical-align:top;" colspan="2">
-                            <div style="background-color:#ffffff;border:1px solid #dbe3f0;border-top:4px solid #005587;border-radius:16px;padding:14px 16px;text-align:left;min-height:92px;">
-                                <p style="margin:0 0 8px;font-size:13px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:#005587;">
-                                    Fecha
-                                </p>
-                                <p style="margin:0;color:#4a596d;font-size:15px;line-height:1.7;">
-                                    {fecha}
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
+                <div class="mail-highlight gold">
+                    <p class="mail-panel-title gold">Asunto</p>
+                    <p class="mail-panel-text">{asunto}</p>
+                </div>
 
-                    <tr>
-                        <td colspan="4" style="padding:0 22px;">
-                            <div style="background-color:#ffffff;border:1px solid #dbe3f0;border-left:5px solid #EAAA00;border-radius:16px;padding:14px 16px;text-align:left;">
-                                <p style="margin:0 0 8px;font-size:13px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:#b88400;">
-                                    Asunto
-                                </p>
-                                <p style="margin:0;color:#4a596d;font-size:15px;line-height:1.7;">
-                                    {asunto}
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
+                <div class="mail-section">
+                    <div class="mail-highlight">
+                        <p class="mail-panel-title blue">Descripcion</p>
+                        <div class="mail-panel-text">{descripcion}</div>
+                    </div>
+                </div>
 
-                    <tr>
-                        <td colspan="4" style="padding:0 22px;">
-                            <div style="background-color:#ffffff;border:1px solid #dbe3f0;border-left:5px solid #2f5cb8;border-radius:16px;padding:14px 16px;text-align:left;">
-                                <p style="margin:0 0 8px;font-size:13px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;color:#2f5cb8;">
-                                    Descripcion
-                                </p>
-                                <div style="margin:0;color:#4a596d;font-size:15px;line-height:1.75;">
-                                    {descripcion}
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td colspan="4" style="padding:0 22px;">
-                            <div style="background:linear-gradient(135deg,#edf4ee 0%,#eef3fb 52%,#fff8eb 100%);border:1px solid #d8e0ef;border-radius:18px;padding:14px 18px;text-align:center;">
-                                <p style="margin:0 0 12px;color:#33445a;font-size:14px;line-height:1.75;">
-                                    Puedes ingresar al sistema para revisar el estado del ticket, conocer su avance y mantener seguimiento de la solicitud.
-                                </p>
-
-                                <a href="https://www.acceso.seduc.cl/" style="display:inline-block;background:#1f2c4b;padding:11px 24px;border-radius:10px;color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;">
-                                    Ir al Sistema
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <div>
-                <hr>
-                <img alt="pie" src="https://www.siae.cl/email/archivos/IuNYrJlxxZN9U0v254lx/Footer_colegios.png" style="max-width:100%;width:760px;border-radius:0 0 18px 18px;display:block;">
+                <div class="mail-cta-wrap">
+                    <p class="mail-text">Puedes ingresar al sistema para revisar el estado del ticket, conocer su avance y mantener seguimiento de la solicitud.</p>
+                    <a class="mail-button" href="https://www.acceso.seduc.cl/">Ir al Sistema</a>
+                </div>
             </div>
+
+            <img alt="Colegios SEDUC" class="mail-footer-image" src="https://www.siae.cl/email/archivos/IuNYrJlxxZN9U0v254lx/Footer_colegios.png">
         </div>
     </div>
 </body>

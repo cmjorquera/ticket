@@ -49,9 +49,8 @@ while ($tecnicoFiltro = $consultaTecnicosFiltro->fetch_array($resultadoTecnicosF
                                     </div>
                                 </div>
 
-                                <div class="table-responsive mt-3">
-                                    <div class="table-responsive">
-                                        <table id="dataTableAdministrador" class="table table-bordered table-hover table-striped">
+                                <div class="table-responsive mt-3 ticket-admin-table-wrap">
+                                        <table id="dataTableAdministrador" class="table table-bordered table-hover table-striped w-100">
                                             <thead class="table-dark">
                                                 <tr>
                                                     <?php $usarIndicadorEstado = !empty($GLOBALS['ticketAdminColorColumn']); ?>
@@ -350,7 +349,6 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 } ?>
                                             </tbody>
                                         </table>
-                                    </div>
                                 </div>
 
             <script>
