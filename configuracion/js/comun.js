@@ -59,13 +59,11 @@ function agregarUsuario() {
                                 const fixed = esObligatorio ? '<span class="menu-badge-obligatorio">Obligatorio</span>' : '';
 
                                 menusHtml += `
-                                    <div class="col-md-6">
-                                        <div class="form-check border rounded bg-white px-3 py-2 h-100 menu-item-disponible ${esObligatorio ? 'menu-item-obligatorio' : ''}">
-                                            <input class="form-check-input menu-checkbox" type="checkbox" value="${menu.id_menu}" id="menu_${menu.id_menu}" ${checked} ${disabled}>
-                                            <label class="form-check-label ms-2" for="menu_${menu.id_menu}">
-                                                ${menu.nombre} ${fixed}
-                                            </label>
-                                        </div>
+                                    <div class="menu-item-disponible ${esObligatorio ? 'menu-item-obligatorio' : ''}">
+                                        <input class="form-check-input menu-checkbox" type="checkbox" value="${menu.id_menu}" id="menu_${menu.id_menu}" ${checked} ${disabled}>
+                                        <label class="form-check-label" for="menu_${menu.id_menu}">
+                                            ${menu.nombre} ${fixed}
+                                        </label>
                                     </div>
                                 `;
                             });
@@ -75,40 +73,56 @@ function agregarUsuario() {
                         html: `
                                 <div class="swal-usuario">
                                     <style>
+                                        /* ── Layout principal: 2 columnas ── */
                                         .swal-usuario { text-align: left; color: #1f2a44; }
-                                        .swal-usuario__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.25rem; margin-bottom: 1.35rem; }
-                                        .swal-usuario__title-wrap { flex: 1 1 auto; padding-top: 0.35rem; }
-                                        .swal-usuario__title { margin: 0; font-size: 2rem; font-weight: 800; color: #1c2740; text-align: center; }
-                                        .swal-usuario__college-card { min-width: 240px; max-width: 280px; display: flex; align-items: center; gap: 0.8rem; padding: 0.85rem 1rem; border: 1px solid #d9e4f2; border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #f5f9ff 100%); box-shadow: 0 10px 24px rgba(31, 69, 123, 0.08); }
-                                        .swal-usuario__college-logo, .swal-usuario__college-fallback { width: 54px; height: 54px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #d7e1ee; background: #fff; flex-shrink: 0; }
-                                        .swal-usuario__college-logo { object-fit: contain; padding: 5px; }
-                                        .swal-usuario__college-fallback { font-weight: 800; color: #31527d; background: #edf4fb; }
-                                        .swal-usuario__college-name { font-size: 1.02rem; font-weight: 800; color: #1e2d47; line-height: 1.2; }
-                                        .swal-usuario__college-meta { color: #6c7b91; font-size: 0.9rem; margin-top: 0.15rem; }
-                                        .swal-usuario__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem 0.9rem; }
-                                        .swal-usuario__field { display: grid; gap: 0.28rem; }
+                                        .swal-usuario__inner { display: flex; gap: 1.2rem; align-items: flex-start; }
+                                        .swal-usuario__left  { flex: 0 0 340px; min-width: 0; }
+                                        .swal-usuario__right { flex: 1 1 260px; min-width: 220px; display: flex; flex-direction: column; gap: 0; }
+
+                                        /* Cabecera (título + colegio card) */
+                                        .swal-usuario__header { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-bottom: 1rem; }
+                                        .swal-usuario__title { margin: 0; font-size: 1.45rem; font-weight: 800; color: #1c2740; }
+                                        .swal-usuario__college-card { display: flex; align-items: center; gap: .6rem; padding: .55rem .75rem; border: 1px solid #d9e4f2; border-radius: 14px; background: #f5f9ff; box-shadow: 0 4px 12px rgba(31,69,123,.07); min-width: 160px; }
+                                        .swal-usuario__college-logo, .swal-usuario__college-fallback { width: 40px; height: 40px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #d7e1ee; background: #fff; flex-shrink: 0; }
+                                        .swal-usuario__college-logo { object-fit: contain; padding: 4px; }
+                                        .swal-usuario__college-fallback { font-weight: 800; color: #31527d; background: #edf4fb; font-size: .75rem; }
+                                        .swal-usuario__college-name { font-size: .82rem; font-weight: 800; color: #1e2d47; line-height: 1.2; }
+                                        .swal-usuario__college-meta { color: #6c7b91; font-size: .73rem; margin-top: .1rem; }
+
+                                        /* Formulario izquierda */
+                                        .swal-usuario__grid { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem .8rem; }
+                                        .swal-usuario__field { display: grid; gap: .2rem; }
                                         .swal-usuario__field--full { grid-column: 1 / -1; }
-                                        .swal-usuario__label { font-size: 0.96rem; font-weight: 800; color: #1f2a44; margin-bottom: 0; }
-                                        .swal-usuario__input, .swal-usuario__select { width: 100%; min-height: 48px; border-radius: 14px; border: 1px solid #c7d4e5; background: #eef4ff; color: #1f2a44; padding: 0.72rem 0.9rem; font-size: 0.96rem; outline: none; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
-                                        .swal-usuario__input:focus, .swal-usuario__select:focus { border-color: #4f83ff; box-shadow: 0 0 0 0.18rem rgba(79, 131, 255, 0.16); background: #f7faff; }
-                                        .swal-usuario__input--email { background: #ffffff; }
-                                        .swal-usuario__help { min-height: 16px; font-size: 0.86rem; font-weight: 600; }
-                                        .swal-usuario__help--ok { color: #13824c; }
+                                        .swal-usuario__label { font-size: .78rem; font-weight: 700; color: #1f2a44; margin-bottom: 0; text-transform: uppercase; letter-spacing: .03em; }
+                                        .swal-usuario__input, .swal-usuario__select { width: 100%; height: 38px; border-radius: 9px; border: 1px solid #c7d4e5; background: #eef4ff; color: #1f2a44; padding: 0 .75rem; font-size: .85rem; outline: none; transition: border-color .15s, box-shadow .15s, background .15s; }
+                                        .swal-usuario__input:focus, .swal-usuario__select:focus { border-color: #4f83ff; box-shadow: 0 0 0 .15rem rgba(79,131,255,.18); background: #f7faff; }
+                                        .swal-usuario__input--email { background: #fff; }
+                                        .swal-usuario__help  { min-height: 14px; font-size: .78rem; font-weight: 600; }
+                                        .swal-usuario__help--ok    { color: #13824c; }
                                         .swal-usuario__help--error { color: #c23a3a; }
-                                        .swal-usuario__menu-box { margin-top: 0.55rem; border: 1px solid #d9e4f2; border-radius: 20px; background: #f8fbff; padding: 0.9rem; }
-                                        .swal-usuario__menu-title { font-weight: 800; color: #1f2a44; margin-bottom: 0.65rem; }
-                                        .menu-item-disponible { display: flex; align-items: center; gap: 10px; min-height: 52px; }
-                                        .menu-item-disponible .form-check-input { margin-top: 0; flex-shrink: 0; }
-                                        .menu-item-disponible .form-check-label { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 0; font-size: 15px; }
-                                        .menu-item-obligatorio { border-color: #8bb3ff !important; background: linear-gradient(180deg, #f7faff 0%, #eef4ff 100%) !important; }
-                                        .menu-badge-obligatorio { display: inline-flex; align-items: center; justify-content: center; min-width: 96px; padding: 5px 12px; border-radius: 999px; background: #5f8ee6; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .02em; box-shadow: 0 4px 12px rgba(95, 142, 230, .22); flex-shrink: 0; }
-                                        .swal-usuario__error { font-size: 0.85rem; color: #c23a3a; min-height: 16px; }
-                                        @media (max-width: 900px) { .swal-usuario__header { flex-direction: column; } .swal-usuario__college-card { max-width: 100%; width: 100%; } .swal-usuario__grid { grid-template-columns: 1fr; } }
+                                        .swal-usuario__error { font-size: .76rem; color: #c23a3a; min-height: 14px; }
+
+                                        /* Panel de menús derecha */
+                                        .swal-usuario__menu-box { border: 1px solid #d9e4f2; border-radius: 14px; background: #f8fbff; padding: .75rem; height: 100%; box-sizing: border-box; overflow-y: auto; max-height: 420px; }
+                                        .swal-usuario__menu-title { font-weight: 800; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; color: #1f2a44; margin-bottom: .6rem; }
+                                        .swal-usuario__menu-list { display: flex; flex-direction: column; gap: .35rem; }
+                                        .menu-item-disponible { display: flex; align-items: center; gap: 8px; padding: .45rem .6rem; border: 1px solid #e3e8f0; border-radius: 8px; background: #fff; cursor: pointer; transition: border-color .12s, background .12s; min-height: 36px; }
+                                        .menu-item-disponible:hover { border-color: #4e73df; background: #f0f5ff; }
+                                        .menu-item-disponible .form-check-input { margin: 0; flex-shrink: 0; cursor: pointer; }
+                                        .menu-item-disponible .form-check-label { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; font-size: .82rem; cursor: pointer; line-height: 1.2; }
+                                        .menu-item-obligatorio { border-color: #8bb3ff !important; background: #f0f5ff !important; }
+                                        .menu-badge-obligatorio { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; background: #5f8ee6; color: #fff; font-size: .68rem; font-weight: 700; flex-shrink: 0; }
+
+                                        @media (max-width: 780px) {
+                                            .swal-usuario__inner { flex-direction: column; }
+                                            .swal-usuario__left, .swal-usuario__right { width: 100%; flex: none; }
+                                            .swal-usuario__menu-box { max-height: 260px; }
+                                        }
                                     </style>
+
+                                    <!-- Cabecera compacta -->
                                     <div class="swal-usuario__header">
-                                        <div class="swal-usuario__title-wrap">
-                                            <h2 class="swal-usuario__title">Agregar usuario</h2>
-                                        </div>
+                                        <h2 class="swal-usuario__title">Agregar usuario</h2>
                                         <div class="swal-usuario__college-card">
                                             <img src="${configuracionUrl('img/colegios/colegio_0.png')}" alt="" class="swal-usuario__college-logo" id="colegioResumenLogo"
                                                 onerror="this.style.display='none'; document.getElementById('colegioResumenFallback').style.display='inline-flex';">
@@ -119,59 +133,71 @@ function agregarUsuario() {
                                             </div>
                                         </div>
                                     </div>
-                                    <form class="swal-usuario__grid" id="usuarioForm">
-                                        <div class="swal-usuario__field">
-                                            <label class="swal-usuario__label" for="email">Email</label>
-                                            <input type="email" class="swal-usuario__input swal-usuario__input--email" id="email" placeholder="usuario@correo.cl">
-                                            <div id="emailEstado" class="swal-usuario__help"></div>
-                                            <div id="email-error" class="swal-usuario__error"></div>
+
+                                    <!-- Dos columnas -->
+                                    <div class="swal-usuario__inner">
+
+                                        <!-- IZQ: Formulario -->
+                                        <div class="swal-usuario__left">
+                                            <form class="swal-usuario__grid" id="usuarioForm">
+                                                <div class="swal-usuario__field">
+                                                    <label class="swal-usuario__label" for="email">Email</label>
+                                                    <input type="email" class="swal-usuario__input swal-usuario__input--email" id="email" placeholder="usuario@correo.cl">
+                                                    <div id="emailEstado" class="swal-usuario__help"></div>
+                                                    <div id="email-error" class="swal-usuario__error"></div>
+                                                </div>
+                                                <div class="swal-usuario__field">
+                                                    <label class="swal-usuario__label" for="area_trabajo">Departamento</label>
+                                                    <select class="swal-usuario__select" id="area_trabajo">${optionsHtml}</select>
+                                                    <div id="area_trabajo-error" class="swal-usuario__error"></div>
+                                                </div>
+                                                <div class="swal-usuario__field">
+                                                    <label class="swal-usuario__label" for="nombre">Nombre</label>
+                                                    <input type="text" class="swal-usuario__input" id="nombre" placeholder="Nombre">
+                                                    <div id="nombre-error" class="swal-usuario__error"></div>
+                                                </div>
+                                                <div class="swal-usuario__field">
+                                                    <label class="swal-usuario__label" for="apellidoPaterno">Apellido paterno</label>
+                                                    <input type="text" class="swal-usuario__input" id="apellidoPaterno" placeholder="Apellido paterno">
+                                                    <div id="apellidoPaterno-error" class="swal-usuario__error"></div>
+                                                </div>
+                                                <div class="swal-usuario__field">
+                                                    <label class="swal-usuario__label" for="apellidoMaterno">Apellido materno</label>
+                                                    <input type="text" class="swal-usuario__input" id="apellidoMaterno" placeholder="Apellido materno">
+                                                    <div id="apellidoMaterno-error" class="swal-usuario__error"></div>
+                                                </div>
+                                                <div class="swal-usuario__field">
+                                                    <label class="swal-usuario__label" for="id_colegio">Colegio</label>
+                                                    <select class="swal-usuario__select" id="id_colegio">${colegiosHtml}</select>
+                                                    <div id="id_colegio-error" class="swal-usuario__error"></div>
+                                                </div>
+                                                <div class="swal-usuario__field swal-usuario__field--full">
+                                                    <label class="swal-usuario__label" for="sexo">Sexo</label>
+                                                    <select class="swal-usuario__select" id="sexo">
+                                                        <option value="">Seleccione sexo</option>
+                                                        <option value="1">Masculino</option>
+                                                        <option value="2">Femenino</option>
+                                                    </select>
+                                                    <div id="sexo-error" class="swal-usuario__error"></div>
+                                                </div>
+                                            </form>
                                         </div>
-                                        <div class="swal-usuario__field">
-                                            <label class="swal-usuario__label" for="area_trabajo">Departamento</label>
-                                            <select class="swal-usuario__select" id="area_trabajo">${optionsHtml}</select>
-                                            <div id="area_trabajo-error" class="swal-usuario__error"></div>
-                                        </div>
-                                        <div class="swal-usuario__field">
-                                            <label class="swal-usuario__label" for="nombre">Nombre</label>
-                                            <input type="text" class="swal-usuario__input" id="nombre" placeholder="Nombre">
-                                            <div id="nombre-error" class="swal-usuario__error"></div>
-                                        </div>
-                                        <div class="swal-usuario__field">
-                                            <label class="swal-usuario__label" for="apellidoPaterno">Apellido paterno</label>
-                                            <input type="text" class="swal-usuario__input" id="apellidoPaterno" placeholder="Apellido paterno">
-                                            <div id="apellidoPaterno-error" class="swal-usuario__error"></div>
-                                        </div>
-                                        <div class="swal-usuario__field">
-                                            <label class="swal-usuario__label" for="apellidoMaterno">Apellido materno</label>
-                                            <input type="text" class="swal-usuario__input" id="apellidoMaterno" placeholder="Apellido materno">
-                                            <div id="apellidoMaterno-error" class="swal-usuario__error"></div>
-                                        </div>
-                                        <div class="swal-usuario__field">
-                                            <label class="swal-usuario__label" for="id_colegio">Colegio</label>
-                                            <select class="swal-usuario__select" id="id_colegio">${colegiosHtml}</select>
-                                            <div id="id_colegio-error" class="swal-usuario__error"></div>
-                                        </div>
-                                        <div class="swal-usuario__field">
-                                            <label class="swal-usuario__label" for="sexo">Sexo</label>
-                                            <select class="swal-usuario__select" id="sexo">
-                                                <option value="">Seleccione sexo</option>
-                                                <option value="1">Masculino</option>
-                                                <option value="2">Femenino</option>
-                                            </select>
-                                            <div id="sexo-error" class="swal-usuario__error"></div>
-                                        </div>
-                                        <div class="swal-usuario__field swal-usuario__field--full">
+
+                                        <!-- DER: Menús -->
+                                        <div class="swal-usuario__right">
                                             <div class="swal-usuario__menu-box">
-                                                <div class="swal-usuario__menu-title">Menus disponibles</div>
-                                                <div class="row g-2">${menusHtml}</div>
+                                                <div class="swal-usuario__menu-title"><i class="bi bi-grid-3x3-gap-fill me-1"></i>Menús disponibles</div>
+                                                <div class="swal-usuario__menu-list">${menusHtml}</div>
                                             </div>
                                         </div>
-                                    </form>
+
+                                    </div><!-- /inner -->
                                 </div>
+                            </div>
                             `,
                         showCancelButton: true,
-                        width: "980px",
-                        padding: "24px",
+                        width: '860px',
+                        padding: '24px',
                         confirmButtonColor: '#0b6aa2',
                         cancelButtonColor: '#e9edf3',
                         confirmButtonText: 'Crear usuario',
@@ -770,7 +796,7 @@ function modificarUsuario(userId) {
                     </div>
                 `,
                 showCancelButton: true,
-                width: '980px',
+                width: '860px',
                 padding: '24px',
                 confirmButtonColor: '#0b6aa2',
                 cancelButtonColor: '#e9edf3',
