@@ -395,33 +395,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $hora = date("H:i:s");
                     $motivoSeguro = $db->escape_string($motivoReprogramacion);
 
-                    $sql = "UPDATE `proceso_tickets` SET
-                            `fecha_estimada_admin` = '$fecha_resolucion',
-                            `dias_estimada_admin` = '$diasResolucion'
-                            WHERE `id_ticket` = '$id_ticket'";
+                    $errores = [];
+
+                    // Calcular dias_estimada_admin desde la fecha de creacion del ticket hasta la nueva fecha
+                    $consultaCreacion = $db->consulta("SELECT fecha_creacion_inicio FROM `proceso_tickets` WHERE `id_ticket` = '$id_ticket' LIMIT 1");
+                    $rowCreacion = $db->fetch_array($consultaCreacion);
+                    $fechaCreacion = $rowCreacion['fecha_creacion_inicio'] ?? $fecha;
+                    $diasResolucion = (int) round((strtotime($fecha_resolucion) - strtotime($fechaCreacion)) / 86400);
+                    if ($diasResolucion < 0) $diasResolucion = 0;
+
+                    // Actualizar fecha y dias en proceso_tickets
+                    $sql = "UPDATE `proceso_tickets` SET `fecha_estimada_admin` = '$fecha_resolucion', `dias_estimada_admin` = '$diasResolucion' WHERE `id_ticket` = '$id_ticket'";
                     $result = $db->guardar($sql);
+                    if ($result !== 0) $errores[] = 'update_proceso:' . $db->getLastError();
 
-                    $sql1 = "UPDATE `tickets` SET
-                             `id_estado` = '3'
-                             WHERE `id_ticket` = '$id_ticket'";
+                    // Mantener ticket en estado en proceso
+                    $sql1 = "UPDATE `tickets` SET `id_estado` = '3' WHERE `id_ticket` = '$id_ticket'";
                     $result1 = $db->guardar($sql1);
+                    if ($result1 !== 0) $errores[] = 'update_estado:' . $db->getLastError();
 
+                    // Guardar avance en timeline
                     $accionAvance = "Nueva fecha estimada: $fecha_resolucion";
-                    if ($diasResolucion > 0) {
-                        $accionAvance .= " ($diasResolucion dias)";
-                    }
-                    if ($motivoSeguro !== '') {
-                        $accionAvance .= " - Motivo: $motivoSeguro";
-                    }
-
-                    $sql2 = "INSERT INTO `avance_tecnicos`(`id_ticket`, `accion`, `fecha_avance`, `hora_avance`)
-                             VALUES ('$id_ticket', '" . $db->escape_string($accionAvance) . "', '$fecha', '$hora')";
+                    if ($diasResolucion > 0) $accionAvance .= " ($diasResolucion dias desde creación)";
+                    if ($motivoSeguro !== '') $accionAvance .= " - Motivo: $motivoSeguro";
+                    $sql2 = "INSERT INTO `avance_tecnicos`(`id_ticket`, `accion`, `fecha_avance`, `hora_avance`) VALUES ('$id_ticket', '" . $db->escape_string($accionAvance) . "', '$fecha', '$hora')";
                     $result2 = $db->guardar($sql2);
+                    if ($result2 !== 0) $errores[] = 'insert_avance:' . $db->getLastError();
 
-                    if ($result && $result1 && $result2) {
+                    // Guardar comentario en reprogramar_ticket (solo si hay comentario)
+                    $result3 = 0;
+                    if ($motivoSeguro !== '') {
+                        $idTecnicoSession = isset($_SESSION['id']) ? (int)$_SESSION['id'] : 0;
+                        $sql3 = "INSERT INTO `reprogramar_ticket`(`id_ticket`, `id_tecnico`, `comentario`, `fecha_reprogramada`, `hora_reprogramada`, `fecha_registro`)
+                                 VALUES ('$id_ticket', '$idTecnicoSession', '$motivoSeguro', '$fecha_resolucion', '$hora', '$fecha')";
+                        $result3 = $db->guardar($sql3);
+                        if ($result3 !== 0) $errores[] = 'insert_reprogramar:' . $db->getLastError();
+                    }
+
+                    if (empty($errores)) {
                         echo json_encode(['status' => 'success', 'message' => 'La fecha estimada fue actualizada correctamente.']);
                     } else {
-                        echo json_encode(['status' => 'error', 'message' => 'No se pudo actualizar la fecha estimada.']);
+                        echo json_encode(['status' => 'error', 'message' => 'Error al guardar: ' . implode(' | ', $errores)]);
                     }
                     break;
             

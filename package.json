@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "3dsvg": "^0.2.1",
     "intro.js": "^7.2.0"
   }
 }

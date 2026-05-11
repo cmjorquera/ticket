@@ -1,0 +1,6 @@
+DirectoryIndex portada_herramientas.php
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^index\.php$ portada_herramientas.php [L]
+</IfModule>

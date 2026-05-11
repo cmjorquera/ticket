@@ -1,0 +1,21 @@
+[2026-03-16 15:36:34] Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_sofware/componentes/layout_top.inc(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_sofware/index.php(16): require('/home/acceso/pu...')
+#4 {main}
+  thrown en /home/acceso/public_html/class/conexion.php:38
+[2026-03-18 09:53:31] Uncaught Error: Failed opening required '/home/acceso/public_html/class/conexion.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/inventario_sofware/componentes/boot.php:38
+Stack trace:
+#0 /home/acceso/public_html/inventario_sofware/index.php(2): require_once()
+#1 {main}
+  thrown en /home/acceso/public_html/inventario_sofware/componentes/boot.php:38
+[2026-03-18 09:53:34] Uncaught Error: Failed opening required '/home/acceso/public_html/class/conexion.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/inventario_sofware/componentes/boot.php:38
+Stack trace:
+#0 /home/acceso/public_html/inventario_sofware/index.php(2): require_once()
+#1 {main}
+  thrown en /home/acceso/public_html/inventario_sofware/componentes/boot.php:38

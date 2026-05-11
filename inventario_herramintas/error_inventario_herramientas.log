@@ -1,0 +1,44 @@
+[2026-03-16 09:30:22] Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown en /home/acceso/public_html/class/conexion.php:38
+[2026-03-16 09:30:38] Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown en /home/acceso/public_html/class/conexion.php:38
+[2026-03-16 09:30:42] Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown en /home/acceso/public_html/class/conexion.php:38
+[2026-03-16 09:31:06] Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown en /home/acceso/public_html/class/conexion.php:38

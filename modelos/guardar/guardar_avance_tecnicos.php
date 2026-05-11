@@ -21,9 +21,10 @@ if (!$idTicket || !$comentario) {
     exit;
 }
 
+$idAutorSession = isset($_SESSION['id']) ? (int)$_SESSION['id'] : 0;
 $comentarioSeguro = $db->escape_string((string) $comentario);
 $autorSeguro = $db->escape_string($autorAvance !== '' ? $autorAvance : 'Registro del sistema');
-$avanceHtml = '<div data-avance-autor="' . $autorSeguro . '">' . $comentarioSeguro . '</div>';
+$avanceHtml = '<div data-avance-autor="' . $autorSeguro . '" data-avance-autor-id="' . $idAutorSession . '">' . $comentarioSeguro . '</div>';
 
 // Ejecutar consulta
 $sql = "INSERT INTO `avance_tecnicos` (`id_ticket`, `accion`, `fecha_avance`, `hora_avance`)

@@ -1412,7 +1412,7 @@
         dataType: "json",
         success: function (data) {
           const {
-            id_ticket,id_estado,nombreUsuario,apePaternoUsuario,nombreTecnico,apePaternoTecnico,nombrePrioridad,dias_estimada_admin,nombre_categoria,nombreEstado,
+            id_ticket,id_estado,id_usuario,id_tecnico,nombreUsuario,apePaternoUsuario,nombreTecnico,apePaternoTecnico,nombrePrioridad,dias_estimada_admin,nombre_categoria,nombreEstado,
             asunto,descripcion_ticket,fecha_creacion_inicio,hora_creacion_inicio,fecha_asignacion_tecnico,hora_asignacion_tecnico,fecha_comienzo_ticket,hora_comienzo_ticket,
             fecha_termino_ticket,hora_termino_ticket,hora_cierre_ticket,fecha_cierre_ticket,acciones,comentario_final
           } = data;
@@ -1641,7 +1641,11 @@
           
           // Se incorpora el timeline de acciones obtenido de construirAccionesHTML
           // (en este ejemplo se muestra debajo del timeline principal)
-        const accionesHTML = construirAccionesHTML(acciones, id_ticket, id_estado);
+        const accionesHTML = construirAccionesHTML(acciones, id_ticket, id_estado, {
+            idUsuario: id_usuario, idTecnico: id_tecnico,
+            nombreTecnico, apeTecnico: apePaternoTecnico,
+            nombreUsuario, apeUsuario: apePaternoUsuario
+        });
         const escapeHTML = (str = "") =>
           String(str)
             .replaceAll("&","&amp;")
@@ -1755,7 +1759,10 @@
                         </form>
                       </div>
                         <!-- Derecha: Avances del Técnico -->
-                     <div class="col-lg-5 d-flex flex-column ticket-modal-side" id="timelineContainer">
+                     <div class="col-lg-5 d-flex flex-column ticket-modal-side" id="timelineContainer"
+                          data-id-usuario="${id_usuario}" data-id-tecnico="${id_tecnico}"
+                          data-nombre-tecnico="${escapeHTMLTicket(nombreTecnico || '')}" data-ape-tecnico="${escapeHTMLTicket(apePaternoTecnico || '')}"
+                          data-nombre-usuario="${escapeHTMLTicket(nombreUsuario || '')}" data-ape-usuario="${escapeHTMLTicket(apePaternoUsuario || '')}">
                           <input type="hidden" id="ticketId" value="${id_ticket}">
                           <input type="hidden" id="idEstadoTicket" value="${id_estado}">
                           ${accionesHTML}
@@ -2127,10 +2134,14 @@
         const autor = autorNode
           ? (autorNode.getAttribute("data-avance-autor") || "").trim()
           : "";
+        const autorId = autorNode
+          ? parseInt(autorNode.getAttribute("data-avance-autor-id") || "0", 10)
+          : 0;
         const contenido = autorNode ? autorNode.innerHTML : String(html || "");
 
         return {
           autor: autor || "Registro del sistema",
+          autorId,
           contenido: sanitizeHtmlTicket(contenido)
         };
       }
@@ -2201,7 +2212,15 @@
           return;
         }
 
-        const accionesHTML = construirAccionesHTML(acciones, idTicket, idEstado);
+        const opts = {
+          idUsuario:    parseInt(timelineContainer.dataset.idUsuario  || "0", 10),
+          idTecnico:    parseInt(timelineContainer.dataset.idTecnico  || "0", 10),
+          nombreTecnico: timelineContainer.dataset.nombreTecnico || "",
+          apeTecnico:    timelineContainer.dataset.apeTecnico    || "",
+          nombreUsuario: timelineContainer.dataset.nombreUsuario || "",
+          apeUsuario:    timelineContainer.dataset.apeUsuario    || ""
+        };
+        const accionesHTML = construirAccionesHTML(acciones, idTicket, idEstado, opts);
         timelineContainer.innerHTML = `
           <input type="hidden" id="ticketId" value="${idTicket}">
           <input type="hidden" id="idEstadoTicket" value="${idEstado}">
@@ -2316,10 +2335,21 @@
         });
       });
 
-    function construirAccionesHTML(acciones = [], idTicket, idEstado) {
+    function construirAccionesHTML(acciones = [], idTicket, idEstado, opts = {}) {
+          const {
+            idUsuario   = 0,
+            idTecnico   = 0,
+            nombreTecnico  = "",
+            apeTecnico     = "",
+            nombreUsuario  = "",
+            apeUsuario     = ""
+          } = opts;
+          const nomTecFull = `${nombreTecnico} ${apeTecnico}`.trim().toLowerCase();
+          const nomUsrFull = `${nombreUsuario} ${apeUsuario}`.trim().toLowerCase();
+
           const hayAvances = Array.isArray(acciones) && acciones.length > 0;
           const isTerminado = Number(idEstado) === 5; // estado 5 ⇒ no se puede escribir ni enviar avances
-        
+
           // ---- Items del timeline
           let items = "";
           if (hayAvances) {
@@ -2330,7 +2360,24 @@
               const esCritico =
                 texto.includes("Ticket Finalizado") ||
                 texto.includes("Inicio Ticket");
-        
+
+              // Determinar nombre y etiqueta de rol del autor
+              let autorDisplay = metaAvance.autor;
+              let rolBadge = "";
+              if (autorDisplay !== "Registro del sistema") {
+                const autorLow = autorDisplay.toLowerCase();
+                const esTecnico =
+                  (metaAvance.autorId && idTecnico && metaAvance.autorId === idTecnico) ||
+                  (nomTecFull && autorLow === nomTecFull);
+                const esUsuario =
+                  !esTecnico &&
+                  ((metaAvance.autorId && idUsuario && metaAvance.autorId === idUsuario) ||
+                   (nomUsrFull && autorLow === nomUsrFull));
+
+                if (esTecnico)       rolBadge = '<span class="timeline-role-badge tl-tecnico">tecnico</span>';
+                else if (esUsuario)  rolBadge = '<span class="timeline-role-badge tl-usuario">usuario</span>';
+              }
+
               items += `
                 <li class="timeline-item ${esCritico ? "timeline-item--critico" : ""}"
                     data-avance-item="1"
@@ -2339,7 +2386,7 @@
                     data-hora="${escapeHTMLTicket(avance.hora_avance)}">
                   <div class="timeline-dot"></div>
                   <div class="timeline-content">
-                    <div class="timeline-author">${escapeHTMLTicket(metaAvance.autor)}</div>
+                    <div class="timeline-author">${escapeHTMLTicket(autorDisplay)}${rolBadge}</div>
                     <div class="timeline-time">
                       <strong>${escapeHTMLTicket(avance.fecha_avance)} (${escapeHTMLTicket(avance.hora_avance)})</strong>
                     </div>
@@ -2640,7 +2687,7 @@
             dataType: "json",
             success: function (data) {
               const {
-                id_ticket,id_estado,nombreUsuario,apePaternoUsuario,nombreTecnico,apePaternoTecnico,nombrePrioridad,dias_estimada_admin,nombre_categoria,nombreEstado,
+                id_ticket,id_estado,id_usuario,id_tecnico,nombreUsuario,apePaternoUsuario,nombreTecnico,apePaternoTecnico,nombrePrioridad,dias_estimada_admin,nombre_categoria,nombreEstado,
                 asunto,descripcion_ticket,fecha_creacion_inicio,hora_creacion_inicio,fecha_asignacion_tecnico,hora_asignacion_tecnico,fecha_comienzo_ticket,hora_comienzo_ticket,
                 fecha_termino_ticket,hora_termino_ticket,fecha_cierre_ticket,hora_cierre_ticket,acciones,comentario_final
               } = data;
@@ -2757,7 +2804,11 @@
           
               // Se incorpora el timeline de acciones obtenido de construirAccionesHTML
               // (en este ejemplo se muestra debajo del timeline principal)
-        const accionesHTML = construirAccionesHTML(acciones, id_ticket, id_estado);
+        const accionesHTML = construirAccionesHTML(acciones, id_ticket, id_estado, {
+            idUsuario: id_usuario, idTecnico: id_tecnico,
+            nombreTecnico, apeTecnico: apePaternoTecnico,
+            nombreUsuario, apeUsuario: apePaternoUsuario
+        });
            //MENSAJE DEL TECNICO AL USUARIO PARA FINALIZAR EL TICKET
 
         const escapeHTML = (str = "") =>
@@ -2872,7 +2923,10 @@
                       </div>
             
                         <!-- Derecha: Avances del Técnico -->
-                        <div class="col-lg-5 d-flex flex-column ticket-modal-side mt-4 p-3 rounded" id="timelineContainer">
+                        <div class="col-lg-5 d-flex flex-column ticket-modal-side mt-4 p-3 rounded" id="timelineContainer"
+                             data-id-usuario="${id_usuario}" data-id-tecnico="${id_tecnico}"
+                             data-nombre-tecnico="${escapeHTMLTicket(nombreTecnico || '')}" data-ape-tecnico="${escapeHTMLTicket(apePaternoTecnico || '')}"
+                             data-nombre-usuario="${escapeHTMLTicket(nombreUsuario || '')}" data-ape-usuario="${escapeHTMLTicket(apePaternoUsuario || '')}">
                           <input type="hidden" id="ticketId" value="${id_ticket}">
                           <input type="hidden" id="idEstadoTicket" value="${id_estado}">
                             ${accionesHTML}  <!-- aquí se inyecta la card completa -->
@@ -3079,43 +3133,4 @@
 
     
 
-    function cambioDeTecnico(id_ticket) {
-      Swal.fire({
-        title: "<div class='alert alert-dark' role='alert'>Cambio de Técnico</div>",
-        html: `
-          <label for="nuevoTecnico"><strong>Selecciona el nuevo técnico:</strong></label>
-          <select id="nuevoTecnico" class="form-select mt-2">
-            <option value="8">Cristian Jorquera</option>
-            <option value="9">Alejandro Rojas</option>
-            <option value="10">Constanza Nieto</option>
-          </select>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Confirmar Cambio',
-        cancelButtonText: 'Cancelar',
-        width: "800px",
-        showCloseButton: true,
-        customClass: {
-          popup: "cuerpo_modal_guardar",
-          confirmButton: "bt_crear"
-        },
-        buttonsStyling: false,
-        preConfirm: () => {
-          const nuevoTecnico = document.getElementById('nuevoTecnico').value;
-          if (!nuevoTecnico) {
-            Swal.showValidationMessage('Debes seleccionar un técnico');
-          }
-          return nuevoTecnico;
-        }
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const tecnicoSeleccionado = result.value;
-          console.log("Ticket ID:", id_ticket);
-          console.log("Nuevo técnico:", tecnicoSeleccionado);
-    
-          // Aquí podrías enviar el cambio al backend con fetch o AJAX
-          // ejemplo: enviarCambioTecnico(id_ticket, tecnicoSeleccionado);
-        }
-      });
-    }
-
+  

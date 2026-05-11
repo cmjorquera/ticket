@@ -68,6 +68,7 @@ if ($db->num_rows($consulta) > 0) {
         'id_ticket'                 => (int)$row['id_ticket'],
         'avance_count'              => (int)$row['avance_count'],
         'id_usuario'                => (int)$row['id_usuario'],
+        'id_tecnico'                => (int)($row['id_tecnico'] ?? 0),
         'asunto'                    => $row['asunto'],
         'descripcion_ticket'        => $row['descripcion_ticket'],
         'comentario_final'          => $row['comentario_final'],

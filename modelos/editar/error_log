@@ -1,0 +1,635 @@
+[25-Jul-2024 16:28:52 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php:1) in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php on line 3
+[25-Jul-2024 19:11:02 America/Santiago] PHP Fatal error:  Uncaught Error: Cannot access private property MySQL::$error in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php:66
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php on line 66
+[25-Jul-2024 19:11:10 America/Santiago] PHP Fatal error:  Uncaught Error: Cannot access private property MySQL::$error in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php:66
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php on line 66
+[25-Jul-2024 19:59:01 America/Santiago] PHP Fatal error:  Uncaught Error: Cannot access private property MySQL::$error in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php:64
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php on line 64
+[25-Jul-2024 19:59:15 America/Santiago] PHP Fatal error:  Uncaught Error: Cannot access private property MySQL::$error in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php:64
+Stack trace:
+#0 {main}
+  thrown in /home/qaseduc/public_html/sistema/sistema_ticket/modelos/editar/editar_borrador.php on line 64
+[03-Dec-2024 16:58:53 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 16:58:53 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[03-Dec-2024 17:00:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 17:00:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[03-Dec-2024 17:00:37 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 17:00:37 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[03-Dec-2024 17:19:07 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 17:19:07 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[03-Dec-2024 17:19:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 17:19:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[03-Dec-2024 17:19:29 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 17:19:29 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[03-Dec-2024 20:03:38 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 20:03:38 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[03-Dec-2024 20:04:01 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[03-Dec-2024 20:04:01 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 11:54:27 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 11:54:27 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 11:55:06 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 11:55:06 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 11:55:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 11:55:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 12:50:17 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 12:50:17 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 12:50:31 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 12:50:31 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 12:58:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 12:58:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 12:58:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 12:58:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:21:01 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:21:01 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:21:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:21:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:34:51 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:34:51 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:35:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:35:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:36:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:36:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:36:40 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:36:40 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:37:29 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:37:29 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:38:03 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:38:03 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:38:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:38:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:46:49 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:46:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:30 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:30 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:45 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 13:47:45 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:04:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:04:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:05:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:05:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:09:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:09:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:12 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:12 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:21 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:21 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:37 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:37 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:48 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:10:48 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:11:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:11:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:12:32 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:12:32 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:16:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:16:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:36 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:36 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:46 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:45:46 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:51:27 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:51:27 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:51:39 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:51:39 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:51:46 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:51:46 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:52:33 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:52:33 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:52:48 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:52:48 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:56:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:56:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 17:56:33 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 17:56:33 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:01:42 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:01:42 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:01:59 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:01:59 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:02:41 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:02:41 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:04:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:04:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:04:55 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:04:55 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:05:12 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:05:12 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:05:53 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:05:53 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:06:17 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:06:17 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:06:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:06:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:10:39 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:10:39 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:13:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:13:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[04-Dec-2024 18:19:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[04-Dec-2024 18:19:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 18:58:24 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 18:58:24 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 18:59:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 18:59:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:02:24 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:02:24 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:02:41 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:02:41 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:04:17 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:04:17 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:04:51 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:04:51 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:05:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:05:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:08:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:08:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:09:27 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:09:27 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:11:46 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:11:46 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:18:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:18:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:21:37 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:21:37 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:29:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:29:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[05-Dec-2024 19:30:45 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[05-Dec-2024 19:30:45 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 11:55:53 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 11:55:53 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:10:17 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:10:17 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:38:01 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:38:01 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:39:41 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:39:41 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:39:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:39:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:40:26 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:40:26 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:40:37 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:40:37 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:43:01 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:43:01 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:43:11 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:43:11 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:46:31 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:46:31 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:46:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:46:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:46:59 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:46:59 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:47:08 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:47:08 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:47:15 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:47:15 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:48:14 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:48:14 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:48:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:48:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:49:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:49:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:49:51 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:49:51 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:50:12 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:50:12 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:50:39 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:50:39 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:50:52 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:50:52 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:12 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:12 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:38 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:38 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:48 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:51:48 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:52:07 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:52:07 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:52:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:52:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:52:49 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:52:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:53:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:53:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:54:30 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:54:30 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:54:56 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:54:56 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 12:55:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 12:55:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:06:54 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:06:54 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:07:27 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:07:27 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:08:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:08:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:08:26 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:08:26 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:08:39 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:08:39 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:42 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:42 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:51 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:51 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:56 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:34:56 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:35:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:35:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 13:36:13 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 13:36:13 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 14:00:41 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 14:00:41 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 14:00:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 14:00:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 14:25:49 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 14:25:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 15:18:27 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 15:18:27 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 15:19:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 15:19:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 15:19:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 15:19:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 15:21:54 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 15:21:54 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 15:22:49 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 15:22:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 15:24:15 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 15:24:15 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[06-Dec-2024 17:05:03 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[06-Dec-2024 17:05:03 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 13:59:51 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 13:59:51 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:00:11 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:00:11 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:04:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:04:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:04:33 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:04:33 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:07:03 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:07:03 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:09:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:09:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:09:28 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:09:28 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:30:54 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:30:54 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:31:05 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:31:05 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:31:17 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:31:17 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:32:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:32:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:35:21 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:35:21 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:45:42 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:45:42 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:49:24 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:49:24 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:50:52 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:50:52 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:51:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:51:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:51:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:51:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:53:00 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:53:00 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:54:05 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:54:05 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:56:03 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:56:03 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 14:56:38 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 14:56:38 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 15:00:11 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 15:00:11 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 15:00:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 15:00:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 15:00:33 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 15:00:33 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 15:49:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 15:49:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 15:49:21 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 15:49:21 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 15:49:38 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 15:49:38 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[09-Dec-2024 19:28:05 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[09-Dec-2024 19:28:05 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 12:19:20 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 12:19:20 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 12:33:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 12:33:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 12:34:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 12:34:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 12:34:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 12:34:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 13:15:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 13:15:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 13:18:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 13:18:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 15:42:46 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 15:42:46 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 15:48:41 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 15:48:41 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 15:50:21 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 15:50:21 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 17:47:40 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 17:47:40 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 17:48:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 17:48:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 17:50:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 17:50:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 18:54:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 18:54:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 18:56:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 18:56:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 18:58:42 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 18:58:42 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 15:58:42 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 118
+[10-Dec-2024 18:58:55 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 18:58:55 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 15:58:55 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 118
+[10-Dec-2024 19:02:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:02:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:02:16 America/Santiago] PHP Warning:  Undefined variable $idEquipo in /home/acceso/public_html/modelos/editar/equipo.php on line 167
+[10-Dec-2024 16:02:16 America/Santiago] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AND orden_memoria = 1' at line 9 in /home/acceso/public_html/class/conexion.php:29
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(29): mysqli_query(Object(mysqli), '\n              ...')
+#1 /home/acceso/public_html/modelos/editar/equipo.php(171): MySQL->consulta('\n              ...')
+#2 {main}
+  thrown in /home/acceso/public_html/class/conexion.php on line 29
+[10-Dec-2024 19:02:22 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:02:22 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:02:22 America/Santiago] PHP Warning:  Undefined variable $idEquipo in /home/acceso/public_html/modelos/editar/equipo.php on line 167
+[10-Dec-2024 16:02:22 America/Santiago] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AND orden_memoria = 1' at line 9 in /home/acceso/public_html/class/conexion.php:29
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(29): mysqli_query(Object(mysqli), '\n              ...')
+#1 /home/acceso/public_html/modelos/editar/equipo.php(171): MySQL->consulta('\n              ...')
+#2 {main}
+  thrown in /home/acceso/public_html/class/conexion.php on line 29
+[10-Dec-2024 19:02:54 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:02:54 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:02:54 America/Santiago] PHP Warning:  Undefined variable $idEquipo in /home/acceso/public_html/modelos/editar/equipo.php on line 167
+[10-Dec-2024 16:02:54 America/Santiago] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'AND orden_memoria = 1' at line 9 in /home/acceso/public_html/class/conexion.php:29
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(29): mysqli_query(Object(mysqli), '\n              ...')
+#1 /home/acceso/public_html/modelos/editar/equipo.php(171): MySQL->consulta('\n              ...')
+#2 {main}
+  thrown in /home/acceso/public_html/class/conexion.php on line 29
+[10-Dec-2024 19:03:20 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:03:20 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:03:20 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[10-Dec-2024 19:09:32 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:09:32 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:09:32 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[10-Dec-2024 19:42:14 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:42:14 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:42:14 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[10-Dec-2024 19:42:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:42:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:42:34 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[10-Dec-2024 19:46:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:46:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:46:25 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[10-Dec-2024 19:47:01 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[10-Dec-2024 19:47:01 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[10-Dec-2024 16:47:01 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[11-Dec-2024 12:07:28 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 12:07:28 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 09:07:28 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[11-Dec-2024 12:12:00 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 12:12:00 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 09:12:00 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[11-Dec-2024 12:13:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 12:13:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 09:13:09 America/Santiago] PHP Warning:  Undefined variable $cantidadMemorias in /home/acceso/public_html/modelos/editar/equipo.php on line 146
+[11-Dec-2024 12:31:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 12:31:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 12:32:24 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 12:32:24 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 12:32:54 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 12:32:54 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 12:33:04 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 12:33:04 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:38 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:38 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:59 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:06:59 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:07:11 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:07:11 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:07:21 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:07:21 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:07:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:07:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:08:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:08:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:08:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:08:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:10:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:10:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:34:37 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:34:37 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:34:48 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:34:48 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:51:03 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:51:03 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:51:28 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:51:28 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 13:58:04 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 13:58:04 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:17:45 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:17:45 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:20:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:20:24 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:22:38 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:22:38 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:23:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:23:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:24:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:24:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:24:34 America/santiago] PHP Parse error:  syntax error, unexpected token ";", expecting ")" in /home/acceso/public_html/modelos/editar/equipo.php on line 170
+[11-Dec-2024 14:25:13 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:25:13 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:28:33 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:28:33 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:28:33 America/Santiago] PHP Warning:  Undefined variable $
+            UPDATE equipo_memoria
+            SET 
+                designacion_memoria = NULL,
+                formato_memoria     = NULL,
+                tipo_memoria        = NULL,
+                tamano_memoria      = 0,
+                frecuencia_memoria  = NULL,
+                marca_memoria       = NULL
+            WHERE id_equipo = 52 AND orden_memoria = 4
+         in /home/acceso/public_html/modelos/editar/equipo.php on line 170
+[11-Dec-2024 14:29:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:29:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:29:18 America/Santiago] PHP Warning:  Undefined variable $
+            UPDATE equipo_memoria
+            SET 
+                designacion_memoria = NULL,
+                formato_memoria     = NULL,
+                tipo_memoria        = NULL,
+                tamano_memoria      = 0,
+                frecuencia_memoria  = NULL,
+                marca_memoria       = NULL
+            WHERE id_equipo = 52 AND orden_memoria = 4
+         in /home/acceso/public_html/modelos/editar/equipo.php on line 170
+[11-Dec-2024 14:30:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:30:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:31:22 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:31:22 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:32:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:32:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:38:53 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:38:53 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:43:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:43:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:43:23 America/Santiago] PHP Warning:  Undefined variable $resultadoMemoria in /home/acceso/public_html/modelos/editar/equipo.php on line 168
+[11-Dec-2024 14:44:59 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:44:59 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:44:59 America/santiago] PHP Parse error:  syntax error, unexpected token ";", expecting ")" in /home/acceso/public_html/modelos/editar/equipo.php on line 171
+[11-Dec-2024 14:45:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:45:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:45:44 America/Santiago] PHP Warning:  Undefined variable $resultadoMemoria in /home/acceso/public_html/modelos/editar/equipo.php on line 168
+[11-Dec-2024 14:47:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:47:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:47:43 America/Santiago] PHP Warning:  Undefined array key "cantidadMemorias" in /home/acceso/public_html/modelos/editar/equipo.php on line 96
+[11-Dec-2024 11:47:43 America/Santiago] PHP Warning:  Undefined variable $resultadoMemoria in /home/acceso/public_html/modelos/editar/equipo.php on line 168
+[11-Dec-2024 14:48:39 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:48:39 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 11:48:39 America/Santiago] PHP Warning:  Undefined array key "cantidadMemorias" in /home/acceso/public_html/modelos/editar/equipo.php on line 96
+[11-Dec-2024 11:48:39 America/Santiago] PHP Warning:  Undefined variable $resultadoMemoria in /home/acceso/public_html/modelos/editar/equipo.php on line 168
+[11-Dec-2024 11:48:39 America/Santiago] PHP Warning:  Undefined variable $sqlUpdateMemoria in /home/acceso/public_html/modelos/editar/equipo.php on line 171
+[11-Dec-2024 11:48:39 America/Santiago] PHP Warning:  Undefined variable $ in /home/acceso/public_html/modelos/editar/equipo.php on line 171
+[11-Dec-2024 11:48:39 America/Santiago] PHP Warning:  Array to string conversion in /home/acceso/public_html/modelos/editar/equipo.php on line 171
+[11-Dec-2024 14:52:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:52:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:53:24 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:53:24 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:55:39 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:55:39 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 14:57:52 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 14:57:52 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:02:30 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:02:30 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:07:45 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:07:45 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:10:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:10:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:14:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:14:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:16:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:16:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:20:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:20:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:21:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:21:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:21:53 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:21:53 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:22:04 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:22:04 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:22:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:22:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:28:07 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:28:07 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:49:45 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:49:45 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:49:56 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:49:56 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:50:56 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:50:56 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:51:48 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:51:48 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:53:55 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:53:55 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:55:52 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:55:52 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:56:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:56:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:56:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:56:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:57:11 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:57:11 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:57:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:57:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 15:57:54 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 15:57:54 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 17:50:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 17:50:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 17:53:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 17:53:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Dec-2024 17:54:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Dec-2024 17:54:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[12-Dec-2024 14:08:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[12-Dec-2024 14:08:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[12-Dec-2024 14:09:07 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[12-Dec-2024 14:09:07 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:32:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:32:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 15:32:18 America/santiago] PHP Warning:  Undefined array key "imagen" in /home/acceso/public_html/modelos/editar/contenedor_accesos.php on line 10
+[23-Dec-2024 18:35:48 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:35:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 15:35:49 America/santiago] PHP Warning:  Undefined array key "imagen" in /home/acceso/public_html/modelos/editar/contenedor_accesos.php on line 10
+[23-Dec-2024 18:37:22 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:37:22 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 15:37:22 America/santiago] PHP Warning:  Undefined array key "imageInput" in /home/acceso/public_html/modelos/editar/contenedor_accesos.php on line 10
+[23-Dec-2024 18:37:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:37:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 15:37:43 America/santiago] PHP Warning:  Undefined array key "imageInput" in /home/acceso/public_html/modelos/editar/contenedor_accesos.php on line 10
+[23-Dec-2024 18:37:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:37:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 15:37:50 America/santiago] PHP Warning:  Undefined array key "imageInput" in /home/acceso/public_html/modelos/editar/contenedor_accesos.php on line 10
+[23-Dec-2024 18:39:28 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:39:28 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:40:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:40:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:41:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:41:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:42:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:42:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:44:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:44:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:44:45 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:44:45 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:45:56 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:45:56 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:46:20 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:46:20 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:46:56 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:46:56 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:48:20 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:48:20 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:50:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:50:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[23-Dec-2024 18:51:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[23-Dec-2024 18:51:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Mar-2026 20:19:31 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Mar-2026 20:19:31 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Mar-2026 20:20:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Mar-2026 20:20:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Mar-2026 20:21:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Mar-2026 20:21:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Mar-2026 20:24:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Mar-2026 20:24:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[11-Mar-2026 22:44:03 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[11-Mar-2026 22:44:03 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0

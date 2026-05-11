@@ -1,0 +1,170 @@
+[16-Mar-2026 12:20:41 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:20:41 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:20:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:20:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:21 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:21 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:22 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:22 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:40 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:40 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:42 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:21:42 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:22:11 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:22:11 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:01 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:01 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:06 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:06 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:26 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:26 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:28 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:28 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:31 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:31 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:49 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:59 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:25:59 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:26:28 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:26:28 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:55 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:27:55 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:28:53 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:28:53 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:28:55 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:28:55 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:29:08 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:29:08 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:29:12 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:29:12 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:22 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:22 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 09:30:22 America/Santiago] PHP Warning:  Undefined array key "id" in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:30:22 America/Santiago] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:30:22 America/Santiago] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown in /home/acceso/public_html/class/conexion.php on line 38
+[16-Mar-2026 12:30:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:38 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:38 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 09:30:38 America/Santiago] PHP Warning:  Undefined array key "id" in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:30:38 America/Santiago] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:30:38 America/Santiago] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown in /home/acceso/public_html/class/conexion.php on line 38
+[16-Mar-2026 12:30:40 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:40 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:42 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:42 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 09:30:42 America/Santiago] PHP Warning:  Undefined array key "id" in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:30:42 America/Santiago] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:30:42 America/Santiago] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown in /home/acceso/public_html/class/conexion.php on line 38
+[16-Mar-2026 12:30:45 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:30:45 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:31:05 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:31:05 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 09:31:06 America/Santiago] PHP Warning:  Undefined array key "id" in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:31:06 America/Santiago] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in /home/acceso/public_html/class/funciones.php on line 504
+[16-Mar-2026 09:31:06 America/Santiago] PHP Fatal error:  Uncaught mysqli_sql_exception: You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'UNION
+        SELECT 
+            recordatorio.id AS id,
+            recor...' at line 16 in /home/acceso/public_html/class/conexion.php:38
+Stack trace:
+#0 /home/acceso/public_html/class/conexion.php(38): mysqli_query(Object(mysqli), '\r\n        SELEC...')
+#1 /home/acceso/public_html/class/funciones.php(539): MySQL->consulta('\r\n        SELEC...')
+#2 /home/acceso/public_html/inventario_herramintas/componentes/layout_top.php(11): Funciones->cabezera()
+#3 /home/acceso/public_html/inventario_herramintas/portada_herramientas.php(24): require('/home/acceso/pu...')
+#4 {main}
+  thrown in /home/acceso/public_html/class/conexion.php on line 38
+[16-Mar-2026 12:32:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:32:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:32:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:32:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:33:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:33:10 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:33:12 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:33:12 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:34:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:34:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:34:44 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:34:44 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:36:49 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:36:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:36:51 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:36:51 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:02 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:02 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:21 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:21 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:37 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:37:37 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:38:17 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:38:17 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:38:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:38:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:39:33 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:39:33 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:40:08 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:40:08 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:41:01 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:41:01 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:50:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:50:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:51:13 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:51:13 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:51:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:51:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 12:51:29 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 12:51:29 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 13:57:10 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 13:57:11 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 14:12:13 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 14:12:13 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 14:12:17 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 14:12:17 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[16-Mar-2026 14:28:36 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[16-Mar-2026 14:28:36 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[25-Mar-2026 18:06:28 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[25-Mar-2026 18:06:28 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0

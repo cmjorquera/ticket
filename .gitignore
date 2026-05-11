@@ -1,9 +1,0 @@
-codigosQR/*
-/vendor/
-*.log
-.htaccess
-error_log
-/class/conexion.php
-*.error_log
-
-

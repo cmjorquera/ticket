@@ -361,7 +361,6 @@ document.addEventListener("DOMContentLoaded", function () {
     dataType: "json",
     success: function (data) {
       if (!data) return;
-
       let nombreUsuario = data.nombre_usuario || 'No disponible';
       let apePaternoUsuario = data.apellido_paterno_usuario || '';
       let asunto = data.asunto || 'Sin asunto';

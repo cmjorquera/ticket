@@ -113,6 +113,28 @@
   font-weight: 700;
   color: #0d6efd;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.timeline-role-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.timeline-role-badge.tl-tecnico {
+  background: #e8f0fe;
+  color: #1a56db;
+}
+.timeline-role-badge.tl-usuario {
+  background: #ecfdf5;
+  color: #065f46;
 }
 .timeline-time {
   font-size: .85rem;

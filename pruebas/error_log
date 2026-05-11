@@ -1,0 +1,110 @@
+[19-Jun-2025 13:32:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:13 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:13 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:23 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:23 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:36 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:36 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 09:32:44 America/santiago] PHP Warning:  include(footer.php): Failed to open stream: No such file or directory in /home/acceso/public_html/pruebas/dashboarh.php on line 496
+[19-Jun-2025 09:32:44 America/santiago] PHP Warning:  include(): Failed opening 'footer.php' for inclusion (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/pruebas/dashboarh.php on line 496
+[19-Jun-2025 13:32:49 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:32:49 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 09:32:49 America/santiago] PHP Warning:  require_once(class/conexion.php): Failed to open stream: No such file or directory in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 3
+[19-Jun-2025 09:32:49 America/santiago] PHP Fatal error:  Uncaught Error: Failed opening required 'class/conexion.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/pruebas/contenedores_responsivos.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 3
+[19-Jun-2025 13:33:07 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:33:07 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 09:33:07 America/santiago] PHP Warning:  require_once(class/conexion.php): Failed to open stream: No such file or directory in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 3
+[19-Jun-2025 09:33:07 America/santiago] PHP Fatal error:  Uncaught Error: Failed opening required 'class/conexion.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/pruebas/contenedores_responsivos.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 3
+[19-Jun-2025 13:33:18 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:33:18 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 09:33:18 America/Santiago] PHP Warning:  include(componentes/bloque_tabla_usuario.php): Failed to open stream: No such file or directory in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 96
+[19-Jun-2025 09:33:18 America/Santiago] PHP Warning:  include(): Failed opening 'componentes/bloque_tabla_usuario.php' for inclusion (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 96
+[19-Jun-2025 13:33:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:33:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 09:33:57 America/Santiago] PHP Warning:  include(componentes/bloque_tabla_usuario.php): Failed to open stream: No such file or directory in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 96
+[19-Jun-2025 09:33:57 America/Santiago] PHP Warning:  include(): Failed opening 'componentes/bloque_tabla_usuario.php' for inclusion (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 96
+[19-Jun-2025 13:34:13 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:34:13 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 09:34:13 America/Santiago] PHP Warning:  include(componentes/bloque_tabla_usuario.php): Failed to open stream: No such file or directory in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 96
+[19-Jun-2025 09:34:13 America/Santiago] PHP Warning:  include(): Failed opening 'componentes/bloque_tabla_usuario.php' for inclusion (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 96
+[19-Jun-2025 13:34:35 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:34:35 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 09:34:35 America/Santiago] PHP Warning:  include(componentes/bloque_tabla_usuario.php): Failed to open stream: No such file or directory in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 94
+[19-Jun-2025 09:34:35 America/Santiago] PHP Warning:  include(): Failed opening 'componentes/bloque_tabla_usuario.php' for inclusion (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home/acceso/public_html/pruebas/contenedores_responsivos.php on line 94
+[19-Jun-2025 13:34:43 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:34:43 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:34:52 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:34:52 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:35:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:35:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:35:37 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:35:37 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:05 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:05 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:58 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:58 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:59 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:36:59 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:53:15 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:53:15 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:53:50 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:53:50 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:54:06 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:54:06 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:54:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:54:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:57:29 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:57:29 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:08 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:08 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:09 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:09 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:24 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:24 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:32 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:58:32 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 13:59:51 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 13:59:51 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:02:25 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:02:25 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:02:52 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:02:52 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:03:03 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:03:03 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:05:19 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:05:19 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:16 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:16 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:26 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:26 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:34 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:34 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:47 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:47 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:57 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:06:57 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:07:08 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:07:08 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:07:14 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:07:14 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:07:22 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:07:22 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 14:11:32 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 14:11:32 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[19-Jun-2025 15:28:54 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[19-Jun-2025 15:28:54 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
+[13-Mar-2026 23:07:31 UTC] PHP Warning:  Module "exif" is already loaded in Unknown on line 0
+[13-Mar-2026 23:07:31 UTC] PHP Warning:  Module "fileinfo" is already loaded in Unknown on line 0
