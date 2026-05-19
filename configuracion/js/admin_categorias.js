@@ -16,10 +16,6 @@
     function alternarChip(chip, activar) {
         chip.classList.toggle('cat-chip--on', activar);
         chip.classList.toggle('cat-chip--off', !activar);
-        const iconoEstado = chip.querySelector('i:first-child');
-        if (iconoEstado) {
-            iconoEstado.className = 'bi ' + (activar ? 'bi-check-circle-fill' : 'bi-circle');
-        }
     }
 
     function actualizarContador(card) {

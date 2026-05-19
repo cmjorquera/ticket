@@ -10,6 +10,7 @@ $idPagActual      = 7;
 
 $assetPrefix = (strpos(str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? ''), '/configuracion/') !== false) ? '../' : '';
 $tituloPagina = 'Categorías y Técnicos';
+$configuracionCss = ['configuracion/css/admin_categorias.css'];
 
 // ── Datos para la tabla ───────────────────────────────────────────────────────
 $bdato = new MySQL('', '', '');
@@ -71,7 +72,6 @@ while ($r = $bdato->fetch_assoc($resTecNuevaCategoria)) {
 // (para el resumen del header)
 ?>
 <?php require __DIR__ . '/componentes/head.php'; ?>
-    <link href="<?php echo $assetPrefix; ?>configuracion/css/admin_categorias.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/buscadores.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/funciones.js"></script>
