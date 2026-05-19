@@ -97,7 +97,6 @@ $funciones = new Funciones();
                                         <h2 class="eventos-section-title mb-1">Calendario operativo</h2>
                                         <p class="text-muted mb-0">Haz clic sobre un día para crear o sobre un evento para editar.</p>
                                     </div>
-                                    <span class="badge bg-light text-dark">FullCalendar</span>
                                 </div>
                                 <div class="card-body px-3 px-lg-4 pb-4">
                                     <div id="eventos-calendar" class="eventos-calendar"></div>

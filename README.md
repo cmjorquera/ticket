@@ -233,6 +233,83 @@ Tablas:
 
 Regla practica: para tocar permisos o menu actual, mirar primero `menu_1`, `menu_1_sub` y `permisos_menu_1`.
 
+## Configuracion de usuarios, permisos y categorias
+
+Carpeta: `configuracion/`.
+
+Este modulo concentra el panel moderno de configuracion. Tiene vistas con pestanas, listado filtrable de usuarios, administracion de categorias de ticket y asignacion de categorias a tecnicos.
+
+Archivos importantes:
+
+- `configuracion/index.php`: panel con pestanas `Usuarios`, `Configuracion`, `Dashboard` y `Mantenimiento`.
+- `configuracion/listado_usuario.php`: listado con filtros por colegio, area y estado; usa botones `lu-btn`.
+- `configuracion/admin_categorias.php`: administracion visual de categorias por tecnico, con cards y chips de colores.
+- `configuracion/componentes/head.php`: cabecera y assets del modulo.
+- `configuracion/componentes/usuarios_tab.php`: contenido de la pestana de usuarios.
+- `configuracion/css/index.css`: estilos del modulo.
+- `configuracion/js/comun.js`: acciones de usuario y permisos: `agregarUsuario()`, `modificarUsuario()`, `mostrarPermisos()`, `estadoUsuario()`.
+- `configuracion/js/index.js`: inicializacion DataTable solo para `configuracion/index.php`.
+- `js/funciones.js`: funciones globales como `guardarCambios()`, `abrirModalAdministrarCategorias()` y `cargarTablaAdministrarCategorias()`.
+
+Endpoints relacionados:
+
+- `modelos/guardar/guardar_usuario.php`
+- `modelos/guardar/guardar_permisos.php`
+- `modelos/guardar/guardar_permisos_categoria.php`
+- `modelos/guardar/crear_categorias.php`
+- `modelos/rescatar/administrar_categorias.php`
+- `modelos/rescatar/area_trabajo.php`
+- `modelos/rescatar/colegio.php`
+- `modelos/rescatar/menu_1.php`
+- `modelos/editar/editar_categoria_ticket.php`
+- `modelos/editar/cambiar_estado_categoria_ticket.php`
+
+Tablas clave:
+
+| Tabla | Uso |
+|---|---|
+| `usuarios` | Usuarios del sistema. `id_area_trabajo = 1` identifica a tecnicos de informatica. |
+| `area_trabajo` | Areas de trabajo. `id_area = 1` es `INFORMATICA`. |
+| `perfiles` | Roles: `1=usuario`, `2=tecnico`, `3=administrador`. |
+| `usuario_perfil` | Relacion usuario-perfil. |
+| `usuario_colegio` | Relacion usuario-colegio-perfil y estado. |
+| `colegio` | Colegios disponibles. |
+| `menu_1` | Menus principales. |
+| `menu_1_sub` | Submenus. |
+| `permisos_menu_1` | Permisos por usuario. `1=ver`, `3=oculto`. |
+| `categoria_de_ticket` | Categorias de ticket, icono, orden y estado. |
+| `categoria_tecnico` | Relacion entre tecnico (`usuarios.id`) y categoria. |
+
+Convenciones de rutas:
+
+```php
+$assetPrefix = '../'; // dentro de /configuracion/
+$assetPrefix = '';    // desde raiz
+```
+
+En JavaScript debe existir:
+
+```js
+window.CONFIG_RELATIVE_ROOT = '../'; // dentro de /configuracion/
+window.CONFIG_RELATIVE_ROOT = '';    // desde raiz
+```
+
+Todas las URLs AJAX deben construirse asi:
+
+```js
+const root = typeof window.CONFIG_RELATIVE_ROOT === 'string' ? window.CONFIG_RELATIVE_ROOT : '';
+const url = root + 'modelos/rescatar/administrar_categorias.php';
+```
+
+Notas ya resueltas y que no se deben rehacer:
+
+- `class/funciones.php`, metodo `listaUsuarios()`: la columna Area diferencia tecnicos con punto azul y badge `Informatica`, y usuarios con punto verde.
+- `configuracion/js/comun.js`: el modal Agregar usuario usa layout de dos columnas, formulario a la izquierda y menus a la derecha, con ancho aproximado de `860px`.
+- `configuracion/listado_usuario.php`: pagina nueva con filtros por colegio, area y estado, mas botones `lu-btn`.
+- `configuracion/admin_categorias.php`: pagina nueva con cards por tecnico y chips de colores para asignar categorias.
+- `js/funciones.js`: `cargarTablaAdministrarCategorias()` y handlers `js-toggle` / `js-editar` usan `CONFIG_RELATIVE_ROOT`.
+- `abrirModalAdministrarCategorias()` ya fue corregida para usar prefijo relativo antes de cada `$.ajax`.
+
 ## Inventario de equipos computacionales
 
 Carpeta: `inventario/`.
@@ -502,6 +579,10 @@ Logica adicional en `modelos/correos/`.
 8. Al cambiar fechas, mantener `America/Santiago`.
 9. Al tocar adjuntos, mantener rutas relativas dentro de `archivos/`.
 10. Al tocar inventarios, revisar el SQL sugerido del modulo correspondiente en `views/sql_sugerido_*.sql`.
+11. En `configuracion/`, toda URL AJAX debe usar `CONFIG_RELATIVE_ROOT`.
+12. No cargar `configuracion/js/index.js` fuera de `configuracion/index.php`, porque causa doble inicializacion de DataTables.
+13. Los tecnicos se detectan por `usuarios.id_area_trabajo = 1` (`INFORMATICA`).
+14. Para asignacion de categorias a tecnicos, usar `categoria_tecnico` y `categoria_de_ticket`.
 
 ## Archivos de contexto complementarios
 
@@ -512,4 +593,3 @@ Logica adicional en `modelos/correos/`.
   - `inventario_herramintas/views/sql_sugerido_inventario_herramientas.sql`
   - `inventario_aseo/views/sql_sugerido_inventario_aseo.sql`
   - `licenciamiento/views/sql_sugerido_inventario_software.sql`
-

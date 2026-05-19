@@ -1,0 +1,119 @@
+.config-modal-dialog {
+    width: min(920px, calc(100vw - 2rem));
+    max-width: none;
+}
+
+.config-modal-dialog--xl {
+    width: min(980px, calc(100vw - 2rem));
+}
+
+.config-modal {
+    border: 0;
+    border-radius: 26px;
+    box-shadow: 0 22px 55px rgba(15, 23, 42, .22);
+    overflow: hidden;
+}
+
+.config-modal__header {
+    position: relative;
+    padding: 1.8rem 2rem .75rem;
+    border: 0;
+    justify-content: center;
+}
+
+.config-modal__title {
+    margin: 0;
+    color: #1c2740;
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.config-modal__close {
+    position: absolute;
+    top: 1.55rem;
+    right: 1.65rem;
+}
+
+.config-modal__body {
+    padding: 1rem 2rem 2rem;
+    background: #fff;
+}
+
+.config-modal__footer {
+    display: flex;
+    justify-content: center;
+    gap: .6rem;
+    padding: 0 2rem 2rem;
+    border: 0;
+}
+
+.btn-config-soft {
+    background: #eef4ff;
+    color: #25324b;
+    border: 0;
+}
+
+.btn-config-soft:hover,
+.btn-config-soft:focus {
+    background: #e2ebfb;
+    color: #172033;
+}
+
+.swal2-popup.config-swal-popup,
+.swal2-popup.cuerpo_modal_guardar {
+    border-radius: 22px;
+    padding: 2rem 2.2rem;
+    color: #27324a;
+}
+
+.swal2-popup.config-swal-popup .swal2-title,
+.swal2-popup.cuerpo_modal_guardar .swal2-title {
+    color: #334155;
+    font-weight: 800;
+}
+
+.swal2-popup.config-swal-popup .swal2-html-container,
+.swal2-popup.config-swal-popup .swal2-content,
+.swal2-popup.cuerpo_modal_guardar .swal2-html-container,
+.swal2-popup.cuerpo_modal_guardar .swal2-content {
+    color: #5b6472;
+    font-size: 1rem;
+}
+
+.swal2-popup.config-swal-popup .swal2-actions,
+.swal2-popup.cuerpo_modal_guardar .swal2-actions {
+    gap: .55rem;
+}
+
+@media (max-width: 720px) {
+    .config-modal-dialog,
+    .config-modal-dialog--xl {
+        width: calc(100vw - 1rem);
+        margin-inline: auto;
+    }
+
+    .config-modal__header {
+        padding: 1.4rem 1.25rem .5rem;
+    }
+
+    .config-modal__title {
+        font-size: 1.45rem;
+        padding-inline: 1.5rem;
+    }
+
+    .config-modal__close {
+        top: 1.25rem;
+        right: 1.2rem;
+    }
+
+    .config-modal__body {
+        padding: .75rem 1rem 1.5rem;
+    }
+
+    .config-modal__footer {
+        padding: 0 1rem 1.5rem;
+        flex-wrap: wrap;
+    }
+}

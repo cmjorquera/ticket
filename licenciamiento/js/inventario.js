@@ -140,7 +140,8 @@
     }
 
     function renderResumenActivo() {
-        if ($('#tab-sitios').hasClass('active')) {
+        const pagina = (window.INVENTARIO_CONFIG && window.INVENTARIO_CONFIG.pagina) ? window.INVENTARIO_CONFIG.pagina : 'software';
+        if (pagina === 'sitios') {
             renderResumenSitios();
             return;
         }

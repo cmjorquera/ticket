@@ -21,6 +21,7 @@ $assetPrefix = isset($assetPrefix) ? $assetPrefix : '../';
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.min.css" rel="stylesheet">
+    <link href="<?php echo htmlspecialchars($assetPrefix . 'configuracion/css/modales.css', ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
     <link href="<?php echo htmlspecialchars($assetPrefix . 'configuracion/css/index.css', ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
     <link href="<?php echo htmlspecialchars($assetPrefix . 'configuracion/css/mantenimiento_tickets.css', ENT_QUOTES, 'UTF-8'); ?>" rel="stylesheet">
 </head>

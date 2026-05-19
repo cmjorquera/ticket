@@ -97,7 +97,7 @@
                         <strong class="d-block">${escapeHtml(formatoEntero(totalLicencias))} licencias en total</strong>
                         <span class="text-muted small">Resumen dinamico del software visible</span>
                     </div>
-                    <span class="badge text-bg-light border">Actualiza con filtros y cambio de pestaña</span>
+                    <span class="badge text-bg-light border"></span>
                 </div>
             </div>
         </div>`);

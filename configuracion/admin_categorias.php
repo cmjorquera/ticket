@@ -53,13 +53,25 @@ while ($r = $bdato->fetch_assoc($resTec)) {
     ];
 }
 
+$resTecNuevaCategoria = $bdato->consulta("
+    SELECT id, nombre, apellido_paterno
+    FROM usuarios
+    WHERE id_area_trabajo = 1 AND id != 27
+    ORDER BY nombre ASC, apellido_paterno ASC
+");
+$tecnicosParaNuevaCategoria = [];
+while ($r = $bdato->fetch_assoc($resTecNuevaCategoria)) {
+    $tecnicosParaNuevaCategoria[] = [
+        'id' => (int)$r['id'],
+        'nombre' => trim($r['nombre'] . ' ' . $r['apellido_paterno']),
+    ];
+}
+
 // Contar cuántas categorías tiene cada técnico asignadas
 // (para el resumen del header)
 ?>
 <?php require __DIR__ . '/componentes/head.php'; ?>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.min.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>configuracion/css/admin_categorias.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/buscadores.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/funciones.js"></script>
@@ -67,121 +79,6 @@ while ($r = $bdato->fetch_assoc($resTec)) {
     <script>window.CONFIG_RELATIVE_ROOT = '<?php echo $assetPrefix; ?>';</script>
     <script src="<?php echo $assetPrefix; ?>configuracion/js/comun.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/comunes.js"></script>
-
-    <style>
-        /* ── Layout ── */
-        .ac-card { border-radius: 14px; border: 1px solid #e3e6f0; background: #fff; }
-        .ac-card__header {
-            padding: .85rem 1.2rem;
-            background: #f8f9fc;
-            border-bottom: 1px solid #e3e6f0;
-            border-radius: 14px 14px 0 0;
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-        }
-        .ac-card__avatar {
-            width: 44px; height: 44px; border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #e3e6f0;
-            background: #eef0f5;
-            flex-shrink: 0;
-        }
-        .ac-card__name    { font-size: .95rem; font-weight: 700; color: #1f2a44; line-height: 1.2; }
-        .ac-card__meta    { font-size: .75rem; color: #6c757d; }
-        .ac-card__body    { padding: .85rem 1.2rem 1rem; }
-
-        /* Contador de categorías asignadas */
-        .ac-badge-count {
-            margin-left: auto;
-            background: #4e73df;
-            color: #fff;
-            border-radius: 999px;
-            padding: 3px 10px;
-            font-size: .72rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        /* ── Chips de categoría ── */
-        .cat-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
-
-        .cat-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: .3rem;
-            padding: .32rem .75rem;
-            border-radius: 999px;
-            font-size: .78rem;
-            font-weight: 600;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform .1s, box-shadow .1s, background .15s, border-color .15s;
-            user-select: none;
-        }
-        .cat-chip:hover   { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,.13); }
-        .cat-chip:active  { transform: none; }
-
-        /* Asignada = verde */
-        .cat-chip--on  {
-            background: #d4edda;
-            color: #155724;
-            border-color: #a8d5b5;
-        }
-        .cat-chip--on:hover  { background: #c2e8cc; }
-
-        /* No asignada = salmón */
-        .cat-chip--off {
-            background: #fde8e4;
-            color: #7d2d1f;
-            border-color: #f5bdb5;
-        }
-        .cat-chip--off:hover { background: #fad5cf; }
-
-        /* ── Barra de acciones ── */
-        .ac-action-bar {
-            position: sticky;
-            bottom: 0;
-            z-index: 10;
-            background: #fff;
-            border-top: 1px solid #e3e6f0;
-            padding: .75rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            flex-wrap: wrap;
-        }
-        .ac-action-bar .ac-hint {
-            font-size: .78rem;
-            color: #6c757d;
-            flex: 1 1 auto;
-        }
-
-        /* ── Grid de cards ── */
-        .ac-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1rem;
-            padding: 1.25rem;
-        }
-
-        /* ── Leyenda rápida ── */
-        .ac-legend {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            padding: .5rem 1.25rem;
-            background: #f8f9fc;
-            border-bottom: 1px solid #e3e6f0;
-            font-size: .78rem;
-            color: #6c757d;
-            flex-wrap: wrap;
-        }
-        .ac-legend span { display: inline-flex; align-items: center; gap: .3rem; }
-
-        /* ── Modal Administrar Categorías ── */
-        .cat-admin-row td { vertical-align: middle; }
-    </style>
 </head>
 
 <body id="page-top">
@@ -210,7 +107,7 @@ while ($r = $bdato->fetch_assoc($resTec)) {
                                         <h6 class="m-0 font-weight-bold text-primary">
                                             <i class="bi bi-person-gear me-2"></i>Asignación de Categorías a Técnicos
                                         </h6>
-                                        <p class="mb-0 text-muted" style="font-size:.8rem;">
+                                        <p class="mb-0 text-muted ac-page-subtitle">
                                             Haz clic en un chip para activar o desactivar la categoría.
                                             Solo técnicos de <strong>Informática</strong> aparecen aquí.
                                         </p>
@@ -228,13 +125,13 @@ while ($r = $bdato->fetch_assoc($resTec)) {
                                 <!-- Leyenda -->
                                 <div class="ac-legend">
                                     <span>
-                                        <span class="cat-chip cat-chip--on" style="pointer-events:none;font-size:.72rem;padding:.2rem .6rem;">
+                                        <span class="cat-chip cat-chip--on cat-chip--legend">
                                             <i class="bi bi-check-circle-fill"></i> Asignada
                                         </span>
                                         El técnico recibe tickets de esta categoría
                                     </span>
                                     <span>
-                                        <span class="cat-chip cat-chip--off" style="pointer-events:none;font-size:.72rem;padding:.2rem .6rem;">
+                                        <span class="cat-chip cat-chip--off cat-chip--legend">
                                             <i class="bi bi-circle"></i> Sin asignar
                                         </span>
                                         No recibe tickets de esta categoría
@@ -336,15 +233,15 @@ while ($r = $bdato->fetch_assoc($resTec)) {
 
     <!-- ── Modal: Administrar Categorías ─────────────────────────────────── -->
     <div class="modal fade" id="modalAdministrarCategorias" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable config-modal-dialog config-modal-dialog--xl">
+            <div class="modal-content config-modal">
+                <div class="modal-header config-modal__header">
+                    <h5 class="modal-title config-modal__title">
                         <i class="bi bi-tags-fill me-2"></i>Administrar Categorías
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close config-modal__close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
-                <div class="modal-body bg-light">
+                <div class="modal-body config-modal__body">
                     <div id="contenedorAdministrarCategorias">
                         <div class="d-flex justify-content-center py-5">
                             <div class="spinner-border text-primary" role="status"></div>
@@ -357,45 +254,46 @@ while ($r = $bdato->fetch_assoc($resTec)) {
 
     <!-- ── Modal: Editar Categoría ──────────────────────────────────────── -->
     <div class="modal fade" id="modalEditarCategoria" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-pencil-square me-2 text-primary"></i>Editar Categoría
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg swal-categoria-popup">
                 <form id="formEditarCategoria">
-                    <div class="modal-body">
+                    <div class="modal-body p-0">
                         <input type="hidden" id="editar_id_categoria" name="id_categoria">
-                        <div class="mb-3">
-                            <label for="editar_nombre_categoria" class="form-label fw-bold">Nombre</label>
-                            <input type="text" class="form-control" id="editar_nombre_categoria" name="nombre_categoria" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editar_abreviacion" class="form-label fw-bold">Abreviación</label>
-                            <input type="text" class="form-control" id="editar_abreviacion" name="abreviacion">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editar_icono" class="form-label fw-bold">Ícono Bootstrap</label>
-                            <div class="input-group">
-                                <span class="input-group-text" id="iconoPreview"><i class="bi bi-tag-fill"></i></span>
-                                <input type="text" class="form-control" id="editar_icono" name="icono"
-                                       placeholder="bi-tag-fill"
-                                       oninput="document.getElementById('iconoPreview').innerHTML='<i class=\'bi \'+this.value+\'\'></i>'">
+                        <div class="swal-categoria">
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                             </div>
-                            <div class="form-text">Clases de Bootstrap Icons, ej: <code>bi-tools</code></div>
-                        </div>
-                        <div class="mb-0">
-                            <label for="editar_orden" class="form-label fw-bold">Orden</label>
-                            <input type="number" class="form-control" id="editar_orden" name="orden" min="0">
+                            <h2 class="swal-categoria__title">Editar categoría</h2>
+                            <div class="swal-categoria__grid">
+                                <div class="swal-categoria__field swal-categoria__field--full">
+                                    <label class="swal-categoria__label" for="editar_id_tecnico">Técnico asignado</label>
+                                    <select id="editar_id_tecnico" name="id_tecnico" class="swal-categoria__select" required></select>
+                                </div>
+                                <div class="swal-categoria__field">
+                                    <label class="swal-categoria__label" for="editar_nombre_categoria">Nombre</label>
+                                    <input type="text" class="swal-categoria__input" id="editar_nombre_categoria" name="nombre_categoria" placeholder="Nombre de la categoría" required>
+                                </div>
+                                <div class="swal-categoria__field">
+                                    <label class="swal-categoria__label" for="editar_abreviacion">Abreviación</label>
+                                    <input type="text" class="swal-categoria__input" id="editar_abreviacion" name="abreviacion" placeholder="Abreviación corta">
+                                </div>
+                                <div class="swal-categoria__field swal-categoria__field--full">
+                                    <label class="swal-categoria__label" for="editar_icono">Ícono Bootstrap</label>
+                                    <div class="swal-categoria__icon-row">
+                                        <span class="swal-categoria__icon-preview" id="iconoPreview"><i class="bi bi-tag"></i></span>
+                                        <input type="text" class="swal-categoria__input" id="editar_icono" name="icono" placeholder="bi-tag">
+                                    </div>
+                                    <div class="swal-categoria__hint">
+                                        Copia el nombre del ícono desde
+                                        <a href="https://icons.getbootstrap.com/" target="_blank" rel="noopener noreferrer">Bootstrap Icons</a>.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check2-circle me-1"></i>Guardar cambios
-                        </button>
+                    <div class="modal-footer border-0 justify-content-center pt-4 pb-0">
+                        <button type="submit" class="btn btn-primary px-4">Guardar</button>
+                        <button type="button" class="btn btn-config-soft px-4" data-bs-dismiss="modal">Cancelar</button>
                     </div>
                 </form>
             </div>
@@ -407,245 +305,12 @@ while ($r = $bdato->fetch_assoc($resTec)) {
     <script type="text/javascript" src="<?php echo $assetPrefix; ?>template_01/js/funciones.js"></script>
 
     <script>
-    // ── Prefijo para rutas AJAX (siempre apunta a la raíz del proyecto) ─────
-    const ROOT = '<?php echo $assetPrefix; ?>';
-
-    // ── Toggle chip ──────────────────────────────────────────────────────────
-    function toggleChip(chip) {
-        const esOn  = chip.classList.contains('cat-chip--on');
-        const idCat = chip.dataset.idCategoria;
-        const card  = chip.closest('.ac-card');
-
-        // Si vamos a activar, verificar que ningún otro técnico tenga esa cat activa
-        // (regla de negocio: una categoría solo puede tener un técnico asignado)
-        if (!esOn) {
-            const yaAsignado = document.querySelector(
-                `.ac-card:not([data-tecnico-id="${card.dataset.tecnicoId}"]) .cat-chip--on[data-id-categoria="${idCat}"]`
-            );
-            if (yaAsignado) {
-                const otroCard  = yaAsignado.closest('.ac-card');
-                const otroNombre = otroCard.querySelector('.ac-card__name').textContent.trim();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Categoría ya asignada',
-                    html: `<b>${chip.textContent.trim()}</b> ya está asignada a <b>${otroNombre}</b>.<br>¿Quieres reasignarla a este técnico?`,
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, reasignar',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#4e73df',
-                });
-                // No hacemos nada hasta que el usuario confirme en un flujo real
-                // Por ahora solo avisamos
-                return;
-            }
-        }
-
-        // Toggle visual
-        chip.classList.toggle('cat-chip--on',  !esOn);
-        chip.classList.toggle('cat-chip--off',  esOn);
-        chip.querySelector('i:first-child').className =
-            'bi ' + (!esOn ? 'bi-check-circle-fill' : 'bi-circle');
-
-        // Actualizar contador
-        const chips    = card.querySelectorAll('.cat-chip--on').length;
-        const total    = card.querySelectorAll('.cat-chip').length;
-        card.querySelector('.cat-count').textContent = chips;
-    }
-
-    // ── Guardar cambios (versión cards, apunta a la ruta correcta) ───────────
-    function guardarCambiosCards() {
-        Swal.fire({
-            title: 'Guardar cambios',
-            text: '¿Confirmas los cambios de asignación de categorías?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#4e73df',
-            cancelButtonColor: '#858796',
-            confirmButtonText: 'Sí, guardar',
-            cancelButtonText: 'Cancelar',
-        }).then(result => {
-            if (!result.isConfirmed) return;
-
-            const peticiones = [];
-
-            document.querySelectorAll('.ac-card').forEach(card => {
-                const idTecnico = parseInt(card.dataset.tecnicoId, 10);
-                const idsCategorias = [];
-
-                card.querySelectorAll('.cat-chip--on').forEach(chip => {
-                    const idCat = parseInt(chip.dataset.idCategoria, 10);
-                    if (!isNaN(idCat)) idsCategorias.push(idCat);
-                });
-
-                peticiones.push(
-                    fetch(ROOT + 'modelos/guardar/guardar_permisos_categoria.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id_usuario: idTecnico, ids_categorias: idsCategorias })
-                    }).then(r => r.json())
-                );
-            });
-
-            Promise.all(peticiones)
-                .then(respuestas => {
-                    const conError = respuestas.some(r => !r || r.status !== 'ok');
-                    if (conError) {
-                        Swal.fire('Error', 'Ocurrió un error al guardar una o más asignaciones.', 'error');
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Guardado',
-                            text: 'Las asignaciones se guardaron correctamente.',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                    }
-                })
-                .catch(() => Swal.fire('Error', 'No se pudo conectar al servidor.', 'error'));
-        });
-    }
-
-    // ── Administrar Categorías — carga con ruta correcta ────────────────────
-    function abrirModalAdministrarCategorias() {
-        const modalEl = document.getElementById('modalAdministrarCategorias');
-        if (!modalEl) return;
-        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-        modal.show();
-
-        $('#contenedorAdministrarCategorias').html(`
-            <div class="d-flex justify-content-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-            </div>
-        `);
-
-        $.ajax({
-            url: ROOT + 'modelos/rescatar/administrar_categorias.php',
-            type: 'GET',
-            success: function(html) {
-                $('#contenedorAdministrarCategorias').html(html);
-            },
-            error: function() {
-                $('#contenedorAdministrarCategorias').html(
-                    '<div class="alert alert-danger mb-0"><i class="bi bi-exclamation-circle me-2"></i>No se pudo cargar el listado de categorías.</div>'
-                );
-            }
-        });
-    }
-
-    // ── Editar categoría (formulario inline en el modal) ─────────────────────
-    $(document).on('click', '.js-editar-categoria', function () {
-        $('#editar_id_categoria').val($(this).data('id_categoria'));
-        $('#editar_nombre_categoria').val($(this).data('nombre_categoria') || '');
-        $('#editar_abreviacion').val($(this).data('abreviacion') || '');
-        const icono = $(this).data('icono') || '';
-        $('#editar_icono').val(icono);
-        $('#iconoPreview').html('<i class="bi ' + icono + '"></i>');
-        $('#editar_orden').val($(this).data('orden') || 0);
-
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAdministrarCategorias')).hide();
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarCategoria')).show();
-    });
-
-    $('#formEditarCategoria').on('submit', function(e) {
-        e.preventDefault();
-        const data = $(this).serialize();
-        $.post(ROOT + 'modelos/editar/editar_categoria_ticket.php', data, function(resp) {
-            let ok = false;
-            try { ok = (typeof resp === 'object' ? resp : JSON.parse(resp)).success; } catch(ex) {}
-            if (ok) {
-                Swal.fire({ icon:'success', title:'Guardado', timer:1500, showConfirmButton:false })
-                    .then(() => abrirModalAdministrarCategorias());
-                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarCategoria')).hide();
-            } else {
-                Swal.fire('Error', 'No se pudo guardar la categoría.', 'error');
-            }
-        });
-    });
-
-    // ── Toggle estado categoría ──────────────────────────────────────────────
-    $(document).on('click', '.js-toggle-estado-categoria', function () {
-        const idCat     = $(this).data('id_categoria');
-        const estado    = parseInt($(this).data('estado'), 10);
-        const accion    = estado === 1 ? 'desactivar' : 'activar';
-
-        Swal.fire({
-            title: accion.charAt(0).toUpperCase() + accion.slice(1) + ' categoría',
-            text: '¿Confirmas esta acción?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Confirmar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: estado === 1 ? '#e74a3b' : '#1cc88a',
-        }).then(result => {
-            if (!result.isConfirmed) return;
-            $.post(ROOT + 'modelos/editar/cambiar_estado_categoria_ticket.php',
-                { id_categoria: idCat, estado: estado === 1 ? 0 : 1 },
-                function() {
-                    Swal.fire({ icon:'success', title:'Listo', timer:1200, showConfirmButton:false })
-                        .then(() => {
-                            // Recargar tabla dentro del modal
-                            $.ajax({
-                                url: ROOT + 'modelos/rescatar/administrar_categorias.php',
-                                success: html => $('#contenedorAdministrarCategorias').html(html)
-                            });
-                        });
-                }
-            );
-        });
-    });
-
-    // ── Agregar categoría ────────────────────────────────────────────────────
-    function agregarCategoria() {
-        Swal.fire({
-            title: 'Nueva categoría',
-            html: `
-                <div style="text-align:left;display:grid;gap:.6rem;">
-                    <div>
-                        <label style="font-size:.82rem;font-weight:700;">Nombre</label>
-                        <input id="nc_nombre" class="swal2-input" placeholder="Nombre de la categoría" style="margin:0;height:38px;">
-                    </div>
-                    <div>
-                        <label style="font-size:.82rem;font-weight:700;">Abreviación</label>
-                        <input id="nc_abrev" class="swal2-input" placeholder="Abreviación corta" style="margin:0;height:38px;">
-                    </div>
-                    <div>
-                        <label style="font-size:.82rem;font-weight:700;">Ícono Bootstrap (ej: bi-tools)</label>
-                        <input id="nc_icono" class="swal2-input" placeholder="bi-tag" style="margin:0;height:38px;">
-                    </div>
-                    <div>
-                        <label style="font-size:.82rem;font-weight:700;">Orden</label>
-                        <input id="nc_orden" type="number" class="swal2-input" value="99" style="margin:0;height:38px;">
-                    </div>
-                </div>`,
-            showCancelButton: true,
-            confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#4e73df',
-            focusConfirm: false,
-            preConfirm: () => {
-                const nombre = document.getElementById('nc_nombre').value.trim();
-                if (!nombre) { Swal.showValidationMessage('El nombre es obligatorio'); return false; }
-                return {
-                    nombre_categoria: nombre,
-                    abreviacion: document.getElementById('nc_abrev').value.trim(),
-                    icono: document.getElementById('nc_icono').value.trim() || 'bi-tag',
-                    orden: document.getElementById('nc_orden').value || 99,
-                };
-            }
-        }).then(result => {
-            if (!result.isConfirmed) return;
-            $.post(ROOT + 'modelos/guardar/crear_categorias.php', result.value, function(resp) {
-                let ok = false;
-                try { ok = (typeof resp === 'object' ? resp : JSON.parse(resp)).success; } catch(ex) { ok = !!resp; }
-                if (ok) {
-                    Swal.fire({ icon:'success', title:'Categoría creada', timer:1500, showConfirmButton:false })
-                        .then(() => location.reload());
-                } else {
-                    Swal.fire('Error', 'No se pudo crear la categoría.', 'error');
-                }
-            });
-        });
-    }
+    window.ADMIN_CATEGORIAS_CONFIG = {
+        root: '<?php echo $assetPrefix; ?>',
+        tecnicos: <?php echo json_encode($tecnicosParaNuevaCategoria, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP); ?>
+    };
     </script>
+    <script src="<?php echo $assetPrefix; ?>configuracion/js/admin_categorias.js"></script>
 </body>
 </html>
+

@@ -59,25 +59,25 @@
 .lic-kpi-row {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 1.15rem;
+    gap: .75rem;
     align-items: stretch;
 }
 
 .lic-kpi-card {
-    min-height: 188px;
-    border-radius: 18px;
+    min-height: 120px;
+    border-radius: 14px;
     color: #fff;
-    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.10);
     overflow: hidden;
 }
 
 .lic-kpi-card__content {
     min-height: 100%;
-    padding: 1.45rem 1.2rem;
+    padding: 1rem 1.1rem;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1rem;
+    gap: .75rem;
 }
 
 .lic-kpi-card__copy {
@@ -95,7 +95,7 @@
 
 .lic-kpi-card__value {
     color: #fff;
-    font-size: clamp(2rem, 2.2vw, 2.45rem);
+    font-size: clamp(1.4rem, 1.8vw, 1.85rem);
     font-weight: 800;
     line-height: 1.05;
     word-break: break-word;
