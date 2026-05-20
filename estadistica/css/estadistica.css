@@ -1093,3 +1093,279 @@ body {
         width: 100%;
     }
 }
+
+/* Compactacion exclusiva para estadistica/vida_ticket.php: mantiene identidad visual y aumenta densidad operativa. */
+.vida-ticket-compact .topbar {
+    margin-bottom: 0.75rem !important;
+}
+
+.vida-ticket-compact .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.vida-ticket-compact .row.mx-1.mx-md-3 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+.vida-ticket-compact .vida-ticket-compact__body {
+    padding: 1rem 1.15rem !important;
+}
+
+.vida-ticket-compact .stats-hero-compact {
+    padding: 1rem 1.15rem;
+    border-radius: 18px;
+    margin-bottom: 0.9rem !important;
+}
+
+.vida-ticket-compact .stats-hero-compact .inv-kicker {
+    padding: 0.22rem 0.55rem;
+    font-size: 0.68rem;
+}
+
+.vida-ticket-compact .stats-hero-compact .inv-title {
+    font-size: 1.45rem;
+    line-height: 1.12;
+    margin-bottom: 0.25rem !important;
+}
+
+.vida-ticket-compact .stats-hero-compact .inv-subtitle {
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+
+.vida-ticket-compact .stats-summary-badge {
+    min-width: 170px;
+    border-radius: 14px;
+    padding: 0.65rem 0.8rem;
+    box-shadow: 0 10px 24px rgba(15, 76, 129, 0.06);
+}
+
+.vida-ticket-compact .stats-summary-badge span {
+    font-size: 0.66rem;
+    margin-bottom: 0.18rem;
+}
+
+.vida-ticket-compact .stats-summary-badge strong {
+    font-size: 0.9rem;
+}
+
+/* Tarjeta operativa compacta para que filtros y tabla queden mas cerca del titulo. */
+.vida-ticket-compact .vida-ticket-compact__panel {
+    padding: 1rem;
+    border-radius: 14px;
+}
+
+.vida-ticket-compact .vida-ticket-compact__panel .panel-card__header {
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.vida-ticket-compact .vida-ticket-compact__panel .panel-card__eyebrow {
+    font-size: 0.68rem;
+}
+
+.vida-ticket-compact .vida-ticket-compact__panel .panel-card__title {
+    font-size: 1.05rem;
+    margin-top: 0.12rem;
+}
+
+.vida-ticket-compact .vida-ticket-compact__panel .panel-chip {
+    padding: 0.32rem 0.62rem;
+    font-size: 0.76rem;
+}
+
+/* Filtros compactos: misma disposicion, menor alto y menos aire vertical. */
+.vida-ticket-compact .filters-compact {
+    margin-bottom: 0.75rem;
+}
+
+.vida-ticket-compact .filters-compact .row {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.45rem;
+}
+
+.vida-ticket-compact .filters-compact .form-label {
+    font-size: 0.78rem;
+    margin-bottom: 0.22rem !important;
+}
+
+.vida-ticket-compact .filters-compact .form-select,
+.vida-ticket-compact .filters-compact .form-control {
+    min-height: 32px;
+    padding-top: 0.28rem;
+    padding-bottom: 0.28rem;
+    font-size: 0.88rem;
+    border-radius: 8px;
+}
+
+/* DataTable compacto: filas mas bajas sin perder lectura ni acciones. */
+.vida-ticket-compact .ticket-table-wrap {
+    border-radius: 14px;
+}
+
+.vida-ticket-compact #ticketLifeTable {
+    font-size: 0.78rem !important;
+}
+
+.vida-ticket-compact #ticketLifeTable thead th {
+    padding: 0.55rem 0.65rem !important;
+    font-size: 0.7rem !important;
+}
+
+.vida-ticket-compact #ticketLifeTable tbody td {
+    padding: 0.45rem 0.65rem !important;
+}
+
+.vida-ticket-compact #ticketLifeTable td.celda-id,
+.vida-ticket-compact #ticketLifeTable th.col-id {
+    width: 48px !important;
+    min-width: 48px !important;
+}
+
+.vida-ticket-compact #ticketLifeTable td.celda-id-con-indicador {
+    padding-left: 14px !important;
+}
+
+.vida-ticket-compact #ticketLifeTable .estado-indicador-dot--inline {
+    left: 4px;
+    width: 5px !important;
+    height: 40px !important;
+}
+
+.vida-ticket-compact #ticketLifeTable th.col-fecha-hora,
+.vida-ticket-compact #ticketLifeTable td.celda-fecha-hora {
+    width: 105px !important;
+    min-width: 105px !important;
+}
+
+.vida-ticket-compact #ticketLifeTable th.col-de,
+.vida-ticket-compact #ticketLifeTable td.celda-de {
+    width: 125px !important;
+    min-width: 125px !important;
+}
+
+.vida-ticket-compact #ticketLifeTable th.col-asunto,
+.vida-ticket-compact #ticketLifeTable td.celda-asunto {
+    min-width: 260px !important;
+}
+
+.vida-ticket-compact #ticketLifeTable .ticket-life-table__title {
+    font-size: 0.88rem;
+    line-height: 1.18;
+}
+
+.vida-ticket-compact #ticketLifeTable .ticket-life-table__subtitle {
+    margin-top: 0.15rem;
+    font-size: 0.74rem;
+    line-height: 1.15;
+}
+
+.vida-ticket-compact #ticketLifeTable td.celda-fecha-respuesta .ticket-resumen-estado {
+    min-height: 40px !important;
+    padding: 0.35rem 0.45rem !important;
+    gap: 0.4rem;
+}
+
+.vida-ticket-compact #ticketLifeTable td.celda-fecha-respuesta .ticket-resumen-estado__titulo {
+    font-size: 0.72rem !important;
+}
+
+.vida-ticket-compact #ticketLifeTable td.celda-fecha-respuesta .ticket-resumen-estado__detalle {
+    font-size: 0.66rem !important;
+}
+
+.vida-ticket-compact #ticketLifeTable .ticket-life-row__toggle.btn-tecnico-accion,
+.vida-ticket-compact #ticketLifeTable .ticket-life-pdf-link {
+    min-width: 86px;
+    padding: 0.28rem 0.52rem !important;
+    border-radius: 9px;
+    font-size: 0.72rem;
+    line-height: 1.1;
+}
+
+.vida-ticket-compact #ticketLifeTable .celda-opciones .gap-2 {
+    gap: 0.35rem !important;
+}
+
+.vida-ticket-compact #ticketLifeTable_wrapper .dataTables_length,
+.vida-ticket-compact #ticketLifeTable_wrapper .dataTables_filter,
+.vida-ticket-compact #ticketLifeTable_wrapper .dataTables_info,
+.vida-ticket-compact #ticketLifeTable_wrapper .dataTables_paginate {
+    margin-top: 0.55rem;
+    font-size: 0.78rem;
+}
+
+.vida-ticket-compact #ticketLifeTable_wrapper .dataTables_length select {
+    min-height: 30px;
+    padding: 0.2rem 1.7rem 0.2rem 0.45rem;
+    font-size: 0.82rem;
+    border-radius: 8px;
+}
+
+.vida-ticket-compact #ticketLifeTable_wrapper .pagination .page-link {
+    padding: 0.25rem 0.48rem;
+    font-size: 0.78rem;
+}
+
+/* Detalle expandible mas denso para que la vida del ticket no desplace tanto la tabla. */
+.vida-ticket-compact .ticket-life-content {
+    padding: 0.7rem 0.85rem;
+}
+
+.vida-ticket-compact .ticket-life-detail {
+    gap: 0.7rem;
+}
+
+.vida-ticket-compact .ticket-life-detail__summary {
+    gap: 0.65rem;
+}
+
+.vida-ticket-compact .ticket-life-summary-card,
+.vida-ticket-compact .ticket-life-side-card {
+    border-radius: 12px;
+    padding: 0.7rem 0.8rem;
+}
+
+.vida-ticket-compact .ticket-life-progress {
+    padding: 1rem 0.75rem;
+}
+
+.vida-ticket-compact .ticket-life-description,
+.vida-ticket-compact .ticket-life-timeline {
+    padding: 0.85rem;
+}
+
+@media (min-width: 992px) {
+    .vida-ticket-compact .filters-compact .col-md-3 {
+        flex: 0 0 25%;
+        max-width: 25%;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .vida-ticket-compact .vida-ticket-compact__body {
+        padding: 0.85rem !important;
+    }
+
+    .vida-ticket-compact .filters-compact .row > div {
+        width: 50%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .vida-ticket-compact .container-fluid {
+        padding-left: 0.6rem;
+        padding-right: 0.6rem;
+    }
+
+    .vida-ticket-compact .stats-hero-compact,
+    .vida-ticket-compact .vida-ticket-compact__panel {
+        padding: 0.85rem;
+    }
+
+    .vida-ticket-compact .filters-compact .row > div {
+        width: 100%;
+    }
+}

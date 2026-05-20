@@ -304,7 +304,8 @@
         tablaVida = window.jQuery('#ticketLifeTable').DataTable({
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
             responsive: true,
-            pageLength: 10,
+            pageLength: 15,
+            lengthMenu: [[15, 25, 50, 100], [15, 25, 50, 100]],
             paging: true,
             pagingType: 'simple_numbers',
             info: true,

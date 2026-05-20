@@ -524,7 +524,7 @@ ksort($estadosDisponibles);
     <link href="css/ticket_admin.css" rel="stylesheet">
     <link href="estadistica/css/estadistica.css?v=<?php echo $versionCss; ?>" rel="stylesheet">
 </head>
-<body id="page-top">
+<body id="page-top" class="vida-ticket-compact">
     <input type="hidden" id="idUsuario" value="<?php echo htmlspecialchars((string) $idUsuarioSession, ENT_QUOTES, 'UTF-8'); ?>">
     <div id="wrapper">
         <?php $funciones->menuLateral2($idUsuarioSession, $idPagActual); ?>
@@ -541,8 +541,8 @@ ksort($estadosDisponibles);
                     <div class="row mx-1 mx-md-3">
                         <div class="col-12">
                             <div class="card shadow mb-4 px-0 border-0 inv-panel">
-                                <div class="card-body p-4 p-lg-5">
-                                    <div class="inv-hero mb-4">
+                                <div class="card-body vida-ticket-compact__body p-4 p-lg-5">
+                                    <div class="inv-hero stats-hero-compact mb-4">
                                         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                                             <div>
                                                 <span class="inv-kicker">Mesa de ayuda</span>
@@ -558,7 +558,7 @@ ksort($estadosDisponibles);
                                         </div>
                                     </div>
 
-                                    <section class="panel-card">
+                                    <section class="panel-card vida-ticket-compact__panel">
                                         <div class="panel-card__header">
                                             <div>
                                                 <span class="panel-card__eyebrow">Listado operacional</span>
@@ -567,11 +567,11 @@ ksort($estadosDisponibles);
                                             <span class="panel-chip"><?php echo count($ticketsRecientes); ?> recientes</span>
                                         </div>
 
-                                        <div class="ticket-admin-filtros ticket-life-filtros px-0 pt-0">
+                                        <div class="ticket-admin-filtros ticket-life-filtros filters-compact px-0 pt-0">
                                             <div class="row g-3">
                                                 <div class="col-md-3">
                                                     <label class="form-label fw-semibold text-muted mb-1">Colegio</label>
-                                                    <select id="ticketLifeFilterColegio" class="form-select">
+                                                    <select id="ticketLifeFilterColegio" class="form-select form-select-sm">
                                                         <option value="">Todos</option>
                                                         <?php foreach ($colegiosVisibles as $colegio): ?>
                                                             <option value="<?php echo htmlspecialchars((string) $colegio['nom_colegio'], ENT_QUOTES, 'UTF-8'); ?>">
@@ -582,7 +582,7 @@ ksort($estadosDisponibles);
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label class="form-label fw-semibold text-muted mb-1">Categoria</label>
-                                                    <select id="ticketLifeFilterCategoria" class="form-select">
+                                                    <select id="ticketLifeFilterCategoria" class="form-select form-select-sm">
                                                         <option value="">Todas</option>
                                                         <?php foreach ($categoriasDisponibles as $categoria): ?>
                                                             <option value="<?php echo htmlspecialchars($categoria, ENT_QUOTES, 'UTF-8'); ?>">
@@ -593,7 +593,7 @@ ksort($estadosDisponibles);
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label class="form-label fw-semibold text-muted mb-1">Estado</label>
-                                                    <select id="ticketLifeFilterEstado" class="form-select">
+                                                    <select id="ticketLifeFilterEstado" class="form-select form-select-sm">
                                                         <option value="activos">Activos</option>
                                                         <option value="">Todos</option>
                                                         <?php foreach ($estadosDisponibles as $estado): ?>
@@ -605,7 +605,7 @@ ksort($estadosDisponibles);
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label class="form-label fw-semibold text-muted mb-1">Buscar</label>
-                                                    <input type="text" id="ticketLifeSearch" class="form-control" placeholder="Ticket, asunto, solicitante o tecnico...">
+                                                    <input type="text" id="ticketLifeSearch" class="form-control form-control-sm" placeholder="Ticket, asunto, solicitante o tecnico...">
                                                 </div>
                                             </div>
                                         </div>
@@ -615,7 +615,7 @@ ksort($estadosDisponibles);
                                                 <div class="ticket-life-empty">No hay tickets disponibles para mostrar en este momento.</div>
                                             <?php else: ?>
                                                 <div class="table-responsive">
-                                                    <table class="table table-bordered table-hover align-middle ticket-life-table" id="ticketLifeTable">
+                                                    <table class="table table-bordered table-hover align-middle ticket-life-table table-compact" id="ticketLifeTable">
                                                         <thead class="table-dark">
                                                             <tr>
                                                                 <th class="col-id">ID</th>
