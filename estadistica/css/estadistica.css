@@ -167,6 +167,21 @@ body {
     white-space: nowrap;
 }
 
+.estadistica-select-estado {
+    width: min(220px, 100%);
+    border-color: var(--inv-border);
+    border-radius: 999px;
+    color: var(--inv-primary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    background-color: rgba(15, 76, 129, 0.06);
+}
+
+.estadistica-select-estado:focus {
+    border-color: rgba(15, 76, 129, 0.45);
+    box-shadow: 0 0 0 0.2rem rgba(15, 76, 129, 0.12);
+}
+
 .ticket-life-filtros {
     margin-bottom: 1.25rem;
 }
@@ -1023,6 +1038,15 @@ body {
 @media (max-width: 768px) {
     .inv-hero {
         padding: 1.25rem;
+    }
+
+    .panel-card__header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .estadistica-select-estado {
+        width: 100%;
     }
 
     .inv-stat-card strong {
