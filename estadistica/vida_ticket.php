@@ -545,11 +545,11 @@ ksort($estadosDisponibles);
                                     <div class="inv-hero stats-hero-compact mb-4">
                                         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                                             <div>
-                                                <span class="inv-kicker">Mesa de ayuda</span>
+                                                <!-- <span class="inv-kicker">Mesa de a33yuda</span> -->
                                                 <h1 class="inv-title mb-2">Vida del ticket</h1>
-                                                <p class="inv-subtitle mb-0">
+                                                <!-- <p class="inv-subtitle mb-0">
                                                     Explora el listado de tickets y despliega el ciclo completo de cada caso con sus hitos, tiempos y avances registrados.
-                                                </p>
+                                                </p> -->
                                             </div>
                                             <div class="stats-summary-badge">
                                                 <span>Tickets cargados</span>
