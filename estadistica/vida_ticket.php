@@ -133,6 +133,15 @@ $renderizarDetalleTicket = static function (array $ticket, array $acciones) use 
     ob_start();
     ?>
     <div class="ticket-life-detail">
+        <div class="ticket-life-detail__toolbar">
+            <a class="btn btn-sm btn-danger ticket-life-pdf-button"
+               href="estadistica/vida_ticket.php?id_ticket=<?= (int) $ticket['id_ticket'] ?>&pdf=1"
+               target="_blank"
+               rel="noopener">
+                <i class="bi bi-file-earmark-pdf"></i>
+                Descargar PDF
+            </a>
+        </div>
         <div class="ticket-life-detail__summary">
             <div class="ticket-life-summary-card">
                 <span>Estado actual</span>
@@ -234,6 +243,107 @@ $renderizarDetalleTicket = static function (array $ticket, array $acciones) use 
     return ob_get_clean();
 };
 
+$renderizarPdfTicket = static function (array $ticket, array $acciones) use ($normalizarFecha, $formatearFecha, $duracion): string {
+    $creacion = $normalizarFecha($ticket['fecha_creacion_inicio'] ?? '', $ticket['hora_creacion_inicio'] ?? '');
+    $asignacion = $normalizarFecha($ticket['fecha_asignacion_tecnico'] ?? '', $ticket['hora_asignacion_tecnico'] ?? '');
+    $comienzo = $normalizarFecha($ticket['fecha_comienzo_ticket'] ?? '', $ticket['hora_comienzo_ticket'] ?? '');
+    $termino = $normalizarFecha($ticket['fecha_termino_ticket'] ?? '', $ticket['hora_termino_ticket'] ?? '');
+    $cierre = $normalizarFecha($ticket['fecha_cierre_ticket'] ?? '', $ticket['hora_cierre_ticket'] ?? '');
+    $h = static fn ($valor): string => htmlspecialchars(trim((string) $valor), ENT_QUOTES, 'UTF-8');
+
+    $etapas = [
+        ['Ingreso del ticket', $formatearFecha($creacion), 'Solicitud registrada por el usuario.', $duracion($creacion, $asignacion)],
+        ['Asignacion tecnica', $formatearFecha($asignacion), 'Derivacion a responsable tecnico.', $duracion($asignacion, $comienzo)],
+        ['Inicio de atencion', $formatearFecha($comienzo), 'Comienzo formal del trabajo.', $duracion($comienzo, $termino)],
+        ['Termino tecnico', $formatearFecha($termino), 'Resolucion tecnica o entrega.', $duracion($termino, $cierre)],
+        ['Cierre administrativo', $formatearFecha($cierre), 'Confirmacion final y cierre.', $cierre ? 'Completado' : 'Pendiente'],
+    ];
+
+    ob_start();
+    ?>
+    <style>
+        body { font-family: sans-serif; color: #17324d; font-size: 11px; }
+        h1 { color: #0f4c81; font-size: 22px; margin: 0 0 4px; }
+        h2 { color: #0f4c81; font-size: 15px; margin: 18px 0 8px; }
+        .muted { color: #64748b; }
+        .header { border-bottom: 2px solid #d8e4ef; padding-bottom: 12px; margin-bottom: 14px; }
+        .grid { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .grid td, .grid th { border: 1px solid #d8e4ef; padding: 8px; vertical-align: top; }
+        .grid th { background: #eef5fb; color: #0f4c81; text-align: left; }
+        .box { border: 1px solid #d8e4ef; border-radius: 8px; padding: 10px; margin: 8px 0; }
+        .timeline td:first-child { width: 26%; font-weight: bold; color: #0f4c81; }
+    </style>
+    <div class="header">
+        <h1>Vida del ticket #<?= (int) $ticket['id_ticket'] ?></h1>
+        <div class="muted"><?= $h($ticket['asunto'] ?? 'Sin asunto') ?></div>
+    </div>
+
+    <table class="grid">
+        <tr>
+            <th>Estado actual</th>
+            <th>Prioridad</th>
+            <th>Categoria</th>
+            <th>Colegio</th>
+        </tr>
+        <tr>
+            <td><?= $h($ticket['estado_nombre'] ?? 'Sin estado') ?></td>
+            <td><?= $h($ticket['prioridad_nombre'] ?? 'Sin prioridad') ?></td>
+            <td><?= $h($ticket['nombre_categoria'] ?? 'Sin categoria') ?></td>
+            <td><?= $h($ticket['colegio_nombre'] ?? 'Sin colegio') ?></td>
+        </tr>
+        <tr>
+            <th>Solicitante</th>
+            <th>Tecnico</th>
+            <th>Ingreso</th>
+            <th>Generado</th>
+        </tr>
+        <tr>
+            <td><?= $h($ticket['usuario_nombre'] ?? 'Sin solicitante') ?></td>
+            <td><?= $h($ticket['tecnico_nombre'] ?? 'Sin tecnico') ?></td>
+            <td><?= $h($formatearFecha($creacion)) ?></td>
+            <td><?= date('d-m-Y H:i') ?></td>
+        </tr>
+    </table>
+
+    <h2>Resumen del ticket</h2>
+    <div class="box"><?= nl2br($h($ticket['descripcion_ticket'] ?? 'Sin descripcion disponible')) ?></div>
+    <?php if (!empty($ticket['comentario_final'])): ?>
+        <h2>Comentario final</h2>
+        <div class="box"><?= nl2br($h($ticket['comentario_final'])) ?></div>
+    <?php endif; ?>
+
+    <h2>Linea de tiempo</h2>
+    <table class="grid timeline">
+        <tr><th>Etapa</th><th>Fecha</th><th>Detalle</th><th>Duracion a siguiente etapa</th></tr>
+        <?php foreach ($etapas as $etapa): ?>
+            <tr>
+                <td><?= $h($etapa[0]) ?></td>
+                <td><?= $h($etapa[1]) ?></td>
+                <td><?= $h($etapa[2]) ?></td>
+                <td><?= $h($etapa[3]) ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </table>
+
+    <h2>Avances registrados</h2>
+    <?php if (empty($acciones)): ?>
+        <div class="box muted">No hay avances tecnicos registrados.</div>
+    <?php else: ?>
+        <table class="grid">
+            <tr><th>Fecha</th><th>Accion</th></tr>
+            <?php foreach ($acciones as $accion): ?>
+                <?php $fechaAccion = $normalizarFecha($accion['fecha_avance'] ?? '', $accion['hora_avance'] ?? ''); ?>
+                <tr>
+                    <td><?= $h($formatearFecha($fechaAccion)) ?></td>
+                    <td><?= $h($accion['accion'] ?? 'Accion sin detalle') ?></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php endif; ?>
+    <?php
+    return ob_get_clean();
+};
+
 $resolverTicket = static function (MySQL $db, int $idTicket): array {
     $ticketQuery = $db->consulta("
         SELECT
@@ -245,6 +355,7 @@ $resolverTicket = static function (MySQL $db, int $idTicket): array {
             et.color AS estado_color,
             pr.nombre AS prioridad_nombre,
             ct.nombre_categoria,
+            COALESCE(col.nom_colegio, 'Sin colegio') AS colegio_nombre,
             CONCAT(COALESCE(u.nombre, ''), ' ', COALESCE(u.apellido_paterno, ''), ' ', COALESCE(u.apellido_materno, '')) AS usuario_nombre,
             CONCAT(COALESCE(tec.nombre, ''), ' ', COALESCE(tec.apellido_paterno, ''), ' ', COALESCE(tec.apellido_materno, '')) AS tecnico_nombre,
             pt.fecha_creacion_inicio,
@@ -263,6 +374,13 @@ $resolverTicket = static function (MySQL $db, int $idTicket): array {
         LEFT JOIN categoria_de_ticket ct ON ct.id_categoria = t.id_categoria_ticket
         LEFT JOIN usuarios u ON u.id = t.id_usuario
         LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
+        LEFT JOIN (
+            SELECT uc.id_usuario, MIN(c.nom_colegio) AS nom_colegio
+            FROM usuario_colegio uc
+            INNER JOIN colegio c ON c.id_colegio = uc.id_colegio
+            WHERE uc.estado = 1 AND c.estado = 1
+            GROUP BY uc.id_usuario
+        ) col ON col.id_usuario = t.id_usuario
         LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
         WHERE t.id_ticket = {$idTicket}
         LIMIT 1
@@ -290,7 +408,31 @@ $resolverTicket = static function (MySQL $db, int $idTicket): array {
 };
 
 $idTicketAjax = isset($_GET['id_ticket']) ? (int) $_GET['id_ticket'] : 0;
+$esSolicitudPdf = $idTicketAjax > 0 && isset($_GET['pdf']);
 $esSolicitudDetalle = $idTicketAjax > 0;
+
+if ($esSolicitudPdf) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+    [$ticketDetalle, $accionesDetalle] = $resolverTicket($db, $idTicketAjax);
+    if (!$ticketDetalle) {
+        http_response_code(404);
+        echo 'No se encontro informacion para este ticket.';
+        exit;
+    }
+
+    $mpdf = new \Mpdf\Mpdf([
+        'mode' => 'utf-8',
+        'format' => 'A4',
+        'margin_left' => 12,
+        'margin_right' => 12,
+        'margin_top' => 12,
+        'margin_bottom' => 12,
+    ]);
+    $mpdf->SetTitle('Vida del ticket #' . (int) $ticketDetalle['id_ticket']);
+    $mpdf->WriteHTML($renderizarPdfTicket($ticketDetalle, $accionesDetalle));
+    $mpdf->Output('vida_ticket_' . (int) $ticketDetalle['id_ticket'] . '.pdf', \Mpdf\Output\Destination::DOWNLOAD);
+    exit;
+}
 
 if ($esSolicitudDetalle) {
     header('Content-Type: text/html; charset=utf-8');
@@ -521,9 +663,9 @@ ksort($estadosDisponibles);
                                                                 <tr class="ticket-life-row fila-ticket-admin-compacta estado-ticket-<?php echo $estadoId; ?>"
                                                                     data-ticket-id="<?php echo $ticketId; ?>"
                                                                     data-ticket-search="<?php echo htmlspecialchars($buscarTexto, ENT_QUOTES, 'UTF-8'); ?>"
-                                                                    data-colegio="<?php echo htmlspecialchars(strtolower($colegioNombre), ENT_QUOTES, 'UTF-8'); ?>"
-                                                                    data-categoria="<?php echo htmlspecialchars(strtolower($categoriaNombre), ENT_QUOTES, 'UTF-8'); ?>"
-                                                                    data-estado="<?php echo htmlspecialchars(strtolower($estadoNombre), ENT_QUOTES, 'UTF-8'); ?>">
+                                                                    data-colegio="<?php echo htmlspecialchars($colegioNombre, ENT_QUOTES, 'UTF-8'); ?>"
+                                                                    data-categoria="<?php echo htmlspecialchars($categoriaNombre, ENT_QUOTES, 'UTF-8'); ?>"
+                                                                    data-estado="<?php echo htmlspecialchars($estadoNombre, ENT_QUOTES, 'UTF-8'); ?>">
                                                                     <td class="celda-id celda-id-con-indicador">
                                                                         <span class="estado-indicador-dot estado-indicador-dot--inline" style="background-color: <?php echo htmlspecialchars($estadoColor, ENT_QUOTES, 'UTF-8'); ?>;"></span>
                                                                         <span class="celda-id-numero"><?php echo $contadorFila++; ?></span>
@@ -561,11 +703,19 @@ ksort($estadosDisponibles);
                                                                         </div>
                                                                     </td>
                                                                     <td class="celda-opciones">
-                                                                        <button type="button"
-                                                                                class="btn btn-sm btn-primary btn-tecnico-accion ticket-life-row__toggle"
-                                                                                data-ticket-id="<?php echo $ticketId; ?>">
-                                                                            Ver vida
-                                                                        </button>
+                                                                        <div class="d-flex flex-column gap-2">
+                                                                            <button type="button"
+                                                                                    class="btn btn-sm btn-primary btn-tecnico-accion ticket-life-row__toggle"
+                                                                                    data-ticket-id="<?php echo $ticketId; ?>">
+                                                                                Ver vida
+                                                                            </button>
+                                                                            <a class="btn btn-sm btn-outline-danger ticket-life-pdf-link"
+                                                                               href="estadistica/vida_ticket.php?id_ticket=<?php echo $ticketId; ?>&pdf=1"
+                                                                               target="_blank"
+                                                                               rel="noopener">
+                                                                                <i class="bi bi-file-earmark-pdf"></i> PDF
+                                                                            </a>
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
                                                             <?php endforeach; ?>

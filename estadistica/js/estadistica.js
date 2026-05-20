@@ -209,16 +209,24 @@
     const tableElement = document.getElementById('ticketLifeTable');
     let tablaVida = null;
 
+    function normalizeFilterText(value) {
+        return String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase();
+    }
+
     function estadoMatches(filterValue, estadoValue) {
         if (!filterValue) {
             return true;
         }
 
         if (filterValue === 'activos') {
-            return estadoValue.indexOf('cerr') === -1 && estadoValue.indexOf('termin') === -1;
+            return estadoValue.indexOf('cerr') === -1 && estadoValue.indexOf('termin') === -1 && estadoValue.indexOf('borrador') === -1;
         }
 
-        return estadoValue === filterValue.toLowerCase();
+        return estadoValue === filterValue;
     }
 
     function toggleTicketRow(rowNode) {
@@ -275,14 +283,14 @@
                     return true;
                 }
 
-                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-                const colegio = colegioFilter ? colegioFilter.value.trim().toLowerCase() : '';
-                const categoria = categoriaFilter ? categoriaFilter.value.trim().toLowerCase() : '';
-                const estado = estadoFilter ? estadoFilter.value.trim().toLowerCase() : '';
-                const haystack = rowNode.getAttribute('data-ticket-search') || '';
-                const rowColegio = rowNode.getAttribute('data-colegio') || '';
-                const rowCategoria = rowNode.getAttribute('data-categoria') || '';
-                const rowEstado = rowNode.getAttribute('data-estado') || '';
+                const query = normalizeFilterText(searchInput ? searchInput.value : '');
+                const colegio = normalizeFilterText(colegioFilter ? colegioFilter.value : '');
+                const categoria = normalizeFilterText(categoriaFilter ? categoriaFilter.value : '');
+                const estado = normalizeFilterText(estadoFilter ? estadoFilter.value : '');
+                const haystack = normalizeFilterText(rowNode.getAttribute('data-ticket-search') || '');
+                const rowColegio = normalizeFilterText(rowNode.getAttribute('data-colegio') || '');
+                const rowCategoria = normalizeFilterText(rowNode.getAttribute('data-categoria') || '');
+                const rowEstado = normalizeFilterText(rowNode.getAttribute('data-estado') || '');
 
                 return haystack.indexOf(query) !== -1 &&
                     (!colegio || rowColegio === colegio) &&
@@ -305,7 +313,7 @@
         });
 
         window.jQuery('#ticketLifeTable tbody').on('click', 'tr.ticket-life-row', function (event) {
-            if (event.target.closest('.ticket-life-row__toggle')) {
+            if (event.target.closest('.ticket-life-row__toggle') || event.target.closest('a')) {
                 return;
             }
             toggleTicketRow(this);

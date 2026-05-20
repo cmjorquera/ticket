@@ -732,6 +732,20 @@ body {
     gap: 1rem;
 }
 
+.ticket-life-detail__toolbar {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ticket-life-pdf-button,
+.ticket-life-pdf-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
 .ticket-life-detail__summary {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
