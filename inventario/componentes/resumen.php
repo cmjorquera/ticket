@@ -1,6 +1,5 @@
 <?php
 $resumen = $resumen ?? [];
-$porColegio = $resumen['por_colegio'] ?? [];
 ?>
 <div class="row g-3 mb-4">
     <div class="col-12 col-md-6 col-xl-2">
@@ -85,33 +84,6 @@ $porColegio = $resumen['por_colegio'] ?? [];
                     <i class="bi bi-tools"></i>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<div class="card shadow-sm border-0 inv-panel mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h6 class="mb-1">Total por colegio</h6>
-                <small class="text-muted">Distribucion del inventario en la red de colegios</small>
-            </div>
-        </div>
-        <div class="row g-3">
-            <?php if (!empty($porColegio)): ?>
-                <?php foreach ($porColegio as $item): ?>
-                    <div class="col-12 col-md-6 col-xl-4">
-                        <div class="inv-colegio-pill">
-                            <span><?= inventario_h($item['nom_colegio']) ?></span>
-                            <strong><?= (int)$item['total'] ?></strong>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="col-12">
-                    <div class="alert alert-light border mb-0">No hay datos para los filtros seleccionados.</div>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 </div>

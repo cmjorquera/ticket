@@ -60,7 +60,9 @@ try {
         'busqueda' => trim((string)($_GET['busqueda'] ?? '')),
     ];
     $resumen = $inventario->obtenerResumen($filtros);
-    $coloresColegio = $inventario->obtenerColoresColegio($idUsuarioSession);
+    $coloresColegio    = $inventario->obtenerColoresColegio($idUsuarioSession);
+    $colegioDelUsuario = $inventario->obtenerColegioDelUsuario($idUsuarioSession);
+    $idColegioRestringido = (int)($colegioDelUsuario['id_colegio'] ?? 0);
 } catch (Throwable $e) {
     inventario_responder_error('Error al cargar la portada del inventario: ' . $e->getMessage());
 }
@@ -103,6 +105,7 @@ require __DIR__ . '/componentes/layout_top.php';
                 <div class="card shadow-sm border-0 inv-panel">
                     <div class="card-body">
                         <div class="row g-3 align-items-end mb-4">
+                            <?php if ($idColegioRestringido === 0): ?>
                             <div class="col-md-3">
                                 <label class="form-label">Colegio</label>
                                 <select id="filtroColegio" class="form-select">
@@ -114,6 +117,7 @@ require __DIR__ . '/componentes/layout_top.php';
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+                            <?php endif; ?>
                             <div class="col-md-2">
                                 <label class="form-label">Estado</label>
                                 <select id="filtroEstado" class="form-select">
@@ -155,7 +159,7 @@ require __DIR__ . '/componentes/layout_top.php';
                             <table class="table table-striped table-hover align-middle" id="tablaInventario">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>N°</th>
                                         <th>Equipo</th>
                                         <th>Colegio</th>
                                         <th>Tipo</th>

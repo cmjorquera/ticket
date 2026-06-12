@@ -395,6 +395,28 @@
     font-size: 0.9rem;
 }
 
+#tablaInventario td .badge {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    border-radius: 999px;
+    padding: 0.32rem 0.65rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+#tablaInventario td .text-bg-success { background-color: #198754 !important; color: #fff !important; }
+#tablaInventario td .text-bg-secondary { background-color: #6c757d !important; color: #fff !important; }
+#tablaInventario td .text-bg-warning { background-color: #ffc107 !important; color: #1f2937 !important; }
+#tablaInventario td .text-bg-danger { background-color: #dc3545 !important; color: #fff !important; }
+#tablaInventario td .text-bg-info { background-color: #0dcaf0 !important; color: #1f2937 !important; }
+#tablaInventario td .text-bg-dark { background-color: #212529 !important; color: #fff !important; }
+
 .inv-action-buttons {
     min-width: 148px;
 }
@@ -452,34 +474,67 @@
 
 /* ── Carga masiva ─────────────────────────────────────────────────────────── */
 
-/* Hero con fondo blanco suave (igual a .inv-hero del módulo) */
+/* Hero oscuro con degradado púrpura → rojo/rosa */
 .cm-hero {
-    background: linear-gradient(135deg, #fafcff 0%, #f5f9fd 50%, #f0faf8 100%);
-    border: 1px solid rgba(15, 76, 129, 0.07);
+    background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 45%, #be185d 100%);
+    border: none;
     border-radius: 24px;
     padding: 2rem 2.25rem;
-    box-shadow: 0 4px 20px rgba(15, 76, 129, 0.06);
+    box-shadow: 0 8px 32px rgba(76, 29, 149, 0.28);
     margin-bottom: 1.75rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.cm-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+    pointer-events: none;
 }
 
 .cm-hero .inv-kicker {
-    background: rgba(15, 76, 129, 0.07);
-    color: #4a6580;
-    border-color: rgba(15, 76, 129, 0.10);
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
 }
 
 .cm-hero .inv-title {
-    color: var(--inv-text);
+    color: #fff;
     font-size: clamp(1.5rem, 2.5vw, 2.2rem);
 }
 
 .cm-hero .inv-subtitle {
-    color: #5f7388;
+    color: rgba(255, 255, 255, 0.80);
     max-width: 52rem;
 }
 
 .cm-hero .btn-light {
-    border-color: rgba(15, 76, 129, 0.14);
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.30);
+    color: #fff;
+    backdrop-filter: blur(4px);
+}
+
+.cm-hero .btn-light:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
+}
+
+.cm-feature-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
 }
 
 /* ── Stepper horizontal ──────────────────────────────────────────────────── */

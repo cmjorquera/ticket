@@ -61,7 +61,15 @@
                 }
             },
             columns: [
-                { data: 'id_equipo' },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        const pageInfo = new $.fn.dataTable.Api(meta.settings).page.info();
+                        return pageInfo.start + meta.row + 1;
+                    }
+                },
                 {
                     data: null,
                     render: function (data) {

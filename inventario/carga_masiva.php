@@ -10,16 +10,22 @@ require __DIR__ . '/componentes/layout_top.php';
 <div class="row mx-1 mx-md-3">
     <div class="col-12">
 
-        <!-- ── Hero con degradado azul → teal ─────────────────────────────── -->
+        <!-- ── Hero oscuro ───────────────────────────────────────────────── -->
         <div class="cm-hero mb-4">
             <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                 <div>
                     <span class="inv-kicker">Importacion masiva</span>
                     <h1 class="inv-title mb-2">Carga masiva de equipos</h1>
-                    <p class="inv-subtitle mb-0">
+                    <p class="inv-subtitle mb-3">
                         Importa múltiples equipos desde un archivo Excel. El colegio se asigna
                         automáticamente según tu usuario — no es necesario ingresarlo en la planilla.
                     </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="cm-feature-pill"><i class="bi bi-file-earmark-excel me-1"></i>Formato Excel (.xlsx / .xls)</span>
+                        <span class="cm-feature-pill"><i class="bi bi-arrow-repeat me-1"></i>Inserción y actualización automática</span>
+                        <span class="cm-feature-pill"><i class="bi bi-list-check me-1"></i>Detalle de errores por fila</span>
+                        <span class="cm-feature-pill"><i class="bi bi-building me-1"></i>Colegio asignado por sesión</span>
+                    </div>
                 </div>
                 <div class="flex-shrink-0">
                     <a href="index.php" class="btn btn-light btn-sm px-3">
