@@ -1188,7 +1188,7 @@ function cabezera()
     echo '<div class="topbar-divider d-none d-sm-block"></div>';
     echo '<li class="nav-item dropdown no-arrow" id="idDatosPersonales">';
     echo '<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
-    echo '<span class="mr-2 text-gray-600 small topbar-user-name">' . $_SESSION['nombre'] . " " .  htmlentities($_SESSION['apellido_paterno'], ENT_HTML5, "ISO-8859-1") . " <br> " . $_SESSION['apellido_materno'] . '</span>';
+    echo '<span class="mr-2 text-gray-600 small topbar-user-name">' . $_SESSION['nombre'] . " " .  htmlentities($_SESSION['apellido_paterno'], ENT_HTML5, "ISO-8859-1") . " <br> " . $_SESSION['apellido_materno'] .  '</span>';
     echo '<img class="img-profile rounded-circle" src="' . $urlPerfilImagen . '">';
     echo '</a>';
     echo '<div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">';

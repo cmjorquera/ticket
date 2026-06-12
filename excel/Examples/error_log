@@ -1,0 +1,342 @@
+[12-May-2024 13:19:47 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:19:47 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:19:56 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:19:57 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 13:20:22 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 13:21:33 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 13:21:35 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:35 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:21:35 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:21:36 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 13:21:37 Europe/London] PHP Fatal error:  Call to a member function children() on boolean in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 1445
+[12-May-2024 13:21:41 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 13:21:42 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 13:21:42 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 13:21:42 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 13:21:42 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 13:21:43 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open ./templates/28iterators.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:338
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Examples/28iterator.php(43): PHPExcel_Reader_Excel2007->load('./templates/28i...')
+#1 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 338
+[12-May-2024 13:21:48 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:48 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:48 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:48 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Warning:  require_once(../Build/PHPExcel.phar): failed to open stream: No such file or directory in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 13:21:49 Europe/London] PHP Fatal error:  require_once(): Failed opening required '../Build/PHPExcel.phar' (include_path='.:/opt/cpanel/ea-php56/root/usr/share/pear') in /home/personasseduc/public_html/excel/Examples/01pharSimple.php on line 37
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:21:50 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 36
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 40
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 51
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 91
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 117
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 131
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 137
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 142
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 146
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 152
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 166
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 177
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 190
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 202
+[12-May-2024 13:21:51 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Writer_Exception' with message 'Error zipping files : PCLZIP_ERR_BAD_FORMAT (-10) : Unable to find End of Central Dir Record signature' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Shared/ZipArchive.php:96
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Classes/PHPExcel/Writer/Excel2007.php(270): PHPExcel_Shared_ZipArchive->addFromString('xl/_rels/workbo...', '<?xml version="...')
+#1 /home/personasseduc/public_html/excel/Examples/01simplePCLZip.php(91): PHPExcel_Writer_Excel2007->save('/home/personass...')
+#2 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Shared/ZipArchive.php on line 96
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 207
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 266
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 270
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 276
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 283
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 292
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 305
+[12-May-2024 12:21:51 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 316
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 323
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 328
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 333
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 338
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 345
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 354
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 358
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 362
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 366
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 375
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 384
+[12-May-2024 12:21:52 UTC] PHP Notice:  Use of undefined constant EOL - assumed 'EOL' in /home/personasseduc/public_html/excel/Examples/05featuredemo.inc.php on line 389
+[12-May-2024 13:21:52 Europe/London] PHP Fatal error:  Uncaught exception 'PHPExcel_Reader_Exception' with message 'Could not open /home/personasseduc/public_html/excel/Examples/02types.xlsx for reading! File does not exist.' in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php:73
+Stack trace:
+#0 /home/personasseduc/public_html/excel/Classes/PHPExcel/IOFactory.php(269): PHPExcel_Reader_Excel2007->canRead('/home/personass...')
+#1 /home/personasseduc/public_html/excel/Classes/PHPExcel/IOFactory.php(191): PHPExcel_IOFactory::createReaderForFile('/home/personass...')
+#2 /home/personasseduc/public_html/excel/Examples/02types.php(187): PHPExcel_IOFactory::load('/home/personass...')
+#3 {main}
+  thrown in /home/personasseduc/public_html/excel/Classes/PHPExcel/Reader/Excel2007.php on line 73

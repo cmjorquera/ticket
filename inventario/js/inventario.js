@@ -41,7 +41,8 @@
 
         tablaInventario = $tabla.DataTable({
             data: [],
-            responsive: true,
+            responsive: false,
+            autoWidth: false,
             pageLength: 10,
             paging: true,
             info: true,
@@ -89,6 +90,15 @@
         });
 
         loadInventario();
+
+        // Recalcular anchos cuando el contenedor cambia de tamaño (toggle sidebar, resize)
+        if (window.ResizeObserver) {
+            const _adjustCols = debounce(function () {
+                if (tablaInventario) { tablaInventario.columns.adjust(); }
+            }, 130);
+            const _wrapper = document.getElementById('tablaInventario_wrapper');
+            if (_wrapper) { new ResizeObserver(_adjustCols).observe(_wrapper); }
+        }
     }
 
     function loadInventario() {

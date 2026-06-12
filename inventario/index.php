@@ -60,9 +60,16 @@ try {
         'busqueda' => trim((string)($_GET['busqueda'] ?? '')),
     ];
     $resumen = $inventario->obtenerResumen($filtros);
+    $coloresColegio = $inventario->obtenerColoresColegio($idUsuarioSession);
 } catch (Throwable $e) {
     inventario_responder_error('Error al cargar la portada del inventario: ' . $e->getMessage());
 }
+
+// Aplicar colores del colegio al hero si están configurados
+$_c1 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_principal'] ?? '') ? $coloresColegio['color_principal'] : '';
+$_c2 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_secundario'] ?? '') ? $coloresColegio['color_secundario'] : '';
+$_heroBranded = $_c1 !== '';
+$_heroStyle   = $_heroBranded ? ' style="background: linear-gradient(135deg, ' . $_c1 . ' 0%, ' . ($_c2 ?: $_c1) . ' 100%)"' : '';
 
 $idPagActual = '9';
 require __DIR__ . '/componentes/layout_top.php';
@@ -71,7 +78,7 @@ require __DIR__ . '/componentes/layout_top.php';
     <div class="col-12">
         <div class="card shadow mb-4 px-0 border-0 inv-panel">
             <div class="card-body p-4 p-lg-5">
-                <div class="inv-hero mb-4">
+                <div class="inv-hero mb-4<?= $_heroBranded ? ' inv-hero--branded' : '' ?>"<?= $_heroStyle ?>>
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                         <div>
                             <span class="inv-kicker">Modulo institucional</span>
@@ -79,6 +86,9 @@ require __DIR__ . '/componentes/layout_top.php';
                             <p class="inv-subtitle mb-0">Registra, organiza y da seguimiento al equipamiento tecnológico por colegio desde una sola vista operativa.</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
+                            <a href="carga_masiva.php" class="btn btn-outline-primary">
+                                <i class="bi bi-cloud-upload me-1"></i>Carga masiva
+                            </a>
                             <a href="registrar_equipo.php" class="btn btn-primary">
                                 <i class="bi bi-plus-circle me-1"></i>Agregar equipo
                             </a>

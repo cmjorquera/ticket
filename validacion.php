@@ -30,8 +30,26 @@ $db = new MySQL("", "", "");
 // Proteger contra SQL Injection escapando las variables
 $usu = $db->escape_string($usu);
 
-// Consultar el usuario por email
-$consulta = $db->consulta("SELECT * FROM usuarios WHERE email = '$usu'");
+// Consultar el usuario por email junto con el colegio activo asignado
+$consulta = $db->consulta("
+    SELECT
+        u.*,
+        uc.id_colegio,
+        c.nom_colegio,
+        uc.colegios_ids
+    FROM usuarios u
+    LEFT JOIN (
+        SELECT
+            id_usuario,
+            MIN(id_colegio) AS id_colegio,
+            GROUP_CONCAT(id_colegio ORDER BY id_colegio ASC) AS colegios_ids
+        FROM usuario_colegio
+        WHERE estado = 1
+        GROUP BY id_usuario
+    ) uc ON uc.id_usuario = u.id
+    LEFT JOIN colegio c ON c.id_colegio = uc.id_colegio
+    WHERE u.email = '$usu'
+");
 
 if ($db->num_rows($consulta) == 1) {
     $usuario = $db->fetch_array($consulta);
@@ -59,6 +77,9 @@ if ($db->num_rows($consulta) == 1) {
         $_SESSION['apellido_materno']    = $usuario['apellido_materno'];
         $_SESSION['email']               = $usuario['email'];
         $_SESSION['id_area_trabajo']     = $usuario['id_area_trabajo'];
+        $_SESSION['id_colegio']          = $usuario['id_colegio'];
+        $_SESSION['nom_colegio']         = $usuario['nom_colegio'];
+        $_SESSION['colegios_ids']        = $usuario['colegios_ids'];
         $_SESSION['primera_vez']         = 0;
 
         // Redirigir a la página principal

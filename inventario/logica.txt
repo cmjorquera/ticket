@@ -174,3 +174,149 @@ LOGICA DEL MODULO INVENTARIO
 
 14. Regla de trabajo acordada
 - Toda nueva decision de estructura o logica del modulo inventario debe quedar documentada en este archivo `inventario/logica.txt`.
+
+15. Modulo de carga masiva de equipos
+NOTA: $_SESSION no almacena 'id_colegio'. El colegio del usuario se obtiene
+consultando la tabla usuario_colegio por id_usuario (campo $_SESSION['id']).
+El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa consulta.
+
+- Logo del colegio: se busca en /img/colegios/colegio_{id_colegio}.png
+  (ruta fisica: dirname del proyecto . '/img/colegios/colegio_' . $id . '.png').
+  Si no existe el archivo, la plantilla se genera igual sin imagen.
+
+- Vista principal: `inventario/carga_masiva.php`
+  - Usa el layout comun del modulo (boot.php + layout_top.php + layout_bottom.php).
+  - Hero con degradado azul a teal (clase `.cm-hero`).
+  - Stepper horizontal de 4 pasos con circulos numerados: paso activo = azul (#0F4C81),
+    pasos completados = verde teal (#0f766e), inactivos = gris (#CBD5E1).
+    La linea entre pasos tambien cambia de color segun el estado.
+  - Zona drag&drop para soltar o seleccionar el archivo .xlsx/.xls.
+  - Tabla de resultados (inicialmente oculta) con una fila por equipo: numero de fila Excel, badge OK/ERROR, mensaje.
+  - El JS exclusivo de esta vista esta en `inventario/js/carga_masiva.js` y se carga con atributo `defer`.
+  - El stepper avanza automaticamente en el JS: paso 3 al seleccionar archivo, paso 4 al terminar.
+
+- Plantilla Excel: `inventario/exportar_plantilla.php`
+  - Genera y descarga directamente un .xlsx usando PHPExcel en `excel/Classes/PHPExcel.php`.
+  - Al inicio se suprimen deprecaciones de PHP 8.x con ini_set('display_errors', 0).
+  - Hoja 1 "Equipos" — estructura:
+      Filas 1-2: encabezado institucional (logo PNG en A1 si existe, nombre colegio en B1-C1)
+      Fila 3:    subtitulo "Plantilla de carga masiva de inventario de equipos"
+      Fila 4:    fecha de generacion
+      Fila 5:    separador vacio
+      Fila 6:    encabezados de columna con etiquetas legibles (fondo azul #0F4C81)
+      Fila 7:    fila de ejemplo en gris claro (el usuario la elimina antes de subir)
+      Fila 8+:   datos reales
+  - Hoja "Estados": listado de id_estado y nombre_estado (referencia para columna H).
+  - La hoja "Colegios" fue eliminada: el colegio se asigna por sesion, no por columna.
+  - El archivo incluye freeze en fila 7 (encabezado institucional + encabezados de columna fijos).
+
+  Columnas de la hoja "Equipos" (A a AG — 33 columnas, sin id_colegio):
+    Columna | Campo interno          | Etiqueta en Excel
+    --------|------------------------|----------------------------------
+    A       | id_usuario_asignado    | Usuario asignado (ID, opcional)
+    B       | nombre_equipo          | Nombre equipo
+    C       | fabricante             | Fabricante
+    D       | producto               | Producto / modelo
+    E       | numero_serie           | Numero de serie
+    F       | tipo_pc                | Tipo de PC
+    G       | qr_code                | Codigo QR
+    H       | id_estado              | Estado (ID)
+    I       | valor_equipo           | Valor equipo
+    J       | proveedor              | Proveedor
+    K       | numero_factura         | Numero factura
+    L       | fecha_compra           | Fecha compra  (formato YYYY-MM-DD)
+    M       | observacion_compra     | Observacion compra
+    N       | almacenamiento_modelo  | Almacenamiento modelo
+    O       | almacenamiento_capacidad| Almacenamiento capacidad
+    P       | almacenamiento_tamano  | Almacenamiento tipo/tamano
+    Q       | procesador_fabricante  | Procesador fabricante
+    R       | procesador_modelo      | Procesador modelo
+    S       | procesador_velocidad   | Procesador velocidad
+    T       | windows                | Windows
+    U       | office                 | Office
+    V       | antivirus              | Antivirus
+    W       | memoria_designacion    | Memoria slot/designacion
+    X       | memoria_formato        | Memoria formato
+    Y       | memoria_tipo           | Memoria tipo
+    Z       | memoria_tamano         | Memoria tamano
+    AA      | memoria_frecuencia     | Memoria frecuencia
+    AB      | memoria_marca          | Memoria marca
+    AC      | monitor_modelo         | Monitor modelo
+    AD      | monitor_codigo         | Monitor codigo
+    AE      | monitor_serie          | Monitor serie
+    AF      | monitor_tamano         | Monitor tamano
+    AG      | monitor_resolucion     | Monitor resolucion
+
+  Si en el futuro se agregan o renombran columnas, actualizar AMBOS:
+    - el array $columnas en exportar_plantilla.php
+    - el array $columnaMap en ajax/procesar_carga_masiva.php
+
+- Endpoint de procesamiento: `inventario/ajax/procesar_carga_masiva.php`
+  - Recibe el archivo via POST (campo "archivo").
+  - Obtiene id_colegio consultando Inventario::obtenerColegioDelUsuario($idUsuarioSession).
+  - Lee el Excel con PHPExcel (setReadDataOnly=true).
+  - Salta las primeras 6 filas (indices 0-5): encabezado institucional + encabezados de columna.
+  - Datos desde indice 6 del array (Excel fila 7). El numero de fila reportado en resultados
+    corresponde a la fila real del Excel (fila 7 = primera fila de datos).
+  - Validaciones por fila: nombre_equipo y numero_serie obligatorios (id_colegio viene de sesion).
+  - Detecta automaticamente fechas en formato serial Excel en columna L (fecha_compra).
+  - Cada fila se guarda en su propia transaccion via Inventario::guardarEquipoDesdeArray().
+  - Responde JSON: { ok, total, ok_count, error_count, detalle[] }.
+
+- Metodo de guardado reutilizable: `Inventario::guardarEquipoDesdeArray(array $payload, int $idUsuario): int`
+  - Recibe directamente el array normalizado (misma estructura que normalizarPayload).
+  - No procesa fotos (solo datos tabulares).
+  - Usa el metodo privado `insertarRegistroEquipo()` extraido de `guardarEquipo()`.
+  - El formulario normal sigue usando `guardarEquipo()` que adicionalmente procesa fotos.
+
+- Metodo auxiliar: `Inventario::obtenerColoresColegio(int $idUsuario): array`
+  - Consulta usuario_colegio JOIN colegio WHERE id_usuario = ? AND uc.estado = 1 LIMIT 1.
+  - Retorna ['color_principal', 'color_secundario', 'color_terciario', 'color_cuaternario'] o [].
+  - Captura cualquier excepcion (por si las columnas no existen en el schema) y retorna [].
+  - Usado en index.php para aplicar branding del colegio al hero header.
+
+- Metodo auxiliar: `Inventario::obtenerColegioDelUsuario(int $idUsuario): array`
+  - Consulta usuario_colegio JOIN colegio WHERE id_usuario = ? AND uc.estado = 1 LIMIT 1.
+  - Retorna ['id_colegio' => int, 'nom_colegio' => string] o [] si no tiene colegio asignado.
+
+- JS: `inventario/js/carga_masiva.js`
+  - Vanilla JS (sin dependencia de jQuery).
+  - Funcion activarPaso(num): actualiza clases active/completed en circulos y lineas del stepper.
+  - Paso 1 activo al cargar, paso 3 al seleccionar archivo, paso 4 al recibir resultado.
+  - Maneja eventos dragover, dragleave, drop, click y keydown para la zona de subida.
+  - Funcion procesarCargaMasiva(archivo): encapsula toda la logica de envio AJAX (fetch + FormData +
+    mostrarResultados). Se llama automaticamente al seleccionar o soltar un archivo valido —
+    sin necesidad de click adicional. Incluye flag `procesando` para evitar envios dobles.
+  - El boton "Procesar carga" es reintento manual: llama procesarCargaMasiva(archivoSeleccionado).
+  - Durante el procesamiento: dropzone cambia a .cm-drop-processing (icono pulsante, pointer-events none).
+  - Construye la tabla de resultados dinamicamente en el DOM.
+  - Usa SweetAlert2 para alertas si esta disponible, alert() como fallback.
+
+- Estilos actualizados en `inventario/css/inventario.css` (modulo general):
+  - Botones de accion en tabla (`.inv-btn-view`, `.inv-btn-edit`, `.inv-btn-photo`, `.inv-btn-delete`):
+    cambiados de cajas solidas coloreadas a iconos transparentes. Icono visible en su color
+    (gris/azul/rojo); fondo sutil solo en hover. Tamano reducido a 32px.
+  - `.inv-hero--branded`: clase dinamica que se agrega via PHP cuando el colegio tiene
+    color_principal configurado. El hero muestra el degradado del colegio con texto blanco
+    y botones adaptados para fondo oscuro. Si no hay color configurado, se usa el fondo
+    blanco suave por defecto.
+  - `.inv-hero` y `.cm-hero`: fondo blanco muy suave con degradado casi imperceptible
+    (fafcff → f5f9fd → f0faf8). Sin colores saturados. Borde y sombra muy suaves.
+  - `.inv-kicker`: badge pill gris azulado claro (sin color primario saturado); texto #4a6580.
+  - `.inv-stat-card`: fondo blanco (var --inv-surface), borde gris sutil (var --inv-border).
+    Todas las variantes comparten el mismo fondo blanco — la unica diferencia por variante
+    es el circulo del icono (pastel suave por categoria). Label en gris #8a9db5, numero grande
+    en color de texto normal, descripcion small en gris.
+  - `#tablaInventario`: thead con fondo gris muy claro y texto uppercase espaciado; filas con
+    rayado minimo (blanco / #fafbfd); sin bordes verticales; hover azul muy suave.
+
+- CSS nuevas en `inventario/css/inventario.css`:
+  - `.cm-hero`: hero con degradado linear-gradient(135deg, #0f4c81, #0e7490, #0f766e).
+  - `.cm-stepper`: contenedor flex horizontal del stepper.
+  - `.cm-stepper-step[.active|.completed]`: paso del stepper con su estado.
+  - `.cm-stepper-circle[.active|.completed]`: circulo numerado (gris/azul/verde).
+  - `.cm-stepper-label[.active|.completed]`: etiqueta debajo del circulo.
+  - `.cm-stepper-line[.active|.completed]`: linea conectora entre pasos.
+  - `.cm-step-num-sm`: circulo pequeño de numero dentro de cada tarjeta.
+  - `.cm-dropzone`, `.cm-drop-active`, `.cm-dropzone-icon`, `.cm-dropzone-text`: zona de carga.
+  - `.cm-drop-processing`: estado del dropzone mientras se procesa (fondo azul claro, sin interaccion, icono pulsante animado).

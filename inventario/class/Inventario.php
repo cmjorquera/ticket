@@ -76,6 +76,44 @@ class Inventario
         return $datos;
     }
 
+    public function obtenerColegioDelUsuario(int $idUsuario): array
+    {
+        $stmt = mysqli_prepare(
+            $this->cn,
+            "SELECT uc.id_colegio, c.nom_colegio
+             FROM usuario_colegio uc
+             INNER JOIN colegio c ON c.id_colegio = uc.id_colegio
+             WHERE uc.id_usuario = ? AND uc.estado = 1
+             LIMIT 1"
+        );
+        mysqli_stmt_bind_param($stmt, 'i', $idUsuario);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+        return $fila;
+    }
+
+    public function obtenerColoresColegio(int $idUsuario): array
+    {
+        try {
+            $stmt = mysqli_prepare(
+                $this->cn,
+                "SELECT c.color_principal, c.color_secundario, c.color_terciario, c.color_cuaternario
+                 FROM usuario_colegio uc
+                 INNER JOIN colegio c ON c.id_colegio = uc.id_colegio
+                 WHERE uc.id_usuario = ? AND uc.estado = 1
+                 LIMIT 1"
+            );
+            mysqli_stmt_bind_param($stmt, 'i', $idUsuario);
+            mysqli_stmt_execute($stmt);
+            $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+            mysqli_stmt_close($stmt);
+            return $fila;
+        } catch (Throwable $e) {
+            return [];
+        }
+    }
+
     public function obtenerUsuarios()
     {
         $datos = [];
@@ -432,31 +470,10 @@ SQL;
         mysqli_begin_transaction($this->cn);
 
         try {
-            $sql = "INSERT INTO equipos
-                    (id_usuario, id_colegio, id_usuario_asignado, nombre_equipo, fabricante, producto, numero_serie, tipo_pc, qr_code, id_estado)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = mysqli_prepare($this->cn, $sql);
-            mysqli_stmt_bind_param(
-                $stmt,
-                'iiissssssi',
-                $payload['equipo']['id_usuario'],
-                $payload['equipo']['id_colegio'],
-                $payload['equipo']['id_usuario_asignado'],
-                $payload['equipo']['nombre_equipo'],
-                $payload['equipo']['fabricante'],
-                $payload['equipo']['producto'],
-                $payload['equipo']['numero_serie'],
-                $payload['equipo']['tipo_pc'],
-                $payload['equipo']['qr_code'],
-                $payload['equipo']['id_estado']
-            );
-            mysqli_stmt_execute($stmt);
-            mysqli_stmt_close($stmt);
-
-            $idEquipo = mysqli_insert_id($this->cn);
+            $idEquipo = $this->insertarRegistroEquipo($payload);
             $this->guardarTablasRelacionadas($idEquipo, $payload);
             $this->guardarFotos($idEquipo, $files);
-            $this->registrarHistorial($idEquipo, 'creacion', 'Equipo registrado en inventario.', $idUsuario);
+            $this->registrarHistorial($idEquipo, 'creacion', 'Equipo registrado en inventario.', (int)$idUsuario);
 
             mysqli_commit($this->cn);
             return $idEquipo;
@@ -464,6 +481,52 @@ SQL;
             mysqli_rollback($this->cn);
             throw $e;
         }
+    }
+
+    public function guardarEquipoDesdeArray(array $payload, int $idUsuario): int
+    {
+        if ($this->validarSerieDuplicada($payload['equipo']['numero_serie'])) {
+            throw new RuntimeException('El numero de serie ya existe en otro equipo.');
+        }
+
+        mysqli_begin_transaction($this->cn);
+
+        try {
+            $idEquipo = $this->insertarRegistroEquipo($payload);
+            $this->guardarTablasRelacionadas($idEquipo, $payload);
+            $this->registrarHistorial($idEquipo, 'creacion', 'Equipo registrado via carga masiva.', $idUsuario);
+
+            mysqli_commit($this->cn);
+            return $idEquipo;
+        } catch (Throwable $e) {
+            mysqli_rollback($this->cn);
+            throw $e;
+        }
+    }
+
+    private function insertarRegistroEquipo(array $payload): int
+    {
+        $sql = "INSERT INTO equipos
+                (id_usuario, id_colegio, id_usuario_asignado, nombre_equipo, fabricante, producto, numero_serie, tipo_pc, qr_code, id_estado)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = mysqli_prepare($this->cn, $sql);
+        mysqli_stmt_bind_param(
+            $stmt,
+            'iiissssssi',
+            $payload['equipo']['id_usuario'],
+            $payload['equipo']['id_colegio'],
+            $payload['equipo']['id_usuario_asignado'],
+            $payload['equipo']['nombre_equipo'],
+            $payload['equipo']['fabricante'],
+            $payload['equipo']['producto'],
+            $payload['equipo']['numero_serie'],
+            $payload['equipo']['tipo_pc'],
+            $payload['equipo']['qr_code'],
+            $payload['equipo']['id_estado']
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+        return (int)mysqli_insert_id($this->cn);
     }
 
     public function actualizarEquipo($idEquipo, $post, $files, $idUsuario)
