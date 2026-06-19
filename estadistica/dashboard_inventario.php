@@ -83,11 +83,11 @@ $versionCss = @filemtime(__DIR__ . '/css/dashboard_inventario.css') ?: time();
                     </div>
                 </div>
 
-                <form method="get" class="inv-filter-card mb-4">
+                <form method="get" class="inv-filter-card mb-4" id="formDashboardInventario">
                     <div class="row g-3 align-items-end">
                         <div class="col-lg-4">
                             <label class="form-label">Colegio</label>
-                            <select name="id_colegio" class="form-select">
+                            <select name="id_colegio" class="form-select" id="filtroColegioInventario">
                                 <option value="0">Todos los colegios</option>
                                 <?php foreach ($ctx['colegios'] as $colegio): ?>
                                     <option value="<?= (int)$colegio['id_colegio'] ?>" <?= $ctx['id_colegio'] === (int)$colegio['id_colegio'] ? 'selected' : '' ?>>
@@ -105,9 +105,6 @@ $versionCss = @filemtime(__DIR__ . '/css/dashboard_inventario.css') ?: time();
                             <input type="date" name="hasta" class="form-control" value="<?= di_h($filters['hasta']) ?>">
                         </div>
                         <div class="col-md-6 col-lg-4 d-flex gap-2 justify-content-lg-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-arrow-repeat me-1"></i>Actualizar
-                            </button>
                             <a href="estadistica/descargar_dashboard_inventario_pdf.php?<?= di_h($pdfParams) ?>" class="btn btn-outline-danger" target="_blank" rel="noopener">
                                 <i class="bi bi-file-earmark-pdf me-1"></i>Descargar PDF
                             </a>
@@ -318,6 +315,17 @@ window.dashboardInventarioData = <?= json_encode([
     'antiguedadLabels' => $antiguedadOrden,
     'antiguedadValues' => $chartAntiguedad,
 ], JSON_UNESCAPED_UNICODE) ?>;
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var colegio = document.getElementById('filtroColegioInventario');
+    var form = document.getElementById('formDashboardInventario');
+    if (!colegio || !form) return;
+
+    colegio.addEventListener('change', function () {
+        form.submit();
+    });
+});
 </script>
 <script>
 (function () {

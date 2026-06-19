@@ -838,6 +838,16 @@
     gap: 8px;
 }
 
+.inv-detail-offcanvas {
+    width: min(920px, 96vw);
+}
+
+.inv-qr-print-image {
+    display: none;
+    width: 180px;
+    height: 180px;
+}
+
 .inv-photo-item {
     position: relative;
     width: 110px;
@@ -935,4 +945,24 @@
     border-radius: 4px;
     padding: 1px 5px;
     font-size: .83em;
+}
+
+@media print {
+    .js-qr-equipo {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        background: #fff !important;
+    }
+
+    .js-qr-equipo canvas,
+    .js-qr-equipo img:not(.inv-qr-print-image) {
+        display: none !important;
+    }
+
+    .js-qr-equipo .inv-qr-print-image {
+        display: block !important;
+        margin: 0 auto;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
 }

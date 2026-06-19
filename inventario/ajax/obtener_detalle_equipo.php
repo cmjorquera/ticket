@@ -11,15 +11,10 @@ if (!$equipo) {
     exit;
 }
 
-$html = '
-    <div class="row g-3 text-start">
-        <div class="col-md-6"><span class="text-muted small d-block">Equipo</span><strong>' . inventario_h($equipo['nombre_equipo']) . '</strong></div>
-        <div class="col-md-6"><span class="text-muted small d-block">Colegio</span><strong>' . inventario_h($equipo['nom_colegio']) . '</strong></div>
-        <div class="col-md-6"><span class="text-muted small d-block">Serie</span><strong>' . inventario_h($equipo['numero_serie']) . '</strong></div>
-        <div class="col-md-6"><span class="text-muted small d-block">Tipo</span><strong>' . inventario_h($equipo['tipo_pc']) . '</strong></div>
-        <div class="col-md-6"><span class="text-muted small d-block">CPU</span><strong>' . inventario_h(($equipo['procesador']['equipo_fabricante'] ?? '') . ' ' . ($equipo['procesador']['equipo_modelo'] ?? '')) . '</strong></div>
-        <div class="col-md-6"><span class="text-muted small d-block">Disco</span><strong>' . inventario_h(($equipo['almacenamiento']['equipo_modelo'] ?? '') . ' ' . ($equipo['almacenamiento']['equipo_capacidad'] ?? '')) . '</strong></div>
-    </div>';
+ob_start();
+$detalleOffcanvas = true;
+require dirname(__DIR__) . '/componentes/detalle_equipo.php';
+$detalleHtml = ob_get_clean();
 
 $galeriaHtml = '';
 if (!empty($equipo['fotos'])) {
@@ -72,6 +67,7 @@ if (!empty($equipo['fotos'])) {
 echo json_encode([
     'ok' => true,
     'equipo' => $equipo,
-    'html' => $html,
+    'html' => $detalleHtml,
+    'detalle_html' => $detalleHtml,
     'galeria_html' => $galeriaHtml
 ]);

@@ -14,44 +14,45 @@ if (!function_exists('di_money')) {
     }
 }
 
-if (!function_exists('di_stmt_rows')) {
-    function di_stmt_rows(mysqli_stmt $stmt): array
+if (!function_exists('di_sql_value')) {
+    function di_sql_value(MySQL $db, $value, string $type): string
     {
-        mysqli_stmt_execute($stmt);
-        $res = mysqli_stmt_get_result($stmt);
-        $rows = [];
-        if ($res) {
-            while ($row = mysqli_fetch_assoc($res)) {
-                $rows[] = $row;
-            }
+        if ($value === null) {
+            return 'NULL';
         }
-        mysqli_stmt_close($stmt);
-        return $rows;
+        if ($type === 'i') {
+            return (string)(int)$value;
+        }
+        if ($type === 'd') {
+            return (string)(float)$value;
+        }
+
+        return "'" . $db->escape_string((string)$value) . "'";
     }
 }
 
-if (!function_exists('di_bind')) {
-    function di_bind(mysqli_stmt $stmt, string $types, array $params): void
+if (!function_exists('di_sql_with_params')) {
+    function di_sql_with_params(MySQL $db, string $sql, string $types = '', array $params = []): string
     {
-        if ($types === '') {
-            return;
+        if ($types === '' || empty($params)) {
+            return $sql;
         }
-        $refs = [$types];
-        foreach ($params as $key => $value) {
-            $refs[] = &$params[$key];
+
+        $parts = explode('?', $sql);
+        $finalSql = array_shift($parts);
+        foreach ($params as $index => $param) {
+            $type = $types[$index] ?? 's';
+            $finalSql .= di_sql_value($db, $param, $type) . (array_shift($parts) ?? '');
         }
-        call_user_func_array([$stmt, 'bind_param'], $refs);
+
+        return $finalSql . implode('?', $parts);
     }
 }
 
 if (!function_exists('di_scalar')) {
     function di_scalar(MySQL $db, string $sql, string $types = '', array $params = [])
     {
-        $stmt = $db->prepare($sql);
-        if ($types !== '') {
-            di_bind($stmt, $types, $params);
-        }
-        $rows = di_stmt_rows($stmt);
+        $rows = di_rows($db, $sql, $types, $params);
         return $rows[0]['valor'] ?? null;
     }
 }
@@ -59,11 +60,14 @@ if (!function_exists('di_scalar')) {
 if (!function_exists('di_rows')) {
     function di_rows(MySQL $db, string $sql, string $types = '', array $params = []): array
     {
-        $stmt = $db->prepare($sql);
-        if ($types !== '') {
-            di_bind($stmt, $types, $params);
+        $res = $db->consulta(di_sql_with_params($db, $sql, $types, $params));
+        $rows = [];
+        if ($res) {
+            while ($row = $db->fetch_assoc($res)) {
+                $rows[] = $row;
+            }
         }
-        return di_stmt_rows($stmt);
+        return $rows;
     }
 }
 
@@ -352,11 +356,13 @@ if (!function_exists('di_dashboard_data')) {
 
         $movimientos = di_rows($db, "
             SELECT * FROM (
-                SELECT em.fecha_movimiento fecha, 'PC' tipo_activo, e.nombre_equipo activo,
-                       COALESCE(uo.nombre_ubicacion, 'Sin origen') origen,
-                       COALESCE(ud.nombre_ubicacion, 'Sin destino') destino,
-                       CONCAT(COALESCE(us.nombre,''), ' ', COALESCE(us.apellido_paterno,'')) usuario,
-                       COALESCE(em.motivo, '') motivo,
+                SELECT em.fecha_movimiento fecha,
+                       CONVERT('PC' USING utf8mb4) COLLATE utf8mb4_general_ci tipo_activo,
+                       CONVERT(COALESCE(e.nombre_equipo, '') USING utf8mb4) COLLATE utf8mb4_general_ci activo,
+                       CONVERT(COALESCE(uo.nombre_ubicacion, 'Sin origen') USING utf8mb4) COLLATE utf8mb4_general_ci origen,
+                       CONVERT(COALESCE(ud.nombre_ubicacion, 'Sin destino') USING utf8mb4) COLLATE utf8mb4_general_ci destino,
+                       CONVERT(CONCAT(COALESCE(us.nombre,''), ' ', COALESCE(us.apellido_paterno,'')) USING utf8mb4) COLLATE utf8mb4_general_ci usuario,
+                       CONVERT(COALESCE(em.motivo, '') USING utf8mb4) COLLATE utf8mb4_general_ci motivo,
                        e.id_colegio
                 FROM equipo_movimiento em
                 INNER JOIN equipos e ON e.id_equipo = em.id_equipo
@@ -364,11 +370,13 @@ if (!function_exists('di_dashboard_data')) {
                 LEFT JOIN equipo_ubicacion ud ON ud.id_ubicacion = em.id_ubicacion_destino
                 LEFT JOIN usuarios us ON us.id = em.id_usuario_movimiento
                 UNION ALL
-                SELECT mm.fecha_movimiento fecha, 'Monitor' tipo_activo, m.nombre_monitor activo,
-                       COALESCE(uo.nombre_ubicacion, 'Sin origen') origen,
-                       COALESCE(ud.nombre_ubicacion, 'Sin destino') destino,
-                       CONCAT(COALESCE(us.nombre,''), ' ', COALESCE(us.apellido_paterno,'')) usuario,
-                       COALESCE(mm.motivo, '') motivo,
+                SELECT mm.fecha_movimiento fecha,
+                       CONVERT('Monitor' USING utf8mb4) COLLATE utf8mb4_general_ci tipo_activo,
+                       CONVERT(COALESCE(m.nombre_monitor, '') USING utf8mb4) COLLATE utf8mb4_general_ci activo,
+                       CONVERT(COALESCE(uo.nombre_ubicacion, 'Sin origen') USING utf8mb4) COLLATE utf8mb4_general_ci origen,
+                       CONVERT(COALESCE(ud.nombre_ubicacion, 'Sin destino') USING utf8mb4) COLLATE utf8mb4_general_ci destino,
+                       CONVERT(CONCAT(COALESCE(us.nombre,''), ' ', COALESCE(us.apellido_paterno,'')) USING utf8mb4) COLLATE utf8mb4_general_ci usuario,
+                       CONVERT(COALESCE(mm.motivo, '') USING utf8mb4) COLLATE utf8mb4_general_ci motivo,
                        m.id_colegio
                 FROM monitor_movimiento mm
                 INNER JOIN monitores m ON m.id_monitor = mm.id_monitor

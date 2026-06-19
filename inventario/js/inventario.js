@@ -14,9 +14,9 @@
             : '';
         return `
             <div class="inv-action-buttons d-flex flex-wrap gap-2">
-                <a href="ver_equipo.php?id_equipo=${id}" class="btn btn-sm inv-btn-action inv-btn-view" title="Ver detalle" aria-label="Ver detalle">
+                <button type="button" class="btn btn-sm inv-btn-action inv-btn-view btnVerDetalleEquipo" data-id="${id}" data-href="ver_equipo.php?id_equipo=${id}" title="Ver detalle" aria-label="Ver detalle">
                     <i class="bi bi-eye"></i>
-                </a>
+                </button>
                 <a href="editar_equipo.php?id_equipo=${id}" class="btn btn-sm inv-btn-action inv-btn-edit" title="Editar" aria-label="Editar">
                     <i class="bi bi-pencil"></i>
                 </a>
@@ -56,7 +56,7 @@
             info: true,
             lengthChange: false,
             pagingType: 'simple_numbers',
-            dom: "<'row align-items-center mb-3'<'col-md-6'i><'col-md-6 text-md-end'p>>" +
+            dom: "<'row align-items-center mb-3'<'col-md-12'i>>" +
                  "rt" +
                  "<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
             language: {
@@ -233,6 +233,95 @@
         });
     }
 
+    function bindModalCloseFallback() {
+        $(document).on('click', '#modalGaleriaEquipo [data-bs-dismiss="modal"], #modalGaleriaMonitor [data-bs-dismiss="modal"]', function () {
+            const modalEl = this.closest('.modal');
+            if (!modalEl || !window.bootstrap || !bootstrap.Modal) {
+                return;
+            }
+
+            const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
+            instance.hide();
+        });
+
+        $('#modalGaleriaEquipo, #modalGaleriaMonitor').on('hidden.bs.modal', function () {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+        });
+    }
+
+    function setDetalleOffcanvasLoading(title) {
+        const $offcanvas = $('#offcanvasDetalleInventario');
+        const $title = $('#offcanvasDetalleInventarioLabel');
+        const $body = $('#offcanvasDetalleInventarioBody');
+
+        if (!$offcanvas.length || !$body.length) {
+            return null;
+        }
+
+        $title.text(title || 'Detalle');
+        $body.html('<div class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Cargando detalle...</div>');
+
+        const instance = bootstrap.Offcanvas.getOrCreateInstance($offcanvas[0]);
+        instance.show();
+        return { $title, $body };
+    }
+
+    function renderDetalleOffcanvas($title, $body, title, html) {
+        $title.text(title || 'Detalle');
+        $body.html(html || '<div class="alert alert-light border mb-0">Sin detalle disponible.</div>');
+        initQrBlocks($body[0]);
+    }
+
+    function bindDetalleOffcanvas() {
+        $(document).on('click', '.btnVerDetalleEquipo', function () {
+            const idEquipo = $(this).data('id');
+            const href = $(this).data('href') || `ver_equipo.php?id_equipo=${idEquipo}`;
+            const ui = setDetalleOffcanvasLoading('Detalle del equipo');
+            if (!ui || !idEquipo) {
+                window.location.href = href;
+                return;
+            }
+
+            $.getJSON(window.INVENTARIO_CONFIG.endpoints.detalle, { id_equipo: idEquipo })
+                .done(function (response) {
+                    if (!response.ok) {
+                        ui.$body.html('<div class="alert alert-warning mb-0">No fue posible cargar el detalle.</div>');
+                        return;
+                    }
+                    renderDetalleOffcanvas(ui.$title, ui.$body, response.equipo.nombre_equipo || 'Detalle del equipo', response.detalle_html || response.html);
+                })
+                .fail(function (xhr) {
+                    const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible cargar el detalle.';
+                    ui.$body.html(`<div class="alert alert-danger mb-3">${escapeHtml(mensaje)}</div><a href="${escapeHtml(href)}" class="btn btn-outline-primary">Abrir ficha completa</a>`);
+                });
+        });
+
+        $(document).on('click', '.btnVerDetalleMonitor', function () {
+            const idMonitor = $(this).data('id');
+            const href = $(this).data('href') || `ver_monitor.php?id_monitor=${idMonitor}`;
+            const ui = setDetalleOffcanvasLoading('Detalle del monitor');
+            if (!ui || !idMonitor) {
+                window.location.href = href;
+                return;
+            }
+
+            $.getJSON(window.INVENTARIO_CONFIG.endpoints.detalleMonitor, { id_monitor: idMonitor })
+                .done(function (response) {
+                    if (!response.ok) {
+                        ui.$body.html('<div class="alert alert-warning mb-0">No fue posible cargar el detalle.</div>');
+                        return;
+                    }
+                    const nombre = response.monitor && response.monitor.nombre_monitor ? response.monitor.nombre_monitor : 'Detalle del monitor';
+                    renderDetalleOffcanvas(ui.$title, ui.$body, nombre, response.detalle_html || response.html);
+                })
+                .fail(function (xhr) {
+                    const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible cargar el detalle.';
+                    ui.$body.html(`<div class="alert alert-danger mb-3">${escapeHtml(mensaje)}</div><a href="${escapeHtml(href)}" class="btn btn-outline-primary">Abrir ficha completa</a>`);
+                });
+        });
+    }
+
     function bindFormAjax() {
         const $form = $('#formInventario');
         if (!$form.length) {
@@ -323,14 +412,53 @@
 
     }
 
-    function initExtras() {
-        if (window.QRCode && window.INVENTARIO_CONFIG && window.INVENTARIO_CONFIG.qrText && document.getElementById('qrEquipo')) {
-            new QRCode(document.getElementById('qrEquipo'), {
-                text: window.INVENTARIO_CONFIG.qrText,
+    function initQrBlocks(root) {
+        if (!window.QRCode) {
+            return;
+        }
+        const scope = root || document;
+        $(scope).find('.js-qr-equipo').each(function () {
+            const el = this;
+            const text = el.getAttribute('data-qr-text') || '';
+            if (!text || el.getAttribute('data-qr-ready') === '1') {
+                return;
+            }
+            el.innerHTML = '';
+            new QRCode(el, {
+                text: text,
                 width: 180,
                 height: 180
             });
-        }
+            el.setAttribute('data-qr-ready', '1');
+            setTimeout(function () {
+                prepareQrForPrint(el);
+            }, 0);
+        });
+    }
+
+    function prepareQrForPrint(root) {
+        const scope = root || document;
+        $(scope).find('.js-qr-equipo').addBack('.js-qr-equipo').each(function () {
+            const box = this;
+            const canvas = box.querySelector('canvas');
+            if (!canvas || box.querySelector('.inv-qr-print-image')) {
+                return;
+            }
+
+            try {
+                const img = document.createElement('img');
+                img.src = canvas.toDataURL('image/png');
+                img.alt = 'QR del equipo';
+                img.className = 'inv-qr-print-image';
+                box.appendChild(img);
+            } catch (e) {
+                // Si el navegador bloquea la conversion, el canvas queda como respaldo visual.
+            }
+        });
+    }
+
+    function initExtras() {
+        initQrBlocks(document);
     }
 
     function escapeHtml(value) {
@@ -367,9 +495,9 @@
             : '';
         return `
             <div class="inv-action-buttons d-flex flex-wrap gap-2">
-                <a href="ver_monitor.php?id_monitor=${id}" class="btn btn-sm inv-btn-action inv-btn-view" title="Ver detalle" aria-label="Ver detalle">
+                <button type="button" class="btn btn-sm inv-btn-action inv-btn-view btnVerDetalleMonitor" data-id="${id}" data-href="ver_monitor.php?id_monitor=${id}" title="Ver detalle" aria-label="Ver detalle">
                     <i class="bi bi-eye"></i>
-                </a>
+                </button>
                 <a href="editar_monitor.php?id_monitor=${id}" class="btn btn-sm inv-btn-action inv-btn-edit" title="Editar" aria-label="Editar">
                     <i class="bi bi-pencil"></i>
                 </a>
@@ -407,7 +535,7 @@
             info: true,
             lengthChange: false,
             pagingType: 'simple_numbers',
-            dom: "<'row align-items-center mb-3'<'col-md-6'i><'col-md-6 text-md-end'p>>" +
+            dom: "<'row align-items-center mb-3'<'col-md-12'i>>" +
                  "rt" +
                  "<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
             language: {
@@ -558,7 +686,7 @@
 
             new bootstrap.Modal($modal[0]).show();
 
-            $.getJSON(window.INVENTARIO_CONFIG.endpoints.detalleMonitor, { id_monitor: idMonitor })
+            $.getJSON(window.INVENTARIO_CONFIG.endpoints.fotosMonitor || window.INVENTARIO_CONFIG.endpoints.detalleMonitor, { id_monitor: idMonitor })
                 .done(function (response) {
                     $title.text(response.ok ? ('Imágenes de ' + (response.monitor.nombre_monitor || 'monitor')) : 'Galería');
                     $body.html(response.ok
@@ -613,11 +741,17 @@
     }
 
     $(function () {
+        window.addEventListener('beforeprint', function () {
+            prepareQrForPrint(document);
+        });
+
         initTabla();
         bindFilters();
         bindLiberarEquipo();
         bindDelete();
         bindGaleriaModal();
+        bindModalCloseFallback();
+        bindDetalleOffcanvas();
         bindFormAjax();
         bindRepeater();
         initExtras();

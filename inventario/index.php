@@ -289,6 +289,17 @@ require __DIR__ . '/componentes/layout_top.php';
     </div>
 </div>
 
+<!-- Offcanvas detalle inventario -->
+<div class="offcanvas offcanvas-end inv-detail-offcanvas" tabindex="-1" id="offcanvasDetalleInventario" aria-labelledby="offcanvasDetalleInventarioLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title" id="offcanvasDetalleInventarioLabel">Detalle</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body" id="offcanvasDetalleInventarioBody">
+        <div class="text-center py-5 text-muted">Selecciona un registro para ver el detalle.</div>
+    </div>
+</div>
+
 <!-- Modal galería equipos PC -->
 <div class="modal fade" id="modalGaleriaEquipo" tabindex="-1" aria-labelledby="modalGaleriaEquipoLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
@@ -328,7 +339,8 @@ window.INVENTARIO_CONFIG = {
         eliminar:        'eliminar_logico_equipo.php',
         liberarEquipo:   'ajax/liberar_equipo.php',
         listarMonitores: 'ajax/listar_monitores.php',
-        detalleMonitor:  'ajax/obtener_fotos_monitor.php',
+        detalleMonitor:  'ajax/obtener_detalle_monitor.php',
+        fotosMonitor:    'ajax/obtener_fotos_monitor.php',
         eliminarMonitor: 'ajax/eliminar_monitor.php',
         liberarMonitor:  'ajax/liberar_monitor.php'
     }
