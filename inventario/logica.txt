@@ -210,42 +210,48 @@ El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa con
   - La hoja "Colegios" fue eliminada: el colegio se asigna por sesion, no por columna.
   - El archivo incluye freeze en fila 7 (encabezado institucional + encabezados de columna fijos).
 
-  Columnas de la hoja "Equipos" (A a AG — 33 columnas, sin id_colegio):
+  Columnas de la hoja "Equipos" (A a AE — 31 columnas, sin id_colegio, nombre_equipo ni qr_code):
     Columna | Campo interno          | Etiqueta en Excel
     --------|------------------------|----------------------------------
-    A       | id_usuario_asignado    | Usuario asignado (ID, opcional)
-    B       | nombre_equipo          | Nombre equipo
-    C       | fabricante             | Fabricante
-    D       | producto               | Producto / modelo
-    E       | numero_serie           | Numero de serie
-    F       | tipo_pc                | Tipo de PC
-    G       | qr_code                | Codigo QR
-    H       | id_estado              | Estado (ID)
-    I       | valor_equipo           | Valor equipo
-    J       | proveedor              | Proveedor
-    K       | numero_factura         | Numero factura
-    L       | fecha_compra           | Fecha compra  (formato YYYY-MM-DD)
-    M       | observacion_compra     | Observacion compra
-    N       | almacenamiento_modelo  | Almacenamiento modelo
-    O       | almacenamiento_capacidad| Almacenamiento capacidad
-    P       | almacenamiento_tamano  | Almacenamiento tipo/tamano
-    Q       | procesador_fabricante  | Procesador fabricante
-    R       | procesador_modelo      | Procesador modelo
-    S       | procesador_velocidad   | Procesador velocidad
-    T       | windows                | Windows
-    U       | office                 | Office
-    V       | antivirus              | Antivirus
-    W       | memoria_designacion    | Memoria slot/designacion
-    X       | memoria_formato        | Memoria formato
-    Y       | memoria_tipo           | Memoria tipo
-    Z       | memoria_tamano         | Memoria tamano
-    AA      | memoria_frecuencia     | Memoria frecuencia
-    AB      | memoria_marca          | Memoria marca
-    AC      | monitor_modelo         | Monitor modelo
-    AD      | monitor_codigo         | Monitor codigo
-    AE      | monitor_serie          | Monitor serie
-    AF      | monitor_tamano         | Monitor tamano
-    AG      | monitor_resolucion     | Monitor resolucion
+    A       | id_usuario_asignado    | Usuario asignado
+    B       | fabricante             | Fabricante
+    C       | producto               | Producto / modelo
+    D       | numero_serie           | Numero de serie
+    E       | tipo_pc                | Tipo de PC
+    F       | id_estado              | Estado
+    G       | valor_equipo           | Valor equipo
+    H       | proveedor              | Proveedor
+    I       | numero_factura         | Numero factura
+    J       | fecha_compra           | Fecha compra  (formato YYYY-MM-DD)
+    K       | observacion_compra     | Observacion compra
+    L       | almacenamiento_modelo  | Almacenamiento modelo
+    M       | almacenamiento_capacidad| Almacenamiento capacidad
+    N       | almacenamiento_tamano  | Almacenamiento tipo/tamano
+    O       | procesador_fabricante  | Procesador fabricante
+    P       | procesador_modelo      | Procesador modelo
+    Q       | procesador_velocidad   | Procesador velocidad
+    R       | windows                | Windows
+    S       | office                 | Office
+    T       | antivirus              | Antivirus
+    U       | memoria_designacion    | Memoria slot/designacion
+    V       | memoria_formato        | Memoria formato
+    W       | memoria_tipo           | Memoria tipo
+    X       | memoria_tamano         | Memoria tamano
+    Y       | memoria_frecuencia     | Memoria frecuencia
+    Z       | memoria_marca          | Memoria marca
+    AA      | monitor_modelo         | Monitor modelo
+    AB      | monitor_codigo         | Monitor codigo
+    AC      | monitor_serie          | Monitor serie
+    AD      | monitor_tamano         | Monitor tamano
+    AE      | monitor_resolucion     | Monitor resolucion
+
+  La plantilla incluye desplegables:
+    - Usuario asignado: desde hoja "Usuarios" con formato "ID - Nombre".
+    - Tipo de PC: desde hoja "Tipos PC", alimentada por tipo_pc_catalogo.activo = 1.
+    - Estado: desde hoja "Estados" con formato "ID - Nombre".
+  En carga masiva, nombre_equipo y qr_code NO se piden en Excel:
+    - nombre_equipo se genera como "PC-" + numero_serie limpio.
+    - qr_code se genera con el mismo criterio automatico.
 
   Si en el futuro se agregan o renombran columnas, actualizar AMBOS:
     - el array $columnas en exportar_plantilla.php
@@ -258,8 +264,8 @@ El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa con
   - Salta las primeras 6 filas (indices 0-5): encabezado institucional + encabezados de columna.
   - Datos desde indice 6 del array (Excel fila 7). El numero de fila reportado en resultados
     corresponde a la fila real del Excel (fila 7 = primera fila de datos).
-  - Validaciones por fila: nombre_equipo y numero_serie obligatorios (id_colegio viene de sesion).
-  - Detecta automaticamente fechas en formato serial Excel en columna L (fecha_compra).
+  - Validaciones por fila: numero_serie y tipo_pc obligatorios (id_colegio viene de sesion).
+  - Detecta automaticamente fechas en formato serial Excel en columna J (fecha_compra).
   - Cada fila se guarda en su propia transaccion via Inventario::guardarEquipoDesdeArray().
   - Responde JSON: { ok, total, ok_count, error_count, detalle[] }.
 
@@ -555,3 +561,222 @@ El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa con
 - inventario/ajax/marcar_foto_principal_monitor.php — AJAX cambio de foto principal.
 - inventario/ajax/obtener_fotos_monitor.php — AJAX galeria para modal.
 - inventario/sql/migracion_add_monitores_eliminado.sql — ALTER TABLE para columna eliminado.
+
+34. Liberacion de equipo / monitor
+- Un equipo PC o monitor puede liberarse del usuario asignado sin eliminarlo ni cambiar su estado.
+- "Liberar" solo hace NULL la columna id_usuario_asignado.
+- El equipo o monitor queda "Disponible / Sin asignar" (texto en listados: "Sin asignar").
+- El estado del equipo (Activo, Bodega, etc.) NO cambia automaticamente.
+- La ubicacion del equipo NO cambia automaticamente.
+- La accion queda registrada en historial permanente:
+  - PC:      equipo_asignacion_historial
+  - Monitor: monitor_asignacion_historial
+- Campos del historial: id_equipo/id_monitor, id_usuario_anterior, id_usuario_nuevo (NULL al liberar),
+  id_usuario_accion (quien realizo la accion), fecha_accion, motivo, observacion.
+
+Metodos en Inventario.php:
+- liberarEquipo(int $idEquipo, int $idUsuarioAccion): void
+  1. Busca el equipo. Si no existe → excepcion.
+  2. Si id_usuario_asignado ya es NULL → excepcion "El equipo ya esta sin asignar."
+  3. En transaccion: INSERT en equipo_asignacion_historial, luego UPDATE equipos SET id_usuario_asignado = NULL.
+  4. La tabla historial se inserta condicionalmente: solo si tablaExiste('equipo_asignacion_historial').
+
+- liberarMonitor(int $idMonitor, int $idUsuarioAccion): void
+  1. Misma logica que liberarEquipo, sobre la tabla monitores.
+  2. Historial en monitor_asignacion_historial.
+
+AJAX:
+- inventario/ajax/liberar_equipo.php  — POST {id_equipo} → JSON {ok, mensaje}
+- inventario/ajax/liberar_monitor.php — POST {id_monitor} → JSON {ok, mensaje}
+
+Boton en listados:
+- Aparece unicamente si id_usuario_asignado IS NOT NULL (verificado en JS sobre datos del DataTable).
+- Icono: bi-person-x, color ambar (#d97706), clase CSS: inv-btn-release.
+- SweetAlert2 confirma antes de enviar.
+- Al confirmar, recarga el DataTable correspondiente.
+
+Tablas SQL:
+- inventario/sql/equipo_asignacion_historial.sql
+- inventario/sql/monitor_asignacion_historial.sql
+
+35. Campo id_usuario_asignado en listarEquipos / listarMonitores
+- listarEquipos(): ahora incluye e.id_usuario_asignado en el SELECT.
+  Permite que el JS evalue si mostrar el boton "Liberar" por fila.
+- listarMonitores(): ahora incluye m.id_usuario_asignado en el SELECT.
+  Misma logica que PC.
+
+36. Dos tipos de monitores — distincion importante
+Existen dos conceptos de "monitor" completamente separados en el inventario:
+
+A) Monitores asociados al PC (tabla: equipo_monitor)
+- Son los monitores fisicamente conectados o asignados a un equipo PC especifico.
+- Se administran DENTRO del formulario de PC (registrar_equipo.php y editar_equipo.php).
+- Aparecen en la seccion accordion "Monitores asociados al PC".
+- La tabla equipo_monitor tiene la estructura legacy: id_monitor, id_equipo, modelo_monitor,
+  codigo_monitor, serie_monitor, tamano_monitor, resolucion_monitor, orden_monitor.
+- Al editar un PC, se borran y reinsertan (DELETE + INSERT en limpiarRelacionados + guardarTablasRelacionadas).
+- Boton "Agregar monitor" tiene id="btnAgregarMonitorPC" para no colisionar con el tab de monitores.
+
+B) Monitores independientes (tabla: monitores)
+- Son monitores comprados de forma independiente, sin relacion directa con un PC especifico.
+- Se administran desde la PESTANA "Monitores" en inventario/index.php.
+- Pueden estar asignados a un usuario (id_usuario_asignado) o quedar sin asignar (NULL).
+- Tablas relacionadas: monitor_fotos, monitor_compra, monitor_movimiento.
+- Se crean desde registrar_monitor.php, se editan desde editar_monitor.php.
+- La accion "Liberar" desvincula el usuario asignado (id_usuario_asignado = NULL) y deja registro
+  en monitor_asignacion_historial.
+
+Reglas:
+- NO migrar datos de equipo_monitor hacia monitores.
+- NO mezclar las dos logicas.
+- NO borrar la tabla equipo_monitor.
+- Un PC puede tener N monitores en equipo_monitor.
+- Un monitor independiente en la tabla monitores puede estar asignado a N usuarios a lo largo
+  del tiempo (historial), pero solo tiene uno activo a la vez.
+
+37. Fotos de equipos PC
+- Las fotos se guardan en inventario/uploads/equipos/{id_equipo}/
+- La tabla equipo_fotos guarda ruta relativa, tipo_foto (normal|panoramica), principal (0|1) y orden_foto.
+- Solo debe existir una foto con principal = 1 por equipo.
+- En el formulario, la seccion "Fotos del equipo" permite:
+  a) Ver fotos actuales (solo en edicion): con controles para marcar principal y eliminar.
+  b) Agregar nuevas fotos: input multiple accept=image/*.
+     Se puede subir varias imagenes en una misma operacion.
+     Si el equipo ya tiene foto principal, las nuevas quedan principal = 0.
+     Si no tiene foto principal, la primera nueva queda principal = 1.
+- El preview de fotos nuevas es un grid compacto (140x110px por imagen, object-fit: contain).
+- No se muestra imagen grande ni carrusel de ancho completo.
+- Clases CSS del preview: inv-new-photo-grid, inv-new-photo-card, inv-new-photo-wrap, inv-new-photo-name.
+- La primera imagen del preview lleva badge "★ Principal" (inv-badge-principal-overlay).
+
+38. Correccion bind_param en actualizarEquipo
+- El tipo del UPDATE en actualizarEquipo usaba 'isssssssi' (9 chars) para 8 params: ERROR.
+- Corregido a 'issssssi' (8 chars):
+  i=id_usuario_asignado, s*6=nombre+fabricante+producto+serie+tipo_pc+qr_code, i=id_estado.
+- El tipo de id_usuario_movimiento en registrarMovimiento fue corregido de 's' a 'i'.
+- Tipos correctos: 'iiiiss' (id_equipo, id_ubicacion_origen, id_ubicacion_destino, id_usuario_movimiento, motivo, observacion).
+
+39. Inventario Automatico mediante Agente
+El sistema permite completar el formulario de registro de PC usando un archivo JSON
+generado por el agente de inventario SEDUC.
+
+Flujo completo:
+  1. El tecnico descarga el agente desde: Registrar Equipo → "Descargar Agente".
+  2. Copia el .exe al equipo que desea inventariar y lo ejecuta (doble clic).
+  3. El script recopila hardware con PowerShell/WMI y ctypes.
+  4. Genera inventario_<NOMBRE_EQUIPO>.json en el mismo directorio.
+  5. El tecnico vuelve al sistema y usa "Importar Inventario Automatico".
+  6. El JS lee el JSON y completa automaticamente los campos del formulario.
+  7. El tecnico revisa, completa los datos manuales y guarda.
+
+Archivos del agente:
+  inventario/agente/seduc_inventario_agent.py  — script fuente Python
+  inventario/agente/seduc_inventario_agent.exe — ejecutable compilado (colocar aqui)
+  inventario/agente/README.txt                 — instrucciones PyInstaller
+  inventario/ajax/descargar_agente.php         — endpoint de descarga (sirve .exe o .py)
+
+Datos que captura el agente:
+  - nombre_equipo (hostname del equipo)
+  - fabricante (Win32_ComputerSystem.Manufacturer)
+  - modelo (Win32_ComputerSystem.Model)
+  - serial (Win32_BIOS.SerialNumber)
+  - procesador: nombre, fabricante detectado (Intel/AMD), velocidad en GHz
+  - ram_gb: total de RAM en GB (Win32_PhysicalMemory o GlobalMemoryStatusEx)
+  - almacenamiento[]: modelo, capacidad (GB/TB), tipo (SSD/NVMe/HDD) por disco
+  - windows: caption del SO (Win32_OperatingSystem.Caption)
+  - usuario_windows: $env:USERNAME de la sesion activa
+  - monitores[]: modelo (WmiMonitorID en root\wmi) y resolucion (EnumDisplayMonitors)
+  - generado_en: timestamp de ejecucion
+  - version_agente: "1.0"
+
+Datos que NO completa el agente (ingreso manual obligatorio):
+  - id_colegio y id_ubicacion (siempre del servidor, no del cliente)
+  - id_usuario_asignado
+  - id_estado
+  - valor_equipo, proveedor, numero_factura, fecha_compra, observaciones
+  - fotos del equipo
+
+Mapeo JSON → campos del formulario:
+  nombre_equipo  → input[name="nombre_equipo"]
+  fabricante     → input[name="fabricante"]
+  modelo         → input[name="producto"]
+  serial         → input[name="numero_serie"]
+  procesador_fab → input[name="procesador_fabricante"]
+  procesador     → input[name="procesador_modelo"]
+  procesador_vel → input[name="procesador_velocidad"]
+  almacenamiento[0].modelo    → input[name="equipo_modelo"]
+  almacenamiento[0].capacidad → input[name="equipo_capacidad"]
+  almacenamiento[0].tipo      → input[name="equipo_tamano"]
+  windows        → input[name="windows"]
+  ram_gb         → input[name="memoria[0][tamano_memoria]"] (ej: "16 GB")
+  monitores[]    → filas de monitor[N][modelo_monitor] y monitor[N][resolucion_monitor]
+
+Compatibilidad del agente:
+  - Windows 7 / 8 / 10 / 11 (32 y 64 bits)
+  - Sin dependencias externas pip (usa PowerShell y ctypes de stdlib)
+  - Compilar con: pyinstaller --onefile --console seduc_inventario_agent.py
+
+Coexistencia con registro manual:
+  - Ambas formas son independientes.
+  - La importacion solo pre-rellena campos; el usuario puede editar antes de guardar.
+  - Si no se importa archivo, el formulario funciona igual que siempre.
+  - Si el .exe no existe en agente/, el endpoint sirve el .py como alternativa.
+
+
+40. Carga masiva de monitores
+Permite importar multiples monitores desde un archivo Excel (.xlsx/.xls).
+Es el equivalente exacto de la carga masiva de PC, pero para el modulo Monitores.
+
+Archivos:
+  inventario/carga_masiva_monitores.php             — pagina principal con hero, stepper y panel de carga
+  inventario/exportar_plantilla_monitores.php        — genera el Excel con 3 hojas
+  inventario/ajax/procesar_carga_masiva_monitores.php — lee el Excel, valida, llama guardarMonitorDesdeArray
+  inventario/js/carga_masiva_monitores.js            — drag&drop, fetch, stepper y tabla de resultados
+
+Boton en index.php:
+  - Hay dos botones de carga masiva en el hero:
+    - inv-btn-carga-masiva      → PC (carga_masiva.php)          — visible solo en pestana PC
+    - inv-btn-carga-masiva-mon  → Monitores (carga_masiva_monitores.php) — visible solo en pestana Monitores
+  - La logica de visibilidad esta en initTabBehavior() en inventario.js.
+  - En carga inicial, tabActiva determina cual boton es visible.
+
+Plantilla Excel (exportar_plantilla_monitores.php):
+  - 3 hojas: "Monitores", "Estados", "Ubicaciones"
+  - 18 columnas A-R en la hoja principal:
+    A=id_usuario_asignado, B=id_ubicacion*, C=id_estado*, D=nombre_monitor*,
+    E=marca, F=modelo, G=numero_serie*, H=codigo_interno, I=tamano_monitor,
+    J=resolucion_monitor, K=tipo_panel, L=tipo_conexion, M=observacion,
+    N=valor_monitor, O=proveedor, P=numero_factura, Q=fecha_compra, R=observacion_compra
+  - (* = obligatorio)
+  - Filas 1-5: encabezado institucional (logo, colegio, titulo, fecha, separador)
+  - Fila 6: encabezados de columna (fondo azul #0F4C81, texto blanco)
+  - Fila 7: fila de ejemplo (gris italica, PHPExcel_Cell_DataType::TYPE_STRING para evitar conversion)
+  - Hoja 2 Estados: ID + nombre de cada estado disponible
+  - Hoja 3 Ubicaciones: ID + nombre de ubicaciones del colegio del usuario
+  - Las ubicaciones de la hoja 3 son solo las del colegio del usuario (id_colegio de sesion)
+
+Procesamiento (procesar_carga_masiva_monitores.php):
+  - Columnas 0-indexed mapeadas con $columnaMap
+  - Datos empiezan en fila 7 del Excel (array_slice($todasFilas, 6))
+  - Validaciones por fila: nombre_monitor, numero_serie, id_ubicacion > 0, id_estado > 0
+  - Cada fila llama a $inventario->guardarMonitorDesdeArray($payload, $idUsuarioSession)
+  - Transacciones independientes por fila (un error no cancela las demas)
+  - Respuesta JSON: {ok, total, ok_count, error_count, detalle[]}
+
+Metodo guardarMonitorDesdeArray(array $payload, int $idUsuario): int
+  - Metodo publico en inventario/class/Inventario.php
+  - Valida: id_colegio, nombre_monitor, numero_serie, id_estado, id_ubicacion (si tabla existe)
+  - Valida que id_ubicacion pertenezca al colegio (consulta equipo_ubicacion)
+  - Detecta numero_serie duplicado en el mismo colegio (error si existe)
+  - Usa insertarMonitor() + insertarCompraMonitor() + registrarMovimientoMonitor()
+  - Compra solo se guarda si tabla monitor_compra existe (tablaExiste)
+  - Movimiento inicial: origen=0, destino=id_ubicacion, motivo="Alta inicial de inventario"
+  - Transaccion atomica: begin_transaction / commit / rollback
+  - Retorna id_monitor del monitor creado
+
+Seguridad:
+  - id_colegio SIEMPRE viene de la sesion (via obtenerColegioDelUsuario), nunca del POST
+  - id_usuario_registra = $idUsuarioSession del servidor
+  - id_usuario_asignado puede ser NULL (campo opcional)
+  - Validacion de ubicacion: confirma que pertenece al colegio antes de insertar
+  - No se puede subir monitor con numero_serie ya existente en el colegio

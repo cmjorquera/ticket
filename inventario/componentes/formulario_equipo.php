@@ -244,18 +244,22 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
             </div>
         </div>
 
-        <!-- ===== MONITORES ===== -->
+        <!-- ===== MONITORES ASOCIADOS AL PC ===== -->
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosMonitores">
-                    Monitores
+                    Monitores asociados al PC
                 </button>
             </h2>
             <div id="datosMonitores" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
                 <div class="accordion-body">
+                    <p class="text-muted small mb-3">
+                        Registra aqui los monitores fisicamente conectados o asignados a este equipo PC.<br>
+                        Los monitores comprados de forma independiente se administran en la pestana <strong>Monitores</strong> del inventario.
+                    </p>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">Monitores asociados</h6>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnAgregarMonitor">Agregar monitor</button>
+                        <h6 class="mb-0">Monitores del equipo</h6>
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnAgregarMonitorPC">Agregar monitor</button>
                     </div>
                     <div id="contenedorMonitores">
                         <?php foreach ($monitores as $index => $monitor): ?>
@@ -375,7 +379,7 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         });
     });
 
-    /* ---- Preview de fotos nuevas ---- */
+    /* ---- Preview de fotos nuevas (grid compacto) ---- */
     var inputFotos = document.getElementById('fotos_equipo');
     var previewEl  = document.getElementById('previewFotos');
     if (!inputFotos || !previewEl) return;
@@ -384,83 +388,29 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         var files = Array.from(this.files).filter(function (f) {
             return f.type.startsWith('image/');
         });
-        if (!files.length) {
-            previewEl.classList.add('d-none');
-            previewEl.innerHTML = '';
-            return;
-        }
+        previewEl.innerHTML = '';
+        previewEl.classList.toggle('d-none', files.length === 0);
+        if (!files.length) return;
 
-        var srcs   = new Array(files.length);
-        var loaded = 0;
+        var grid = document.createElement('div');
+        grid.className = 'inv-new-photo-grid';
+        previewEl.appendChild(grid);
 
         files.forEach(function (file, i) {
             var reader = new FileReader();
             reader.onload = function (e) {
-                srcs[i] = e.target.result;
-                loaded++;
-                if (loaded === files.length) renderPreview(srcs);
+                var card = document.createElement('div');
+                card.className = 'inv-new-photo-card';
+                card.innerHTML =
+                    '<div class="inv-new-photo-wrap">' +
+                        '<img src="' + e.target.result + '" alt="">' +
+                        (i === 0 ? '<span class="inv-badge-principal-overlay">&#9733; Principal</span>' : '') +
+                    '</div>' +
+                    '<span class="inv-new-photo-name">' + (file.name.length > 20 ? file.name.substring(0, 18) + '…' : file.name) + '</span>';
+                grid.appendChild(card);
             };
             reader.readAsDataURL(file);
         });
     });
-
-    function renderPreview(srcs) {
-        previewEl.classList.remove('d-none');
-
-        if (srcs.length === 1) {
-            previewEl.innerHTML =
-                '<div class="text-center">' +
-                    '<div class="position-relative d-inline-block">' +
-                        '<img src="' + srcs[0] + '" class="inv-preview-single" alt="Vista previa">' +
-                        '<span class="inv-badge-principal-overlay">&#9733; Principal</span>' +
-                    '</div>' +
-                '</div>';
-            return;
-        }
-
-        /* Carrusel Bootstrap con strip de thumbnails */
-        var indicators = srcs.map(function (_, i) {
-            return '<button type="button" data-bs-target="#invCarouselPreview" data-bs-slide-to="' + i + '"' +
-                (i === 0 ? ' class="active" aria-current="true"' : '') + '></button>';
-        }).join('');
-
-        var items = srcs.map(function (src, i) {
-            var badge = i === 0 ? '<span class="inv-badge-principal-overlay">&#9733; Principal</span>' : '';
-            return '<div class="carousel-item' + (i === 0 ? ' active' : '') + '">' +
-                '<div class="inv-carousel-img-wrap position-relative">' +
-                '<img src="' + src + '" class="d-block w-100 inv-carousel-img" alt="Foto ' + (i + 1) + '">' +
-                badge + '</div></div>';
-        }).join('');
-
-        var thumbs = srcs.map(function (src, i) {
-            return '<img src="' + src + '" class="inv-carousel-thumb' + (i === 0 ? ' active' : '') +
-                '" data-idx="' + i + '" alt="Miniatura ' + (i + 1) + '">';
-        }).join('');
-
-        previewEl.innerHTML =
-            '<div id="invCarouselPreview" class="carousel slide" data-bs-ride="false">' +
-                '<div class="carousel-indicators">' + indicators + '</div>' +
-                '<div class="carousel-inner rounded">' + items + '</div>' +
-                '<button class="carousel-control-prev" type="button" data-bs-target="#invCarouselPreview" data-bs-slide="prev">' +
-                    '<span class="carousel-control-prev-icon"></span></button>' +
-                '<button class="carousel-control-next" type="button" data-bs-target="#invCarouselPreview" data-bs-slide="next">' +
-                    '<span class="carousel-control-next-icon"></span></button>' +
-            '</div>' +
-            '<div class="inv-thumb-strip mt-2">' + thumbs + '</div>';
-
-        var carouselEl = document.getElementById('invCarouselPreview');
-
-        carouselEl.addEventListener('slid.bs.carousel', function (e) {
-            document.querySelectorAll('#previewFotos .inv-carousel-thumb').forEach(function (t, i) {
-                t.classList.toggle('active', i === e.to);
-            });
-        });
-
-        document.querySelectorAll('#previewFotos .inv-carousel-thumb').forEach(function (t) {
-            t.addEventListener('click', function () {
-                bootstrap.Carousel.getOrCreateInstance(carouselEl).to(parseInt(this.dataset.idx, 10));
-            });
-        });
-    }
 }());
 </script>

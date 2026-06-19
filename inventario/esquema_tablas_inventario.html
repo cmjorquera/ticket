@@ -296,6 +296,120 @@
       </div>
     </div>
 
+    <div class="entity">
+      <div class="entity-header h-movement">equipo_asignacion_historial</div>
+      <div class="entity-fields">
+        <div class="field-pk">id_asignacion <span class="field-tag">PK</span></div>
+        <div class="field-fk">id_equipo <span class="field-tag">FK → equipos</span></div>
+        <div>id_usuario_anterior <span class="field-tag">nullable</span></div>
+        <div>id_usuario_nuevo <span class="field-tag">nullable · NULL=liberado</span></div>
+        <div class="field-fk">id_usuario_accion <span class="field-tag">FK → usuarios</span></div>
+        <div>fecha_accion <span class="field-tag">auto</span></div>
+        <div>motivo</div>
+        <div>observacion</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Módulo Monitores -->
+<h1 style="margin-top:2.5rem;font-size:1.1rem;color:#7c3aed">Módulo Monitores</h1>
+<p class="subtitle">Tablas independientes para el inventario de monitores</p>
+
+<div class="diagram">
+
+  <div class="col-left">
+    <div class="entity">
+      <div class="entity-header h-ref">colegio</div>
+      <div class="entity-fields"><div class="field-pk">id_colegio <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida con PC</div></div>
+    </div>
+    <div class="entity">
+      <div class="entity-header h-lookup">estado_equipo</div>
+      <div class="entity-fields"><div class="field-pk">id_estado <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida con PC</div></div>
+    </div>
+    <div class="entity">
+      <div class="entity-header h-lookup">equipo_ubicacion</div>
+      <div class="entity-fields"><div class="field-pk">id_ubicacion <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida con PC</div></div>
+    </div>
+    <div class="entity">
+      <div class="entity-header h-ref">usuarios</div>
+      <div class="entity-fields"><div class="field-pk">id <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida</div></div>
+    </div>
+  </div>
+
+  <div class="col-center">
+    <div class="entity" style="min-width:230px">
+      <div class="entity-header h-main">monitores <span style="font-weight:400;font-size:0.7rem">(tabla principal)</span></div>
+      <div class="entity-fields">
+        <div class="field-pk">id_monitor <span class="field-tag">PK</span></div>
+        <div class="field-fk">id_colegio <span class="field-tag">FK → colegio</span></div>
+        <div class="field-fk">id_ubicacion <span class="field-tag">nullable · FK → equipo_ubicacion</span></div>
+        <div class="field-fk">id_estado <span class="field-tag">FK → estado_equipo</span></div>
+        <div class="field-fk">id_usuario_asignado <span class="field-tag">nullable · FK → usuarios</span></div>
+        <div class="field-fk">id_usuario_registra <span class="field-tag">nullable · FK → usuarios</span></div>
+        <div>nombre_monitor</div>
+        <div>marca · modelo</div>
+        <div>numero_serie</div>
+        <div>codigo_interno</div>
+        <div>tamano_monitor · resolucion_monitor</div>
+        <div>tipo_panel · tipo_conexion</div>
+        <div>observacion</div>
+        <div>fecha_registro</div>
+        <div>eliminado <span class="field-tag">0=activo · 1=eliminado</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-right">
+    <div class="entity">
+      <div class="entity-header h-support">monitor_compra <span style="font-weight:400">(1:1)</span></div>
+      <div class="entity-fields">
+        <div class="field-fk">id_monitor <span class="field-tag">PK · FK</span></div>
+        <div>valor_monitor</div>
+        <div>proveedor</div>
+        <div>numero_factura</div>
+        <div>fecha_compra</div>
+        <div>observacion</div>
+      </div>
+    </div>
+    <div class="entity">
+      <div class="entity-header h-relation">monitor_fotos</div>
+      <div class="entity-fields">
+        <div class="field-pk">id_foto <span class="field-tag">PK</span></div>
+        <div class="field-fk">id_monitor <span class="field-tag">FK</span></div>
+        <div>ruta_foto</div>
+        <div>tipo_foto <span class="field-tag">normal|panoramica</span></div>
+        <div>principal <span class="field-tag">0|1</span></div>
+        <div>orden_foto</div>
+        <div>fecha_subida</div>
+      </div>
+    </div>
+    <div class="entity">
+      <div class="entity-header h-movement">monitor_movimiento</div>
+      <div class="entity-fields">
+        <div class="field-pk">id_movimiento <span class="field-tag">PK</span></div>
+        <div class="field-fk">id_monitor <span class="field-tag">FK</span></div>
+        <div>id_ubicacion_origen <span class="field-tag">nullable</span></div>
+        <div>id_ubicacion_destino</div>
+        <div class="field-fk">id_usuario_movimiento <span class="field-tag">FK → usuarios</span></div>
+        <div>fecha_movimiento</div>
+        <div>motivo · observacion</div>
+      </div>
+    </div>
+    <div class="entity">
+      <div class="entity-header h-movement">monitor_asignacion_historial</div>
+      <div class="entity-fields">
+        <div class="field-pk">id_asignacion <span class="field-tag">PK</span></div>
+        <div class="field-fk">id_monitor <span class="field-tag">FK → monitores</span></div>
+        <div>id_usuario_anterior <span class="field-tag">nullable</span></div>
+        <div>id_usuario_nuevo <span class="field-tag">nullable · NULL=liberado</span></div>
+        <div class="field-fk">id_usuario_accion <span class="field-tag">FK → usuarios</span></div>
+        <div>fecha_accion <span class="field-tag">auto</span></div>
+        <div>motivo · observacion</div>
+      </div>
+    </div>
   </div>
 
 </div>

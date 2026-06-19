@@ -58,41 +58,39 @@ try {
     //   Fila 6+ (Excel 7+)   : datos
     $filasDatos = array_slice($todasFilas, 6);
 
-    // Mapeo columna 0-indexed => campo interno (sin id_colegio — viene de la sesión)
+    // Mapeo columna 0-indexed => campo interno (sin id_colegio/nombre/QR — vienen del sistema)
     $columnaMap = [
         0  => 'id_usuario_asignado',
-        1  => 'nombre_equipo',
-        2  => 'fabricante',
-        3  => 'producto',
-        4  => 'numero_serie',
-        5  => 'tipo_pc',
-        6  => 'qr_code',
-        7  => 'id_estado',
-        8  => 'valor_equipo',
-        9  => 'proveedor',
-        10 => 'numero_factura',
-        11 => 'fecha_compra',
-        12 => 'observacion_compra',
-        13 => 'almacenamiento_modelo',
-        14 => 'almacenamiento_capacidad',
-        15 => 'almacenamiento_tamano',
-        16 => 'procesador_fabricante',
-        17 => 'procesador_modelo',
-        18 => 'procesador_velocidad',
-        19 => 'windows',
-        20 => 'office',
-        21 => 'antivirus',
-        22 => 'memoria_designacion',
-        23 => 'memoria_formato',
-        24 => 'memoria_tipo',
-        25 => 'memoria_tamano',
-        26 => 'memoria_frecuencia',
-        27 => 'memoria_marca',
-        28 => 'monitor_modelo',
-        29 => 'monitor_codigo',
-        30 => 'monitor_serie',
-        31 => 'monitor_tamano',
-        32 => 'monitor_resolucion',
+        1  => 'fabricante',
+        2  => 'producto',
+        3  => 'numero_serie',
+        4  => 'tipo_pc',
+        5  => 'id_estado',
+        6  => 'valor_equipo',
+        7  => 'proveedor',
+        8  => 'numero_factura',
+        9  => 'fecha_compra',
+        10 => 'observacion_compra',
+        11 => 'almacenamiento_modelo',
+        12 => 'almacenamiento_capacidad',
+        13 => 'almacenamiento_tamano',
+        14 => 'procesador_fabricante',
+        15 => 'procesador_modelo',
+        16 => 'procesador_velocidad',
+        17 => 'windows',
+        18 => 'office',
+        19 => 'antivirus',
+        20 => 'memoria_designacion',
+        21 => 'memoria_formato',
+        22 => 'memoria_tipo',
+        23 => 'memoria_tamano',
+        24 => 'memoria_frecuencia',
+        25 => 'memoria_marca',
+        26 => 'monitor_modelo',
+        27 => 'monitor_codigo',
+        28 => 'monitor_serie',
+        29 => 'monitor_tamano',
+        30 => 'monitor_resolucion',
     ];
 
     $resultados = [];
@@ -133,17 +131,16 @@ try {
         }
 
         // ── Validaciones ─────────────────────────────────────────────────────
-        $nombreEquipo = $datos['nombre_equipo'];
         $numeroSerie  = $datos['numero_serie'];
 
-        if ($nombreEquipo === '') {
-            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Nombre equipo es obligatorio.'];
+        if ($numeroSerie === '') {
+            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Numero de serie es obligatorio.'];
             $totalError++;
             continue;
         }
 
-        if ($numeroSerie === '') {
-            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Numero de serie es obligatorio.'];
+        if ($datos['tipo_pc'] === '') {
+            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Tipo de PC es obligatorio.'];
             $totalError++;
             continue;
         }
@@ -154,15 +151,15 @@ try {
             $idEstado = 1;
         }
 
-        $qrCode = $datos['qr_code'];
-        if ($qrCode === '') {
-            $qrCode = 'PC-' . preg_replace('/[^A-Za-z0-9\-]/', '', strtoupper($numeroSerie));
-        }
+        $serieLimpia = preg_replace('/[^A-Za-z0-9\-]/', '', strtoupper($numeroSerie));
+        $nombreEquipo = 'PC-' . ($serieLimpia !== '' ? $serieLimpia : uniqid());
+        $qrCode = 'PC-' . ($serieLimpia !== '' ? $serieLimpia : uniqid());
 
         $payload = [
             'equipo' => [
                 'id_usuario'          => $idUsuarioSession,
                 'id_colegio'          => $idColegio,
+                'id_usuario_registra' => $idUsuarioSession,
                 'id_usuario_asignado' => (int)$datos['id_usuario_asignado'],
                 'nombre_equipo'       => $nombreEquipo,
                 'fabricante'          => $datos['fabricante'],

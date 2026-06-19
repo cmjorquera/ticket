@@ -286,7 +286,7 @@
             `);
         });
 
-        $('#btnAgregarMonitor').on('click', function () {
+        $('#btnAgregarMonitorPC').on('click', function () {
             const index = $('#contenedorMonitores .monitor-item').length;
             $('#contenedorMonitores').append(`
                 <div class="inv-repeat-card monitor-item">
@@ -574,20 +574,23 @@
 
     function initTabBehavior() {
         const cfg = window.INVENTARIO_CONFIG || {};
-        const $btn   = $('#btnAgregarPrincipal');
-        const $label = $('#btnAgregarLabel');
-        const $carga = $('.inv-btn-carga-masiva');
+        const $btn      = $('#btnAgregarPrincipal');
+        const $label    = $('#btnAgregarLabel');
+        const $cargaPc  = $('.inv-btn-carga-masiva');
+        const $cargaMon = $('.inv-btn-carga-masiva-mon');
 
         function applyTab(tab) {
             if (!$btn.length) { return; }
             if (tab === 'monitores') {
                 $btn.attr('href', $btn.data('href-mon') || 'registrar_monitor.php');
                 if ($label.length) { $label.text($btn.data('label-mon') || 'Agregar monitor'); }
-                if ($carga.length) { $carga.hide(); }
+                if ($cargaPc.length)  { $cargaPc.addClass('d-none'); }
+                if ($cargaMon.length) { $cargaMon.removeClass('d-none'); }
             } else {
                 $btn.attr('href', $btn.data('href-pc') || 'registrar_equipo.php');
                 if ($label.length) { $label.text($btn.data('label-pc') || 'Agregar PC'); }
-                if ($carga.length) { $carga.show(); }
+                if ($cargaPc.length)  { $cargaPc.removeClass('d-none'); }
+                if ($cargaMon.length) { $cargaMon.addClass('d-none'); }
             }
         }
 
@@ -617,7 +620,6 @@
         bindGaleriaModal();
         bindFormAjax();
         bindRepeater();
-        bindPreview();
         initExtras();
         initTabBehavior();
 

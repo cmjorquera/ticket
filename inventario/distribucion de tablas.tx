@@ -41,8 +41,11 @@ Distribucion de tablas de inventario
 - orden_memoria
 
 5. Tabla relacionada: equipo_monitor
-- id_monitor
-- id_equipo
+PROPOSITO: Monitores fisicamente asociados a un PC especifico.
+NO confundir con la tabla "monitores" (modulo independiente).
+Gestionada desde el formulario de PC (seccion "Monitores asociados al PC").
+- id_monitor (PK autoincremental)
+- id_equipo (FK -> equipos)
 - modelo_monitor
 - codigo_monitor
 - serie_monitor
@@ -197,7 +200,11 @@ Relaciones generales del modulo PC
 - equipo_ubicacion se relaciona con equipos por id_ubicacion (1:N).
 - tipo_pc_catalogo provee valores logicos para equipos.tipo_pc (sin FK formal).
 
-=== MODULO MONITORES (tablas independientes) ===
+=== MODULO MONITORES INDEPENDIENTES ===
+IMPORTANTE: Este modulo es DISTINTO a la tabla equipo_monitor del modulo PC.
+- equipo_monitor: monitores vinculados a un PC (formulario PC, tabla legacy).
+- monitores: monitores comprados de forma independiente (pestana "Monitores", tablas nuevas).
+No se migran datos entre ambas tablas. No se mezclan las logicas.
 
 13. Tabla principal: monitores
 - id_monitor: clave primaria autoincremental.
@@ -228,3 +235,75 @@ Relaciones del modulo Monitores
 - monitor_fotos, monitor_movimiento, monitor_compra se relacionan por id_monitor.
 - estado_equipo y equipo_ubicacion son compartidas con el modulo PC.
 - equipo_monitor (legacy) NO pertenece a este modulo — es la tabla antigua de monitores del PC.
+
+=== HISTORIAL DE ASIGNACION (PC y Monitores) ===
+
+17. Tabla de historial: equipo_asignacion_historial
+Objetivo:
+- Registra cada cambio de usuario asignado para equipos PC.
+- Incluye la liberacion (id_usuario_nuevo = NULL).
+- Nunca se borra; es un log permanente.
+
+Campos:
+- id_asignacion: clave primaria autoincremental.
+- id_equipo: equipo relacionado.
+- id_usuario_anterior: usuario que tenia asignado el equipo antes del cambio (nullable).
+- id_usuario_nuevo: usuario nuevo al que se asigna (NULL cuando se libera).
+- id_usuario_accion: usuario de sesion que realizo la accion (quien libero/asigno).
+- fecha_accion: fecha y hora de la accion (auto, DEFAULT CURRENT_TIMESTAMP).
+- motivo: descripcion corta del tipo de accion ('Liberacion de equipo', etc.).
+- observacion: detalle textual adicional (opcional).
+
+18. Tabla de historial: monitor_asignacion_historial
+- Misma estructura que equipo_asignacion_historial, pero para monitores.
+- Campos: id_asignacion, id_monitor, id_usuario_anterior, id_usuario_nuevo,
+  id_usuario_accion, fecha_accion, motivo, observacion.
+
+Reglas generales de liberacion:
+- id_usuario_asignado = NULL significa equipo o monitor libre/disponible.
+- Liberar NO elimina el registro ni cambia el estado ni la ubicacion.
+- Solo deja id_usuario_asignado en NULL.
+- La accion queda registrada en el historial correspondiente.
+- Un monitor puede estar sin persona asignada.
+- Una persona puede tener varios monitores o equipos asignados (relacion 1:N logica).
+
+Relaciones:
+- equipos 1:N equipo_asignacion_historial (por id_equipo).
+- monitores 1:N monitor_asignacion_historial (por id_monitor).
+
+
+=== CARGA MASIVA MONITORES ===
+
+19. Archivos de carga masiva de monitores
+
+Flujo de importacion masiva de monitores:
+  1. Usuario descarga plantilla desde exportar_plantilla_monitores.php.
+  2. Completa datos en Excel (18 columnas A-R) segun su colegio.
+  3. Sube el archivo en carga_masiva_monitores.php.
+  4. procesar_carga_masiva_monitores.php lee el Excel y llama guardarMonitorDesdeArray por fila.
+  5. Se muestra tabla de resultados con estado OK / ERROR por cada fila.
+
+Columnas de la plantilla Excel (A=0 ... R=17):
+  A  id_usuario_asignado   — opcional, puede quedar vacio
+  B  id_ubicacion          — OBLIGATORIO, ver hoja Ubicaciones
+  C  id_estado             — OBLIGATORIO, ver hoja Estados
+  D  nombre_monitor        — OBLIGATORIO
+  E  marca
+  F  modelo
+  G  numero_serie          — OBLIGATORIO, unico por colegio
+  H  codigo_interno
+  I  tamano_monitor
+  J  resolucion_monitor
+  K  tipo_panel
+  L  tipo_conexion
+  M  observacion
+  N  valor_monitor         — solo numeros, sin puntos ni comas
+  O  proveedor
+  P  numero_factura
+  Q  fecha_compra          — formato YYYY-MM-DD
+  R  observacion_compra
+
+Metodo guardarMonitorDesdeArray(array $payload, int $idUsuario): int
+  Definido en Inventario.php. Recibe payload normalizado + idUsuario de sesion.
+  Retorna id_monitor del registro creado.
+  Lanza RuntimeException en caso de error de validacion o duplicado.

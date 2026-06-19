@@ -446,27 +446,32 @@
 .inv-btn-view,
 .inv-btn-edit,
 .inv-btn-photo,
+.inv-btn-release,
 .inv-btn-delete {
     background: transparent !important;
     border: none !important;
 }
 
-.inv-btn-view   { color: #6c757d !important; }
-.inv-btn-edit   { color: #0d6efd !important; }
-.inv-btn-photo  { color: #6c757d !important; }
-.inv-btn-delete { color: #dc3545 !important; }
+.inv-btn-view    { color: #6c757d !important; }
+.inv-btn-edit    { color: #0d6efd !important; }
+.inv-btn-photo   { color: #6c757d !important; }
+.inv-btn-release { color: #d97706 !important; }
+.inv-btn-delete  { color: #dc3545 !important; }
 
 .inv-btn-view:hover,
-.inv-btn-view:focus   { color: #495057 !important; background: rgba(108, 117, 125, 0.10) !important; }
+.inv-btn-view:focus    { color: #495057 !important; background: rgba(108, 117, 125, 0.10) !important; }
 
 .inv-btn-edit:hover,
-.inv-btn-edit:focus   { color: #0b5ed7 !important; background: rgba(13, 110, 253, 0.08) !important; }
+.inv-btn-edit:focus    { color: #0b5ed7 !important; background: rgba(13, 110, 253, 0.08) !important; }
 
 .inv-btn-photo:hover,
-.inv-btn-photo:focus  { color: #495057 !important; background: rgba(108, 117, 125, 0.10) !important; }
+.inv-btn-photo:focus   { color: #495057 !important; background: rgba(108, 117, 125, 0.10) !important; }
+
+.inv-btn-release:hover,
+.inv-btn-release:focus { color: #b45309 !important; background: rgba(217, 119, 6, 0.08) !important; }
 
 .inv-btn-delete:hover,
-.inv-btn-delete:focus { color: #b02a37 !important; background: rgba(220, 53, 69, 0.08) !important; }
+.inv-btn-delete:focus  { color: #b02a37 !important; background: rgba(220, 53, 69, 0.08) !important; }
 
 #tablaInventario td:last-child {
     min-width: 155px;
@@ -768,68 +773,61 @@
     }
 }
 
-/* ── Foto preview nueva (formulario) ───────────────────────────────────────── */
-
-.inv-preview-single {
-    max-height: 250px;
-    max-width: 100%;
-    border-radius: 10px;
-    box-shadow: 0 4px 18px rgba(0,0,0,.13);
-    display: block;
-}
+/* ── Foto preview nueva — grid compacto (formulario) ───────────────────────── */
 
 .inv-badge-principal-overlay {
     position: absolute;
-    top: 8px;
-    left: 8px;
+    top: 6px;
+    left: 6px;
     background: #f59e0b;
     color: #fff;
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    padding: 3px 9px;
+    padding: 2px 8px;
     border-radius: 999px;
     letter-spacing: 0.03em;
     pointer-events: none;
     white-space: nowrap;
+    line-height: 1.4;
 }
 
-.inv-carousel-img-wrap {
-    background: #1e293b;
-    border-radius: 10px;
-    overflow: hidden;
-    max-height: 300px;
+.inv-new-photo-grid {
     display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.inv-carousel-img {
-    max-height: 300px;
-    object-fit: contain;
-}
-
-.inv-thumb-strip {
-    display: flex;
-    gap: 6px;
     flex-wrap: wrap;
-    justify-content: center;
+    gap: 8px;
 }
 
-.inv-carousel-thumb {
-    width: 56px;
-    height: 56px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 2px solid transparent;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: border-color .15s, opacity .15s;
+.inv-new-photo-card {
+    width: 140px;
+    border: 1px solid var(--inv-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(15,76,129,.07);
 }
 
-.inv-carousel-thumb.active,
-.inv-carousel-thumb:hover {
-    border-color: var(--inv-primary);
-    opacity: 1;
+.inv-new-photo-wrap {
+    position: relative;
+    height: 110px;
+    background: #f4f7fb;
+}
+
+.inv-new-photo-wrap img {
+    width: 140px;
+    height: 110px;
+    object-fit: contain;
+    display: block;
+}
+
+.inv-new-photo-name {
+    display: block;
+    padding: 4px 6px;
+    font-size: .72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--inv-text);
+    border-top: 1px solid var(--inv-border);
 }
 
 /* ── Grid de fotos existentes (edicion + ver_equipo) ───────────────────────── */
@@ -896,4 +894,45 @@
     object-fit: cover;
     display: block;
     border-radius: 10px;
+}
+
+/* ── Panel Inventario Automático (Agente) ──────────────────────────────────── */
+
+.inv-agent-panel {
+    background: linear-gradient(135deg, #f0f7ff 0%, #f8fbff 100%);
+    border: 1px solid #c3d9f0 !important;
+    border-radius: 16px !important;
+}
+
+.inv-agent-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    background: var(--inv-primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.inv-agent-steps {
+    padding-left: 1.2rem;
+    margin: 0;
+}
+
+.inv-agent-steps li {
+    font-size: .9rem;
+    color: var(--inv-text);
+    padding: 3px 0;
+    line-height: 1.5;
+}
+
+.inv-agent-steps code {
+    background: rgba(15, 76, 129, .08);
+    color: var(--inv-primary);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: .83em;
 }

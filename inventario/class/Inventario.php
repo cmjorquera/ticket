@@ -678,7 +678,7 @@ SQL;
         try {
             $cols   = ['id_usuario_asignado=?', 'nombre_equipo=?', 'fabricante=?', 'producto=?',
                        'numero_serie=?', 'tipo_pc=?', 'qr_code=?', 'id_estado=?'];
-            $types  = 'isssssssi';
+            $types  = 'issssssi';
             $params = [
                 $payload['equipo']['id_usuario_asignado'],
                 $payload['equipo']['nombre_equipo'],
@@ -1024,7 +1024,7 @@ SQL;
                 (id_equipo, id_ubicacion_origen, id_ubicacion_destino, id_usuario_movimiento, motivo, observacion)
             VALUES (?, NULLIF(?, 0), ?, ?, ?, ?)
         ");
-        mysqli_stmt_bind_param($stmt, 'iiisss', $idEquipo, $idUbicOrigen, $idUbicDestino, $idUsuario, $motivo, $observacion);
+        mysqli_stmt_bind_param($stmt, 'iiiiss', $idEquipo, $idUbicOrigen, $idUbicDestino, $idUsuario, $motivo, $observacion);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
     }
@@ -1787,6 +1787,102 @@ SQL;
             mysqli_stmt_close($stmt);
 
             mysqli_commit($this->cn);
+        } catch (Throwable $e) {
+            mysqli_rollback($this->cn);
+            throw $e;
+        }
+    }
+
+    public function guardarMonitorDesdeArray(array $payload, int $idUsuario): int
+    {
+        $idColegio   = (int)($payload['id_colegio']   ?? 0);
+        $idUbicacion = (int)($payload['id_ubicacion'] ?? 0);
+        $idEstado    = (int)($payload['id_estado']    ?? 0);
+        $nombre      = trim((string)($payload['nombre_monitor'] ?? ''));
+        $serie       = trim((string)($payload['numero_serie']   ?? ''));
+
+        if ($idColegio <= 0) {
+            throw new RuntimeException('No se pudo determinar el colegio del usuario.');
+        }
+        if ($nombre === '') {
+            throw new RuntimeException('El nombre del monitor es obligatorio.');
+        }
+        if ($serie === '') {
+            throw new RuntimeException('El número de serie es obligatorio.');
+        }
+        if ($idEstado <= 0) {
+            throw new RuntimeException('El estado del monitor es obligatorio.');
+        }
+        if ($this->tablaExiste('equipo_ubicacion') && $idUbicacion <= 0) {
+            throw new RuntimeException('La ubicación del monitor es obligatoria.');
+        }
+
+        if ($idUbicacion > 0 && $this->tablaExiste('equipo_ubicacion')) {
+            $stmt = mysqli_prepare($this->cn,
+                "SELECT 1 FROM equipo_ubicacion WHERE id_ubicacion = ? AND id_colegio = ? AND estado = 1 LIMIT 1");
+            mysqli_stmt_bind_param($stmt, 'ii', $idUbicacion, $idColegio);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_store_result($stmt);
+            $valida = mysqli_stmt_num_rows($stmt) > 0;
+            mysqli_stmt_close($stmt);
+            if (!$valida) {
+                throw new RuntimeException('La ubicación indicada no pertenece al colegio del usuario.');
+            }
+        }
+
+        // Verificar número de serie duplicado dentro del mismo colegio
+        $conElim = $this->columnaExiste('monitores', 'eliminado');
+        $condElim = $conElim ? ' AND (eliminado IS NULL OR eliminado = 0)' : '';
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT 1 FROM monitores WHERE numero_serie = ? AND id_colegio = ?{$condElim} LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'si', $serie, $idColegio);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $duplicado = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+        if ($duplicado) {
+            throw new RuntimeException("Ya existe un monitor con número de serie «{$serie}» en este colegio.");
+        }
+
+        $compraRaw = $payload['compra'] ?? [];
+        $p = [
+            'id_colegio'          => $idColegio,
+            'id_ubicacion'        => $idUbicacion,
+            'id_usuario_asignado' => (int)($payload['id_usuario_asignado'] ?? 0),
+            'id_usuario_registra' => $idUsuario,
+            'id_estado'           => $idEstado,
+            'nombre_monitor'      => $nombre,
+            'marca'               => trim((string)($payload['marca']              ?? '')),
+            'modelo'              => trim((string)($payload['modelo']             ?? '')),
+            'numero_serie'        => $serie,
+            'codigo_interno'      => trim((string)($payload['codigo_interno']     ?? '')),
+            'tamano_monitor'      => trim((string)($payload['tamano_monitor']     ?? '')),
+            'resolucion_monitor'  => trim((string)($payload['resolucion_monitor'] ?? '')),
+            'tipo_panel'          => trim((string)($payload['tipo_panel']         ?? '')),
+            'tipo_conexion'       => trim((string)($payload['tipo_conexion']      ?? '')),
+            'observacion'         => trim((string)($payload['observacion']        ?? '')),
+            'compra' => [
+                'valor_monitor'  => (int)str_replace([',', '.'], '', (string)($compraRaw['valor_monitor'] ?? 0)),
+                'proveedor'      => trim((string)($compraRaw['proveedor']      ?? '')),
+                'numero_factura' => trim((string)($compraRaw['numero_factura'] ?? '')),
+                'fecha_compra'   => trim((string)($compraRaw['fecha_compra']   ?? '')),
+                'observacion'    => trim((string)($compraRaw['observacion']    ?? '')),
+            ],
+        ];
+
+        mysqli_begin_transaction($this->cn);
+        try {
+            $idMonitor = $this->insertarMonitor($p);
+            $this->insertarCompraMonitor($idMonitor, $p['compra']);
+            if ($idUbicacion > 0) {
+                $this->registrarMovimientoMonitor(
+                    $idMonitor, 0, $idUbicacion, $idUsuario,
+                    'Alta inicial de inventario',
+                    'Monitor registrado mediante carga masiva.'
+                );
+            }
+            mysqli_commit($this->cn);
+            return $idMonitor;
         } catch (Throwable $e) {
             mysqli_rollback($this->cn);
             throw $e;

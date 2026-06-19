@@ -1,0 +1,9 @@
+
+Warning: session_start(): Session ID is too long or contains illegal characters. Only the A-Z, a-z, 0-9, "-", and "," characters are allowed in C:\Users\cmjor\Documents\SISTEMA_TICKET\tmp_generar_plantilla_inventario.php on line 3
+
+Warning: session_start(): Failed to read session data: files (path: ) in C:\Users\cmjor\Documents\SISTEMA_TICKET\tmp_generar_plantilla_inventario.php on line 3
+
+Warning: session_start(): Session cannot be started after headers have already been sent (sent from C:\Users\cmjor\Documents\SISTEMA_TICKET\tmp_generar_plantilla_inventario.php on line 3) in C:\Users\cmjor\Documents\SISTEMA_TICKET\inventario\componentes\boot.php on line 8
+
+Warning: http_response_code(): Cannot set response code - headers already sent (output started at C:\Users\cmjor\Documents\SISTEMA_TICKET\tmp_generar_plantilla_inventario.php:3) in C:\Users\cmjor\Documents\SISTEMA_TICKET\inventario\componentes\boot.php on line 23
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Error inventario</title><style>body{font-family:Arial,sans-serif;background:#f4f7fb;color:#17324d;padding:32px}.box{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.08)}h1{margin-top:0}code{background:#f1f5f9;padding:2px 6px;border-radius:6px}</style></head><body><div class="box"><h1>Inventario no pudo cargar</h1><p>Error al iniciar el modulo de inventario: Call to undefined function mysqli_connect()</p></div></body></html>

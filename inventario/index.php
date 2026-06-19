@@ -93,6 +93,9 @@ require __DIR__ . '/componentes/layout_top.php';
                             <a href="carga_masiva.php" class="btn btn-outline-primary inv-btn-carga-masiva">
                                 <i class="bi bi-cloud-upload me-1"></i>Carga masiva
                             </a>
+                            <a href="carga_masiva_monitores.php" class="btn btn-outline-primary inv-btn-carga-masiva-mon d-none">
+                                <i class="bi bi-cloud-upload me-1"></i>Carga masiva monitores
+                            </a>
                             <a href="registrar_equipo.php" class="btn btn-primary" id="btnAgregarPrincipal"
                                data-href-pc="registrar_equipo.php"
                                data-href-mon="registrar_monitor.php"
