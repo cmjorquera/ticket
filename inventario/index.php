@@ -323,9 +323,11 @@ window.INVENTARIO_CONFIG = {
         listar:          'ajax/listar_equipos.php',
         detalle:         'ajax/obtener_detalle_equipo.php',
         eliminar:        'eliminar_logico_equipo.php',
+        liberarEquipo:   'ajax/liberar_equipo.php',
         listarMonitores: 'ajax/listar_monitores.php',
         detalleMonitor:  'ajax/obtener_fotos_monitor.php',
-        eliminarMonitor: 'ajax/eliminar_monitor.php'
+        eliminarMonitor: 'ajax/eliminar_monitor.php',
+        liberarMonitor:  'ajax/liberar_monitor.php'
     }
 };
 </script>

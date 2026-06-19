@@ -6,6 +6,12 @@
 
     function buildAccionButtons(row) {
         const id = parseInt(row.id_equipo, 10);
+        const tieneAsignado = row.id_usuario_asignado && parseInt(row.id_usuario_asignado, 10) > 0;
+        const btnLiberar = tieneAsignado
+            ? `<button type="button" class="btn btn-sm inv-btn-action inv-btn-release btnLiberarEquipo" data-id="${id}" title="Liberar equipo" aria-label="Liberar equipo">
+                   <i class="bi bi-person-x"></i>
+               </button>`
+            : '';
         return `
             <div class="inv-action-buttons d-flex flex-wrap gap-2">
                 <a href="ver_equipo.php?id_equipo=${id}" class="btn btn-sm inv-btn-action inv-btn-view" title="Ver detalle" aria-label="Ver detalle">
@@ -17,6 +23,7 @@
                 <button type="button" class="btn btn-sm inv-btn-action inv-btn-photo btnVerFotos" data-id="${id}" title="Fotos" aria-label="Fotos">
                     <i class="bi bi-images"></i>
                 </button>
+                ${btnLiberar}
                 <button type="button" class="btn btn-sm inv-btn-action inv-btn-delete btnEliminarLogico" data-id="${id}" title="Cambiar a baja" aria-label="Cambiar a baja">
                     <i class="bi bi-trash"></i>
                 </button>
@@ -134,6 +141,32 @@
     function bindFilters() {
         $('#filtroColegio, #filtroEstado, #filtroTipo, #filtroUsuario').on('change', loadInventario);
         $('#filtroBusqueda').on('keyup', debounce(loadInventario, 350));
+    }
+
+    function bindLiberarEquipo() {
+        $(document).on('click', '.btnLiberarEquipo', function () {
+            const idEquipo = $(this).data('id');
+            Swal.fire({
+                title: '¿Liberar este equipo?',
+                text: 'Se quitará el usuario asignado y quedará disponible.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, liberar',
+                cancelButtonText: 'Cancelar'
+            }).then(function (result) {
+                if (!result.isConfirmed) { return; }
+                $.post(window.INVENTARIO_CONFIG.endpoints.liberarEquipo, { id_equipo: idEquipo }, null, 'json')
+                    .done(function (response) {
+                        Swal.fire('Liberado', response.mensaje, 'success');
+                        loadInventario();
+                    })
+                    .fail(function (xhr) {
+                        const msg = xhr.responseJSON && xhr.responseJSON.mensaje
+                            ? xhr.responseJSON.mensaje : 'No fue posible liberar el equipo.';
+                        Swal.fire('Error', msg, 'error');
+                    });
+            });
+        });
     }
 
     function bindDelete() {
@@ -326,6 +359,12 @@
 
     function buildMonitorAccionButtons(row) {
         const id = parseInt(row.id_monitor, 10);
+        const tieneAsignado = row.id_usuario_asignado && parseInt(row.id_usuario_asignado, 10) > 0;
+        const btnLiberar = tieneAsignado
+            ? `<button type="button" class="btn btn-sm inv-btn-action inv-btn-release btnLiberarMonitor" data-id="${id}" title="Liberar monitor" aria-label="Liberar monitor">
+                   <i class="bi bi-person-x"></i>
+               </button>`
+            : '';
         return `
             <div class="inv-action-buttons d-flex flex-wrap gap-2">
                 <a href="ver_monitor.php?id_monitor=${id}" class="btn btn-sm inv-btn-action inv-btn-view" title="Ver detalle" aria-label="Ver detalle">
@@ -337,6 +376,7 @@
                 <button type="button" class="btn btn-sm inv-btn-action inv-btn-photo btnVerFotosMonitor" data-id="${id}" title="Fotos" aria-label="Fotos">
                     <i class="bi bi-images"></i>
                 </button>
+                ${btnLiberar}
                 <button type="button" class="btn btn-sm inv-btn-action inv-btn-delete btnEliminarMonitor" data-id="${id}" title="Eliminar" aria-label="Eliminar">
                     <i class="bi bi-trash"></i>
                 </button>
@@ -452,6 +492,32 @@
         $('#filtroBusquedaMon').on('keyup', debounce(loadMonitores, 350));
     }
 
+    function bindLiberarMonitor() {
+        $(document).on('click', '.btnLiberarMonitor', function () {
+            const idMonitor = $(this).data('id');
+            Swal.fire({
+                title: '¿Liberar este monitor?',
+                text: 'Se quitará el usuario asignado y quedará disponible.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, liberar',
+                cancelButtonText: 'Cancelar'
+            }).then(function (result) {
+                if (!result.isConfirmed) { return; }
+                $.post(window.INVENTARIO_CONFIG.endpoints.liberarMonitor, { id_monitor: idMonitor }, null, 'json')
+                    .done(function (response) {
+                        Swal.fire('Liberado', response.mensaje, 'success');
+                        loadMonitores();
+                    })
+                    .fail(function (xhr) {
+                        const msg = xhr.responseJSON && xhr.responseJSON.mensaje
+                            ? xhr.responseJSON.mensaje : 'No fue posible liberar el monitor.';
+                        Swal.fire('Error', msg, 'error');
+                    });
+            });
+        });
+    }
+
     function bindMonitorDelete() {
         $(document).on('click', '.btnEliminarMonitor', function () {
             const idMonitor = $(this).data('id');
@@ -536,6 +602,7 @@
             if (tab === 'monitores' && !tablaMonitores) {
                 initTablaMonitores();
                 bindMonitorFilters();
+                bindLiberarMonitor();
                 bindMonitorDelete();
                 bindMonitorGaleriaModal();
             }
@@ -545,6 +612,7 @@
     $(function () {
         initTabla();
         bindFilters();
+        bindLiberarEquipo();
         bindDelete();
         bindGaleriaModal();
         bindFormAjax();
@@ -557,6 +625,7 @@
         if ((window.INVENTARIO_CONFIG || {}).tabActiva === 'monitores') {
             initTablaMonitores();
             bindMonitorFilters();
+            bindLiberarMonitor();
             bindMonitorDelete();
             bindMonitorGaleriaModal();
         }

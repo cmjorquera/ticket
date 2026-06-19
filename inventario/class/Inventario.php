@@ -280,6 +280,7 @@ class Inventario
 
         $sql = "SELECT
                     e.id_equipo,
+                    e.id_usuario_asignado,
                     e.nombre_equipo,
                     e.fabricante,
                     e.producto,
@@ -1515,6 +1516,7 @@ SQL;
 
         $sql = "SELECT
                     m.id_monitor,
+                    m.id_usuario_asignado,
                     m.nombre_monitor,
                     m.marca,
                     m.modelo,
@@ -1560,18 +1562,17 @@ SQL;
         $conEstado     = $this->tablaExiste('estado_equipo');
         $joinEstado    = $conEstado ? "LEFT JOIN estado_equipo ee ON ee.id_estado = m.id_estado" : '';
         $selectEstado  = $conEstado
-            ? "COALESCE(ee.nombre_estado, 'Sin estado') AS nombre_estado, COALESCE(ee.color_badge, 'dark') AS color_badge,"
-            : "'Sin estado' AS nombre_estado, 'dark' AS color_badge,";
+            ? "COALESCE(ee.nombre_estado, 'Sin estado') AS nombre_estado, COALESCE(ee.color_badge, 'dark') AS color_badge"
+            : "'Sin estado' AS nombre_estado, 'dark' AS color_badge";
         $joinUbicacion   = $conUbicacion ? "LEFT JOIN equipo_ubicacion eu ON eu.id_ubicacion = m.id_ubicacion" : '';
-        $selectUbicacion = $conUbicacion ? ", eu.nombre_ubicacion, eu.tipo_ubicacion" : ", NULL AS nombre_ubicacion, NULL AS tipo_ubicacion";
+        $selectUbicacion = $conUbicacion ? "eu.nombre_ubicacion, eu.tipo_ubicacion" : "NULL AS nombre_ubicacion, NULL AS tipo_ubicacion";
 
         $stmt = mysqli_prepare($this->cn, "
             SELECT m.*,
                 c.nom_colegio,
                 CONCAT(ua.nombre, ' ', ua.apellido_paterno) AS usuario_asignado,
                 CONCAT(ur.nombre, ' ', ur.apellido_paterno) AS nombre_usuario_registra,
-                {$selectEstado}
-                NULL AS _dummy
+                {$selectEstado},
                 {$selectUbicacion}
             FROM monitores m
             INNER JOIN colegio c ON c.id_colegio = m.id_colegio
@@ -1706,6 +1707,90 @@ SQL;
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
         return true;
+    }
+
+    public function liberarEquipo(int $idEquipo, int $idUsuarioAccion): void
+    {
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT id_equipo, id_usuario_asignado FROM equipos WHERE id_equipo = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        mysqli_stmt_execute($stmt);
+        $actual = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+        mysqli_stmt_close($stmt);
+
+        if (!$actual) {
+            throw new RuntimeException('El equipo indicado no existe.');
+        }
+        $idUsuarioAnterior = $actual['id_usuario_asignado'] !== null ? (int)$actual['id_usuario_asignado'] : null;
+        if ($idUsuarioAnterior === null) {
+            throw new RuntimeException('El equipo ya está sin asignar.');
+        }
+
+        mysqli_begin_transaction($this->cn);
+        try {
+            if ($this->tablaExiste('equipo_asignacion_historial')) {
+                $stmt = mysqli_prepare($this->cn,
+                    "INSERT INTO equipo_asignacion_historial
+                     (id_equipo, id_usuario_anterior, id_usuario_nuevo, id_usuario_accion, motivo, observacion)
+                     VALUES (?, ?, NULL, ?, 'Liberación de equipo', 'Equipo desvinculado del usuario asignado y dejado disponible.')");
+                mysqli_stmt_bind_param($stmt, 'iii', $idEquipo, $idUsuarioAnterior, $idUsuarioAccion);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
+
+            $stmt = mysqli_prepare($this->cn,
+                "UPDATE equipos SET id_usuario_asignado = NULL WHERE id_equipo = ?");
+            mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+
+            mysqli_commit($this->cn);
+        } catch (Throwable $e) {
+            mysqli_rollback($this->cn);
+            throw $e;
+        }
+    }
+
+    public function liberarMonitor(int $idMonitor, int $idUsuarioAccion): void
+    {
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT id_monitor, id_usuario_asignado FROM monitores WHERE id_monitor = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        $actual = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+        mysqli_stmt_close($stmt);
+
+        if (!$actual) {
+            throw new RuntimeException('El monitor indicado no existe.');
+        }
+        $idUsuarioAnterior = $actual['id_usuario_asignado'] !== null ? (int)$actual['id_usuario_asignado'] : null;
+        if ($idUsuarioAnterior === null) {
+            throw new RuntimeException('El monitor ya está sin asignar.');
+        }
+
+        mysqli_begin_transaction($this->cn);
+        try {
+            if ($this->tablaExiste('monitor_asignacion_historial')) {
+                $stmt = mysqli_prepare($this->cn,
+                    "INSERT INTO monitor_asignacion_historial
+                     (id_monitor, id_usuario_anterior, id_usuario_nuevo, id_usuario_accion, motivo, observacion)
+                     VALUES (?, ?, NULL, ?, 'Liberación de monitor', 'Monitor desvinculado del usuario asignado y dejado disponible.')");
+                mysqli_stmt_bind_param($stmt, 'iii', $idMonitor, $idUsuarioAnterior, $idUsuarioAccion);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
+
+            $stmt = mysqli_prepare($this->cn,
+                "UPDATE monitores SET id_usuario_asignado = NULL WHERE id_monitor = ?");
+            mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+
+            mysqli_commit($this->cn);
+        } catch (Throwable $e) {
+            mysqli_rollback($this->cn);
+            throw $e;
+        }
     }
 
     public function obtenerResumenMonitores(array $filtros = []): array
