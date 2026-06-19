@@ -236,12 +236,25 @@
     function bindModalCloseFallback() {
         $(document).on('click', '#modalGaleriaEquipo [data-bs-dismiss="modal"], #modalGaleriaMonitor [data-bs-dismiss="modal"]', function () {
             const modalEl = this.closest('.modal');
-            if (!modalEl || !window.bootstrap || !bootstrap.Modal) {
+            if (!modalEl) {
                 return;
             }
 
-            const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
-            instance.hide();
+            if (window.bootstrap && bootstrap.Modal && bootstrap.Modal.getOrCreateInstance) {
+                bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                return;
+            }
+
+            if ($.fn.modal) {
+                $(modalEl).modal('hide');
+                return;
+            }
+
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            modalEl.setAttribute('aria-hidden', 'true');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
         });
 
         $('#modalGaleriaEquipo, #modalGaleriaMonitor').on('hidden.bs.modal', function () {
@@ -262,9 +275,55 @@
         $title.text(title || 'Detalle');
         $body.html('<div class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Cargando detalle...</div>');
 
-        const instance = bootstrap.Offcanvas.getOrCreateInstance($offcanvas[0]);
-        instance.show();
+        showDetalleOffcanvas($offcanvas[0]);
         return { $title, $body };
+    }
+
+    function showDetalleOffcanvas(offcanvasEl) {
+        if (!offcanvasEl) {
+            return;
+        }
+
+        if (window.bootstrap && bootstrap.Offcanvas && bootstrap.Offcanvas.getOrCreateInstance) {
+            bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl).show();
+            return;
+        }
+
+        offcanvasEl.classList.add('show');
+        offcanvasEl.style.visibility = 'visible';
+        offcanvasEl.setAttribute('aria-modal', 'true');
+        offcanvasEl.setAttribute('role', 'dialog');
+        document.body.classList.add('modal-open');
+
+        if (!document.querySelector('.inv-offcanvas-backdrop')) {
+            const backdrop = document.createElement('div');
+            backdrop.className = 'offcanvas-backdrop fade show inv-offcanvas-backdrop';
+            document.body.appendChild(backdrop);
+        }
+    }
+
+    function hideDetalleOffcanvas() {
+        const offcanvasEl = document.getElementById('offcanvasDetalleInventario');
+        if (!offcanvasEl) {
+            return;
+        }
+
+        if (window.bootstrap && bootstrap.Offcanvas && bootstrap.Offcanvas.getInstance) {
+            const instance = bootstrap.Offcanvas.getInstance(offcanvasEl);
+            if (instance) {
+                instance.hide();
+                return;
+            }
+        }
+
+        offcanvasEl.classList.remove('show');
+        offcanvasEl.style.visibility = 'hidden';
+        offcanvasEl.removeAttribute('aria-modal');
+        offcanvasEl.removeAttribute('role');
+        document.querySelectorAll('.inv-offcanvas-backdrop').forEach(function (el) {
+            el.remove();
+        });
+        document.body.classList.remove('modal-open');
     }
 
     function renderDetalleOffcanvas($title, $body, title, html) {
@@ -319,6 +378,10 @@
                     const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible cargar el detalle.';
                     ui.$body.html(`<div class="alert alert-danger mb-3">${escapeHtml(mensaje)}</div><a href="${escapeHtml(href)}" class="btn btn-outline-primary">Abrir ficha completa</a>`);
                 });
+        });
+
+        $(document).on('click', '#offcanvasDetalleInventario [data-bs-dismiss="offcanvas"], .inv-offcanvas-backdrop', function () {
+            hideDetalleOffcanvas();
         });
     }
 
