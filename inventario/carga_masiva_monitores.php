@@ -80,10 +80,10 @@ require __DIR__ . '/componentes/layout_top.php';
                             Descargar plantilla Excel
                         </h5>
                         <p class="text-muted mb-3 small">
-                            La plantilla incluye el encabezado de tu colegio, las 18 columnas necesarias
+                            La plantilla incluye el encabezado de tu colegio, las 17 columnas necesarias
                             y una fila de ejemplo en gris. <strong>Elimina la fila de ejemplo</strong> antes de subir.
-                            La hoja <strong>Estados</strong> lista los IDs disponibles y
-                            la hoja <strong>Ubicaciones</strong> muestra las ubicaciones de tu colegio.
+                            Usa los desplegables para <strong>Usuario asignado</strong>, <strong>Ubicacion</strong>
+                            y <strong>Estado</strong>. El nombre del monitor se genera automaticamente.
                         </p>
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             <a href="exportar_plantilla_monitores.php" class="btn btn-success">
@@ -102,24 +102,23 @@ require __DIR__ . '/componentes/layout_top.php';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr><td>A</td><td>ID Usuario Asignado</td><td class="text-center">—</td><td>Dejar vacío si no aplica</td></tr>
-                                    <tr class="table-warning"><td>B</td><td>ID Ubicacion</td><td class="text-center"><i class="bi bi-check-circle-fill text-success"></i></td><td>Ver hoja <strong>Ubicaciones</strong></td></tr>
-                                    <tr class="table-warning"><td>C</td><td>ID Estado</td><td class="text-center"><i class="bi bi-check-circle-fill text-success"></i></td><td>Ver hoja <strong>Estados</strong></td></tr>
-                                    <tr class="table-warning"><td>D</td><td>Nombre Monitor</td><td class="text-center"><i class="bi bi-check-circle-fill text-success"></i></td><td>Descripción identificatoria</td></tr>
-                                    <tr><td>E</td><td>Marca</td><td class="text-center">—</td><td>Ej: Samsung, LG, Dell</td></tr>
-                                    <tr><td>F</td><td>Modelo</td><td class="text-center">—</td><td>Código de modelo del fabricante</td></tr>
-                                    <tr class="table-warning"><td>G</td><td>Numero de Serie</td><td class="text-center"><i class="bi bi-check-circle-fill text-success"></i></td><td>Único por colegio</td></tr>
-                                    <tr><td>H</td><td>Codigo Interno</td><td class="text-center">—</td><td>Código propio del establecimiento</td></tr>
-                                    <tr><td>I</td><td>Tamano Monitor</td><td class="text-center">—</td><td>Ej: 24", 27"</td></tr>
-                                    <tr><td>J</td><td>Resolucion Monitor</td><td class="text-center">—</td><td>Ej: 1920x1080, 2560x1440</td></tr>
-                                    <tr><td>K</td><td>Tipo Panel</td><td class="text-center">—</td><td>Ej: IPS, VA, TN</td></tr>
-                                    <tr><td>L</td><td>Tipo Conexion</td><td class="text-center">—</td><td>Ej: HDMI, DisplayPort, VGA</td></tr>
-                                    <tr><td>M</td><td>Observacion</td><td class="text-center">—</td><td>Notas generales del monitor</td></tr>
-                                    <tr><td>N</td><td>Valor Monitor</td><td class="text-center">—</td><td>Precio de compra en CLP (solo números)</td></tr>
-                                    <tr><td>O</td><td>Proveedor</td><td class="text-center">—</td><td>Empresa o proveedor</td></tr>
-                                    <tr><td>P</td><td>Numero Factura</td><td class="text-center">—</td><td>Número de documento de compra</td></tr>
-                                    <tr><td>Q</td><td>Fecha Compra</td><td class="text-center">—</td><td>Formato YYYY-MM-DD</td></tr>
-                                    <tr><td>R</td><td>Observacion Compra</td><td class="text-center">—</td><td>Notas sobre la adquisición</td></tr>
+                                    <tr><td>A</td><td>Usuario asignado</td><td class="text-center">—</td><td>Desplegable; dejar "Sin asignar" si no aplica</td></tr>
+                                    <tr class="table-warning"><td>B</td><td>Ubicacion</td><td class="text-center"><i class="bi bi-check-circle-fill text-success"></i></td><td>Desplegable con ubicaciones del colegio</td></tr>
+                                    <tr class="table-warning"><td>C</td><td>Estado</td><td class="text-center"><i class="bi bi-check-circle-fill text-success"></i></td><td>Desplegable con estados disponibles</td></tr>
+                                    <tr><td>D</td><td>Marca</td><td class="text-center">—</td><td>Ej: Samsung, LG, Dell</td></tr>
+                                    <tr><td>E</td><td>Modelo</td><td class="text-center">—</td><td>Código de modelo del fabricante</td></tr>
+                                    <tr class="table-warning"><td>F</td><td>Numero de Serie</td><td class="text-center"><i class="bi bi-check-circle-fill text-success"></i></td><td>Único por colegio; genera el nombre del monitor</td></tr>
+                                    <tr><td>G</td><td>Codigo Interno</td><td class="text-center">—</td><td>Código propio del establecimiento</td></tr>
+                                    <tr><td>H</td><td>Tamano Monitor</td><td class="text-center">—</td><td>Ej: 24", 27"</td></tr>
+                                    <tr><td>I</td><td>Resolucion Monitor</td><td class="text-center">—</td><td>Ej: 1920x1080, 2560x1440</td></tr>
+                                    <tr><td>J</td><td>Tipo Panel</td><td class="text-center">—</td><td>Ej: IPS, VA, TN</td></tr>
+                                    <tr><td>K</td><td>Tipo Conexion</td><td class="text-center">—</td><td>Ej: HDMI, DisplayPort, VGA</td></tr>
+                                    <tr><td>L</td><td>Observacion</td><td class="text-center">—</td><td>Notas generales del monitor</td></tr>
+                                    <tr><td>M</td><td>Valor Monitor</td><td class="text-center">—</td><td>Precio de compra en CLP (solo números)</td></tr>
+                                    <tr><td>N</td><td>Proveedor</td><td class="text-center">—</td><td>Empresa o proveedor</td></tr>
+                                    <tr><td>O</td><td>Numero Factura</td><td class="text-center">—</td><td>Número de documento de compra</td></tr>
+                                    <tr><td>P</td><td>Fecha Compra</td><td class="text-center">—</td><td>Formato YYYY-MM-DD</td></tr>
+                                    <tr><td>Q</td><td>Observacion Compra</td><td class="text-center">—</td><td>Notas sobre la adquisición</td></tr>
                                 </tbody>
                             </table>
                         </div>

@@ -741,24 +741,27 @@ Boton en index.php:
   - En carga inicial, tabActiva determina cual boton es visible.
 
 Plantilla Excel (exportar_plantilla_monitores.php):
-  - 3 hojas: "Monitores", "Estados", "Ubicaciones"
-  - 18 columnas A-R en la hoja principal:
-    A=id_usuario_asignado, B=id_ubicacion*, C=id_estado*, D=nombre_monitor*,
-    E=marca, F=modelo, G=numero_serie*, H=codigo_interno, I=tamano_monitor,
-    J=resolucion_monitor, K=tipo_panel, L=tipo_conexion, M=observacion,
-    N=valor_monitor, O=proveedor, P=numero_factura, Q=fecha_compra, R=observacion_compra
+  - 4 hojas: "Monitores", "Estados", "Ubicaciones", "Usuarios"
+  - 17 columnas A-Q en la hoja principal:
+    A=id_usuario_asignado, B=id_ubicacion*, C=id_estado*, D=marca,
+    E=modelo, F=numero_serie*, G=codigo_interno, H=tamano_monitor,
+    I=resolucion_monitor, J=tipo_panel, K=tipo_conexion, L=observacion,
+    M=valor_monitor, N=proveedor, O=numero_factura, P=fecha_compra, Q=observacion_compra
   - (* = obligatorio)
   - Filas 1-5: encabezado institucional (logo, colegio, titulo, fecha, separador)
   - Fila 6: encabezados de columna (fondo azul #0F4C81, texto blanco)
   - Fila 7: fila de ejemplo (gris italica, PHPExcel_Cell_DataType::TYPE_STRING para evitar conversion)
-  - Hoja 2 Estados: ID + nombre de cada estado disponible
-  - Hoja 3 Ubicaciones: ID + nombre de ubicaciones del colegio del usuario
+  - Hoja 2 Estados: ID + nombre + seleccion Excel ("ID - Nombre")
+  - Hoja 3 Ubicaciones: ID + nombre + seleccion Excel ("ID - Nombre")
+  - Hoja 4 Usuarios: ID + nombre + seleccion Excel ("ID - Nombre")
   - Las ubicaciones de la hoja 3 son solo las del colegio del usuario (id_colegio de sesion)
+  - La hoja principal incluye desplegables para Usuario asignado, Ubicacion y Estado.
+  - nombre_monitor NO se pide en Excel: se genera automaticamente como "MON-" + numero_serie limpio.
 
 Procesamiento (procesar_carga_masiva_monitores.php):
   - Columnas 0-indexed mapeadas con $columnaMap
   - Datos empiezan en fila 7 del Excel (array_slice($todasFilas, 6))
-  - Validaciones por fila: nombre_monitor, numero_serie, id_ubicacion > 0, id_estado > 0
+  - Validaciones por fila: numero_serie, id_ubicacion > 0, id_estado > 0
   - Cada fila llama a $inventario->guardarMonitorDesdeArray($payload, $idUsuarioSession)
   - Transacciones independientes por fila (un error no cancela las demas)
   - Respuesta JSON: {ok, total, ok_count, error_count, detalle[]}

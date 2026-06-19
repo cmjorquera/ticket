@@ -55,26 +55,26 @@ try {
     //   Fila 6+ (Excel 7+)   : datos
     $filasDatos = array_slice($todasFilas, 6);
 
-    // Mapeo columna 0-indexed => campo interno (A=0 ... R=17)
+    // Mapeo columna 0-indexed => campo interno (A=0 ... Q=16)
+    // nombre_monitor no viene en Excel: se genera automaticamente desde el numero de serie.
     $columnaMap = [
         0  => 'id_usuario_asignado',
         1  => 'id_ubicacion',
         2  => 'id_estado',
-        3  => 'nombre_monitor',
-        4  => 'marca',
-        5  => 'modelo',
-        6  => 'numero_serie',
-        7  => 'codigo_interno',
-        8  => 'tamano_monitor',
-        9  => 'resolucion_monitor',
-        10 => 'tipo_panel',
-        11 => 'tipo_conexion',
-        12 => 'observacion',
-        13 => 'valor_monitor',
-        14 => 'proveedor',
-        15 => 'numero_factura',
-        16 => 'fecha_compra',
-        17 => 'observacion_compra',
+        3  => 'marca',
+        4  => 'modelo',
+        5  => 'numero_serie',
+        6  => 'codigo_interno',
+        7  => 'tamano_monitor',
+        8  => 'resolucion_monitor',
+        9  => 'tipo_panel',
+        10 => 'tipo_conexion',
+        11 => 'observacion',
+        12 => 'valor_monitor',
+        13 => 'proveedor',
+        14 => 'numero_factura',
+        15 => 'fecha_compra',
+        16 => 'observacion_compra',
     ];
 
     $resultados = [];
@@ -109,16 +109,9 @@ try {
         }
 
         // ── Validaciones de campo obligatorio ────────────────────────────────
-        $nombreMonitor = $datos['nombre_monitor'];
         $numeroSerie   = $datos['numero_serie'];
         $idUbicacion   = (int)$datos['id_ubicacion'];
         $idEstado      = (int)$datos['id_estado'];
-
-        if ($nombreMonitor === '') {
-            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Nombre del monitor es obligatorio.'];
-            $totalError++;
-            continue;
-        }
 
         if ($numeroSerie === '') {
             $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Número de serie es obligatorio.'];
@@ -127,18 +120,21 @@ try {
         }
 
         if ($idUbicacion <= 0) {
-            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'ID Ubicacion es obligatorio (ver hoja Ubicaciones).'];
+            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Ubicacion es obligatoria. Seleccionela desde el desplegable.'];
             $totalError++;
             continue;
         }
 
         if ($idEstado <= 0) {
-            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'ID Estado es obligatorio (ver hoja Estados).'];
+            $resultados[] = ['fila' => $numFilaExcel, 'ok' => false, 'mensaje' => 'Estado es obligatorio. Seleccionelo desde el desplegable.'];
             $totalError++;
             continue;
         }
 
         // ── Construir payload ─────────────────────────────────────────────────
+        $serieLimpia = preg_replace('/[^A-Za-z0-9\-]/', '', strtoupper($numeroSerie));
+        $nombreMonitor = 'MON-' . ($serieLimpia !== '' ? $serieLimpia : uniqid());
+
         $payload = [
             'id_colegio'          => $idColegio,
             'id_ubicacion'        => $idUbicacion,

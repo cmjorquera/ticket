@@ -1,0 +1,108 @@
+Dashboard Inventario - estadistica/dashboard_inventario.php
+===========================================================
+
+Objetivo
+--------
+El archivo dashboard_inventario.php muestra un dashboard ejecutivo del inventario tecnologico
+del sistema SEDUC. Permite revisar PC, monitores, estados, valores, ubicaciones, antiguedad
+y movimientos recientes desde una vista visual coherente con el panel actual.
+
+Archivos creados
+----------------
+- estadistica/dashboard_inventario.php
+- estadistica/dashboard_inventario_data.php
+- estadistica/descargar_dashboard_inventario_pdf.php
+- estadistica/css/dashboard_inventario.css
+- estadistica/dashboard_inventario.txt
+
+Tablas utilizadas
+-----------------
+- equipos
+- monitores
+- estado_equipo
+- equipos_compra
+- monitor_compra
+- colegio
+- equipo_ubicacion
+- equipo_movimiento
+- monitor_movimiento
+- usuarios
+- usuario_colegio
+- permisos_menu_1
+
+KPIs superiores
+---------------
+El dashboard muestra:
+- Total PC
+- Total monitores
+- Activos
+- En reparacion
+- Dados de baja
+- Valor inventario
+
+Graficos
+--------
+Se generan graficos con Chart.js:
+- PC y monitores por colegio: barras comparativas.
+- Estado general del inventario: dona.
+- Valor inventario por colegio: barras horizontales.
+- Top ubicaciones con mas activos: barras horizontales.
+- Antiguedad de equipos: menos de 3 anos, 3 a 5 anos, mas de 5 anos y sin fecha.
+
+Filtro por colegio
+------------------
+El filtro superior permite seleccionar:
+- Todos los colegios visibles para el usuario.
+- Un colegio especifico.
+
+La lista de colegios usa la logica existente de Funciones::obtenerColegios().
+Usuarios globales definidos por el sistema pueden ver todos los colegios. Usuarios no globales
+solo ven los colegios asignados en usuario_colegio con estado activo.
+
+Filtro por fecha
+----------------
+El rango de fecha se aplica sobre la fecha de compra registrada en:
+- equipos_compra.fecha_compra
+- monitor_compra.fecha_compra
+
+Los activos sin fecha de compra se mantienen visibles para no ocultar inventario historico
+que aun no tenga dato de adquisicion completo.
+
+PDF
+---
+El boton "Descargar PDF" apunta a:
+- estadistica/descargar_dashboard_inventario_pdf.php
+
+El PDF usa la libreria existente:
+- PDF/PDF/fpdf.php
+
+El reporte PDF incluye:
+- Titulo: Reporte Ejecutivo de Inventario Tecnologico
+- Fecha de generacion
+- Colegio filtrado o "Todos los colegios"
+- KPIs principales
+- Tabla resumen por colegio
+- Top 10 ubicaciones con mas activos
+- Ultimos 10 movimientos
+
+Informacion excluida del PDF
+----------------------------
+Para evitar un PDF demasiado largo y dificil de leer, no se incluyen:
+- Todos los activos individuales.
+- Todas las filas de movimientos historicos.
+- Todos los equipos proximos a cumplir 5 anos.
+- Graficos completos renderizados como imagen.
+
+La vista web conserva esos elementos visuales y tablas operativas; el PDF queda como resumen
+ejecutivo breve.
+
+Notas de diseno
+---------------
+El CSS especifico usa colores claros y coherentes con el sistema:
+- Azul institucional #0F4C81
+- Blanco
+- Gris claro
+- Bordes suaves
+- Cards limpias estilo Bootstrap
+
+No se agrego un tema oscuro ni librerias nuevas.
