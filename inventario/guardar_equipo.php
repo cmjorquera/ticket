@@ -3,7 +3,9 @@ require_once __DIR__ . '/componentes/boot.php';
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    $idEquipo = $inventario->guardarEquipo($_POST, $_FILES, $idUsuarioSession);
+    $colegioUsuario = $inventario->obtenerColegioDelUsuario($idUsuarioSession);
+    $idColegio = (int)($colegioUsuario['id_colegio'] ?? 0);
+    $idEquipo = $inventario->guardarEquipo($_POST, $_FILES, $idUsuarioSession, $idColegio);
     echo json_encode([
         'ok' => true,
         'mensaje' => 'Equipo registrado correctamente.',

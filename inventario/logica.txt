@@ -1,4 +1,4 @@
-LOGICA DEL MODULO INVENTARIO
+LOGICA DEL MODULO INVENTARIO 
 ============================
 
 1. Objetivo general
@@ -8,7 +8,7 @@ LOGICA DEL MODULO INVENTARIO
 
 2. Conexion a base de datos
 - La conexion oficial del sistema esta en `class/conexion.php`.
-- El modulo inventario NO debe usar una conexion propia dentro de `inventario/class/conexion.php`.
+- El modulo inventario NO debe usar una conexion propiardentro de `inventario/class/conexion.php`.
 - La clase principal del modulo es `inventario/class/Inventario.php`.
 - Dentro de `Inventario.php` la conexion se crea siguiendo el patron del sistema:
   `$bdato = new MySQL("", "", "");`
@@ -310,6 +310,169 @@ El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa con
   - `#tablaInventario`: thead con fondo gris muy claro y texto uppercase espaciado; filas con
     rayado minimo (blanco / #fafbfd); sin bordes verticales; hover azul muy suave.
 
+16. Estados de equipo
+- Los estados del inventario se administran desde la tabla `estado_equipo`.
+- La clase `Inventario.php` ya NO usa estados hardcodeados en `$estadosFallback` (propiedad eliminada).
+- El metodo `obtenerEstados()` consulta solo registros activos:
+  `WHERE estado = 1`
+- Si la tabla no existe, el metodo retorna array vacio para no romper el modulo.
+- Los colores se usan como clases Bootstrap de badge: success, secondary, warning, danger, info, etc.
+- El metodo `renderBadgeEstado()` consulta la tabla `estado_equipo` cuando no recibe nombre o color.
+  Si la tabla no existe, devuelve badge con texto "Sin estado" y color "dark".
+
+17. Fotos de equipo
+- Las fotos se guardan fisicamente en:
+  `inventario/uploads/equipos/{id_equipo}/`
+- La relacion logica se guarda en la tabla `equipo_fotos`.
+- Una foto principal NO se guarda en la tabla `equipos`.
+- La foto principal se identifica en `equipo_fotos.principal = 1`.
+- Solo debe existir una foto principal por equipo.
+- Antes de asignar una nueva foto principal, el sistema debe poner en 0 todas las fotos del mismo equipo:
+  UPDATE equipo_fotos SET principal = 0 WHERE id_equipo = ?
+- Luego se marca la foto elegida como principal:
+  UPDATE equipo_fotos SET principal = 1 WHERE id_foto = ? AND id_equipo = ?
+- `tipo_foto` usa los valores oficiales `normal` y `panoramica`.
+  - `normal`: foto de galeria estandar del equipo.
+  - `panoramica`: foto de vista amplia (usada en encabezado o banner de la ficha del equipo).
+- El SQL del archivo `equipo_fotos.sql` debe tener:
+  - `tipo_foto ENUM('normal', 'panoramica')`
+  - Motor InnoDB (no MyISAM).
+
+18. Ubicacion y movimiento de equipos
+- Cada equipo pertenece a un colegio mediante `equipos.id_colegio`.
+- Cada equipo puede estar ubicado en una sala, biblioteca, enfermeria, porteria, direccion, bodega
+  u otra ubicacion interna del colegio.
+- La ubicacion actual debe guardarse en `equipos.id_ubicacion` si ya existe esa columna.
+- Si un equipo cambia de ubicacion, el cambio debe registrarse en `equipo_movimiento`.
+- Logica recomendada para registrar un traslado:
+  1. Leer ubicacion actual desde `equipos.id_ubicacion`.
+  2. Insertar registro en `equipo_movimiento` con id_ubicacion_origen = valor actual.
+  3. Actualizar `equipos.id_ubicacion` con la nueva ubicacion (id_ubicacion_destino).
+- El usuario logueado es quien registra el movimiento (`id_usuario_movimiento`),
+  pero no necesariamente es el responsable del equipo.
+- Campos clave de `equipo_movimiento`:
+  - `id_ubicacion_origen`: puede ser NULL si es el primer registro del equipo.
+  - `motivo`: razon del traslado (opcional).
+  - `observacion`: detalle adicional (opcional).
+
+19. Tipos de PC (tipo_pc_catalogo)
+- Los tipos de PC del inventario se administran desde la tabla `tipo_pc_catalogo`.
+- La clase `Inventario.php` ya NO usa el arreglo hardcodeado de tipos en `obtenerTiposPc()`.
+- El metodo `obtenerTiposPc()` consulta solo registros activos:
+  `WHERE activo = 1`
+- Si la tabla no existe, el metodo retorna array vacio para no romper formularios.
+- El campo `equipos.tipo_pc` sigue siendo VARCHAR (texto). No se cambia a id_tipo_pc.
+  La tabla `tipo_pc_catalogo` sirve como catalogo fuente, pero el valor guardado en `equipos`
+  es el nombre textual (ej: 'Desktop', 'Notebook').
+- Mejora futura documentada: normalizar `equipos.tipo_pc` a `id_tipo_pc` FK si se requiere
+  reportes mas precisos por tipo.
+- Archivo SQL: `inventario/sql/tipo_pc_catalogo.sql`
+  Incluye UNIQUE KEY `uq_tipo_pc_nombre` para evitar duplicados.
+
+20. Ubicaciones de equipo (equipo_ubicacion)
+- Las ubicaciones internas de cada colegio se administran desde la tabla `equipo_ubicacion`.
+- Cada colegio tiene sus propias ubicaciones (filtradas por id_colegio).
+- La ubicacion actual de un equipo se guarda en `equipos.id_ubicacion` (nullable).
+  Si la columna no existe, el modulo la omite graciosamente (verificado con `columnaExiste()`).
+- Metodos en `Inventario.php`:
+  - `obtenerUbicacionesPorColegio($idColegio)`: retorna ubicaciones de un colegio especifico.
+  - `obtenerTodasUbicaciones()`: retorna todas las ubicaciones activas agrupadas por id_colegio.
+    Usado en los formularios para poblar el select de ubicacion con JS dinamico.
+  - `columnaExiste($tabla, $columna)`: verifica si una columna existe en la tabla (con cache).
+    Permite que INSERT y UPDATE en `equipos` incluyan `id_ubicacion` solo si la columna existe.
+- Formulario: el select de ubicacion se actualiza por JS cuando el usuario cambia el colegio.
+  El valor se pre-selecciona al editar usando data-current en el select.
+- Validacion en `normalizarPayload()`:
+  Si id_ubicacion > 0, verifica que la ubicacion pertenezca al colegio del equipo.
+  Si no pertenece, lanza excepcion con mensaje claro.
+- El INSERT usa `NULLIF(?, 0)` para convertir 0 en NULL en la BD.
+- Ejemplos de ubicaciones cargadas inicialmente:
+  Sala Computacion 1, Sala Computacion 2, Biblioteca, Direccion, UTP,
+  Inspectoria, Enfermeria, Porteria, Laboratorio Ciencias, Bodega Informatica.
+- Archivo SQL: `inventario/sql/equipo_ubicacion.sql`
+  Inserta ubicaciones por SELECT desde la tabla colegio (sin hardcodear IDs).
+- Migracion requerida: `inventario/sql/migracion_add_equipos_id_ubicacion.sql`
+  Agrega la columna `id_ubicacion INT NULL` a la tabla `equipos`.
+
+21. Colegio automatico por sesion (formulario manual)
+- El colegio del equipo NO se selecciona en el formulario.
+- Se obtiene exclusivamente de la sesion del usuario logueado via:
+  `Inventario::obtenerColegioDelUsuario($_SESSION['id'])`
+- El formulario muestra el nombre del colegio como texto de solo lectura.
+- El backend (guardar_equipo.php) obtiene el id_colegio del usuario de sesion antes de llamar a guardarEquipo().
+- `guardarEquipo($post, $files, $idUsuario, $idColegio)` recibe idColegio como parametro.
+- `normalizarPayload` usa el $idColegio del parametro, NO de $_POST.
+- `actualizarEquipo` obtiene el id_colegio del equipo desde la BD (inmutable) y lo pasa a normalizarPayload.
+- El colegio del equipo no puede cambiarse desde el formulario de edicion.
+
+22. id_usuario_registra
+- Columna nueva en equipos: `id_usuario_registra INT NULL`.
+- Se auto-completa desde $_SESSION['id'] al registrar. Nunca se modifica.
+- En normalizarPayload, se incluye en el array equipo como:
+  `'id_usuario_registra' => (int)$idUsuario`
+- En insertarRegistroEquipo, se incluye condicionalmente si columnaExiste('equipos', 'id_usuario_registra').
+- Migracion: `inventario/sql/migracion_add_equipos_id_usuario_registra.sql`
+- En ver_equipo.php se muestra como "Registrado por" usando el alias nombre_usuario_registra del JOIN.
+- Si la columna no existe aun (antes de migracion), el sistema usa el campo id_usuario como fallback.
+
+23. Movimiento inicial al crear equipo
+- Cuando se crea un equipo con una ubicacion, se inserta automaticamente un registro en equipo_movimiento:
+  - id_ubicacion_origen = NULL (NULLIF(0, 0))
+  - id_ubicacion_destino = id_ubicacion seleccionado
+  - motivo = 'Alta inicial de inventario'
+  - observacion = 'Equipo registrado inicialmente en esta ubicacion.'
+- Esto queda registrado en el historial de movimientos visible en ver_equipo.php.
+
+24. Movimiento por cambio de ubicacion (edicion)
+- En actualizarEquipo, antes del UPDATE se lee la ubicacion actual del equipo desde la BD.
+- Si la nueva id_ubicacion es distinta a la anterior, se registra un movimiento:
+  - id_ubicacion_origen = ubicacion anterior
+  - id_ubicacion_destino = ubicacion nueva
+  - motivo = 'Cambio de ubicacion'
+  - observacion = campo observacion_movimiento del formulario (opcional)
+- Si la ubicacion no cambia, no se registra ningun movimiento.
+- El formulario de edicion incluye el campo `observacion_movimiento` (opcional, visible siempre).
+
+25. Historial de movimientos en ver_equipo.php
+- Metodo: `Inventario::obtenerMovimientosEquipo(int $idEquipo): array`
+  - Verifica que la tabla equipo_movimiento exista antes de consultar.
+  - Retorna array con: fecha_movimiento, motivo, observacion, ubicacion_origen, ubicacion_destino, usuario_movimiento.
+  - Ordenado por fecha DESC.
+- Se muestra en ver_equipo.php como tabla con columnas:
+  Fecha | Origen | -> | Destino | Motivo | Usuario
+
+26. Foto principal y galeria en ver_equipo.php
+- La foto con equipo_fotos.principal = 1 se muestra como foto principal destacada (col-lg-4).
+- Las fotos sin principal se muestran en galeria (inv-photo-grid debajo).
+- En el formulario de edicion, cada foto existente tiene:
+  - Radio "Marcar como principal" (nombre foto_principal, valor id_foto)
+  - Checkbox "Eliminar" (nombre fotos_eliminar[], valor id_foto)
+- procesarFotoPrincipal() en Inventario.php maneja el cambio de principal:
+  - UPDATE equipo_fotos SET principal = 0 WHERE id_equipo = ?
+  - UPDATE equipo_fotos SET principal = 1 WHERE id_foto = ? AND id_equipo = ?
+- Cuando se suben nuevas fotos:
+  - Si ya existe una foto con principal=1, las nuevas fotos NO son principal.
+  - Si no existe ninguna foto principal, la primera nueva foto se convierte en principal.
+
+27. Preview de fotos nuevas (formulario)
+- Una foto seleccionada: preview centrado, max 250px alto, con badge "Principal".
+- Dos o mas fotos: carrusel Bootstrap con controles prev/next, indicadores y thumbnails.
+  La primera foto recibe el badge "Principal".
+- El badge es el overlay `.inv-badge-principal-overlay` (fondo ambar, posicion absoluta).
+- Para fotos existentes, el badge principal se muestra sobre la imagen directamente.
+- CSS relevantes: inv-preview-single, inv-badge-principal-overlay, inv-carousel-img-wrap,
+  inv-carousel-img, inv-thumb-strip, inv-carousel-thumb, inv-photo-grid, inv-photo-item,
+  inv-photo-principal, inv-photo-thumb, inv-photo-actions, inv-ver-foto-principal.
+
+28. Carga masiva: compatibilidad
+- La carga masiva (Inventario::guardarEquipoDesdeArray) NO llama a normalizarPayload.
+  Recibe el array ya normalizado desde procesar_carga_masiva.php.
+- La columna id_ubicacion NO esta en la plantilla Excel actual.
+  Mejora futura: agregar columna "Nombre ubicacion" en la hoja Equipos y resolver el id_ubicacion
+  con un SELECT de equipo_ubicacion WHERE id_colegio = ? AND nombre_ubicacion = ? LIMIT 1.
+- La columna id_usuario_registra SI se incluye en insertarRegistroEquipo (si existe la columna),
+  usando el idUsuario de sesion que viene de procesar_carga_masiva.php.
+
 - CSS nuevas en `inventario/css/inventario.css`:
   - `.cm-hero`: hero con degradado linear-gradient(135deg, #0f4c81, #0e7490, #0f766e).
   - `.cm-stepper`: contenedor flex horizontal del stepper.
@@ -320,3 +483,75 @@ El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa con
   - `.cm-step-num-sm`: circulo pequeño de numero dentro de cada tarjeta.
   - `.cm-dropzone`, `.cm-drop-active`, `.cm-dropzone-icon`, `.cm-dropzone-text`: zona de carga.
   - `.cm-drop-processing`: estado del dropzone mientras se procesa (fondo azul claro, sin interaccion, icono pulsante animado).
+
+29. Modulo Monitores (Tab en index.php)
+- `inventario/index.php` tiene dos pestanas Bootstrap:
+  - "PC" (tab-pc): inventario de equipos computacionales (existente, sin cambios).
+  - "Monitores" (tab-monitores): inventario independiente de monitores.
+- El boton "Agregar" del hero cambia dinamicamente segun la pestana activa:
+  - Tab PC    → href = registrar_equipo.php,  label = "Agregar PC"
+  - Tab Mon   → href = registrar_monitor.php, label = "Agregar monitor"
+- El boton "Carga masiva" se oculta al cambiar a la pestana Monitores.
+- La pestana inicial se puede pasar por URL: index.php?tab=monitores.
+- La tabla de monitores se inicializa de forma lazy: solo al activar la pestana por primera vez.
+
+30. Tablas del modulo Monitores
+- `monitores` — tabla principal de monitores.
+  - id_monitor, id_colegio, id_ubicacion (NULL), id_usuario_asignado (NULL),
+    id_usuario_registra (NULL), id_estado (1), nombre_monitor, marca, modelo,
+    numero_serie, codigo_interno, tamano_monitor, resolucion_monitor, tipo_panel,
+    tipo_conexion, observacion, fecha_registro, eliminado (requiere migracion).
+  - Requiere migracion: migracion_add_monitores_eliminado.sql
+    (ALTER TABLE monitores ADD COLUMN eliminado TINYINT(1) NOT NULL DEFAULT 0)
+  - La tabla equipo_monitor (legacy, relacion equipo↔monitor del formulario PC) NO se elimina.
+- `monitor_fotos` — fotos del monitor.
+  - id_foto, id_monitor, ruta_foto, tipo_foto ENUM('normal','panoramica'), principal, orden_foto, fecha_subida.
+  - Fotos guardadas fisicamente en: inventario/uploads/monitores/{id_monitor}/
+- `monitor_movimiento` — historial de movimientos del monitor.
+  - id_movimiento, id_monitor, id_ubicacion_origen (NULL), id_ubicacion_destino (NULL),
+    id_usuario_movimiento, fecha_movimiento, motivo, observacion.
+- `monitor_compra` — datos de compra del monitor (1:1 con monitores).
+  - id_monitor (PK), valor_monitor, proveedor, numero_factura, fecha_compra, observacion.
+
+31. Logica de eliminacion de monitores
+- La eliminacion logica usa la columna `eliminado TINYINT(1) DEFAULT 0`.
+- `Inventario::eliminarMonitor(int $idMonitor): bool`
+  - Si columnaExiste('monitores', 'eliminado'): UPDATE monitores SET eliminado = 1.
+  - Fallback (columna aun no migrada): UPDATE monitores SET id_estado = 4 (Baja).
+- `listarMonitores()` siempre incluye WHERE m.eliminado = 0 (si la columna existe).
+- `obtenerResumenMonitores()` siempre incluye el mismo filtro.
+- Los registros eliminados nunca se muestran en listados ni en KPIs.
+
+32. Metodos Inventario.php para monitores
+- normalizarPayloadMonitor($post, $idUsuario, $idColegio): array — valida y normaliza.
+- insertarMonitor(array $p): int — INSERT en monitores.
+- insertarCompraMonitor($idMonitor, $compra): void — INSERT/UPDATE en monitor_compra.
+- obtenerCompraMonitor($idMonitor): array — SELECT desde monitor_compra.
+- obtenerCamposBasicosMonitor($idMonitor): array — id_colegio, id_ubicacion actuales.
+- eliminarFotosMonitor($idMonitor, $ids): void — elimina fisicamente y de BD.
+- procesarFotoPrincipalMonitor($idMonitor, $post): void — maneja foto_principal.
+- guardarFotosMonitor($idMonitor, $files): void — publica en uploads/monitores/{id}/.
+- obtenerFotosMonitor($idMonitor): array — retorna fotos ordenadas.
+- marcarFotoPrincipalMonitor($idMonitor, $idFoto): void — cambia foto principal.
+- registrarMovimientoMonitor($idMonitor, $orig, $dest, $idUsu, $motivo, $obs): void.
+- obtenerMovimientosMonitor($idMonitor): array — historial ordenado DESC.
+- listarMonitores($filtros): array — lista con badge_estado, JOIN colegio/usuario/estado/ubicacion.
+- obtenerMonitorPorId($idMonitor): ?array — ficha completa con compra+fotos+movimientos.
+- guardarMonitor($post, $files, $idUsuario, $idColegio): int — transaccion completa.
+- actualizarMonitor($idMonitor, $post, $files, $idUsuario): bool — transaccion completa.
+- eliminarMonitor($idMonitor): bool — eliminacion logica.
+- obtenerResumenMonitores($filtros): array — KPIs para el componente resumen_monitores.php.
+
+33. Archivos nuevos del modulo monitores
+- inventario/registrar_monitor.php — formulario de alta.
+- inventario/editar_monitor.php — formulario de edicion.
+- inventario/ver_monitor.php — ficha completa (especificaciones, compra, movimientos, fotos).
+- inventario/guardar_monitor.php — endpoint POST JSON (guarda nuevo monitor).
+- inventario/actualizar_monitor.php — endpoint POST JSON (actualiza monitor existente).
+- inventario/componentes/formulario_monitor.php — formulario compartido crear/editar.
+- inventario/componentes/resumen_monitores.php — KPI cards para la pestana Monitores.
+- inventario/ajax/listar_monitores.php — AJAX lista + resumen HTML.
+- inventario/ajax/eliminar_monitor.php — AJAX eliminacion logica.
+- inventario/ajax/marcar_foto_principal_monitor.php — AJAX cambio de foto principal.
+- inventario/ajax/obtener_fotos_monitor.php — AJAX galeria para modal.
+- inventario/sql/migracion_add_monitores_eliminado.sql — ALTER TABLE para columna eliminado.

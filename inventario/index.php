@@ -47,7 +47,7 @@ if ($modoDiagnostico) {
 }
 
 try {
-    $tituloPagina = 'Inventario de computadores';
+    $tituloPagina = 'Inventario';
     $colegios = $inventario->obtenerColegios();
     $usuarios = $inventario->obtenerUsuarios();
     $estados = $inventario->obtenerEstados();
@@ -63,11 +63,11 @@ try {
     $coloresColegio    = $inventario->obtenerColoresColegio($idUsuarioSession);
     $colegioDelUsuario = $inventario->obtenerColegioDelUsuario($idUsuarioSession);
     $idColegioRestringido = (int)($colegioDelUsuario['id_colegio'] ?? 0);
+    $tabActiva = in_array($_GET['tab'] ?? '', ['pc', 'monitores'], true) ? $_GET['tab'] : 'pc';
 } catch (Throwable $e) {
     inventario_responder_error('Error al cargar la portada del inventario: ' . $e->getMessage());
 }
 
-// Aplicar colores del colegio al hero si están configurados
 $_c1 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_principal'] ?? '') ? $coloresColegio['color_principal'] : '';
 $_c2 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_secundario'] ?? '') ? $coloresColegio['color_secundario'] : '';
 $_heroBranded = $_c1 !== '';
@@ -80,114 +80,237 @@ require __DIR__ . '/componentes/layout_top.php';
     <div class="col-12">
         <div class="card shadow mb-4 px-0 border-0 inv-panel">
             <div class="card-body p-4 p-lg-5">
+
+                <!-- Hero -->
                 <div class="inv-hero mb-4<?= $_heroBranded ? ' inv-hero--branded' : '' ?>"<?= $_heroStyle ?>>
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                         <div>
-                            <span class="inv-kicker">Modulo institucional</span>
+                            <span class="inv-kicker">Módulo institucional</span>
                             <h1 class="inv-title mb-2">Gestión de Inventario</h1>
                             <p class="inv-subtitle mb-0">Registra, organiza y da seguimiento al equipamiento tecnológico por colegio desde una sola vista operativa.</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
-                            <a href="carga_masiva.php" class="btn btn-outline-primary">
+                            <a href="carga_masiva.php" class="btn btn-outline-primary inv-btn-carga-masiva">
                                 <i class="bi bi-cloud-upload me-1"></i>Carga masiva
                             </a>
-                            <a href="registrar_equipo.php" class="btn btn-primary">
-                                <i class="bi bi-plus-circle me-1"></i>Agregar equipo
+                            <a href="registrar_equipo.php" class="btn btn-primary" id="btnAgregarPrincipal"
+                               data-href-pc="registrar_equipo.php"
+                               data-href-mon="registrar_monitor.php"
+                               data-label-pc="Agregar PC"
+                               data-label-mon="Agregar monitor">
+                                <i class="bi bi-plus-circle me-1"></i><span id="btnAgregarLabel">Agregar PC</span>
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <div id="contenedorResumen">
-                    <?php require __DIR__ . '/componentes/resumen.php'; ?>
-                </div>
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-4" id="inventarioTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link <?= $tabActiva === 'pc' ? 'active' : '' ?>"
+                                id="tab-pc-btn" data-bs-toggle="tab" data-bs-target="#tab-pc"
+                                type="button" role="tab" data-tab="pc">
+                            <i class="bi bi-pc-display me-1"></i>PC
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link <?= $tabActiva === 'monitores' ? 'active' : '' ?>"
+                                id="tab-monitores-btn" data-bs-toggle="tab" data-bs-target="#tab-monitores"
+                                type="button" role="tab" data-tab="monitores">
+                            <i class="bi bi-display me-1"></i>Monitores
+                        </button>
+                    </li>
+                </ul>
 
-                <div class="card shadow-sm border-0 inv-panel">
-                    <div class="card-body">
-                        <div class="row g-3 align-items-end mb-4">
-                            <?php if ($idColegioRestringido === 0): ?>
-                            <div class="col-md-3">
-                                <label class="form-label">Colegio</label>
-                                <select id="filtroColegio" class="form-select">
-                                    <option value="">Todos</option>
-                                    <?php foreach ($colegios as $colegio): ?>
-                                        <option value="<?= (int)$colegio['id_colegio'] ?>" <?= $filtros['id_colegio'] === (int)$colegio['id_colegio'] ? 'selected' : '' ?>>
-                                            <?= inventario_h($colegio['nom_colegio']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <?php endif; ?>
-                            <div class="col-md-2">
-                                <label class="form-label">Estado</label>
-                                <select id="filtroEstado" class="form-select">
-                                    <option value="">Todos</option>
-                                    <?php foreach ($estados as $estado): ?>
-                                        <option value="<?= (int)$estado['id_estado'] ?>" <?= $filtros['id_estado'] === (int)$estado['id_estado'] ? 'selected' : '' ?>>
-                                            <?= inventario_h($estado['nombre_estado']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Tipo</label>
-                                <select id="filtroTipo" class="form-select">
-                                    <option value="">Todos</option>
-                                    <?php foreach ($tiposPc as $tipo): ?>
-                                        <option value="<?= inventario_h($tipo) ?>" <?= $filtros['tipo_pc'] === $tipo ? 'selected' : '' ?>><?= inventario_h($tipo) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Usuario asignado</label>
-                                <select id="filtroUsuario" class="form-select">
-                                    <option value="">Todos</option>
-                                    <?php foreach ($usuarios as $usuario): ?>
-                                        <option value="<?= (int)$usuario['id'] ?>" <?= $filtros['id_usuario_asignado'] === (int)$usuario['id'] ? 'selected' : '' ?>>
-                                            <?= inventario_h($usuario['nombre_completo']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Buscar</label>
-                                <input type="text" id="filtroBusqueda" class="form-control" placeholder="Nombre, serie, QR..." value="<?= inventario_h($filtros['busqueda']) ?>">
-                            </div>
+                <div class="tab-content" id="inventarioTabsContent">
+
+                    <!-- ===== TAB PC ===== -->
+                    <div class="tab-pane fade <?= $tabActiva === 'pc' ? 'show active' : '' ?>" id="tab-pc" role="tabpanel">
+
+                        <div id="contenedorResumen">
+                            <?php require __DIR__ . '/componentes/resumen.php'; ?>
                         </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover align-middle" id="tablaInventario">
-                                <thead>
-                                    <tr>
-                                        <th>N°</th>
-                                        <th>Equipo</th>
-                                        <th>Colegio</th>
-                                        <th>Tipo</th>
-                                        <th>Serie</th>
-                                        <th>Asignado</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                        <div class="card shadow-sm border-0 inv-panel">
+                            <div class="card-body">
+                                <div class="row g-3 align-items-end mb-4">
+                                    <?php if ($idColegioRestringido === 0): ?>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Colegio</label>
+                                        <select id="filtroColegio" class="form-select">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($colegios as $colegio): ?>
+                                                <option value="<?= (int)$colegio['id_colegio'] ?>" <?= $filtros['id_colegio'] === (int)$colegio['id_colegio'] ? 'selected' : '' ?>>
+                                                    <?= inventario_h($colegio['nom_colegio']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Estado</label>
+                                        <select id="filtroEstado" class="form-select">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($estados as $estado): ?>
+                                                <option value="<?= (int)$estado['id_estado'] ?>" <?= $filtros['id_estado'] === (int)$estado['id_estado'] ? 'selected' : '' ?>>
+                                                    <?= inventario_h($estado['nombre_estado']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Tipo</label>
+                                        <select id="filtroTipo" class="form-select">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($tiposPc as $tipo): ?>
+                                                <option value="<?= inventario_h($tipo) ?>" <?= $filtros['tipo_pc'] === $tipo ? 'selected' : '' ?>><?= inventario_h($tipo) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Usuario asignado</label>
+                                        <select id="filtroUsuario" class="form-select">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($usuarios as $usuario): ?>
+                                                <option value="<?= (int)$usuario['id'] ?>" <?= $filtros['id_usuario_asignado'] === (int)$usuario['id'] ? 'selected' : '' ?>>
+                                                    <?= inventario_h($usuario['nombre_completo']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Buscar</label>
+                                        <input type="text" id="filtroBusqueda" class="form-control" placeholder="Nombre, serie, QR..." value="<?= inventario_h($filtros['busqueda']) ?>">
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover align-middle" id="tablaInventario">
+                                        <thead>
+                                            <tr>
+                                                <th>N°</th>
+                                                <th>Equipo</th>
+                                                <th>Colegio</th>
+                                                <th>Tipo</th>
+                                                <th>Serie</th>
+                                                <th>Asignado</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+
+                    <!-- ===== TAB MONITORES ===== -->
+                    <div class="tab-pane fade <?= $tabActiva === 'monitores' ? 'show active' : '' ?>" id="tab-monitores" role="tabpanel">
+
+                        <div id="contenedorResumenMonitores">
+                            <?php
+                            $resumen = $inventario->obtenerResumenMonitores(['id_colegio' => $idColegioRestringido ?: 0]);
+                            require __DIR__ . '/componentes/resumen_monitores.php';
+                            ?>
+                        </div>
+
+                        <div class="card shadow-sm border-0 inv-panel">
+                            <div class="card-body">
+                                <div class="row g-3 align-items-end mb-4">
+                                    <?php if ($idColegioRestringido === 0): ?>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Colegio</label>
+                                        <select id="filtroColegioMon" class="form-select">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($colegios as $colegio): ?>
+                                                <option value="<?= (int)$colegio['id_colegio'] ?>">
+                                                    <?= inventario_h($colegio['nom_colegio']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Estado</label>
+                                        <select id="filtroEstadoMon" class="form-select">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($estados as $estado): ?>
+                                                <option value="<?= (int)$estado['id_estado'] ?>">
+                                                    <?= inventario_h($estado['nombre_estado']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Usuario asignado</label>
+                                        <select id="filtroUsuarioMon" class="form-select">
+                                            <option value="">Todos</option>
+                                            <?php foreach ($usuarios as $usuario): ?>
+                                                <option value="<?= (int)$usuario['id'] ?>">
+                                                    <?= inventario_h($usuario['nombre_completo']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Buscar</label>
+                                        <input type="text" id="filtroBusquedaMon" class="form-control" placeholder="Nombre, serie, marca...">
+                                    </div>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover align-middle" id="tablaMonitores">
+                                        <thead>
+                                            <tr>
+                                                <th>N°</th>
+                                                <th>Monitor</th>
+                                                <th>Colegio</th>
+                                                <th>Ubicación</th>
+                                                <th>Serie</th>
+                                                <th>Asignado</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /tab-content -->
             </div>
         </div>
     </div>
 </div>
 
+<!-- Modal galería equipos PC -->
 <div class="modal fade" id="modalGaleriaEquipo" tabindex="-1" aria-labelledby="modalGaleriaEquipoLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalGaleriaEquipoLabel">Imagenes del equipo</h5>
+                <h5 class="modal-title" id="modalGaleriaEquipoLabel">Imágenes del equipo</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body" id="modalGaleriaBody">
-                <div class="text-center py-5 text-muted">Cargando galeria...</div>
+                <div class="text-center py-5 text-muted">Cargando galería...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal galería monitores -->
+<div class="modal fade" id="modalGaleriaMonitor" tabindex="-1" aria-labelledby="modalGaleriaMonitorLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalGaleriaMonitorLabel">Imágenes del monitor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="modalGaleriaMonitorBody">
+                <div class="text-center py-5 text-muted">Cargando galería...</div>
             </div>
         </div>
     </div>
@@ -195,10 +318,14 @@ require __DIR__ . '/componentes/layout_top.php';
 
 <script>
 window.INVENTARIO_CONFIG = {
+    tabActiva: '<?= $tabActiva ?>',
     endpoints: {
-        listar: 'ajax/listar_equipos.php',
-        detalle: 'ajax/obtener_detalle_equipo.php',
-        eliminar: 'eliminar_logico_equipo.php'
+        listar:          'ajax/listar_equipos.php',
+        detalle:         'ajax/obtener_detalle_equipo.php',
+        eliminar:        'eliminar_logico_equipo.php',
+        listarMonitores: 'ajax/listar_monitores.php',
+        detalleMonitor:  'ajax/obtener_fotos_monitor.php',
+        eliminarMonitor: 'ajax/eliminar_monitor.php'
     }
 };
 </script>

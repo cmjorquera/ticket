@@ -1,14 +1,17 @@
 <?php
-$modo = $modo ?? 'crear';
-$equipo = $equipo ?? [];
-$compra = $equipo['compra'] ?? [];
-$almacenamiento = $equipo['almacenamiento'] ?? [];
-$procesador = $equipo['procesador'] ?? [];
-$software = $equipo['software'] ?? [];
-$memorias = !empty($equipo['memorias']) ? $equipo['memorias'] : [[]];
-$monitores = !empty($equipo['monitores']) ? $equipo['monitores'] : [[]];
-$fotos = $equipo['fotos'] ?? [];
-$action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
+$modo              = $modo ?? 'crear';
+$equipo            = $equipo ?? [];
+$compra            = $equipo['compra'] ?? [];
+$almacenamiento    = $equipo['almacenamiento'] ?? [];
+$procesador        = $equipo['procesador'] ?? [];
+$software          = $equipo['software'] ?? [];
+$memorias          = !empty($equipo['memorias']) ? $equipo['memorias'] : [[]];
+$monitores         = !empty($equipo['monitores']) ? $equipo['monitores'] : [[]];
+$fotos             = $equipo['fotos'] ?? [];
+$colegioUsuario    = $colegioUsuario ?? [];
+$ubicaciones       = $ubicaciones ?? [];
+$idUbicacionActual = (int)($equipo['id_ubicacion'] ?? 0);
+$action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
 ?>
 
 <form id="formInventario" action="<?= inventario_h($action) ?>" method="post" enctype="multipart/form-data" class="inv-form">
@@ -17,22 +20,31 @@ $action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
     <?php endif; ?>
 
     <div class="accordion inv-accordion" id="accordionInventario">
+
+        <!-- ===== DATOS GENERALES ===== -->
         <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#datosGenerales">Datos generales</button></h2>
+            <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#datosGenerales">
+                    Datos generales
+                </button>
+            </h2>
             <div id="datosGenerales" class="accordion-collapse collapse show" data-bs-parent="#accordionInventario">
                 <div class="accordion-body">
                     <div class="row g-3">
+
+                        <!-- Colegio (solo lectura, viene del usuario de sesion) -->
                         <div class="col-md-4">
-                            <label class="form-label">Colegio</label>
-                            <select name="id_colegio" class="form-select" required>
-                                <option value="">Seleccione</option>
-                                <?php foreach ($colegios as $colegio): ?>
-                                    <option value="<?= (int)$colegio['id_colegio'] ?>" <?= (int)($equipo['id_colegio'] ?? 0) === (int)$colegio['id_colegio'] ? 'selected' : '' ?>>
-                                        <?= inventario_h($colegio['nom_colegio']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <label class="form-label fw-semibold">Colegio</label>
+                            <?php if (!empty($colegioUsuario['nom_colegio'])): ?>
+                                <div class="form-control bg-light text-truncate" title="<?= inventario_h($colegioUsuario['nom_colegio']) ?>">
+                                    <?= inventario_h($colegioUsuario['nom_colegio']) ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="form-control bg-light text-danger">Sin colegio asignado</div>
+                            <?php endif; ?>
                         </div>
+
+                        <!-- Usuario asignado -->
                         <div class="col-md-4">
                             <label class="form-label">Usuario asignado</label>
                             <select name="id_usuario_asignado" class="form-select">
@@ -44,8 +56,10 @@ $action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
+
+                        <!-- Estado -->
                         <div class="col-md-4">
-                            <label class="form-label">Estado</label>
+                            <label class="form-label">Estado <span class="text-danger">*</span></label>
                             <select name="id_estado" class="form-select" required>
                                 <?php foreach ($estados as $estado): ?>
                                     <option value="<?= (int)$estado['id_estado'] ?>" <?= (int)($equipo['id_estado'] ?? 1) === (int)$estado['id_estado'] ? 'selected' : '' ?>>
@@ -54,42 +68,88 @@ $action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
+
+                        <!-- Ubicacion filtrada por colegio del usuario -->
                         <div class="col-md-4">
-                            <label class="form-label">Nombre equipo</label>
+                            <label class="form-label">Ubicacion <span class="text-danger">*</span></label>
+                            <select name="id_ubicacion" id="selectUbicacion" class="form-select" required>
+                                <option value="">Seleccione ubicacion</option>
+                                <?php foreach ($ubicaciones as $ub): ?>
+                                    <?php
+                                    $label = $ub['tipo_ubicacion']
+                                        ? $ub['tipo_ubicacion'] . ' — ' . $ub['nombre_ubicacion']
+                                        : $ub['nombre_ubicacion'];
+                                    ?>
+                                    <option value="<?= (int)$ub['id_ubicacion'] ?>" <?= $idUbicacionActual === (int)$ub['id_ubicacion'] ? 'selected' : '' ?>>
+                                        <?= inventario_h($label) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Nombre equipo -->
+                        <div class="col-md-4">
+                            <label class="form-label">Nombre equipo <span class="text-danger">*</span></label>
                             <input type="text" name="nombre_equipo" class="form-control" value="<?= inventario_h($equipo['nombre_equipo'] ?? '') ?>" required>
                         </div>
+
+                        <!-- Numero de serie -->
+                        <div class="col-md-4">
+                            <label class="form-label">Numero de serie <span class="text-danger">*</span></label>
+                            <input type="text" name="numero_serie" class="form-control" value="<?= inventario_h($equipo['numero_serie'] ?? '') ?>" required>
+                        </div>
+
+                        <!-- Tipo de PC -->
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de PC <span class="text-danger">*</span></label>
+                            <select name="tipo_pc" class="form-select" required>
+                                <option value="">Seleccione tipo</option>
+                                <?php foreach ($tiposPc as $tipo): ?>
+                                    <option value="<?= inventario_h($tipo) ?>" <?= ($equipo['tipo_pc'] ?? '') === $tipo ? 'selected' : '' ?>>
+                                        <?= inventario_h($tipo) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Fabricante -->
                         <div class="col-md-4">
                             <label class="form-label">Fabricante</label>
                             <input type="text" name="fabricante" class="form-control" value="<?= inventario_h($equipo['fabricante'] ?? '') ?>">
                         </div>
+
+                        <!-- Producto / modelo -->
                         <div class="col-md-4">
                             <label class="form-label">Producto / modelo</label>
                             <input type="text" name="producto" class="form-control" value="<?= inventario_h($equipo['producto'] ?? '') ?>">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Numero de serie</label>
-                            <input type="text" name="numero_serie" class="form-control" value="<?= inventario_h($equipo['numero_serie'] ?? '') ?>" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tipo de PC</label>
-                            <select name="tipo_pc" class="form-select">
-                                <option value="">Seleccione</option>
-                                <?php foreach ($tiposPc as $tipo): ?>
-                                    <option value="<?= inventario_h($tipo) ?>" <?= ($equipo['tipo_pc'] ?? '') === $tipo ? 'selected' : '' ?>><?= inventario_h($tipo) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+
+                        <!-- QR / codigo interno -->
                         <div class="col-md-4">
                             <label class="form-label">QR / codigo interno</label>
                             <input type="text" name="qr_code" class="form-control" value="<?= inventario_h($equipo['qr_code'] ?? '') ?>">
                         </div>
+
+                        <?php if ($modo === 'editar'): ?>
+                        <!-- Observacion de traslado (si cambia la ubicacion) -->
+                        <div class="col-12">
+                            <label class="form-label">Observacion de traslado <span class="text-muted fw-normal">(completar solo si cambia de ubicacion)</span></label>
+                            <input type="text" name="observacion_movimiento" class="form-control" placeholder="Ej: Se traslado para reparacion en bodega informatica...">
+                        </div>
+                        <?php endif; ?>
+
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- ===== COMPRA ===== -->
         <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosCompra">Compra y adquisicion</button></h2>
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosCompra">
+                    Compra y adquisicion
+                </button>
+            </h2>
             <div id="datosCompra" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
                 <div class="accordion-body">
                     <div class="row g-3">
@@ -103,8 +163,13 @@ $action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
             </div>
         </div>
 
+        <!-- ===== HARDWARE ===== -->
         <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosHardware">Almacenamiento, procesador y software</button></h2>
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosHardware">
+                    Almacenamiento, procesador y software
+                </button>
+            </h2>
             <div id="datosHardware" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
                 <div class="accordion-body">
                     <div class="row g-4">
@@ -146,8 +211,13 @@ $action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
             </div>
         </div>
 
+        <!-- ===== RAM ===== -->
         <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosRam">Memorias RAM</button></h2>
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosRam">
+                    Memorias RAM
+                </button>
+            </h2>
             <div id="datosRam" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
                 <div class="accordion-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -174,8 +244,13 @@ $action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
             </div>
         </div>
 
+        <!-- ===== MONITORES ===== -->
         <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosMonitores">Monitores</button></h2>
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosMonitores">
+                    Monitores
+                </button>
+            </h2>
             <div id="datosMonitores" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
                 <div class="accordion-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -201,31 +276,191 @@ $action = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
             </div>
         </div>
 
+        <!-- ===== FOTOS ===== -->
         <div class="accordion-item">
-            <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosFotos">Fotos del equipo</button></h2>
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosFotos">
+                    Fotos del equipo
+                </button>
+            </h2>
             <div id="datosFotos" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
                 <div class="accordion-body">
-                    <label class="form-label">Fotos del equipo</label>
-                    <input type="file" name="fotos_equipo[]" id="fotos_equipo" class="form-control" accept="image/*" multiple>
-                    <div id="previewFotos" class="inv-preview-grid mt-3"></div>
 
                     <?php if (!empty($fotos)): ?>
-                        <div class="inv-existing-gallery mt-3">
+                    <!-- Fotos existentes (solo en edicion) -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Fotos actuales</label>
+                        <div class="inv-photo-grid">
                             <?php foreach ($fotos as $foto): ?>
-                                <label class="inv-photo-check">
-                                    <img src="<?= inventario_h(inventario_url(ltrim($foto['ruta_foto'], '/'))) ?>" alt="Foto equipo">
-                                    <span><input type="checkbox" name="fotos_eliminar[]" value="<?= (int)$foto['id_foto'] ?>"> Eliminar</span>
-                                </label>
+                            <div class="inv-photo-item <?= $foto['principal'] ? 'inv-photo-principal' : '' ?>">
+                                <img src="<?= inventario_h(inventario_url(ltrim($foto['ruta_foto'], '/'))) ?>"
+                                     alt="Foto equipo" class="inv-photo-thumb">
+                                <?php if ($foto['principal']): ?>
+                                    <div class="inv-badge-principal-overlay">&#9733; Principal</div>
+                                <?php endif; ?>
+                                <div class="inv-photo-actions">
+                                    <label class="inv-photo-action-lbl" title="Marcar como principal">
+                                        <input type="radio" name="foto_principal" value="<?= (int)$foto['id_foto'] ?>"
+                                               class="d-none" <?= $foto['principal'] ? 'checked' : '' ?>>
+                                        <span class="btn btn-xs btn-outline-warning <?= $foto['principal'] ? 'active' : '' ?>">&#9733;</span>
+                                    </label>
+                                    <label class="inv-photo-action-lbl" title="Eliminar foto">
+                                        <input type="checkbox" name="fotos_eliminar[]" value="<?= (int)$foto['id_foto'] ?>"
+                                               class="d-none inv-chk-eliminar">
+                                        <span class="btn btn-xs btn-outline-danger inv-btn-eliminar">&#10005;</span>
+                                    </label>
+                                </div>
+                            </div>
                             <?php endforeach; ?>
                         </div>
+                        <p class="text-muted small mt-2 mb-0">
+                            <strong>&#9733;</strong> = marcar como principal &nbsp;|&nbsp;
+                            <strong>&#10005;</strong> = marcar para eliminar (se aplica al guardar)
+                        </p>
+                    </div>
                     <?php endif; ?>
+
+                    <!-- Subir nuevas fotos -->
+                    <label class="form-label fw-semibold">
+                        <?= $modo === 'editar' ? 'Agregar nuevas fotos' : 'Fotos del equipo' ?>
+                        <?php if ($modo === 'crear'): ?>
+                            <span class="text-muted fw-normal small">(la primera foto sera la principal)</span>
+                        <?php endif; ?>
+                    </label>
+                    <input type="file" name="fotos_equipo[]" id="fotos_equipo" class="form-control"
+                           accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+
+                    <!-- Preview dinamico de fotos nuevas -->
+                    <div id="previewFotos" class="mt-3 d-none"></div>
+
                 </div>
             </div>
         </div>
-    </div>
+
+    </div><!-- /accordion -->
 
     <div class="d-flex justify-content-end gap-2 mt-4">
         <a href="index.php" class="btn btn-light border">Volver</a>
-        <button type="submit" class="btn btn-primary"><?= $modo === 'editar' ? 'Actualizar equipo' : 'Guardar equipo' ?></button>
+        <button type="submit" class="btn btn-primary">
+            <?= $modo === 'editar' ? 'Actualizar equipo' : 'Guardar equipo' ?>
+        </button>
     </div>
 </form>
+
+<script>
+(function () {
+    /* ---- Checkbox eliminar foto: toggle visual ---- */
+    document.querySelectorAll('.inv-chk-eliminar').forEach(function (chk) {
+        chk.addEventListener('change', function () {
+            var btn  = this.parentElement.querySelector('.inv-btn-eliminar');
+            var item = this.closest('.inv-photo-item');
+            if (btn)  btn.classList.toggle('active', this.checked);
+            if (item) item.style.opacity = this.checked ? '0.4' : '';
+        });
+    });
+
+    /* ---- Radio foto principal: toggle visual ---- */
+    document.querySelectorAll('[name="foto_principal"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            document.querySelectorAll('[name="foto_principal"]').forEach(function (r) {
+                var btn  = r.parentElement.querySelector('span');
+                var item = r.closest('.inv-photo-item');
+                if (btn)  btn.classList.remove('active');
+                if (item) item.classList.remove('inv-photo-principal');
+            });
+            var btnActivo  = this.parentElement.querySelector('span');
+            var itemActivo = this.closest('.inv-photo-item');
+            if (btnActivo)  btnActivo.classList.add('active');
+            if (itemActivo) itemActivo.classList.add('inv-photo-principal');
+        });
+    });
+
+    /* ---- Preview de fotos nuevas ---- */
+    var inputFotos = document.getElementById('fotos_equipo');
+    var previewEl  = document.getElementById('previewFotos');
+    if (!inputFotos || !previewEl) return;
+
+    inputFotos.addEventListener('change', function () {
+        var files = Array.from(this.files).filter(function (f) {
+            return f.type.startsWith('image/');
+        });
+        if (!files.length) {
+            previewEl.classList.add('d-none');
+            previewEl.innerHTML = '';
+            return;
+        }
+
+        var srcs   = new Array(files.length);
+        var loaded = 0;
+
+        files.forEach(function (file, i) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                srcs[i] = e.target.result;
+                loaded++;
+                if (loaded === files.length) renderPreview(srcs);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    function renderPreview(srcs) {
+        previewEl.classList.remove('d-none');
+
+        if (srcs.length === 1) {
+            previewEl.innerHTML =
+                '<div class="text-center">' +
+                    '<div class="position-relative d-inline-block">' +
+                        '<img src="' + srcs[0] + '" class="inv-preview-single" alt="Vista previa">' +
+                        '<span class="inv-badge-principal-overlay">&#9733; Principal</span>' +
+                    '</div>' +
+                '</div>';
+            return;
+        }
+
+        /* Carrusel Bootstrap con strip de thumbnails */
+        var indicators = srcs.map(function (_, i) {
+            return '<button type="button" data-bs-target="#invCarouselPreview" data-bs-slide-to="' + i + '"' +
+                (i === 0 ? ' class="active" aria-current="true"' : '') + '></button>';
+        }).join('');
+
+        var items = srcs.map(function (src, i) {
+            var badge = i === 0 ? '<span class="inv-badge-principal-overlay">&#9733; Principal</span>' : '';
+            return '<div class="carousel-item' + (i === 0 ? ' active' : '') + '">' +
+                '<div class="inv-carousel-img-wrap position-relative">' +
+                '<img src="' + src + '" class="d-block w-100 inv-carousel-img" alt="Foto ' + (i + 1) + '">' +
+                badge + '</div></div>';
+        }).join('');
+
+        var thumbs = srcs.map(function (src, i) {
+            return '<img src="' + src + '" class="inv-carousel-thumb' + (i === 0 ? ' active' : '') +
+                '" data-idx="' + i + '" alt="Miniatura ' + (i + 1) + '">';
+        }).join('');
+
+        previewEl.innerHTML =
+            '<div id="invCarouselPreview" class="carousel slide" data-bs-ride="false">' +
+                '<div class="carousel-indicators">' + indicators + '</div>' +
+                '<div class="carousel-inner rounded">' + items + '</div>' +
+                '<button class="carousel-control-prev" type="button" data-bs-target="#invCarouselPreview" data-bs-slide="prev">' +
+                    '<span class="carousel-control-prev-icon"></span></button>' +
+                '<button class="carousel-control-next" type="button" data-bs-target="#invCarouselPreview" data-bs-slide="next">' +
+                    '<span class="carousel-control-next-icon"></span></button>' +
+            '</div>' +
+            '<div class="inv-thumb-strip mt-2">' + thumbs + '</div>';
+
+        var carouselEl = document.getElementById('invCarouselPreview');
+
+        carouselEl.addEventListener('slid.bs.carousel', function (e) {
+            document.querySelectorAll('#previewFotos .inv-carousel-thumb').forEach(function (t, i) {
+                t.classList.toggle('active', i === e.to);
+            });
+        });
+
+        document.querySelectorAll('#previewFotos .inv-carousel-thumb').forEach(function (t) {
+            t.addEventListener('click', function () {
+                bootstrap.Carousel.getOrCreateInstance(carouselEl).to(parseInt(this.dataset.idx, 10));
+            });
+        });
+    }
+}());
+</script>

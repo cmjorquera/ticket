@@ -9,11 +9,13 @@ if (!$equipo) {
     exit;
 }
 
-$tituloPagina = 'Editar equipo';
-$colegios = $inventario->obtenerColegios();
-$usuarios = $inventario->obtenerUsuarios();
-$estados = $inventario->obtenerEstados();
-$tiposPc = $inventario->obtenerTiposPc();
+$tituloPagina   = 'Editar equipo';
+$idColegioForm  = (int)($equipo['id_colegio'] ?? 0);
+$colegioUsuario = ['id_colegio' => $idColegioForm, 'nom_colegio' => ($equipo['nom_colegio'] ?? '')];
+$usuarios       = $inventario->obtenerUsuarios();
+$estados        = $inventario->obtenerEstados();
+$tiposPc        = $inventario->obtenerTiposPc();
+$ubicaciones    = $inventario->obtenerUbicacionesPorColegio($idColegioForm);
 $modo = 'editar';
 
 require __DIR__ . '/componentes/layout_top.php';

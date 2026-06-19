@@ -2,6 +2,7 @@
     'use strict';
 
     let tablaInventario = null;
+    let tablaMonitores  = null;
 
     function buildAccionButtons(row) {
         const id = parseInt(row.id_equipo, 10);
@@ -319,6 +320,228 @@
         };
     }
 
+    // =========================================================================
+    // MONITORES
+    // =========================================================================
+
+    function buildMonitorAccionButtons(row) {
+        const id = parseInt(row.id_monitor, 10);
+        return `
+            <div class="inv-action-buttons d-flex flex-wrap gap-2">
+                <a href="ver_monitor.php?id_monitor=${id}" class="btn btn-sm inv-btn-action inv-btn-view" title="Ver detalle" aria-label="Ver detalle">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <a href="editar_monitor.php?id_monitor=${id}" class="btn btn-sm inv-btn-action inv-btn-edit" title="Editar" aria-label="Editar">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <button type="button" class="btn btn-sm inv-btn-action inv-btn-photo btnVerFotosMonitor" data-id="${id}" title="Fotos" aria-label="Fotos">
+                    <i class="bi bi-images"></i>
+                </button>
+                <button type="button" class="btn btn-sm inv-btn-action inv-btn-delete btnEliminarMonitor" data-id="${id}" title="Eliminar" aria-label="Eliminar">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    function collectMonitorFilters() {
+        return {
+            id_colegio:          $('#filtroColegioMon').val()  || '',
+            id_estado:           $('#filtroEstadoMon').val()   || '',
+            id_usuario_asignado: $('#filtroUsuarioMon').val()  || '',
+            busqueda:            $('#filtroBusquedaMon').val() || ''
+        };
+    }
+
+    function initTablaMonitores() {
+        const $tabla = $('#tablaMonitores');
+        if (!$tabla.length) {
+            return;
+        }
+        tablaMonitores = $tabla.DataTable({
+            data: [],
+            responsive: false,
+            autoWidth: false,
+            pageLength: 10,
+            paging: true,
+            info: true,
+            lengthChange: false,
+            pagingType: 'simple_numbers',
+            dom: "<'row align-items-center mb-3'<'col-md-6'i><'col-md-6 text-md-end'p>>" +
+                 "rt" +
+                 "<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json',
+                info: 'Mostrando _START_ a _END_ de _TOTAL_ monitores',
+                infoEmpty: 'Sin monitores para mostrar',
+                paginate: { previous: 'Anterior', next: 'Siguiente' }
+            },
+            columns: [
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row, meta) {
+                        const pageInfo = new $.fn.dataTable.Api(meta.settings).page.info();
+                        return pageInfo.start + meta.row + 1;
+                    }
+                },
+                {
+                    data: null,
+                    render: function (data) {
+                        const nombre = escapeHtml(data.nombre_monitor || '');
+                        const sub    = [data.marca, data.modelo, data.tamano_monitor ? data.tamano_monitor + '"' : '']
+                                        .filter(Boolean).map(escapeHtml).join(' ');
+                        return `<div class="fw-semibold">${nombre}</div><small class="text-muted">${sub}</small>`;
+                    }
+                },
+                { data: 'nom_colegio',   render: escapeHtml },
+                {
+                    data: 'nombre_ubicacion',
+                    render: function (data, type, row) {
+                        if (!data) return '<span class="text-muted">Sin ubicación</span>';
+                        const tip = row.tipo_ubicacion ? escapeHtml(row.tipo_ubicacion) + ' — ' : '';
+                        return tip + escapeHtml(data);
+                    }
+                },
+                { data: 'numero_serie',  render: escapeHtml },
+                {
+                    data: 'usuario_asignado',
+                    render: function (data) { return escapeHtml(data || 'Sin asignar'); }
+                },
+                { data: 'badge_estado' },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function (row) { return buildMonitorAccionButtons(row); }
+                }
+            ]
+        });
+
+        loadMonitores();
+
+        if (window.ResizeObserver) {
+            const _adj = debounce(function () {
+                if (tablaMonitores) { tablaMonitores.columns.adjust(); }
+            }, 130);
+            const _wr = document.getElementById('tablaMonitores_wrapper');
+            if (_wr) { new ResizeObserver(_adj).observe(_wr); }
+        }
+    }
+
+    function loadMonitores() {
+        if (!window.INVENTARIO_CONFIG || !window.INVENTARIO_CONFIG.endpoints) {
+            return;
+        }
+        $.getJSON(window.INVENTARIO_CONFIG.endpoints.listarMonitores, collectMonitorFilters())
+            .done(function (response) {
+                if (!response.ok) { return; }
+                $('#contenedorResumenMonitores').html(response.resumen_html);
+                if (tablaMonitores) {
+                    tablaMonitores.clear().rows.add(response.data || []).draw();
+                }
+            })
+            .fail(function () {
+                Swal.fire('Error', 'No fue posible cargar los monitores.', 'error');
+            });
+    }
+
+    function bindMonitorFilters() {
+        $('#filtroColegioMon, #filtroEstadoMon, #filtroUsuarioMon').on('change', loadMonitores);
+        $('#filtroBusquedaMon').on('keyup', debounce(loadMonitores, 350));
+    }
+
+    function bindMonitorDelete() {
+        $(document).on('click', '.btnEliminarMonitor', function () {
+            const idMonitor = $(this).data('id');
+            Swal.fire({
+                title: 'Eliminar monitor',
+                text: 'Esta acción realiza una eliminación lógica del monitor.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then(function (result) {
+                if (!result.isConfirmed) { return; }
+                $.post(window.INVENTARIO_CONFIG.endpoints.eliminarMonitor, { id_monitor: idMonitor }, null, 'json')
+                    .done(function (response) {
+                        Swal.fire('Eliminado', response.mensaje, 'success');
+                        loadMonitores();
+                    })
+                    .fail(function (xhr) {
+                        const msg = xhr.responseJSON && xhr.responseJSON.mensaje
+                            ? xhr.responseJSON.mensaje : 'No fue posible eliminar el monitor.';
+                        Swal.fire('Error', msg, 'error');
+                    });
+            });
+        });
+    }
+
+    function bindMonitorGaleriaModal() {
+        $(document).on('click', '.btnVerFotosMonitor', function () {
+            const idMonitor = $(this).data('id');
+            const $modal    = $('#modalGaleriaMonitor');
+            const $title    = $('#modalGaleriaMonitorLabel');
+            const $body     = $('#modalGaleriaMonitorBody');
+
+            if (!$modal.length || !idMonitor) { return; }
+
+            $title.text('Cargando imágenes...');
+            $body.html('<div class="text-center py-5 text-muted">Cargando galería...</div>');
+
+            new bootstrap.Modal($modal[0]).show();
+
+            $.getJSON(window.INVENTARIO_CONFIG.endpoints.detalleMonitor, { id_monitor: idMonitor })
+                .done(function (response) {
+                    $title.text(response.ok ? ('Imágenes de ' + (response.monitor.nombre_monitor || 'monitor')) : 'Galería');
+                    $body.html(response.ok
+                        ? (response.galeria_html || '<div class="alert alert-light border mb-0">Sin imágenes registradas.</div>')
+                        : '<div class="alert alert-warning mb-0">No fue posible cargar las imágenes.</div>');
+                })
+                .fail(function () {
+                    $title.text('Galería del monitor');
+                    $body.html('<div class="alert alert-danger mb-0">No fue posible cargar la galería.</div>');
+                });
+        });
+    }
+
+    function initTabBehavior() {
+        const cfg = window.INVENTARIO_CONFIG || {};
+        const $btn   = $('#btnAgregarPrincipal');
+        const $label = $('#btnAgregarLabel');
+        const $carga = $('.inv-btn-carga-masiva');
+
+        function applyTab(tab) {
+            if (!$btn.length) { return; }
+            if (tab === 'monitores') {
+                $btn.attr('href', $btn.data('href-mon') || 'registrar_monitor.php');
+                if ($label.length) { $label.text($btn.data('label-mon') || 'Agregar monitor'); }
+                if ($carga.length) { $carga.hide(); }
+            } else {
+                $btn.attr('href', $btn.data('href-pc') || 'registrar_equipo.php');
+                if ($label.length) { $label.text($btn.data('label-pc') || 'Agregar PC'); }
+                if ($carga.length) { $carga.show(); }
+            }
+        }
+
+        // Set initial state from server-rendered tab
+        applyTab(cfg.tabActiva || 'pc');
+
+        // React to tab changes
+        $('#inventarioTabs button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
+            const tab = $(this).data('tab');
+            applyTab(tab);
+            // Lazy-init monitor table on first show
+            if (tab === 'monitores' && !tablaMonitores) {
+                initTablaMonitores();
+                bindMonitorFilters();
+                bindMonitorDelete();
+                bindMonitorGaleriaModal();
+            }
+        });
+    }
+
     $(function () {
         initTabla();
         bindFilters();
@@ -328,5 +551,14 @@
         bindRepeater();
         bindPreview();
         initExtras();
+        initTabBehavior();
+
+        // Si la tab activa al cargar la pagina es monitores, inicializar tabla inmediatamente
+        if ((window.INVENTARIO_CONFIG || {}).tabActiva === 'monitores') {
+            initTablaMonitores();
+            bindMonitorFilters();
+            bindMonitorDelete();
+            bindMonitorGaleriaModal();
+        }
     });
 })(jQuery);

@@ -4,14 +4,23 @@ require_once __DIR__ . '/componentes/boot.php';
 $tituloPagina = 'Carga masiva de equipos';
 $idPagActual  = '9';
 
+// Colores del colegio para el hero (igual que index.php)
+$coloresColegio = $inventario->obtenerColoresColegio($idUsuarioSession);
+$_c1 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_principal']  ?? '') ? $coloresColegio['color_principal']  : '';
+$_c2 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_secundario'] ?? '') ? $coloresColegio['color_secundario'] : '';
+$_heroBranded = $_c1 !== '';
+$_heroStyle   = $_heroBranded
+    ? ' style="background: linear-gradient(135deg, ' . $_c1 . ' 0%, ' . ($_c2 ?: $_c1) . ' 100%)"'
+    : '';
+
 require __DIR__ . '/componentes/layout_top.php';
 ?>
 
 <div class="row mx-1 mx-md-3">
     <div class="col-12">
 
-        <!-- ── Hero oscuro ───────────────────────────────────────────────── -->
-        <div class="cm-hero mb-4">
+        <!-- ── Hero: colores del colegio o degradado oscuro por defecto ──── -->
+        <div class="cm-hero mb-4<?= $_heroBranded ? ' inv-hero--branded' : '' ?>"<?= $_heroStyle ?>>
             <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                 <div>
                     <span class="inv-kicker">Importacion masiva</span>
@@ -58,85 +67,94 @@ require __DIR__ . '/componentes/layout_top.php';
             </div>
         </div>
 
-        <!-- ── Tarjeta 1: Descargar plantilla ────────────────────────────── -->
-        <div class="card shadow-sm border-0 inv-panel mb-3">
-            <div class="card-body p-4">
-                <h5 class="mb-1">
-                    <span class="cm-step-num-sm">1</span>
-                    Descargar plantilla Excel
-                </h5>
-                <p class="text-muted mb-3 small">
-                    La plantilla incluye el encabezado de tu colegio, las columnas con nombres legibles
-                    y una fila de ejemplo en gris. <strong>Elimina la fila de ejemplo</strong> antes de subir.
-                    La hoja <strong>Estados</strong> lista los IDs de estado disponibles.
-                </p>
-                <a href="exportar_plantilla.php" class="btn btn-success">
-                    <i class="bi bi-file-earmark-excel me-2"></i>Descargar plantilla Excel
-                </a>
-            </div>
-        </div>
+        <!-- ── Layout dos columnas: contenido | panel de carga ───────────── -->
+        <div class="row g-4 align-items-start">
 
-        <!-- ── Tarjeta 2+3: Subir archivo ─────────────────────────────────── -->
-        <div class="card shadow-sm border-0 inv-panel mb-3">
-            <div class="card-body p-4">
-                <h5 class="mb-1">
-                    <span class="cm-step-num-sm">3</span>
-                    Subir archivo completado
-                </h5>
-                <p class="text-muted mb-3 small">
-                    Arrastra el archivo o haz clic en la zona de carga. Formatos aceptados:
-                    <code>.xlsx</code> o <code>.xls</code>.
-                    Cada fila se procesa de forma <strong>independiente</strong>: los errores en una fila
-                    no afectan al resto.
-                </p>
+            <!-- Columna izquierda: instrucciones + resultados -->
+            <div class="col-lg-8">
 
-                <div id="cmDropZone"
-                     class="cm-dropzone mb-3"
-                     role="button"
-                     tabindex="0"
-                     aria-label="Zona de carga — arrastra el archivo Excel aquí o haz clic para seleccionarlo">
-                    <i class="bi bi-cloud-upload cm-dropzone-icon"></i>
-                    <p class="cm-dropzone-text mb-1">Arrastra el archivo aquí o haz clic para seleccionarlo</p>
-                    <p class="text-muted small mb-0">Formatos aceptados: <strong>.xlsx</strong>, <strong>.xls</strong></p>
+                <!-- Tarjeta 1: Descargar plantilla -->
+                <div class="card shadow-sm border-0 inv-panel mb-3">
+                    <div class="card-body p-4">
+                        <h5 class="mb-1">
+                            <span class="cm-step-num-sm">1</span>
+                            Descargar plantilla Excel
+                        </h5>
+                        <p class="text-muted mb-3 small">
+                            La plantilla incluye el encabezado de tu colegio, las columnas con nombres legibles
+                            y una fila de ejemplo en gris. <strong>Elimina la fila de ejemplo</strong> antes de subir.
+                            La hoja <strong>Estados</strong> lista los IDs de estado disponibles.
+                        </p>
+                        <a href="exportar_plantilla.php" class="btn btn-success">
+                            <i class="bi bi-file-earmark-excel me-2"></i>Descargar plantilla Excel
+                        </a>
+                    </div>
                 </div>
 
-                <input type="file" id="cmFileInput" accept=".xlsx,.xls" class="d-none" aria-label="Seleccionar archivo Excel">
+                <!-- Tarjeta 4: Resultados (oculta hasta procesar) -->
+                <div id="cmResultados" class="card shadow-sm border-0 inv-panel d-none mb-3">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3">
+                            <span class="cm-step-num-sm">4</span>
+                            Resultado de la importación
+                        </h5>
 
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <span id="cmFileName" class="text-muted small">Ningún archivo seleccionado</span>
-                    <button id="btnCargarMasiva" class="btn btn-primary" disabled>
-                        <span id="cmSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                        <i class="bi bi-upload me-1"></i>Procesar carga
-                    </button>
+                        <div id="cmResumenResultados" class="mb-3 d-flex flex-wrap gap-2 align-items-center"></div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle border" id="cmTablaResultados">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center" style="width: 90px;">Fila Excel</th>
+                                        <th class="text-center" style="width: 100px;">Estado</th>
+                                        <th>Mensaje</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- ── Tarjeta 4: Resultados (oculta hasta procesar) ─────────────── -->
-        <div id="cmResultados" class="card shadow-sm border-0 inv-panel d-none mb-3">
-            <div class="card-body p-4">
-                <h5 class="mb-3">
-                    <span class="cm-step-num-sm">4</span>
-                    Resultado de la importación
-                </h5>
+            </div><!-- /col-lg-8 -->
 
-                <div id="cmResumenResultados" class="mb-3 d-flex flex-wrap gap-2 align-items-center"></div>
+            <!-- Columna derecha: panel de carga -->
+            <div class="col-lg-4">
+                <div class="cm-upload-panel sticky-top" style="top: 1.5rem;">
+                    <div class="cm-upload-panel-header">
+                        <i class="bi bi-file-earmark-arrow-up me-2"></i>CARGAR EQUIPOS (.XLSX)
+                    </div>
+                    <div class="cm-upload-panel-body">
+                        <p class="text-muted small mb-3">
+                            Completa la plantilla con los datos y sube el archivo aquí.
+                            Cada fila se procesa de forma <strong>independiente</strong>.
+                        </p>
 
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle border" id="cmTablaResultados">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" style="width: 90px;">Fila Excel</th>
-                                <th class="text-center" style="width: 100px;">Estado</th>
-                                <th>Mensaje</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                        <div id="cmDropZone"
+                             class="cm-dropzone mb-3"
+                             role="button"
+                             tabindex="0"
+                             aria-label="Zona de carga — arrastra el archivo Excel aquí o haz clic para seleccionarlo">
+                            <i class="bi bi-cloud-upload cm-dropzone-icon"></i>
+                            <p class="cm-dropzone-text mb-1">Arrastra el archivo aquí o haz clic</p>
+                            <p class="text-muted small mb-0">Formatos: <strong>.xlsx</strong>, <strong>.xls</strong></p>
+                        </div>
+
+                        <input type="file" id="cmFileInput" accept=".xlsx,.xls" class="d-none" aria-label="Seleccionar archivo Excel">
+
+                        <div class="mb-3">
+                            <span id="cmFileName" class="text-muted small">Ningún archivo seleccionado</span>
+                        </div>
+
+                        <button id="btnCargarMasiva" class="btn btn-primary w-100" disabled>
+                            <span id="cmSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                            <i class="bi bi-upload me-1"></i>Cargar y mostrar
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </div><!-- /col-lg-4 -->
 
+        </div><!-- /row -->
     </div>
 </div>
 

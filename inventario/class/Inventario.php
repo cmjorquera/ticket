@@ -4,14 +4,8 @@ class Inventario
 {
     private $db;
     private $cn;
-    private $cacheTablas = [];
-    private $estadosFallback = [
-        1 => ['nombre_estado' => 'Activo', 'color_badge' => 'success'],
-        2 => ['nombre_estado' => 'Bodega', 'color_badge' => 'secondary'],
-        3 => ['nombre_estado' => 'Reparacion', 'color_badge' => 'warning'],
-        4 => ['nombre_estado' => 'Baja', 'color_badge' => 'danger'],
-        5 => ['nombre_estado' => 'Prestado', 'color_badge' => 'info'],
-    ];
+    private $cacheTablas  = [];
+    private $cacheColumnas = [];
 
     public function __construct()
     {
@@ -63,6 +57,28 @@ class Inventario
         $existe = $this->db->num_rows($rs) > 0;
 
         $this->cacheTablas[$tabla] = $existe;
+        return $existe;
+    }
+
+    public function columnaExiste($tabla, $columna)
+    {
+        $key = $tabla . '.' . $columna;
+        if (isset($this->cacheColumnas[$key])) {
+            return $this->cacheColumnas[$key];
+        }
+
+        $tablaS   = $this->db->escape_string($tabla);
+        $columnaS = $this->db->escape_string($columna);
+        $sql = "SELECT 1
+                FROM information_schema.columns
+                WHERE table_schema = DATABASE()
+                  AND table_name   = '{$tablaS}'
+                  AND column_name  = '{$columnaS}'
+                LIMIT 1";
+        $rs = $this->db->consulta($sql);
+        $existe = $this->db->num_rows($rs) > 0;
+
+        $this->cacheColumnas[$key] = $existe;
         return $existe;
     }
 
@@ -129,34 +145,90 @@ class Inventario
 
     public function obtenerEstados()
     {
-        if ($this->tablaExiste('estado_equipo')) {
-            $datos = [];
-            $rs = $this->db->consulta("SELECT id_estado, nombre_estado, color_badge FROM estado_equipo ORDER BY id_estado ASC");
-            while ($fila = $this->db->fetch_assoc($rs)) {
-                $datos[] = $fila;
-            }
-            return $datos;
+        if (!$this->tablaExiste('estado_equipo')) {
+            return [];
         }
 
         $datos = [];
-        foreach ($this->estadosFallback as $id => $estado) {
-            $datos[] = ['id_estado' => $id] + $estado;
+        $rs = $this->db->consulta("
+            SELECT id_estado, nombre_estado, color_badge
+            FROM estado_equipo
+            WHERE estado = 1
+            ORDER BY id_estado ASC
+        ");
+        while ($fila = $this->db->fetch_assoc($rs)) {
+            $datos[] = $fila;
         }
         return $datos;
     }
 
     public function obtenerTiposPc()
     {
-        if ($this->tablaExiste('tipo_pc_catalogo')) {
-            $datos = [];
-            $rs = $this->db->consulta("SELECT nombre_tipo FROM tipo_pc_catalogo WHERE activo = 1 ORDER BY nombre_tipo ASC");
-            while ($fila = $this->db->fetch_assoc($rs)) {
-                $datos[] = $fila['nombre_tipo'];
-            }
-            return $datos;
+        if (!$this->tablaExiste('tipo_pc_catalogo')) {
+            return [];
         }
 
-        return ['Desktop', 'Notebook', 'All In One', 'Mini PC', 'Servidor', 'Otro'];
+        $datos = [];
+        $rs = $this->db->consulta("
+            SELECT nombre_tipo
+            FROM tipo_pc_catalogo
+            WHERE activo = 1
+            ORDER BY nombre_tipo ASC
+        ");
+        while ($fila = $this->db->fetch_assoc($rs)) {
+            $datos[] = $fila['nombre_tipo'];
+        }
+        return $datos;
+    }
+
+    public function obtenerUbicacionesPorColegio($idColegio)
+    {
+        if (!$this->tablaExiste('equipo_ubicacion')) {
+            return [];
+        }
+
+        $idColegio = (int)$idColegio;
+        $datos = [];
+
+        $rs = $this->db->consulta("
+            SELECT id_ubicacion, nombre_ubicacion, tipo_ubicacion
+            FROM equipo_ubicacion
+            WHERE id_colegio = {$idColegio}
+            AND estado = 1
+            ORDER BY tipo_ubicacion ASC, nombre_ubicacion ASC
+        ");
+
+        while ($fila = $this->db->fetch_assoc($rs)) {
+            $datos[] = $fila;
+        }
+
+        return $datos;
+    }
+
+    public function obtenerTodasUbicaciones()
+    {
+        if (!$this->tablaExiste('equipo_ubicacion')) {
+            return [];
+        }
+
+        $datos = [];
+        $rs = $this->db->consulta("
+            SELECT id_ubicacion, id_colegio, nombre_ubicacion, tipo_ubicacion
+            FROM equipo_ubicacion
+            WHERE estado = 1
+            ORDER BY id_colegio ASC, tipo_ubicacion ASC, nombre_ubicacion ASC
+        ");
+
+        while ($fila = $this->db->fetch_assoc($rs)) {
+            $idC = (int)$fila['id_colegio'];
+            $datos[$idC][] = [
+                'id_ubicacion'     => (int)$fila['id_ubicacion'],
+                'nombre_ubicacion' => $fila['nombre_ubicacion'],
+                'tipo_ubicacion'   => $fila['tipo_ubicacion'],
+            ];
+        }
+
+        return $datos;
     }
 
     public function obtenerResumen($filtros = [])
@@ -244,11 +316,26 @@ class Inventario
     public function obtenerEquipoCompleto($idEquipo)
     {
         $idEquipo = (int)$idEquipo;
-        $joinEstado = $this->tablaExiste('estado_equipo') ? "LEFT JOIN estado_equipo ee ON ee.id_estado = e.id_estado" : '';
+
+        $joinEstado = $this->tablaExiste('estado_equipo')
+            ? "LEFT JOIN estado_equipo ee ON ee.id_estado = e.id_estado"
+            : '';
         $selectEstado = $this->tablaExiste('estado_equipo')
             ? "COALESCE(ee.nombre_estado, 'Sin estado') AS nombre_estado, COALESCE(ee.color_badge, 'dark') AS color_badge"
             : "CASE e.id_estado WHEN 1 THEN 'Activo' WHEN 2 THEN 'Bodega' WHEN 3 THEN 'Reparacion' WHEN 4 THEN 'Baja' WHEN 5 THEN 'Prestado' ELSE 'Sin estado' END AS nombre_estado,
                CASE e.id_estado WHEN 1 THEN 'success' WHEN 2 THEN 'secondary' WHEN 3 THEN 'warning' WHEN 4 THEN 'danger' WHEN 5 THEN 'info' ELSE 'dark' END AS color_badge";
+
+        $conUbicCol   = $this->columnaExiste('equipos', 'id_ubicacion') && $this->tablaExiste('equipo_ubicacion');
+        $joinUbicacion   = $conUbicCol ? "LEFT JOIN equipo_ubicacion eu ON eu.id_ubicacion = e.id_ubicacion" : '';
+        $selectUbicacion = $conUbicCol
+            ? ", eu.nombre_ubicacion, eu.tipo_ubicacion"
+            : ", NULL AS nombre_ubicacion, NULL AS tipo_ubicacion";
+
+        $conRegCol   = $this->columnaExiste('equipos', 'id_usuario_registra');
+        $joinRegistra   = $conRegCol ? "LEFT JOIN usuarios ureg ON ureg.id = e.id_usuario_registra" : '';
+        $selectRegistra = $conRegCol
+            ? ", CONCAT(ureg.nombre, ' ', ureg.apellido_paterno) AS nombre_usuario_registra"
+            : ", NULL AS nombre_usuario_registra";
 
         $sql = "SELECT
                     e.*,
@@ -256,11 +343,15 @@ class Inventario
                     CONCAT(ur.nombre, ' ', ur.apellido_paterno, ' ', ur.apellido_materno) AS usuario_registra,
                     CONCAT(ua.nombre, ' ', ua.apellido_paterno, ' ', ua.apellido_materno) AS usuario_asignado,
                     {$selectEstado}
+                    {$selectUbicacion}
+                    {$selectRegistra}
                 FROM equipos e
                 INNER JOIN colegio c ON c.id_colegio = e.id_colegio
                 LEFT JOIN usuarios ur ON ur.id = e.id_usuario
                 LEFT JOIN usuarios ua ON ua.id = e.id_usuario_asignado
                 {$joinEstado}
+                {$joinUbicacion}
+                {$joinRegistra}
                 WHERE e.id_equipo = ?";
         $stmt = mysqli_prepare($this->cn, $sql);
         mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
@@ -272,15 +363,16 @@ class Inventario
             return null;
         }
 
-        $equipo['compra'] = $this->obtenerFilaSimple('SELECT * FROM equipos_compra WHERE id_equipo = ?', $idEquipo);
+        $equipo['compra']         = $this->obtenerFilaSimple('SELECT * FROM equipos_compra WHERE id_equipo = ?', $idEquipo);
         $equipo['almacenamiento'] = $this->obtenerFilaSimple('SELECT * FROM equipo_almacenamiento WHERE id_equipo = ?', $idEquipo);
-        $equipo['procesador'] = $this->obtenerFilaSimple('SELECT * FROM equipo_procesador WHERE id_equipo = ?', $idEquipo);
-        $equipo['software'] = $this->obtenerFilaSimple('SELECT * FROM equipo_software WHERE id_equipo = ?', $idEquipo);
-        $equipo['memorias'] = $this->obtenerVariasFilas('SELECT * FROM equipo_memoria WHERE id_equipo = ? ORDER BY orden_memoria ASC, id_memoria ASC', $idEquipo);
-        $equipo['monitores'] = $this->obtenerVariasFilas('SELECT * FROM equipo_monitor WHERE id_equipo = ? ORDER BY orden_monitor ASC, id_monitor ASC', $idEquipo);
-        $equipo['fotos'] = $this->tablaExiste('equipo_fotos')
-            ? $this->obtenerVariasFilas('SELECT * FROM equipo_fotos WHERE id_equipo = ? AND tipo_foto <> "panoramica" ORDER BY principal DESC, orden_foto ASC, id_foto ASC', $idEquipo)
+        $equipo['procesador']     = $this->obtenerFilaSimple('SELECT * FROM equipo_procesador WHERE id_equipo = ?', $idEquipo);
+        $equipo['software']       = $this->obtenerFilaSimple('SELECT * FROM equipo_software WHERE id_equipo = ?', $idEquipo);
+        $equipo['memorias']       = $this->obtenerVariasFilas('SELECT * FROM equipo_memoria WHERE id_equipo = ? ORDER BY orden_memoria ASC, id_memoria ASC', $idEquipo);
+        $equipo['monitores']      = $this->obtenerVariasFilas('SELECT * FROM equipo_monitor WHERE id_equipo = ? ORDER BY orden_monitor ASC, id_monitor ASC', $idEquipo);
+        $equipo['fotos']          = $this->tablaExiste('equipo_fotos')
+            ? $this->obtenerVariasFilas('SELECT * FROM equipo_fotos WHERE id_equipo = ? ORDER BY principal DESC, orden_foto ASC, id_foto ASC', $idEquipo)
             : [];
+        $equipo['movimientos']    = $this->obtenerMovimientosEquipo($idEquipo);
         return $equipo;
     }
 
@@ -322,9 +414,20 @@ class Inventario
     public function renderBadgeEstado($idEstado, $nombreEstado = '', $colorBadge = '')
     {
         if ($nombreEstado === '' || $colorBadge === '') {
-            $meta = $this->estadosFallback[(int)$idEstado] ?? ['nombre_estado' => 'Sin estado', 'color_badge' => 'dark'];
+            $meta = ['nombre_estado' => 'Sin estado', 'color_badge' => 'dark'];
+            if ($this->tablaExiste('estado_equipo')) {
+                $idInt = (int)$idEstado;
+                $stmt = mysqli_prepare($this->cn, "SELECT nombre_estado, color_badge FROM estado_equipo WHERE id_estado = ? LIMIT 1");
+                mysqli_stmt_bind_param($stmt, 'i', $idInt);
+                mysqli_stmt_execute($stmt);
+                $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+                mysqli_stmt_close($stmt);
+                if ($fila) {
+                    $meta = $fila;
+                }
+            }
             $nombreEstado = $nombreEstado !== '' ? $nombreEstado : $meta['nombre_estado'];
-            $colorBadge = $colorBadge !== '' ? $colorBadge : $meta['color_badge'];
+            $colorBadge   = $colorBadge  !== '' ? $colorBadge  : $meta['color_badge'];
         }
 
         return '<span class="badge text-bg-' . htmlspecialchars($colorBadge, ENT_QUOTES, 'UTF-8') . '">' .
@@ -458,21 +561,30 @@ SQL;
         return $filas;
     }
 
-    public function guardarEquipo($post, $files, $idUsuario)
+    public function guardarEquipo($post, $files, $idUsuario, $idColegio = 0)
     {
-        $payload = $this->normalizarPayload($post, 0, $idUsuario);
+        $payload = $this->normalizarPayload($post, 0, $idUsuario, (int)$idColegio);
 
         if ($this->validarSerieDuplicada($payload['equipo']['numero_serie'])) {
             throw new RuntimeException('El numero de serie ya existe en otro equipo.');
         }
 
-        // El alta del equipo se confirma solo si todos los componentes y archivos quedan persistidos.
         mysqli_begin_transaction($this->cn);
 
         try {
             $idEquipo = $this->insertarRegistroEquipo($payload);
             $this->guardarTablasRelacionadas($idEquipo, $payload);
             $this->guardarFotos($idEquipo, $files);
+
+            $idUbicacion = (int)($payload['equipo']['id_ubicacion'] ?? 0);
+            if ($idUbicacion > 0) {
+                $this->registrarMovimiento(
+                    $idEquipo, 0, $idUbicacion, (int)$idUsuario,
+                    'Alta inicial de inventario',
+                    'Equipo registrado inicialmente en esta ubicacion.'
+                );
+            }
+
             $this->registrarHistorial($idEquipo, 'creacion', 'Equipo registrado en inventario.', (int)$idUsuario);
 
             mysqli_commit($this->cn);
@@ -506,24 +618,34 @@ SQL;
 
     private function insertarRegistroEquipo(array $payload): int
     {
-        $sql = "INSERT INTO equipos
-                (id_usuario, id_colegio, id_usuario_asignado, nombre_equipo, fabricante, producto, numero_serie, tipo_pc, qr_code, id_estado)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $p      = $payload['equipo'];
+        $cols   = ['id_usuario', 'id_colegio', 'id_usuario_asignado', 'nombre_equipo',
+                   'fabricante', 'producto', 'numero_serie', 'tipo_pc', 'qr_code', 'id_estado'];
+        $vals   = ['?', '?', '?', '?', '?', '?', '?', '?', '?', '?'];
+        $types  = 'iiissssssi';
+        $params = [
+            $p['id_usuario'], $p['id_colegio'], $p['id_usuario_asignado'],
+            $p['nombre_equipo'], $p['fabricante'], $p['producto'],
+            $p['numero_serie'], $p['tipo_pc'], $p['qr_code'], $p['id_estado'],
+        ];
+
+        if (isset($p['id_ubicacion']) && $this->columnaExiste('equipos', 'id_ubicacion')) {
+            $cols[]   = 'id_ubicacion';
+            $vals[]   = 'NULLIF(?, 0)';
+            $types   .= 'i';
+            $params[] = (int)$p['id_ubicacion'];
+        }
+
+        if (isset($p['id_usuario_registra']) && $this->columnaExiste('equipos', 'id_usuario_registra')) {
+            $cols[]   = 'id_usuario_registra';
+            $vals[]   = '?';
+            $types   .= 'i';
+            $params[] = (int)$p['id_usuario_registra'];
+        }
+
+        $sql  = 'INSERT INTO equipos (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')';
         $stmt = mysqli_prepare($this->cn, $sql);
-        mysqli_stmt_bind_param(
-            $stmt,
-            'iiissssssi',
-            $payload['equipo']['id_usuario'],
-            $payload['equipo']['id_colegio'],
-            $payload['equipo']['id_usuario_asignado'],
-            $payload['equipo']['nombre_equipo'],
-            $payload['equipo']['fabricante'],
-            $payload['equipo']['producto'],
-            $payload['equipo']['numero_serie'],
-            $payload['equipo']['tipo_pc'],
-            $payload['equipo']['qr_code'],
-            $payload['equipo']['id_estado']
-        );
+        $this->bindParams($stmt, $types, $params);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
         return (int)mysqli_insert_id($this->cn);
@@ -532,32 +654,31 @@ SQL;
     public function actualizarEquipo($idEquipo, $post, $files, $idUsuario)
     {
         $idEquipo = (int)$idEquipo;
-        $payload = $this->normalizarPayload($post, $idEquipo, $idUsuario);
+
+        // Fetch current equipo state before any changes (colegio is immutable; detect ubicacion change)
+        $actual = $this->obtenerCamposBasicos($idEquipo);
+        if (!$actual) {
+            throw new RuntimeException('El equipo indicado no existe.');
+        }
+        $idColegio           = (int)$actual['id_colegio'];
+        $idUbicacionAnterior = (int)($actual['id_ubicacion'] ?? 0);
+
+        $payload = $this->normalizarPayload($post, $idEquipo, $idUsuario, $idColegio);
 
         if ($this->validarSerieDuplicada($payload['equipo']['numero_serie'], $idEquipo)) {
             throw new RuntimeException('El numero de serie ya existe en otro equipo.');
         }
 
-        // La actualizacion reutiliza el mismo contrato de guardado para mantener consistencia entre tablas hijas.
+        $idUbicacionNueva       = (int)($payload['equipo']['id_ubicacion'] ?? 0);
+        $observacionMovimiento  = trim((string)($post['observacion_movimiento'] ?? ''));
+
         mysqli_begin_transaction($this->cn);
 
         try {
-            $sql = "UPDATE equipos SET
-                        id_colegio = ?,
-                        id_usuario_asignado = ?,
-                        nombre_equipo = ?,
-                        fabricante = ?,
-                        producto = ?,
-                        numero_serie = ?,
-                        tipo_pc = ?,
-                        qr_code = ?,
-                        id_estado = ?
-                    WHERE id_equipo = ?";
-            $stmt = mysqli_prepare($this->cn, $sql);
-            mysqli_stmt_bind_param(
-                $stmt,
-                'iissssssii',
-                $payload['equipo']['id_colegio'],
+            $cols   = ['id_usuario_asignado=?', 'nombre_equipo=?', 'fabricante=?', 'producto=?',
+                       'numero_serie=?', 'tipo_pc=?', 'qr_code=?', 'id_estado=?'];
+            $types  = 'isssssssi';
+            $params = [
                 $payload['equipo']['id_usuario_asignado'],
                 $payload['equipo']['nombre_equipo'],
                 $payload['equipo']['fabricante'],
@@ -566,14 +687,39 @@ SQL;
                 $payload['equipo']['tipo_pc'],
                 $payload['equipo']['qr_code'],
                 $payload['equipo']['id_estado'],
-                $idEquipo
-            );
+            ];
+
+            if ($this->columnaExiste('equipos', 'id_ubicacion')) {
+                $cols[]   = 'id_ubicacion=NULLIF(?, 0)';
+                $types   .= 'i';
+                $params[] = $idUbicacionNueva;
+            }
+
+            $types   .= 'i';
+            $params[] = $idEquipo;
+
+            $sql  = 'UPDATE equipos SET ' . implode(', ', $cols) . ' WHERE id_equipo = ?';
+            $stmt = mysqli_prepare($this->cn, $sql);
+            $this->bindParams($stmt, $types, $params);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
+
+            // Register location movement when ubicacion changes
+            if ($idUbicacionNueva > 0 && $idUbicacionNueva !== $idUbicacionAnterior) {
+                $this->registrarMovimiento(
+                    $idEquipo,
+                    $idUbicacionAnterior,
+                    $idUbicacionNueva,
+                    (int)$idUsuario,
+                    'Cambio de ubicacion',
+                    $observacionMovimiento
+                );
+            }
 
             $this->limpiarRelacionados($idEquipo);
             $this->guardarTablasRelacionadas($idEquipo, $payload);
             $this->procesarEliminacionFotos($idEquipo, $post);
+            $this->procesarFotoPrincipal($idEquipo, $post);
             $this->guardarFotos($idEquipo, $files);
             $this->registrarHistorial($idEquipo, 'actualizacion', 'Equipo actualizado desde el modulo de inventario.', $idUsuario);
 
@@ -585,23 +731,57 @@ SQL;
         }
     }
 
-    private function normalizarPayload($post, $idEquipo, $idUsuario)
+    private function normalizarPayload($post, $idEquipo, $idUsuario, $idColegio = 0)
     {
+        $idColegio = (int)$idColegio;
+
         $equipo = [
-            'id_usuario' => (int)$idUsuario,
-            'id_colegio' => (int)($post['id_colegio'] ?? 0),
+            'id_usuario'          => (int)$idUsuario,
+            'id_colegio'          => $idColegio,
+            'id_usuario_registra' => (int)$idUsuario,
             'id_usuario_asignado' => (int)($post['id_usuario_asignado'] ?? 0),
-            'nombre_equipo' => trim((string)($post['nombre_equipo'] ?? '')),
-            'fabricante' => trim((string)($post['fabricante'] ?? '')),
-            'producto' => trim((string)($post['producto'] ?? '')),
-            'numero_serie' => trim((string)($post['numero_serie'] ?? '')),
-            'tipo_pc' => trim((string)($post['tipo_pc'] ?? '')),
-            'qr_code' => trim((string)($post['qr_code'] ?? '')),
-            'id_estado' => (int)($post['id_estado'] ?? 1),
+            'nombre_equipo'       => trim((string)($post['nombre_equipo'] ?? '')),
+            'fabricante'          => trim((string)($post['fabricante'] ?? '')),
+            'producto'            => trim((string)($post['producto'] ?? '')),
+            'numero_serie'        => trim((string)($post['numero_serie'] ?? '')),
+            'tipo_pc'             => trim((string)($post['tipo_pc'] ?? '')),
+            'qr_code'             => trim((string)($post['qr_code'] ?? '')),
+            'id_estado'           => (int)($post['id_estado'] ?? 1),
+            'id_ubicacion'        => !empty($post['id_ubicacion']) ? (int)$post['id_ubicacion'] : 0,
         ];
 
-        if ($equipo['id_colegio'] <= 0 || $equipo['nombre_equipo'] === '' || $equipo['numero_serie'] === '') {
-            throw new RuntimeException('Debes completar colegio, nombre del equipo y numero de serie.');
+        if ($idColegio <= 0) {
+            throw new RuntimeException('No se pudo determinar el colegio del usuario. Contacta al administrador.');
+        }
+
+        if ($equipo['nombre_equipo'] === '') {
+            throw new RuntimeException('El nombre del equipo es obligatorio.');
+        }
+
+        if ($equipo['numero_serie'] === '') {
+            throw new RuntimeException('El numero de serie es obligatorio.');
+        }
+
+        if ($equipo['tipo_pc'] === '') {
+            throw new RuntimeException('Debes seleccionar el tipo de PC.');
+        }
+
+        if ($this->tablaExiste('equipo_ubicacion') && $equipo['id_ubicacion'] <= 0) {
+            throw new RuntimeException('Debes seleccionar una ubicacion para el equipo.');
+        }
+
+        if ($equipo['id_ubicacion'] > 0 && $this->tablaExiste('equipo_ubicacion')) {
+            $stmt = mysqli_prepare($this->cn,
+                "SELECT 1 FROM equipo_ubicacion WHERE id_ubicacion = ? AND id_colegio = ? AND estado = 1 LIMIT 1"
+            );
+            mysqli_stmt_bind_param($stmt, 'ii', $equipo['id_ubicacion'], $idColegio);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_store_result($stmt);
+            $valid = mysqli_stmt_num_rows($stmt) > 0;
+            mysqli_stmt_close($stmt);
+            if (!$valid) {
+                throw new RuntimeException('La ubicacion seleccionada no pertenece al colegio del usuario.');
+            }
         }
 
         if ($equipo['qr_code'] === '') {
@@ -765,19 +945,33 @@ SQL;
         }
 
         if (isset($files['fotos_equipo'])) {
-            $this->guardarMultiplesArchivos($idEquipo, $files['fotos_equipo'], $baseDir, 'normal');
+            $stmt = mysqli_prepare($this->cn, "SELECT 1 FROM equipo_fotos WHERE id_equipo = ? AND principal = 1 LIMIT 1");
+            mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_store_result($stmt);
+            $yaExistePrincipal = mysqli_stmt_num_rows($stmt) > 0;
+            mysqli_stmt_close($stmt);
+
+            $this->guardarMultiplesArchivos($idEquipo, $files['fotos_equipo'], $baseDir, 'normal', $yaExistePrincipal);
         }
     }
 
-    private function guardarMultiplesArchivos($idEquipo, $fileBag, $baseDir, $tipo)
+    private function guardarMultiplesArchivos($idEquipo, $fileBag, $baseDir, $tipo, $yaExistePrincipal = false)
     {
         if (!isset($fileBag['name']) || !is_array($fileBag['name'])) {
             return;
         }
 
+        $stmtOrden = mysqli_prepare($this->cn, "SELECT COALESCE(MAX(orden_foto), 0) FROM equipo_fotos WHERE id_equipo = ?");
+        mysqli_stmt_bind_param($stmtOrden, 'i', $idEquipo);
+        mysqli_stmt_execute($stmtOrden);
+        $rsOrden = mysqli_stmt_get_result($stmtOrden);
+        $ordenInicio = (int)(mysqli_fetch_row($rsOrden)[0] ?? 0) + 1;
+        mysqli_stmt_close($stmtOrden);
+
         $stmt = mysqli_prepare($this->cn, "INSERT INTO equipo_fotos (id_equipo, ruta_foto, tipo_foto, principal, orden_foto) VALUES (?, ?, ?, ?, ?)");
-        $tienePrincipal = false;
-        $orden = 1;
+        $tienePrincipal = $yaExistePrincipal;
+        $orden = $ordenInicio;
 
         foreach ($fileBag['name'] as $i => $nombre) {
             if (($fileBag['error'][$i] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
@@ -785,6 +979,9 @@ SQL;
             }
 
             $extension = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
+            if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+                continue;
+            }
             $nombreSeguro = uniqid('foto_', true) . '.' . $extension;
             $destino = $baseDir . '/' . $nombreSeguro;
 
@@ -813,5 +1010,737 @@ SQL;
         mysqli_stmt_bind_param($stmt, 'issi', $idEquipo, $accion, $descripcion, $idUsuario);
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
+    }
+
+    private function registrarMovimiento(int $idEquipo, int $idUbicOrigen, int $idUbicDestino, int $idUsuario, string $motivo, string $observacion = ''): void
+    {
+        if (!$this->tablaExiste('equipo_movimiento')) {
+            return;
+        }
+
+        $stmt = mysqli_prepare($this->cn, "
+            INSERT INTO equipo_movimiento
+                (id_equipo, id_ubicacion_origen, id_ubicacion_destino, id_usuario_movimiento, motivo, observacion)
+            VALUES (?, NULLIF(?, 0), ?, ?, ?, ?)
+        ");
+        mysqli_stmt_bind_param($stmt, 'iiisss', $idEquipo, $idUbicOrigen, $idUbicDestino, $idUsuario, $motivo, $observacion);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    public function obtenerMovimientosEquipo(int $idEquipo): array
+    {
+        if (!$this->tablaExiste('equipo_movimiento')) {
+            return [];
+        }
+
+        $conUbicacion = $this->tablaExiste('equipo_ubicacion');
+        $joinUbic     = $conUbicacion
+            ? "LEFT JOIN equipo_ubicacion uo ON uo.id_ubicacion = m.id_ubicacion_origen
+               LEFT JOIN equipo_ubicacion ud ON ud.id_ubicacion = m.id_ubicacion_destino"
+            : '';
+        $selectUbic   = $conUbicacion
+            ? "uo.nombre_ubicacion AS ubicacion_origen, ud.nombre_ubicacion AS ubicacion_destino,"
+            : "NULL AS ubicacion_origen, NULL AS ubicacion_destino,";
+
+        $stmt = mysqli_prepare($this->cn, "
+            SELECT
+                m.id_movimiento,
+                m.fecha_movimiento,
+                m.motivo,
+                m.observacion,
+                {$selectUbic}
+                CONCAT(u.nombre, ' ', u.apellido_paterno) AS usuario_movimiento
+            FROM equipo_movimiento m
+            LEFT JOIN usuarios u ON u.id = m.id_usuario_movimiento
+            {$joinUbic}
+            WHERE m.id_equipo = ?
+            ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC
+        ");
+        mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        mysqli_stmt_execute($stmt);
+        $rs    = mysqli_stmt_get_result($stmt);
+        $datos = [];
+        while ($fila = mysqli_fetch_assoc($rs)) {
+            $datos[] = $fila;
+        }
+        mysqli_stmt_close($stmt);
+        return $datos;
+    }
+
+    private function obtenerCamposBasicos(int $idEquipo): array
+    {
+        $selectExtra = $this->columnaExiste('equipos', 'id_ubicacion') ? ', id_ubicacion' : '';
+        $stmt = mysqli_prepare($this->cn, "SELECT id_colegio{$selectExtra} FROM equipos WHERE id_equipo = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+        return $fila;
+    }
+
+    private function procesarFotoPrincipal(int $idEquipo, array $post): void
+    {
+        if (!$this->tablaExiste('equipo_fotos')) {
+            return;
+        }
+
+        $idFoto = (int)($post['foto_principal'] ?? 0);
+        if ($idFoto <= 0) {
+            return;
+        }
+
+        // Verify the photo belongs to this equipo
+        $stmt = mysqli_prepare($this->cn, "SELECT 1 FROM equipo_fotos WHERE id_foto = ? AND id_equipo = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'ii', $idFoto, $idEquipo);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $existe = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+
+        if (!$existe) {
+            return;
+        }
+
+        $stmt = mysqli_prepare($this->cn, "UPDATE equipo_fotos SET principal = 0 WHERE id_equipo = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        $stmt = mysqli_prepare($this->cn, "UPDATE equipo_fotos SET principal = 1 WHERE id_foto = ? AND id_equipo = ?");
+        mysqli_stmt_bind_param($stmt, 'ii', $idFoto, $idEquipo);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    // =========================================================================
+    // MONITORES
+    // =========================================================================
+
+    private function normalizarPayloadMonitor(array $post, int $idUsuario, int $idColegio): array
+    {
+        if ($idColegio <= 0) {
+            throw new RuntimeException('No se pudo determinar el colegio del usuario.');
+        }
+
+        $nombre      = trim((string)($post['nombre_monitor'] ?? ''));
+        $serie       = trim((string)($post['numero_serie'] ?? ''));
+        $idEstado    = (int)($post['id_estado'] ?? 1);
+        $idUbicacion = !empty($post['id_ubicacion']) ? (int)$post['id_ubicacion'] : 0;
+
+        if ($nombre === '') {
+            throw new RuntimeException('El nombre del monitor es obligatorio.');
+        }
+        if ($serie === '') {
+            throw new RuntimeException('El número de serie es obligatorio.');
+        }
+        if ($idEstado <= 0) {
+            throw new RuntimeException('Debes seleccionar un estado para el monitor.');
+        }
+        if ($this->tablaExiste('equipo_ubicacion') && $idUbicacion <= 0) {
+            throw new RuntimeException('Debes seleccionar una ubicación para el monitor.');
+        }
+        if ($idUbicacion > 0 && $this->tablaExiste('equipo_ubicacion')) {
+            $stmt = mysqli_prepare($this->cn, "SELECT 1 FROM equipo_ubicacion WHERE id_ubicacion = ? AND id_colegio = ? AND estado = 1 LIMIT 1");
+            mysqli_stmt_bind_param($stmt, 'ii', $idUbicacion, $idColegio);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_store_result($stmt);
+            $valida = mysqli_stmt_num_rows($stmt) > 0;
+            mysqli_stmt_close($stmt);
+            if (!$valida) {
+                throw new RuntimeException('La ubicación seleccionada no pertenece al colegio del usuario.');
+            }
+        }
+
+        return [
+            'id_colegio'          => $idColegio,
+            'id_ubicacion'        => $idUbicacion,
+            'id_usuario_asignado' => (int)($post['id_usuario_asignado'] ?? 0),
+            'id_usuario_registra' => $idUsuario,
+            'id_estado'           => $idEstado,
+            'nombre_monitor'      => $nombre,
+            'marca'               => trim((string)($post['marca'] ?? '')),
+            'modelo'              => trim((string)($post['modelo'] ?? '')),
+            'numero_serie'        => $serie,
+            'codigo_interno'      => trim((string)($post['codigo_interno'] ?? '')),
+            'tamano_monitor'      => trim((string)($post['tamano_monitor'] ?? '')),
+            'resolucion_monitor'  => trim((string)($post['resolucion_monitor'] ?? '')),
+            'tipo_panel'          => trim((string)($post['tipo_panel'] ?? '')),
+            'tipo_conexion'       => trim((string)($post['tipo_conexion'] ?? '')),
+            'observacion'         => trim((string)($post['observacion'] ?? '')),
+            'compra' => [
+                'valor_monitor'  => (int)str_replace([',', '.'], '', (string)($post['valor_monitor'] ?? 0)),
+                'proveedor'      => trim((string)($post['proveedor'] ?? '')),
+                'numero_factura' => trim((string)($post['numero_factura'] ?? '')),
+                'fecha_compra'   => trim((string)($post['fecha_compra'] ?? '')),
+                'observacion'    => trim((string)($post['observacion_compra'] ?? '')),
+            ],
+        ];
+    }
+
+    private function insertarMonitor(array $p): int
+    {
+        $sql = "INSERT INTO monitores
+                (id_colegio, id_ubicacion, id_usuario_asignado, id_usuario_registra, id_estado,
+                 nombre_monitor, marca, modelo, numero_serie, codigo_interno,
+                 tamano_monitor, resolucion_monitor, tipo_panel, tipo_conexion, observacion)
+                VALUES (?, NULLIF(?, 0), NULLIF(?, 0), ?, ?,
+                        ?, ?, ?, ?, ?,
+                        ?, ?, ?, ?, ?)";
+        $stmt = mysqli_prepare($this->cn, $sql);
+        $this->bindParams($stmt, 'iiiiissssssssss', [
+            $p['id_colegio'], $p['id_ubicacion'], $p['id_usuario_asignado'],
+            $p['id_usuario_registra'], $p['id_estado'],
+            $p['nombre_monitor'], $p['marca'], $p['modelo'], $p['numero_serie'], $p['codigo_interno'],
+            $p['tamano_monitor'], $p['resolucion_monitor'], $p['tipo_panel'], $p['tipo_conexion'], $p['observacion'],
+        ]);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+        return (int)mysqli_insert_id($this->cn);
+    }
+
+    private function insertarCompraMonitor(int $idMonitor, array $compra): void
+    {
+        if (!$this->tablaExiste('monitor_compra')) {
+            return;
+        }
+        $fechaCompra = $compra['fecha_compra'] !== '' ? $compra['fecha_compra'] : null;
+        $stmt = mysqli_prepare($this->cn,
+            "INSERT INTO monitor_compra (id_monitor, valor_monitor, proveedor, numero_factura, fecha_compra, observacion)
+             VALUES (?, NULLIF(?, 0), NULLIF(?, ''), NULLIF(?, ''), ?, NULLIF(?, ''))
+             ON DUPLICATE KEY UPDATE
+                valor_monitor = VALUES(valor_monitor),
+                proveedor = VALUES(proveedor),
+                numero_factura = VALUES(numero_factura),
+                fecha_compra = VALUES(fecha_compra),
+                observacion = VALUES(observacion)");
+        mysqli_stmt_bind_param($stmt, 'iissss',
+            $idMonitor, $compra['valor_monitor'], $compra['proveedor'],
+            $compra['numero_factura'], $fechaCompra, $compra['observacion']);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    private function obtenerCompraMonitor(int $idMonitor): array
+    {
+        if (!$this->tablaExiste('monitor_compra')) {
+            return [];
+        }
+        $stmt = mysqli_prepare($this->cn, "SELECT * FROM monitor_compra WHERE id_monitor = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+        return $fila;
+    }
+
+    private function obtenerCamposBasicosMonitor(int $idMonitor): array
+    {
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT id_colegio, id_ubicacion FROM monitores WHERE id_monitor = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+        return $fila;
+    }
+
+    private function eliminarFotosMonitor(int $idMonitor, array $ids): void
+    {
+        if (!$this->tablaExiste('monitor_fotos') || empty($ids)) {
+            return;
+        }
+        foreach ($ids as $idFoto) {
+            $idFoto = (int)$idFoto;
+            if ($idFoto <= 0) {
+                continue;
+            }
+            $stmt = mysqli_prepare($this->cn,
+                "SELECT ruta_foto FROM monitor_fotos WHERE id_foto = ? AND id_monitor = ? LIMIT 1");
+            mysqli_stmt_bind_param($stmt, 'ii', $idFoto, $idMonitor);
+            mysqli_stmt_execute($stmt);
+            $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+            mysqli_stmt_close($stmt);
+            if ($fila && $fila['ruta_foto']) {
+                $rutaFisica = dirname(__DIR__, 2) . '/' . ltrim($fila['ruta_foto'], '/');
+                if (file_exists($rutaFisica)) {
+                    @unlink($rutaFisica);
+                }
+            }
+            $stmtDel = mysqli_prepare($this->cn,
+                "DELETE FROM monitor_fotos WHERE id_foto = ? AND id_monitor = ?");
+            mysqli_stmt_bind_param($stmtDel, 'ii', $idFoto, $idMonitor);
+            mysqli_stmt_execute($stmtDel);
+            mysqli_stmt_close($stmtDel);
+        }
+    }
+
+    private function procesarFotoPrincipalMonitor(int $idMonitor, array $post): void
+    {
+        if (!$this->tablaExiste('monitor_fotos')) {
+            return;
+        }
+        $idFoto = (int)($post['foto_principal'] ?? 0);
+        if ($idFoto <= 0) {
+            return;
+        }
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT 1 FROM monitor_fotos WHERE id_foto = ? AND id_monitor = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'ii', $idFoto, $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $existe = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+        if (!$existe) {
+            return;
+        }
+        $stmt = mysqli_prepare($this->cn,
+            "UPDATE monitor_fotos SET principal = 0 WHERE id_monitor = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        $stmt = mysqli_prepare($this->cn,
+            "UPDATE monitor_fotos SET principal = 1 WHERE id_foto = ? AND id_monitor = ?");
+        mysqli_stmt_bind_param($stmt, 'ii', $idFoto, $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    public function guardarFotosMonitor(int $idMonitor, $files): void
+    {
+        if (!$this->tablaExiste('monitor_fotos')) {
+            return;
+        }
+        if (!isset($files['fotos_monitor']) || !is_array($files['fotos_monitor']['name'] ?? null)) {
+            return;
+        }
+
+        $baseDir = dirname(__DIR__) . '/uploads/monitores/' . $idMonitor;
+        if (!is_dir($baseDir)) {
+            mkdir($baseDir, 0775, true);
+        }
+
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT 1 FROM monitor_fotos WHERE id_monitor = ? AND principal = 1 LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $tienePrincipal = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+
+        $stmtOrden = mysqli_prepare($this->cn,
+            "SELECT COALESCE(MAX(orden_foto), 0) FROM monitor_fotos WHERE id_monitor = ?");
+        mysqli_stmt_bind_param($stmtOrden, 'i', $idMonitor);
+        mysqli_stmt_execute($stmtOrden);
+        $rsOrden = mysqli_stmt_get_result($stmtOrden);
+        $orden   = (int)(mysqli_fetch_row($rsOrden)[0] ?? 0) + 1;
+        mysqli_stmt_close($stmtOrden);
+
+        $stmtIns = mysqli_prepare($this->cn,
+            "INSERT INTO monitor_fotos (id_monitor, ruta_foto, tipo_foto, principal, orden_foto)
+             VALUES (?, ?, 'normal', ?, ?)");
+
+        foreach ($files['fotos_monitor']['name'] as $i => $nombre) {
+            if (($files['fotos_monitor']['error'][$i] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+                continue;
+            }
+            $ext = strtolower(pathinfo($nombre, PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+                continue;
+            }
+            $nombreSeguro = uniqid('mon_', true) . '.' . $ext;
+            $destino      = $baseDir . '/' . $nombreSeguro;
+            if (!move_uploaded_file($files['fotos_monitor']['tmp_name'][$i], $destino)) {
+                throw new RuntimeException('No fue posible guardar una de las fotos del monitor.');
+            }
+            $rutaRelativa = 'inventario/uploads/monitores/' . $idMonitor . '/' . $nombreSeguro;
+            $principal    = $tienePrincipal ? 0 : 1;
+            mysqli_stmt_bind_param($stmtIns, 'isii', $idMonitor, $rutaRelativa, $principal, $orden);
+            mysqli_stmt_execute($stmtIns);
+            $tienePrincipal = true;
+            $orden++;
+        }
+        mysqli_stmt_close($stmtIns);
+    }
+
+    public function obtenerFotosMonitor(int $idMonitor): array
+    {
+        if (!$this->tablaExiste('monitor_fotos')) {
+            return [];
+        }
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT id_foto, ruta_foto, tipo_foto, principal, orden_foto
+             FROM monitor_fotos WHERE id_monitor = ? ORDER BY principal DESC, orden_foto ASC");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        $rs    = mysqli_stmt_get_result($stmt);
+        $datos = [];
+        while ($fila = mysqli_fetch_assoc($rs)) {
+            $datos[] = $fila;
+        }
+        mysqli_stmt_close($stmt);
+        return $datos;
+    }
+
+    public function marcarFotoPrincipalMonitor(int $idMonitor, int $idFoto): void
+    {
+        if (!$this->tablaExiste('monitor_fotos')) {
+            return;
+        }
+        $stmt = mysqli_prepare($this->cn,
+            "SELECT 1 FROM monitor_fotos WHERE id_foto = ? AND id_monitor = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'ii', $idFoto, $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $existe = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+        if (!$existe) {
+            throw new RuntimeException('La foto no pertenece a este monitor.');
+        }
+        $stmt = mysqli_prepare($this->cn,
+            "UPDATE monitor_fotos SET principal = 0 WHERE id_monitor = ?");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+
+        $stmt = mysqli_prepare($this->cn,
+            "UPDATE monitor_fotos SET principal = 1 WHERE id_foto = ? AND id_monitor = ?");
+        mysqli_stmt_bind_param($stmt, 'ii', $idFoto, $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    public function registrarMovimientoMonitor(int $idMonitor, int $idOrigen, int $idDestino, int $idUsuario, string $motivo, string $observacion = ''): void
+    {
+        if (!$this->tablaExiste('monitor_movimiento')) {
+            return;
+        }
+        $stmt = mysqli_prepare($this->cn,
+            "INSERT INTO monitor_movimiento
+             (id_monitor, id_ubicacion_origen, id_ubicacion_destino, id_usuario_movimiento, motivo, observacion)
+             VALUES (?, NULLIF(?, 0), NULLIF(?, 0), ?, ?, ?)");
+        mysqli_stmt_bind_param($stmt, 'iiiiss',
+            $idMonitor, $idOrigen, $idDestino, $idUsuario, $motivo, $observacion);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+
+    public function obtenerMovimientosMonitor(int $idMonitor): array
+    {
+        if (!$this->tablaExiste('monitor_movimiento')) {
+            return [];
+        }
+        $conUbic    = $this->tablaExiste('equipo_ubicacion');
+        $joinUbic   = $conUbic
+            ? "LEFT JOIN equipo_ubicacion uo ON uo.id_ubicacion = m.id_ubicacion_origen
+               LEFT JOIN equipo_ubicacion ud ON ud.id_ubicacion = m.id_ubicacion_destino"
+            : '';
+        $selectUbic = $conUbic
+            ? "uo.nombre_ubicacion AS ubicacion_origen, ud.nombre_ubicacion AS ubicacion_destino,"
+            : "NULL AS ubicacion_origen, NULL AS ubicacion_destino,";
+
+        $stmt = mysqli_prepare($this->cn, "
+            SELECT
+                m.fecha_movimiento,
+                {$selectUbic}
+                m.motivo,
+                m.observacion,
+                CONCAT(u.nombre, ' ', u.apellido_paterno) AS usuario_movimiento
+            FROM monitor_movimiento m
+            LEFT JOIN usuarios u ON u.id = m.id_usuario_movimiento
+            {$joinUbic}
+            WHERE m.id_monitor = ?
+            ORDER BY m.fecha_movimiento DESC, m.id_movimiento DESC
+        ");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        $rs    = mysqli_stmt_get_result($stmt);
+        $datos = [];
+        while ($fila = mysqli_fetch_assoc($rs)) {
+            $datos[] = $fila;
+        }
+        mysqli_stmt_close($stmt);
+        return $datos;
+    }
+
+    public function listarMonitores(array $filtros = []): array
+    {
+        if (!$this->tablaExiste('monitores')) {
+            return [];
+        }
+        $conEliminado = $this->columnaExiste('monitores', 'eliminado');
+        $conUbicacion = $this->tablaExiste('equipo_ubicacion');
+        $conEstado    = $this->tablaExiste('estado_equipo');
+
+        $joinEstado    = $conEstado ? "LEFT JOIN estado_equipo ee ON ee.id_estado = m.id_estado" : '';
+        $selectEstado  = $conEstado
+            ? "COALESCE(ee.nombre_estado, 'Sin estado') AS nombre_estado, COALESCE(ee.color_badge, 'dark') AS color_badge"
+            : "'Sin estado' AS nombre_estado, 'dark' AS color_badge";
+        $joinUbicacion   = $conUbicacion ? "LEFT JOIN equipo_ubicacion eu ON eu.id_ubicacion = m.id_ubicacion" : '';
+        $selectUbicacion = $conUbicacion ? ", eu.nombre_ubicacion, eu.tipo_ubicacion" : ", NULL AS nombre_ubicacion, NULL AS tipo_ubicacion";
+
+        $condiciones = [];
+        $types       = '';
+        $params      = [];
+
+        if ($conEliminado) {
+            $condiciones[] = 'm.eliminado = 0';
+        }
+        if (!empty($filtros['id_colegio'])) {
+            $condiciones[] = 'm.id_colegio = ?';
+            $types .= 'i';
+            $params[] = (int)$filtros['id_colegio'];
+        }
+        if (!empty($filtros['id_estado'])) {
+            $condiciones[] = 'm.id_estado = ?';
+            $types .= 'i';
+            $params[] = (int)$filtros['id_estado'];
+        }
+        if (!empty($filtros['id_usuario_asignado'])) {
+            $condiciones[] = 'm.id_usuario_asignado = ?';
+            $types .= 'i';
+            $params[] = (int)$filtros['id_usuario_asignado'];
+        }
+        if (!empty($filtros['busqueda'])) {
+            $busq          = '%' . $filtros['busqueda'] . '%';
+            $condiciones[] = '(m.nombre_monitor LIKE ? OR m.numero_serie LIKE ? OR m.marca LIKE ? OR m.modelo LIKE ? OR m.codigo_interno LIKE ?)';
+            $types .= 'sssss';
+            for ($i = 0; $i < 5; $i++) {
+                $params[] = $busq;
+            }
+        }
+
+        $where = $condiciones ? 'WHERE ' . implode(' AND ', $condiciones) : '';
+
+        $sql = "SELECT
+                    m.id_monitor,
+                    m.nombre_monitor,
+                    m.marca,
+                    m.modelo,
+                    m.numero_serie,
+                    m.codigo_interno,
+                    m.tamano_monitor,
+                    m.id_estado,
+                    c.nom_colegio,
+                    CONCAT(ua.nombre, ' ', ua.apellido_paterno) AS usuario_asignado,
+                    {$selectEstado}
+                    {$selectUbicacion}
+                FROM monitores m
+                INNER JOIN colegio c ON c.id_colegio = m.id_colegio
+                LEFT JOIN usuarios ua ON ua.id = m.id_usuario_asignado
+                {$joinEstado}
+                {$joinUbicacion}
+                {$where}
+                ORDER BY m.id_monitor DESC";
+
+        $stmt = mysqli_prepare($this->cn, $sql);
+        if ($types !== '') {
+            $this->bindParams($stmt, $types, $params);
+        }
+        mysqli_stmt_execute($stmt);
+        $rs    = mysqli_stmt_get_result($stmt);
+        $datos = [];
+        while ($fila = mysqli_fetch_assoc($rs)) {
+            $fila['badge_estado'] = '<span class="badge text-bg-' .
+                htmlspecialchars($fila['color_badge'] ?? 'dark', ENT_QUOTES, 'UTF-8') . '">' .
+                htmlspecialchars($fila['nombre_estado'] ?? '', ENT_QUOTES, 'UTF-8') . '</span>';
+            $datos[] = $fila;
+        }
+        mysqli_stmt_close($stmt);
+        return $datos;
+    }
+
+    public function obtenerMonitorPorId(int $idMonitor): ?array
+    {
+        if (!$this->tablaExiste('monitores')) {
+            return null;
+        }
+        $conUbicacion  = $this->tablaExiste('equipo_ubicacion');
+        $conEstado     = $this->tablaExiste('estado_equipo');
+        $joinEstado    = $conEstado ? "LEFT JOIN estado_equipo ee ON ee.id_estado = m.id_estado" : '';
+        $selectEstado  = $conEstado
+            ? "COALESCE(ee.nombre_estado, 'Sin estado') AS nombre_estado, COALESCE(ee.color_badge, 'dark') AS color_badge,"
+            : "'Sin estado' AS nombre_estado, 'dark' AS color_badge,";
+        $joinUbicacion   = $conUbicacion ? "LEFT JOIN equipo_ubicacion eu ON eu.id_ubicacion = m.id_ubicacion" : '';
+        $selectUbicacion = $conUbicacion ? ", eu.nombre_ubicacion, eu.tipo_ubicacion" : ", NULL AS nombre_ubicacion, NULL AS tipo_ubicacion";
+
+        $stmt = mysqli_prepare($this->cn, "
+            SELECT m.*,
+                c.nom_colegio,
+                CONCAT(ua.nombre, ' ', ua.apellido_paterno) AS usuario_asignado,
+                CONCAT(ur.nombre, ' ', ur.apellido_paterno) AS nombre_usuario_registra,
+                {$selectEstado}
+                NULL AS _dummy
+                {$selectUbicacion}
+            FROM monitores m
+            INNER JOIN colegio c ON c.id_colegio = m.id_colegio
+            LEFT JOIN usuarios ua ON ua.id = m.id_usuario_asignado
+            LEFT JOIN usuarios ur ON ur.id = m.id_usuario_registra
+            {$joinEstado}
+            {$joinUbicacion}
+            WHERE m.id_monitor = ?
+        ");
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        mysqli_stmt_close($stmt);
+
+        if (!$fila) {
+            return null;
+        }
+
+        $fila['compra']      = $this->obtenerCompraMonitor($idMonitor);
+        $fila['fotos']       = $this->obtenerFotosMonitor($idMonitor);
+        $fila['movimientos'] = $this->obtenerMovimientosMonitor($idMonitor);
+        return $fila;
+    }
+
+    public function guardarMonitor(array $post, $files, int $idUsuario, int $idColegio): int
+    {
+        $payload = $this->normalizarPayloadMonitor($post, $idUsuario, $idColegio);
+
+        mysqli_begin_transaction($this->cn);
+        try {
+            $idMonitor = $this->insertarMonitor($payload);
+            $this->insertarCompraMonitor($idMonitor, $payload['compra']);
+            $this->guardarFotosMonitor($idMonitor, $files);
+
+            if ($payload['id_ubicacion'] > 0) {
+                $this->registrarMovimientoMonitor(
+                    $idMonitor, 0, $payload['id_ubicacion'], $idUsuario,
+                    'Alta inicial de inventario',
+                    'Monitor registrado inicialmente en esta ubicación.'
+                );
+            }
+            mysqli_commit($this->cn);
+            return $idMonitor;
+        } catch (Throwable $e) {
+            mysqli_rollback($this->cn);
+            throw $e;
+        }
+    }
+
+    public function actualizarMonitor(int $idMonitor, array $post, $files, int $idUsuario): bool
+    {
+        $actual = $this->obtenerCamposBasicosMonitor($idMonitor);
+        if (!$actual) {
+            throw new RuntimeException('El monitor indicado no existe.');
+        }
+        $idColegio           = (int)$actual['id_colegio'];
+        $idUbicacionAnterior = (int)($actual['id_ubicacion'] ?? 0);
+        $payload             = $this->normalizarPayloadMonitor($post, $idUsuario, $idColegio);
+        $idUbicacionNueva    = (int)$payload['id_ubicacion'];
+        $obsMovimiento       = trim((string)($post['observacion_movimiento'] ?? ''));
+
+        mysqli_begin_transaction($this->cn);
+        try {
+            $sql = "UPDATE monitores SET
+                        id_ubicacion        = NULLIF(?, 0),
+                        id_usuario_asignado = NULLIF(?, 0),
+                        id_estado           = ?,
+                        nombre_monitor      = ?,
+                        marca               = ?,
+                        modelo              = ?,
+                        numero_serie        = ?,
+                        codigo_interno      = ?,
+                        tamano_monitor      = ?,
+                        resolucion_monitor  = ?,
+                        tipo_panel          = ?,
+                        tipo_conexion       = ?,
+                        observacion         = ?
+                    WHERE id_monitor = ?";
+            $stmt = mysqli_prepare($this->cn, $sql);
+            $this->bindParams($stmt, 'iiissssssssssi', [
+                $idUbicacionNueva,
+                $payload['id_usuario_asignado'],
+                $payload['id_estado'],
+                $payload['nombre_monitor'],
+                $payload['marca'],
+                $payload['modelo'],
+                $payload['numero_serie'],
+                $payload['codigo_interno'],
+                $payload['tamano_monitor'],
+                $payload['resolucion_monitor'],
+                $payload['tipo_panel'],
+                $payload['tipo_conexion'],
+                $payload['observacion'],
+                $idMonitor,
+            ]);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+
+            if ($idUbicacionNueva > 0 && $idUbicacionNueva !== $idUbicacionAnterior) {
+                $this->registrarMovimientoMonitor(
+                    $idMonitor, $idUbicacionAnterior, $idUbicacionNueva, $idUsuario,
+                    'Cambio de ubicación', $obsMovimiento
+                );
+            }
+
+            $this->insertarCompraMonitor($idMonitor, $payload['compra']);
+            $this->eliminarFotosMonitor($idMonitor, $post['fotos_eliminar'] ?? []);
+            $this->procesarFotoPrincipalMonitor($idMonitor, $post);
+            $this->guardarFotosMonitor($idMonitor, $files);
+
+            mysqli_commit($this->cn);
+            return true;
+        } catch (Throwable $e) {
+            mysqli_rollback($this->cn);
+            throw $e;
+        }
+    }
+
+    public function eliminarMonitor(int $idMonitor): bool
+    {
+        if (!$this->tablaExiste('monitores')) {
+            throw new RuntimeException('Tabla monitores no existe.');
+        }
+        if ($this->columnaExiste('monitores', 'eliminado')) {
+            $stmt = mysqli_prepare($this->cn,
+                "UPDATE monitores SET eliminado = 1 WHERE id_monitor = ?");
+        } else {
+            $stmt = mysqli_prepare($this->cn,
+                "UPDATE monitores SET id_estado = 4 WHERE id_monitor = ?");
+        }
+        mysqli_stmt_bind_param($stmt, 'i', $idMonitor);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+        return true;
+    }
+
+    public function obtenerResumenMonitores(array $filtros = []): array
+    {
+        if (!$this->tablaExiste('monitores')) {
+            return [];
+        }
+        $conEliminado = $this->columnaExiste('monitores', 'eliminado');
+        $condiciones  = $conEliminado ? ['m.eliminado = 0'] : [];
+        $types        = '';
+        $params       = [];
+
+        if (!empty($filtros['id_colegio'])) {
+            $condiciones[] = 'm.id_colegio = ?';
+            $types .= 'i';
+            $params[] = (int)$filtros['id_colegio'];
+        }
+        $where = $condiciones ? 'WHERE ' . implode(' AND ', $condiciones) : '';
+
+        $sql = "SELECT
+                    COUNT(*) AS total_monitores,
+                    SUM(CASE WHEN m.id_usuario_asignado IS NULL OR m.id_usuario_asignado = 0 THEN 1 ELSE 0 END) AS total_sin_asignar,
+                    SUM(CASE WHEN m.id_estado = 1 THEN 1 ELSE 0 END) AS total_activos,
+                    SUM(CASE WHEN m.id_estado = 2 THEN 1 ELSE 0 END) AS total_bodega,
+                    SUM(CASE WHEN m.id_estado = 3 THEN 1 ELSE 0 END) AS total_reparacion,
+                    SUM(CASE WHEN m.id_estado = 4 THEN 1 ELSE 0 END) AS total_baja
+                FROM monitores m {$where}";
+
+        $stmt = mysqli_prepare($this->cn, $sql);
+        if ($types !== '') {
+            $this->bindParams($stmt, $types, $params);
+        }
+        mysqli_stmt_execute($stmt);
+        $resumen = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+        return $resumen;
     }
 }
