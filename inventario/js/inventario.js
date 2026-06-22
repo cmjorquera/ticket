@@ -31,13 +31,11 @@
         const estados  = (window.INVENTARIO_CONFIG && window.INVENTARIO_CONFIG.estadosEquipo) || [];
         const idEquipo = parseInt(row.id_equipo, 10);
         const idEstado = parseInt(row.id_estado, 10);
-        const actual   = estados.find(function (e) { return e.id_estado === idEstado; });
-        const color    = actual ? escapeHtml(actual.color_badge) : 'secondary';
         const options  = estados.map(function (e) {
             const sel = e.id_estado === idEstado ? ' selected' : '';
             return '<option value="' + e.id_estado + '"' + sel + '>' + escapeHtml(e.nombre_estado) + '</option>';
         }).join('');
-        return '<select class="inv-estado-select badge text-bg-' + color + ' border-0"' +
+        return '<select class="form-select form-select-sm inv-estado-select"' +
                ' data-id="' + idEquipo + '"' +
                ' onchange="InventarioFunciones.cambiarEstadoEquipo(this)">' +
                options + '</select>';
@@ -583,12 +581,6 @@
         static cambiarEstadoEquipo(selectEl) {
             const idEquipo = parseInt(selectEl.getAttribute('data-id'), 10);
             const idEstado = parseInt(selectEl.value, 10);
-            const estados  = (window.INVENTARIO_CONFIG && window.INVENTARIO_CONFIG.estadosEquipo) || [];
-
-            // Actualizar color del select inmediatamente
-            const estadoSel = estados.find(function (e) { return e.id_estado === idEstado; });
-            estados.forEach(function (e) { selectEl.classList.remove('text-bg-' + e.color_badge); });
-            if (estadoSel) { selectEl.classList.add('text-bg-' + estadoSel.color_badge); }
 
             selectEl.disabled = true;
             $.post(window.INVENTARIO_CONFIG.endpoints.cambiarEstado, { id_equipo: idEquipo, id_estado: idEstado }, null, 'json')

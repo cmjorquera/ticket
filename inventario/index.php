@@ -85,7 +85,7 @@ require __DIR__ . '/componentes/layout_top.php';
                 <div class="inv-hero mb-4<?= $_heroBranded ? ' inv-hero--branded' : '' ?>"<?= $_heroStyle ?>>
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                         <div>
-                            <span class="inv-kicker">Módulo institucional</span>
+                            <span class="inv-kicker">Módulo Inventario</span>
                             <h1 class="inv-title mb-2">Gestión de Inventario</h1>
                             <p class="inv-subtitle mb-0">Registra, organiza y da seguimiento al equipamiento tecnológico por colegio desde una sola vista operativa.</p>
                         </div>
