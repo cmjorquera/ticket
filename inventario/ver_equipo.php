@@ -18,7 +18,7 @@ require __DIR__ . '/componentes/detalle_equipo.php';
 
 <script>
 window.INVENTARIO_CONFIG = window.INVENTARIO_CONFIG || {};
-window.INVENTARIO_CONFIG.qrText = <?= json_encode($equipo['qr_code']) ?>;
+window.INVENTARIO_CONFIG.qrText = <?= json_encode(inventario_sistema_url_absoluta('codigosQR/inventario/equipoQRinformacion.php?id=' . (int)$equipo['id_equipo'])) ?>;
 </script>
 
 <?php require __DIR__ . '/componentes/layout_bottom.php'; ?>

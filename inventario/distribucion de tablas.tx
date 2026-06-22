@@ -13,7 +13,15 @@ Distribucion de tablas de inventario
 - numero_serie (obligatorio, unico)
 - tipo_pc (VARCHAR, valor textual del catalogo tipo_pc_catalogo — obligatorio)
 - qr_code
-- id_estado (obligatorio)
+- id_estado (obligatorio, estado operativo; cambiar a Baja NO elimina el equipo)
+- eliminado (TINYINT, 0 = visible, 1 = eliminado logicamente; requiere migracion: migracion_add_equipos_eliminado.sql)
+- fecha_eliminado (nullable, auditoria de eliminacion logica)
+- id_usuario_elimina (nullable, usuario que marco eliminado = 1)
+
+Reglas:
+- El listado de PC solo muestra equipos.eliminado = 0.
+- El boton basurero marca eliminado = 1 y no cambia id_estado.
+- El cambio de estado se realiza desde el badge de estado.
 
 2. Tabla relacionada: equipos_compra
 - id_equipo
@@ -113,6 +121,8 @@ Datos actuales:
 Relacion:
 - equipos.id_estado referencia a estado_equipo.id_estado (N:1).
 - Un estado puede estar asociado a muchos equipos.
+- `equipos.id_estado` es operativo. Estado "Baja" no equivale a eliminacion logica.
+- Los cambios de estado se registran en `equipo_estado_historial`.
 
 10. Tabla de historial: equipo_movimiento
 Objetivo:
@@ -271,10 +281,28 @@ Relaciones:
 - equipos 1:N equipo_asignacion_historial (por id_equipo).
 - monitores 1:N monitor_asignacion_historial (por id_monitor).
 
+19. Tabla de historial: equipo_estado_historial
+Objetivo:
+- Registra cada cambio de estado operativo de equipos PC.
+- Se usa cuando el usuario cambia el badge de estado desde el listado.
+
+Campos:
+- id_historial: clave primaria autoincremental.
+- id_equipo: equipo relacionado.
+- id_estado_anterior: estado antes del cambio.
+- id_estado_nuevo: estado nuevo.
+- id_usuario_accion: usuario de sesion que realizo el cambio.
+- fecha_accion: fecha y hora de la accion.
+- observacion: detalle textual. Para listado: "Cambio de estado desde listado.".
+
+Reglas:
+- Cambiar a Baja solo actualiza id_estado.
+- Eliminar desde basurero solo marca eliminado = 1.
+- No borrar fisicamente registros de equipos.
 
 === CARGA MASIVA MONITORES ===
 
-19. Archivos de carga masiva de monitores
+20. Archivos de carga masiva de monitores
 
 Flujo de importacion masiva de monitores:
   1. Usuario descarga plantilla desde exportar_plantilla_monitores.php.

@@ -1,5 +1,6 @@
 <?php
 $detalleOffcanvas = !empty($detalleOffcanvas);
+$qrFichaUrl = inventario_sistema_url_absoluta('codigosQR/inventario/equipoQRinformacion.php?id=' . (int)$equipo['id_equipo']);
 $fotoPrincipal = null;
 $fotosGaleria  = [];
 foreach (($equipo['fotos'] ?? []) as $foto) {
@@ -212,7 +213,8 @@ foreach (($equipo['fotos'] ?? []) as $foto) {
         <div class="card shadow-sm border-0 inv-panel">
             <div class="card-body">
                 <h5 class="mb-3">QR del equipo</h5>
-                <div<?= $detalleOffcanvas ? '' : ' id="qrEquipo"' ?> class="d-flex justify-content-center js-qr-equipo" data-qr-text="<?= inventario_h($equipo['qr_code']) ?>"></div>
+                <div<?= $detalleOffcanvas ? '' : ' id="qrEquipo"' ?> class="d-flex justify-content-center js-qr-equipo" data-qr-text="<?= inventario_h($qrFichaUrl) ?>"></div>
+                <p class="small text-muted text-center mt-2 mb-0"><?= inventario_h($qrFichaUrl) ?></p>
             </div>
         </div>
     </div>

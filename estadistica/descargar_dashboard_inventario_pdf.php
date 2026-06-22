@@ -1,24 +1,15 @@
 <?php
 session_start();
 
+if (function_exists('mysqli_report')) {
+    mysqli_report(MYSQLI_REPORT_OFF);
+}
+ob_start();
+
 require_once __DIR__ . '/../class/conexion.php';
 require_once __DIR__ . '/../class/funciones.php';
 require_once __DIR__ . '/../PDF/PDF/fpdf.php';
 require_once __DIR__ . '/dashboard_inventario_data.php';
-
-$idUsuarioSession = (int)($_SESSION['id'] ?? 0);
-if ($idUsuarioSession <= 0) {
-    http_response_code(401);
-    exit('No autorizado');
-}
-
-$db = new MySQL('', '', '');
-$db->set_charset('utf8mb4');
-$funciones = new Funciones();
-$filters = di_parse_filters($_GET);
-$data = di_dashboard_data($db, $funciones, $idUsuarioSession, $filters);
-$ctx = $data['ctx'];
-$kpis = $data['kpis'];
 
 class DashboardInventarioPdf extends FPDF
 {
@@ -44,7 +35,14 @@ class DashboardInventarioPdf extends FPDF
 
     public function txt($text)
     {
-        return utf8_decode((string)$text);
+        $text = (string)$text;
+        if (function_exists('iconv')) {
+            $converted = @iconv('UTF-8', 'ISO-8859-1//TRANSLIT', $text);
+            if ($converted !== false) {
+                return $converted;
+            }
+        }
+        return function_exists('utf8_decode') ? utf8_decode($text) : $text;
     }
 
     public function sectionTitle($title)
@@ -73,70 +71,97 @@ class DashboardInventarioPdf extends FPDF
     }
 }
 
-$pdf = new DashboardInventarioPdf('L', 'mm', 'A4');
-$pdf->AliasNbPages();
-$pdf->SetMargins(12, 12, 12);
-$pdf->AddPage();
+try {
+    $idUsuarioSession = (int)($_SESSION['id'] ?? 0);
+    if ($idUsuarioSession <= 0) {
+        http_response_code(401);
+        exit('No autorizado');
+    }
 
-$pdf->SetFont('Arial', '', 9);
-$pdf->SetTextColor(51, 65, 85);
-$pdf->Cell(0, 6, $pdf->txt('Fecha de generacion: ' . date('d-m-Y H:i')), 0, 1);
-$pdf->Cell(0, 6, $pdf->txt('Colegio: ' . $ctx['colegio_label']), 0, 1);
-$pdf->Cell(0, 6, $pdf->txt('Periodo: ' . date('d-m-Y', strtotime($filters['desde'])) . ' al ' . date('d-m-Y', strtotime($filters['hasta']))), 0, 1);
+    $db = new MySQL('', '', '');
+    $db->set_charset('utf8mb4');
+    $funciones = new Funciones();
+    $filters = di_parse_filters($_GET);
+    $data = di_dashboard_data($db, $funciones, $idUsuarioSession, $filters);
+    $ctx = $data['ctx'];
+    $kpis = $data['kpis'];
 
-$pdf->sectionTitle('KPIs principales');
-$kpiWidths = [42, 42, 42, 42, 42, 58];
-$pdf->row($kpiWidths, ['Total PC', 'Total monitores', 'Activos', 'Reparacion', 'Baja', 'Valor total'], true, ['C','C','C','C','C','C']);
-$pdf->row($kpiWidths, [
-    number_format($kpis['total_pc'], 0, ',', '.'),
-    number_format($kpis['total_monitores'], 0, ',', '.'),
-    number_format($kpis['activos'], 0, ',', '.'),
-    number_format($kpis['reparacion'], 0, ',', '.'),
-    number_format($kpis['baja'], 0, ',', '.'),
-    di_money($kpis['valor']),
-], false, ['C','C','C','C','C','R']);
+    $pdf = new DashboardInventarioPdf('L', 'mm', 'A4');
+    $pdf->AliasNbPages();
+    $pdf->SetMargins(12, 12, 12);
+    $pdf->AddPage();
 
-$pdf->sectionTitle('Resumen por colegio');
-$widths = [76, 22, 26, 24, 28, 22, 42];
-$pdf->row($widths, ['Colegio', 'PC', 'Monitores', 'Activos', 'Reparacion', 'Baja', 'Valor inventario'], true, ['L','R','R','R','R','R','R']);
-foreach (array_slice($data['resumen_colegio'], 0, 18) as $row) {
-    $pdf->row($widths, [
-        $row['nom_colegio'],
-        number_format((int)$row['pc'], 0, ',', '.'),
-        number_format((int)$row['monitores'], 0, ',', '.'),
-        number_format((int)$row['activos'], 0, ',', '.'),
-        number_format((int)$row['reparacion'], 0, ',', '.'),
-        number_format((int)$row['baja'], 0, ',', '.'),
-        di_money($row['valor']),
-    ], false, ['L','R','R','R','R','R','R']);
+    $pdf->SetFont('Arial', '', 9);
+    $pdf->SetTextColor(51, 65, 85);
+    $pdf->Cell(0, 6, $pdf->txt('Fecha de generacion: ' . date('d-m-Y H:i')), 0, 1);
+    $pdf->Cell(0, 6, $pdf->txt('Colegio: ' . $ctx['colegio_label']), 0, 1);
+    $pdf->Cell(0, 6, $pdf->txt('Periodo: ' . date('d-m-Y', strtotime($filters['desde'])) . ' al ' . date('d-m-Y', strtotime($filters['hasta']))), 0, 1);
+
+    $pdf->sectionTitle('KPIs principales');
+    $kpiWidths = [42, 42, 42, 42, 42, 58];
+    $pdf->row($kpiWidths, ['Total PC', 'Total monitores', 'Activos', 'Reparacion', 'Baja', 'Valor total'], true, ['C','C','C','C','C','C']);
+    $pdf->row($kpiWidths, [
+        number_format($kpis['total_pc'], 0, ',', '.'),
+        number_format($kpis['total_monitores'], 0, ',', '.'),
+        number_format($kpis['activos'], 0, ',', '.'),
+        number_format($kpis['reparacion'], 0, ',', '.'),
+        number_format($kpis['baja'], 0, ',', '.'),
+        di_money($kpis['valor']),
+    ], false, ['C','C','C','C','C','R']);
+
+    $pdf->sectionTitle('Resumen por colegio');
+    $widths = [76, 22, 26, 24, 28, 22, 42];
+    $pdf->row($widths, ['Colegio', 'PC', 'Monitores', 'Activos', 'Reparacion', 'Baja', 'Valor inventario'], true, ['L','R','R','R','R','R','R']);
+    foreach (array_slice($data['resumen_colegio'], 0, 18) as $row) {
+        $pdf->row($widths, [
+            $row['nom_colegio'],
+            number_format((int)$row['pc'], 0, ',', '.'),
+            number_format((int)$row['monitores'], 0, ',', '.'),
+            number_format((int)$row['activos'], 0, ',', '.'),
+            number_format((int)$row['reparacion'], 0, ',', '.'),
+            number_format((int)$row['baja'], 0, ',', '.'),
+            di_money($row['valor']),
+        ], false, ['L','R','R','R','R','R','R']);
+    }
+
+    $pdf->sectionTitle('Top 10 ubicaciones con mas activos');
+    $widthsUbic = [100, 100, 32];
+    $pdf->row($widthsUbic, ['Ubicacion', 'Colegio', 'Activos'], true, ['L','L','R']);
+    foreach (array_slice($data['top_ubicaciones'], 0, 10) as $row) {
+        $pdf->row($widthsUbic, [$row['ubicacion'], $row['nom_colegio'], number_format((int)$row['total'], 0, ',', '.')], false, ['L','L','R']);
+    }
+
+    $pdf->sectionTitle('Ultimos 10 movimientos');
+    $widthsMov = [30, 20, 50, 45, 45, 38, 36];
+    $pdf->row($widthsMov, ['Fecha', 'Tipo', 'Activo', 'Origen', 'Destino', 'Usuario', 'Motivo'], true);
+    foreach (array_slice($data['movimientos'], 0, 10) as $row) {
+        $pdf->row($widthsMov, [
+            $row['fecha'] ? date('d-m-Y H:i', strtotime($row['fecha'])) : '',
+            $row['tipo_activo'],
+            $row['activo'],
+            $row['origen'],
+            $row['destino'],
+            trim((string)$row['usuario']) ?: 'Sin usuario',
+            $row['motivo'],
+        ]);
+    }
+
+    $pdf->Ln(4);
+    $pdf->SetFont('Arial', 'I', 8);
+    $pdf->SetTextColor(100, 116, 139);
+    $pdf->MultiCell(0, 5, $pdf->txt('Este reporte resume informacion ejecutiva. No incluye todos los registros individuales para mantener un PDF breve y legible.'));
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    $pdf->Output('I', 'reporte_ejecutivo_inventario_' . date('Ymd_His') . '.pdf');
+} catch (Throwable $e) {
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    error_log('Dashboard inventario PDF error: ' . $e->getMessage() . ' en ' . $e->getFile() . ':' . $e->getLine());
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'No fue posible generar el PDF del dashboard de inventario. Revise el error_log del servidor.';
 }
-
-$pdf->sectionTitle('Top 10 ubicaciones con mas activos');
-$widthsUbic = [100, 100, 32];
-$pdf->row($widthsUbic, ['Ubicacion', 'Colegio', 'Activos'], true, ['L','L','R']);
-foreach (array_slice($data['top_ubicaciones'], 0, 10) as $row) {
-    $pdf->row($widthsUbic, [$row['ubicacion'], $row['nom_colegio'], number_format((int)$row['total'], 0, ',', '.')], false, ['L','L','R']);
-}
-
-$pdf->sectionTitle('Ultimos 10 movimientos');
-$widthsMov = [32, 22, 55, 48, 48, 40, 36];
-$pdf->row($widthsMov, ['Fecha', 'Tipo', 'Activo', 'Origen', 'Destino', 'Usuario', 'Motivo'], true);
-foreach (array_slice($data['movimientos'], 0, 10) as $row) {
-    $pdf->row($widthsMov, [
-        $row['fecha'] ? date('d-m-Y H:i', strtotime($row['fecha'])) : '',
-        $row['tipo_activo'],
-        $row['activo'],
-        $row['origen'],
-        $row['destino'],
-        trim((string)$row['usuario']) ?: 'Sin usuario',
-        $row['motivo'],
-    ]);
-}
-
-$pdf->Ln(4);
-$pdf->SetFont('Arial', 'I', 8);
-$pdf->SetTextColor(100, 116, 139);
-$pdf->MultiCell(0, 5, $pdf->txt('Este reporte resume informacion ejecutiva. No incluye todos los registros individuales para mantener un PDF breve y legible.'));
-
-$pdf->Output('I', 'reporte_ejecutivo_inventario_' . date('Ymd_His') . '.pdf');
 exit;

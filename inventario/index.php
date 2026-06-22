@@ -336,14 +336,22 @@ window.INVENTARIO_CONFIG = {
     endpoints: {
         listar:          'ajax/listar_equipos.php',
         detalle:         'ajax/obtener_detalle_equipo.php',
-        eliminar:        'eliminar_logico_equipo.php',
+        cambiarEstado:   'ajax/cambiar_estado_equipo.php',
+        eliminar:        'ajax/eliminar_equipo.php',
         liberarEquipo:   'ajax/liberar_equipo.php',
         listarMonitores: 'ajax/listar_monitores.php',
         detalleMonitor:  'ajax/obtener_detalle_monitor.php',
         fotosMonitor:    'ajax/obtener_fotos_monitor.php',
         eliminarMonitor: 'ajax/eliminar_monitor.php',
         liberarMonitor:  'ajax/liberar_monitor.php'
-    }
+    },
+    estadosEquipo: <?= json_encode(array_map(static function ($estado) {
+        return [
+            'id_estado'    => (int)$estado['id_estado'],
+            'nombre_estado'=> (string)$estado['nombre_estado'],
+            'color_badge'  => (string)($estado['color_badge'] ?? 'secondary'),
+        ];
+    }, $estados), JSON_UNESCAPED_UNICODE) ?>
 };
 </script>
 

@@ -839,7 +839,20 @@
 }
 
 .inv-detail-offcanvas {
-    width: min(920px, 96vw);
+    width: min(1200px, 98vw);
+}
+
+/* Select de estado inline en la tabla (reemplaza el modal de SweetAlert) */
+.inv-estado-select {
+    border: none;
+    border-radius: 0.375rem;
+    padding: 0.25em 0.5em;
+    font-size: 0.75em;
+    font-weight: 700;
+    cursor: pointer;
+    background-image: none;
+    line-height: 1.2;
+    min-width: 90px;
 }
 
 .inv-qr-print-image {

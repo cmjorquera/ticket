@@ -194,6 +194,9 @@
         <div>numero_serie</div>
         <div>tipo_pc <span class="field-tag">← tipo_pc_catalogo</span></div>
         <div>qr_code</div>
+        <div>eliminado <span class="field-tag">0=visible · 1=eliminado</span></div>
+        <div>fecha_eliminado <span class="field-tag">nullable</span></div>
+        <div>id_usuario_elimina <span class="field-tag">nullable</span></div>
       </div>
     </div>
 
@@ -306,6 +309,19 @@
         <div class="field-fk">id_usuario_accion <span class="field-tag">FK → usuarios</span></div>
         <div>fecha_accion <span class="field-tag">auto</span></div>
         <div>motivo</div>
+        <div>observacion</div>
+      </div>
+    </div>
+
+    <div class="entity">
+      <div class="entity-header h-movement">equipo_estado_historial</div>
+      <div class="entity-fields">
+        <div class="field-pk">id_historial <span class="field-tag">PK</span></div>
+        <div class="field-fk">id_equipo <span class="field-tag">FK → equipos</span></div>
+        <div>id_estado_anterior <span class="field-tag">nullable</span></div>
+        <div>id_estado_nuevo</div>
+        <div class="field-fk">id_usuario_accion <span class="field-tag">FK → usuarios</span></div>
+        <div>fecha_accion <span class="field-tag">auto</span></div>
         <div>observacion</div>
       </div>
     </div>

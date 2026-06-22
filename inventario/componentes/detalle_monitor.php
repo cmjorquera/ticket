@@ -1,5 +1,6 @@
 <?php
 $detalleOffcanvas = !empty($detalleOffcanvas);
+$qrFichaUrl = inventario_sistema_url_absoluta('codigosQR/inventario/monitorQRinformacion.php?id=' . (int)$monitor['id_monitor']);
 $fotoPrincipal = null;
 $fotosGaleria  = [];
 foreach (($monitor['fotos'] ?? []) as $foto) {
@@ -185,5 +186,13 @@ foreach (($monitor['fotos'] ?? []) as $foto) {
             </div>
         </div>
         <?php endif; ?>
+
+        <div class="card shadow-sm border-0 inv-panel">
+            <div class="card-body">
+                <h5 class="mb-3">QR del monitor</h5>
+                <div class="d-flex justify-content-center js-qr-equipo" data-qr-text="<?= inventario_h($qrFichaUrl) ?>"></div>
+                <p class="small text-muted text-center mt-2 mb-0"><?= inventario_h($qrFichaUrl) ?></p>
+            </div>
+        </div>
     </div>
 </div>

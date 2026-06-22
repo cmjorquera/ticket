@@ -70,10 +70,30 @@ function inventario_url($ruta = '')
     return $ruta === '' ? $base : $base . '/' . ltrim($ruta, '/');
 }
 
+function inventario_url_absoluta($ruta = '')
+{
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $scheme = $https ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+    return $scheme . '://' . $host . inventario_url($ruta);
+}
+
 function inventario_sistema_url($ruta = '')
 {
     $ruta = ltrim((string)$ruta, '/');
     return '../' . $ruta;
+}
+
+function inventario_sistema_url_absoluta($ruta = '')
+{
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $scheme = $https ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+    return $scheme . '://' . $host . '/' . ltrim((string)$ruta, '/');
 }
 
 function inventario_h($valor)

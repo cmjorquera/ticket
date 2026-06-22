@@ -1,4 +1,4 @@
-LOGICA DEL MODULO INVENTARIO 
+LOGICA DEL MODULO INVENTARIO
 ============================
 
 1. Objetivo general
@@ -173,7 +173,7 @@ LOGICA DEL MODULO INVENTARIO
 - `tipo_foto` se puede mantener solo si a futuro se volveran a manejar tipos distintos de imagen.
 
 14. Regla de trabajo acordada
-- Toda nueva decision de estructura o logica del modulo inventario debe quedar documentada en este archivo `inventario/logica.txt`.
+- Toda nueva decision de estructura o logica del modulo inventario debe quedar documentada en este archivo `inventario/logica/logica.txt`.
 
 15. Modulo de carga masiva de equipos
 NOTA: $_SESSION no almacena 'id_colegio'. El colegio del usuario se obtiene
@@ -343,6 +343,17 @@ El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa con
 - Migracion: `inventario/sql/migracion_add_equipos_eliminado.sql`.
 - Endpoint de eliminacion: `inventario/ajax/eliminar_equipo.php`.
 - Endpoint de cambio de estado: `inventario/ajax/cambiar_estado_equipo.php`.
+
+16.2 Eliminacion logica de monitores
+- `monitores.eliminado` representa eliminacion logica:
+  - 0 = monitor visible.
+  - 1 = monitor eliminado logicamente.
+- El listado de Monitores y sus KPIs solo consideran monitores con `eliminado = 0`.
+- El boton basurero NO cambia `id_estado`.
+- El boton basurero marca `eliminado = 1` en la tabla `monitores`.
+- No se borran registros fisicos de `monitores`.
+- Migracion: `inventario/sql/migracion_add_monitores_eliminado.sql`.
+- Endpoint de eliminacion: `inventario/ajax/eliminar_monitor.php`.
 
 17. Fotos de equipo
 - Las fotos se guardan fisicamente en:
@@ -626,7 +637,7 @@ Tablas SQL:
 36. Dos tipos de monitores — distincion importante
 Existen dos conceptos de "monitor" completamente separados en el inventario:
 
-A) Monitores asociados al PC (tabla: equipo_monitor)
+A) equipo_monitor — Monitores asociados al PC (LEGACY)
 - Son los monitores fisicamente conectados o asignados a un equipo PC especifico.
 - Se administran DENTRO del formulario de PC (registrar_equipo.php y editar_equipo.php).
 - Aparecen en la seccion accordion "Monitores asociados al PC".
@@ -634,8 +645,10 @@ A) Monitores asociados al PC (tabla: equipo_monitor)
   codigo_monitor, serie_monitor, tamano_monitor, resolucion_monitor, orden_monitor.
 - Al editar un PC, se borran y reinsertan (DELETE + INSERT en limpiarRelacionados + guardarTablasRelacionadas).
 - Boton "Agregar monitor" tiene id="btnAgregarMonitorPC" para no colisionar con el tab de monitores.
+- NO confundir con la tabla "monitores" del modulo independiente.
+- NO eliminar esta tabla. Es legacy pero sigue activa.
 
-B) Monitores independientes (tabla: monitores)
+B) monitores — Monitores independientes
 - Son monitores comprados de forma independiente, sin relacion directa con un PC especifico.
 - Se administran desde la PESTANA "Monitores" en inventario/index.php.
 - Pueden estar asignados a un usuario (id_usuario_asignado) o quedar sin asignar (NULL).

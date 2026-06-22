@@ -306,8 +306,11 @@ class Inventario
 
         $datos = [];
         while ($fila = mysqli_fetch_assoc($rs)) {
-            $fila['badge_estado'] = '<span class="badge text-bg-' . htmlspecialchars($fila['color_badge'], ENT_QUOTES, 'UTF-8') . '">' .
-                htmlspecialchars($fila['nombre_estado'], ENT_QUOTES, 'UTF-8') . '</span>';
+            $idEstado = (int)($fila['id_estado'] ?? 0);
+            $idEquipo = (int)($fila['id_equipo'] ?? 0);
+            $fila['badge_estado'] = '<button type="button" class="badge border-0 text-bg-' . htmlspecialchars($fila['color_badge'], ENT_QUOTES, 'UTF-8') .
+                ' btnCambiarEstadoEquipo" data-id="' . $idEquipo . '" data-estado="' . $idEstado .
+                '" title="Cambiar estado">' . htmlspecialchars($fila['nombre_estado'], ENT_QUOTES, 'UTF-8') . '</button>';
             $datos[] = $fila;
         }
         mysqli_stmt_close($stmt);
@@ -404,12 +407,141 @@ class Inventario
 
     public function cambiarEstadoLogico($idEquipo, $nuevoEstado, $idUsuario)
     {
-        $stmt = mysqli_prepare($this->cn, "UPDATE equipos SET id_estado = ? WHERE id_equipo = ?");
-        mysqli_stmt_bind_param($stmt, 'ii', $nuevoEstado, $idEquipo);
+        return $this->cambiarEstadoEquipo($idEquipo, $nuevoEstado, $idUsuario);
+    }
+
+    public function cambiarEstadoEquipo($idEquipo, $idEstado, $idUsuario)
+    {
+        $idEquipo = (int)$idEquipo;
+        $idEstado = (int)$idEstado;
+        $idUsuario = (int)$idUsuario;
+
+        if ($idEquipo <= 0) {
+            throw new RuntimeException('Equipo no valido.');
+        }
+        if ($idEstado <= 0) {
+            throw new RuntimeException('Estado no valido.');
+        }
+        if ($idUsuario <= 0) {
+            throw new RuntimeException('Usuario no valido.');
+        }
+
+        if (!$this->tablaExiste('estado_equipo')) {
+            throw new RuntimeException('No existe la tabla de estados de equipo.');
+        }
+
+        $stmt = mysqli_prepare($this->cn, "SELECT 1 FROM estado_equipo WHERE id_estado = ? AND estado = 1 LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idEstado);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $estadoExiste = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+
+        if (!$estadoExiste) {
+            throw new RuntimeException('El estado seleccionado no existe o esta inactivo.');
+        }
+
+        $condEliminado = $this->columnaExiste('equipos', 'eliminado') ? ' AND e.eliminado = 0' : '';
+        $stmt = mysqli_prepare($this->cn, "SELECT e.id_equipo, e.id_estado FROM equipos e WHERE e.id_equipo = ?{$condEliminado} LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        mysqli_stmt_execute($stmt);
+        $actual = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+        mysqli_stmt_close($stmt);
+
+        if (!$actual) {
+            throw new RuntimeException('El equipo no existe o fue eliminado.');
+        }
+
+        $idEstadoAnterior = isset($actual['id_estado']) ? (int)$actual['id_estado'] : null;
+
+        mysqli_begin_transaction($this->cn);
+        try {
+            $stmt = mysqli_prepare($this->cn, "UPDATE equipos SET id_estado = ? WHERE id_equipo = ?");
+            mysqli_stmt_bind_param($stmt, 'ii', $idEstado, $idEquipo);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+
+            if ($this->tablaExiste('equipo_estado_historial')) {
+                $observacion = 'Cambio de estado desde listado.';
+                $stmt = mysqli_prepare($this->cn, "
+                    INSERT INTO equipo_estado_historial
+                        (id_equipo, id_estado_anterior, id_estado_nuevo, id_usuario_accion, observacion)
+                    VALUES (?, ?, ?, ?, ?)
+                ");
+                mysqli_stmt_bind_param($stmt, 'iiiis', $idEquipo, $idEstadoAnterior, $idEstado, $idUsuario, $observacion);
+                mysqli_stmt_execute($stmt);
+                mysqli_stmt_close($stmt);
+            }
+
+            $this->registrarHistorial($idEquipo, 'estado', 'Cambio de estado desde listado.', $idUsuario);
+            mysqli_commit($this->cn);
+        } catch (Throwable $e) {
+            mysqli_rollback($this->cn);
+            throw $e;
+        }
+
+        return true;
+    }
+
+    public function eliminarEquipo(int $idEquipo, int $idUsuario): bool
+    {
+        if ($idEquipo <= 0) {
+            throw new RuntimeException('Equipo no valido.');
+        }
+        if ($idUsuario <= 0) {
+            throw new RuntimeException('Usuario no valido.');
+        }
+        if (!$this->columnaExiste('equipos', 'eliminado')) {
+            throw new RuntimeException('Falta ejecutar la migracion de eliminacion logica de equipos.');
+        }
+
+        $stmt = mysqli_prepare($this->cn, "
+            SELECT id_equipo, eliminado
+            FROM equipos
+            WHERE id_equipo = ?
+            LIMIT 1
+        ");
+        mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        mysqli_stmt_execute($stmt);
+        $actual = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+        mysqli_stmt_close($stmt);
+
+        if (!$actual) {
+            throw new RuntimeException('El equipo indicado no existe.');
+        }
+        if ((int)($actual['eliminado'] ?? 0) === 1) {
+            throw new RuntimeException('El equipo ya fue eliminado.');
+        }
+
+        $setFecha = $this->columnaExiste('equipos', 'fecha_eliminado') ? ', fecha_eliminado = NOW()' : '';
+        $setUsuario = $this->columnaExiste('equipos', 'id_usuario_elimina') ? ', id_usuario_elimina = ?' : '';
+        $sql = "UPDATE equipos SET eliminado = 1{$setFecha}{$setUsuario} WHERE id_equipo = ?";
+        $stmt = mysqli_prepare($this->cn, $sql);
+        if ($setUsuario !== '') {
+            mysqli_stmt_bind_param($stmt, 'ii', $idUsuario, $idEquipo);
+        } else {
+            mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        }
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
-        $this->registrarHistorial((int)$idEquipo, 'estado', 'Cambio logico de estado del equipo.', (int)$idUsuario);
+
+        $this->registrarHistorial($idEquipo, 'eliminacion_logica', 'Equipo eliminado logicamente desde listado.', $idUsuario);
         return true;
+    }
+
+    public function usuarioPuedeGestionarEquipo(int $idEquipo, int $idColegioUsuario): bool
+    {
+        if ($idColegioUsuario <= 0) {
+            return true;
+        }
+
+        $stmt = mysqli_prepare($this->cn, "SELECT id_colegio FROM equipos WHERE id_equipo = ? LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idEquipo);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+
+        return (int)($fila['id_colegio'] ?? 0) === $idColegioUsuario;
     }
 
     public function renderBadgeEstado($idEstado, $nombreEstado = '', $colorBadge = '')
@@ -486,6 +618,10 @@ SQL;
         $condiciones = [];
         $types = '';
         $params = [];
+
+        if ($this->columnaExiste('equipos', 'eliminado')) {
+            $condiciones[] = 'e.eliminado = 0';
+        }
 
         if (!empty($filtros['id_colegio'])) {
             $condiciones[] = 'e.id_colegio = ?';
