@@ -839,7 +839,7 @@
 }
 
 .inv-detail-offcanvas {
-    width: min(1200px, 98vw);
+    width: 50vw;
 }
 
 /* Select de estado inline en la tabla (reemplaza el modal de SweetAlert) */
