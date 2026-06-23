@@ -691,20 +691,69 @@ Reglas:
 El sistema permite completar el formulario de registro de PC usando un archivo JSON
 generado por el agente de inventario SEDUC.
 
+Que hace el agente:
+  - Se ejecuta localmente en un computador Windows.
+  - Consulta informacion tecnica del equipo con PowerShell/WMI y ctypes.
+  - No modifica datos del equipo ni se conecta a la base de datos.
+  - Genera un archivo JSON local para importarlo despues en el formulario.
+
+Por que ahora se usa .exe:
+  - Los computadores de los colegios no deben depender de tener Python instalado.
+  - El ejecutable incluye el runtime necesario para ejecutar el agente en Windows.
+  - La fuente Python se mantiene en el sistema para mantenimiento y recompilacion.
+
 Flujo completo:
   1. El tecnico descarga el agente desde: Registrar Equipo → "Descargar Agente".
-  2. Copia el .exe al equipo que desea inventariar y lo ejecuta (doble clic).
-  3. El script recopila hardware con PowerShell/WMI y ctypes.
-  4. Genera inventario_<NOMBRE_EQUIPO>.json en el mismo directorio.
-  5. El tecnico vuelve al sistema y usa "Importar Inventario Automatico".
-  6. El JS lee el JSON y completa automaticamente los campos del formulario.
-  7. El tecnico revisa, completa los datos manuales y guarda.
+  2. Copia seduc_inventario_agent.exe al equipo que desea inventariar.
+  3. Ejecuta el .exe como Administrador.
+  4. El agente recopila hardware con PowerShell/WMI y ctypes.
+  5. Genera inventario_<NOMBRE_EQUIPO>.json en el mismo directorio donde se ejecuto.
+  6. El tecnico vuelve al sistema y usa "Importar Inventario Automatico".
+  7. El JS de registrar_equipo.php lee el JSON y completa automaticamente los campos del formulario.
+  8. El tecnico revisa, completa los datos manuales y guarda.
+
+Archivo que descarga el sistema:
+  - El endpoint inventario/ajax/descargar_agente.php busca primero:
+      inventario/agente/seduc_inventario_agent.exe
+  - Si el .exe existe y es legible, descarga ese archivo.
+  - Si el .exe no existe, puede descargar como respaldo:
+      inventario/agente/seduc_inventario_agent.py
+  - Si no existe ningun agente, responde un mensaje claro en texto plano.
+
+Ubicacion obligatoria del ejecutable:
+  - El .exe final debe quedar en:
+      inventario/agente/seduc_inventario_agent.exe
+  - PyInstaller deja inicialmente el resultado en:
+      inventario/agente/dist/seduc_inventario_agent.exe
+  - Despues de compilar, se debe copiar manualmente desde dist/ a inventario/agente/.
+
+Compilacion del agente:
+  - Documentacion principal: inventario/agente/README.txt
+  - Ayuda Windows: inventario/agente/compilar_exe.bat
+  - Comandos base:
+      pip install pyinstaller
+      pyinstaller --onefile --console --name seduc_inventario_agent seduc_inventario_agent.py
+
+Como se genera el JSON:
+  - El script recopila hardware con PowerShell/WMI y ctypes.
+  - Genera inventario_<NOMBRE_EQUIPO>.json en el mismo directorio.
+  - El nombre del archivo usa el hostname detectado por socket.gethostname().
+  - El JSON se escribe con codificacion UTF-8 e indentacion legible.
+
+Como se importa el JSON:
+  - La pantalla inventario/registrar_equipo.php contiene el panel "Inventario Automatico mediante Agente".
+  - El boton "Importar Inventario Automatico" abre un input de archivo .json.
+  - El JavaScript de la misma pagina lee el JSON con FileReader.
+  - La funcion aplicarDatos() mapea los datos tecnicos a los campos del formulario.
+  - La importacion solo pre-rellena campos; no guarda automaticamente el equipo.
 
 Archivos del agente:
   inventario/agente/seduc_inventario_agent.py  — script fuente Python
   inventario/agente/seduc_inventario_agent.exe — ejecutable compilado (colocar aqui)
   inventario/agente/README.txt                 — instrucciones PyInstaller
+  inventario/agente/compilar_exe.bat           — ayuda para compilar en Windows
   inventario/ajax/descargar_agente.php         — endpoint de descarga (sirve .exe o .py)
+  inventario/registrar_equipo.php              — panel visual e importador JSON
 
 Datos que captura el agente:
   - nombre_equipo (hostname del equipo)

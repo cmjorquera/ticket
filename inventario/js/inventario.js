@@ -104,9 +104,22 @@
             id_colegio:          $('#filtroColegio').val()    || '',
             id_estado:           $('#filtroEstado').val()     || '',
             tipo_pc:             $('#filtroTipo').val()       || '',
+            id_ubicacion:        $('#filtroUbicacion').val()  || '',
             id_usuario_asignado: $('#filtroUsuario').val()    || '',
             busqueda:            $('#filtroBusqueda').val()   || ''
         };
+    }
+
+    function updateUbicacionSelect(idColegio) {
+        const $sel = $('#filtroUbicacion');
+        if (!$sel.length) { return; }
+        const ubicaciones = (window.INVENTARIO_CONFIG || {}).ubicaciones || {};
+        const lista = idColegio ? (ubicaciones[String(idColegio)] || []) : [];
+        let html = '<option value="">Todas</option>';
+        lista.forEach(function (ub) {
+            html += '<option value="' + ub.id_ubicacion + '">' + escapeHtml(ub.nombre_ubicacion) + '</option>';
+        });
+        $sel.html(html).val('');
     }
 
     function collectMonitorFilters() {
@@ -188,6 +201,12 @@
                 { data: 'nom_colegio', render: escapeHtml },
                 { data: 'tipo_pc', render: escapeHtml },
                 { data: 'numero_serie', render: escapeHtml },
+                {
+                    data: 'nombre_ubicacion',
+                    render: function (data) {
+                        return data ? escapeHtml(data) : '<span class="text-muted">—</span>';
+                    }
+                },
                 {
                     data: 'usuario_asignado',
                     render: function (data) { return escapeHtml(data || 'Sin asignar'); }
@@ -375,7 +394,11 @@
     // =========================================================================
 
     function bindFilters() {
-        $('#filtroColegio, #filtroEstado, #filtroTipo, #filtroUsuario').on('change', loadInventario);
+        $('#filtroColegio').on('change', function () {
+            updateUbicacionSelect(parseInt($(this).val(), 10) || 0);
+            loadInventario();
+        });
+        $('#filtroEstado, #filtroTipo, #filtroUbicacion, #filtroUsuario').on('change', loadInventario);
         $('#filtroBusqueda').on('keyup', debounce(loadInventario, 350));
     }
 
@@ -745,6 +768,11 @@
 
     $(function () {
         window.addEventListener('beforeprint', function () { prepareQrForPrint(document); });
+
+        const _cfg = window.INVENTARIO_CONFIG || {};
+        if (_cfg.idColegioRestringido > 0) {
+            updateUbicacionSelect(_cfg.idColegioRestringido);
+        }
 
         initTabla();
         bindFilters();

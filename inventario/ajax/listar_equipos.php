@@ -13,6 +13,7 @@ try {
         'id_estado'           => (int)($_GET['id_estado'] ?? 0),
         'tipo_pc'             => trim((string)($_GET['tipo_pc'] ?? '')),
         'id_usuario_asignado' => (int)($_GET['id_usuario_asignado'] ?? 0),
+        'id_ubicacion'        => (int)($_GET['id_ubicacion'] ?? 0),
         'busqueda'            => trim((string)($_GET['busqueda'] ?? '')),
     ];
 

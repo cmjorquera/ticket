@@ -63,6 +63,10 @@ try {
     $coloresColegio    = $inventario->obtenerColoresColegio($idUsuarioSession);
     $colegioDelUsuario = $inventario->obtenerColegioDelUsuario($idUsuarioSession);
     $idColegioRestringido = (int)($colegioDelUsuario['id_colegio'] ?? 0);
+    $todasUbicaciones = $inventario->obtenerTodasUbicaciones();
+    $ubicacionesPc = $idColegioRestringido > 0
+        ? ($todasUbicaciones[$idColegioRestringido] ?? [])
+        : [];
     $tabActiva = in_array($_GET['tab'] ?? '', ['pc', 'monitores'], true) ? $_GET['tab'] : 'pc';
 } catch (Throwable $e) {
     inventario_responder_error('Error al cargar la portada del inventario: ' . $e->getMessage());
@@ -170,7 +174,18 @@ require __DIR__ . '/componentes/layout_top.php';
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
+                                        <label class="form-label">Ubicación</label>
+                                        <select id="filtroUbicacion" class="form-select">
+                                            <option value="">Todas</option>
+                                            <?php foreach ($ubicacionesPc as $ub): ?>
+                                                <option value="<?= (int)$ub['id_ubicacion'] ?>">
+                                                    <?= inventario_h($ub['nombre_ubicacion']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
                                         <label class="form-label">Usuario asignado</label>
                                         <select id="filtroUsuario" class="form-select">
                                             <option value="">Todos</option>
@@ -196,6 +211,7 @@ require __DIR__ . '/componentes/layout_top.php';
                                                 <th>Colegio</th>
                                                 <th>Tipo</th>
                                                 <th>Serie</th>
+                                                <th>Ubicación</th>
                                                 <th>Asignado</th>
                                                 <th>Estado</th>
                                                 <th>Acciones</th>
@@ -333,6 +349,7 @@ require __DIR__ . '/componentes/layout_top.php';
 <script>
 window.INVENTARIO_CONFIG = {
     tabActiva: '<?= $tabActiva ?>',
+    idColegioRestringido: <?= $idColegioRestringido ?>,
     endpoints: {
         listar:          'ajax/listar_equipos.php',
         detalle:         'ajax/obtener_detalle_equipo.php',
@@ -351,7 +368,8 @@ window.INVENTARIO_CONFIG = {
             'nombre_estado'=> (string)$estado['nombre_estado'],
             'color_badge'  => (string)($estado['color_badge'] ?? 'secondary'),
         ];
-    }, $estados), JSON_UNESCAPED_UNICODE) ?>
+    }, $estados), JSON_UNESCAPED_UNICODE) ?>,
+    ubicaciones: <?= json_encode($todasUbicaciones, JSON_UNESCAPED_UNICODE) ?>
 };
 </script>
 

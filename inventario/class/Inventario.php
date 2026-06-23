@@ -278,6 +278,10 @@ class Inventario
             : "CASE e.id_estado WHEN 1 THEN 'Activo' WHEN 2 THEN 'Bodega' WHEN 3 THEN 'Reparacion' WHEN 4 THEN 'Baja' WHEN 5 THEN 'Prestado' ELSE 'Sin estado' END AS nombre_estado,
                CASE e.id_estado WHEN 1 THEN 'success' WHEN 2 THEN 'secondary' WHEN 3 THEN 'warning' WHEN 4 THEN 'danger' WHEN 5 THEN 'info' ELSE 'dark' END AS color_badge";
 
+        $conUbicCol      = $this->columnaExiste('equipos', 'id_ubicacion') && $this->tablaExiste('equipo_ubicacion');
+        $joinUbicacion   = $conUbicCol ? "LEFT JOIN equipo_ubicacion eu ON eu.id_ubicacion = e.id_ubicacion" : '';
+        $selectUbicacion = $conUbicCol ? ", eu.nombre_ubicacion" : ", NULL AS nombre_ubicacion";
+
         $sql = "SELECT
                     e.id_equipo,
                     e.id_usuario_asignado,
@@ -292,11 +296,13 @@ class Inventario
                     CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS usuario_registra,
                     CONCAT(ua.nombre, ' ', ua.apellido_paterno, ' ', ua.apellido_materno) AS usuario_asignado,
                     {$selectEstado}
+                    {$selectUbicacion}
                 FROM equipos e
                 INNER JOIN colegio c ON c.id_colegio = e.id_colegio
                 LEFT JOIN usuarios u ON u.id = e.id_usuario
                 LEFT JOIN usuarios ua ON ua.id = e.id_usuario_asignado
                 {$joinEstado}
+                {$joinUbicacion}
                 {$where['sql']}
                 ORDER BY e.id_equipo DESC";
         $stmt = mysqli_prepare($this->cn, $sql);
@@ -642,6 +648,11 @@ SQL;
             $condiciones[] = 'e.id_usuario_asignado = ?';
             $types .= 'i';
             $params[] = (int)$filtros['id_usuario_asignado'];
+        }
+        if (!empty($filtros['id_ubicacion']) && $this->columnaExiste('equipos', 'id_ubicacion')) {
+            $condiciones[] = 'e.id_ubicacion = ?';
+            $types .= 'i';
+            $params[] = (int)$filtros['id_ubicacion'];
         }
         if (!empty($filtros['busqueda'])) {
             $busqueda = '%' . trim((string)$filtros['busqueda']) . '%';

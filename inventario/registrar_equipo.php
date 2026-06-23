@@ -28,7 +28,7 @@ require __DIR__ . '/componentes/layout_top.php';
             <span class="inv-agent-icon"><i class="bi bi-cpu"></i></span>
             <div>
                 <h6 class="mb-0 fw-semibold">Inventario Automatico mediante Agente</h6>
-                <p class="text-muted small mb-0">Ejecuta el agente en el equipo y sube el JSON para autocompletar los datos tecnicos.</p>
+                <p class="text-muted small mb-0">Descarga el agente ejecutable, ejecútalo en Windows y sube el JSON para autocompletar los datos técnicos.</p>
             </div>
         </div>
 
@@ -37,11 +37,11 @@ require __DIR__ . '/componentes/layout_top.php';
             <!-- Pasos -->
             <div class="col-lg-5">
                 <ol class="inv-agent-steps mb-0">
-                    <li>Descarga el agente y cópialo al equipo a inventariar.</li>
-                    <li>Ejecútalo como Administrador (doble clic en el <code>.exe</code>).</li>
+                    <li>Descarga el agente SEDUC.</li>
+                    <li>Copia el archivo <code>.exe</code> al equipo que quieres inventariar.</li>
+                    <li>Ejecútalo como Administrador.</li>
                     <li>Se generará un archivo <code>inventario_NOMBREEQUIPO.json</code>.</li>
-                    <li>Selecciona ese archivo con el botón de abajo.</li>
-                    <li>Los datos técnicos se completarán automáticamente en el formulario.</li>
+                    <li>Vuelve al sistema e importa ese JSON con el botón <strong>Importar Inventario Automático</strong>.</li>
                 </ol>
             </div>
 

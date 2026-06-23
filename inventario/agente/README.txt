@@ -3,74 +3,116 @@ SEDUC Inventario Agent
 
 DESCRIPCION
 -----------
-Script Python que recopila automaticamente informacion de hardware del equipo
-Windows y genera un archivo JSON listo para importar en el sistema SEDUC.
+Agente para Windows que recopila automaticamente informacion tecnica del
+equipo y genera un archivo JSON listo para importar en el Sistema Ticket.
 
-No requiere librerias externas. Usa PowerShell y ctypes (incluidos en Windows).
+El archivo fuente es:
+
+  inventario/agente/seduc_inventario_agent.py
+
+El agente no usa librerias externas innecesarias. Trabaja con modulos
+estandar de Python y herramientas incluidas en Windows:
+
+  - ctypes
+  - json
+  - os
+  - socket
+  - subprocess
+  - sys
+  - datetime
+  - PowerShell / WMI de Windows
 
 
-COMO COMPILAR EL EJECUTABLE (.exe)
+POR QUE SE COMPILA A .EXE
+-------------------------
+Los computadores de los colegios no deben depender de tener Python instalado.
+Por eso el agente se distribuye como ejecutable Windows:
+
+  seduc_inventario_agent.exe
+
+El tecnico descarga ese .exe desde el sistema, lo copia al equipo que desea
+inventariar y lo ejecuta directamente.
+
+
+COMO GENERAR EL .EXE CON PYINSTALLER
 ------------------------------------
-Requisitos:
-  - Python 3.8 o superior instalado
-  - pip instalado
+Requisitos en el computador donde se compila:
 
-Pasos:
-  1. Instalar PyInstaller:
-         pip install pyinstaller
+  - Windows
+  - Python 3 instalado
+  - pip disponible
 
-  2. Compilar:
-         pyinstaller --onefile --console seduc_inventario_agent.py
+Desde esta carpeta:
 
-  3. El ejecutable quedara en:
-         dist/seduc_inventario_agent.exe
+  inventario/agente/
 
-  4. Copiar el ejecutable a esta carpeta:
-         inventario/agente/seduc_inventario_agent.exe
+ejecutar:
 
-  El sistema detectara automaticamente el .exe y lo ofrecera para descarga.
-  Si no existe el .exe, se descarga el .py como alternativa.
+  pip install pyinstaller
+
+  pyinstaller --onefile --console --name seduc_inventario_agent seduc_inventario_agent.py
+
+El resultado final queda en:
+
+  inventario/agente/dist/seduc_inventario_agent.exe
+
+Despues de compilar, copiar el ejecutable final a:
+
+  inventario/agente/seduc_inventario_agent.exe
+
+Ese es el archivo que descarga el sistema desde:
+
+  inventario/ajax/descargar_agente.php
+
+Si el .exe no existe, el sistema puede descargar el .py como respaldo tecnico,
+pero la distribucion recomendada para colegios es siempre el .exe.
 
 
-COMO USAR
-----------
-  1. Descargar el ejecutable desde el sistema SEDUC
-     (boton "Descargar Agente" en Registrar Equipo).
+COMPILACION RAPIDA EN WINDOWS
+-----------------------------
+Tambien se puede usar:
 
-  2. Copiar el .exe al equipo que se desea inventariar.
+  inventario/agente/compilar_exe.bat
 
-  3. Ejecutar como Administrador para mayor precision de datos.
+Ese archivo ejecuta PyInstaller con el nombre correcto. Al terminar, verificar:
 
-  4. Se generara un archivo:
-         inventario_<NOMBRE_EQUIPO>.json
+  inventario/agente/dist/seduc_inventario_agent.exe
 
-  5. Subir ese archivo al sistema SEDUC usando
-     "Importar Inventario Automatico" en Registrar Equipo.
+Luego copiarlo manualmente a:
+
+  inventario/agente/seduc_inventario_agent.exe
+
+
+COMO USAR EL AGENTE
+-------------------
+1. En el Sistema Ticket, entrar a inventario/registrar_equipo.php.
+2. Presionar "Descargar Agente".
+3. Copiar seduc_inventario_agent.exe al equipo Windows que se quiere inventariar.
+4. Ejecutarlo como Administrador.
+5. El agente generara:
+
+     inventario_NOMBREEQUIPO.json
+
+6. Volver al sistema e importar ese JSON con "Importar Inventario Automatico".
 
 
 DATOS QUE CAPTURA
-------------------
-  - Nombre del equipo (hostname)
-  - Fabricante y modelo del equipo
-  - Numero de serie (BIOS)
-  - Procesador (nombre, fabricante, velocidad)
-  - RAM total en GB
-  - Discos: modelo, capacidad, tipo (SSD/HDD/NVMe)
-  - Sistema operativo Windows
-  - Usuario de sesion actual
-  - Monitores conectados: modelo y resolucion
+-----------------
+  - Nombre del equipo
+  - Fabricante y modelo
+  - Numero de serie BIOS
+  - Procesador
+  - RAM total
+  - Discos y tipo de almacenamiento
+  - Version de Windows
+  - Usuario Windows activo
+  - Monitores detectados y resoluciones
 
 
-DATOS QUE NO CAPTURA (se ingresan manualmente)
--------------------------------------------------
+DATOS QUE SE COMPLETAN MANUALMENTE
+----------------------------------
   - Colegio y ubicacion
-  - Usuario asignado en el sistema
+  - Usuario asignado
   - Estado del equipo
-  - Datos de compra (valor, proveedor, factura, fecha)
+  - Datos de compra
   - Fotos del equipo
-
-
-COMPATIBILIDAD
---------------
-  Windows 7 / 8 / 10 / 11 (32 y 64 bits)
-  Requiere PowerShell (incluido en Windows 7+)
