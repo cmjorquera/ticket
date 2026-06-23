@@ -1,0 +1,57 @@
+LOGICA DEL AGENTE DE INVENTARIO
+===============================
+
+El agente de inventario SEDUC se desarrolla en Python para facilitar su
+mantenimiento tecnico dentro del Sistema Ticket.
+
+Aunque el codigo fuente del agente esta en:
+
+  inventario/agente/seduc_inventario_agent.py
+
+los usuarios finales nunca utilizan ni descargan el archivo .py desde el
+sistema.
+
+Distribucion
+------------
+El agente se distribuye exclusivamente como ejecutable Windows:
+
+  seduc_inventario_agent.exe
+
+El archivo descargado por el sistema desde el boton "Descargar Agente" es:
+
+  inventario/agente/seduc_inventario_agent.exe
+
+El endpoint responsable de la descarga es:
+
+  inventario/ajax/descargar_agente.php
+
+Ese endpoint no entrega el archivo Python como respaldo. Si el ejecutable no
+existe, muestra el mensaje:
+
+  No se encontró el agente ejecutable. Contacte al administrador.
+
+
+Flujo de uso
+------------
+1. El usuario entra a inventario/registrar_equipo.php.
+2. Presiona "Descargar Agente".
+3. Descarga seduc_inventario_agent.exe.
+4. Copia el ejecutable al equipo Windows que desea inventariar.
+5. Ejecuta el agente como Administrador.
+6. El ejecutable recopila la informacion tecnica del equipo.
+7. El ejecutable genera:
+
+     inventario_NOMBREEQUIPO.json
+
+8. El usuario vuelve a registrar_equipo.php.
+9. Importa el JSON con el boton "Importar Inventario Automatico".
+
+
+Importacion del JSON
+--------------------
+El archivo inventario_NOMBREEQUIPO.json es importado desde:
+
+  inventario/registrar_equipo.php
+
+La importacion solo completa datos tecnicos del formulario. El guardado final
+del equipo sigue dependiendo de la revision y confirmacion del usuario.

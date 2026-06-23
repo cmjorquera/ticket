@@ -64,8 +64,8 @@ Ese es el archivo que descarga el sistema desde:
 
   inventario/ajax/descargar_agente.php
 
-Si el .exe no existe, el sistema puede descargar el .py como respaldo tecnico,
-pero la distribucion recomendada para colegios es siempre el .exe.
+Si el .exe no existe, el sistema no entrega ningun respaldo al usuario final y
+muestra un mensaje para contactar al administrador.
 
 
 COMPILACION RAPIDA EN WINDOWS

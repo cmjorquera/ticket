@@ -716,8 +716,7 @@ Archivo que descarga el sistema:
   - El endpoint inventario/ajax/descargar_agente.php busca primero:
       inventario/agente/seduc_inventario_agent.exe
   - Si el .exe existe y es legible, descarga ese archivo.
-  - Si el .exe no existe, puede descargar como respaldo:
-      inventario/agente/seduc_inventario_agent.py
+  - No descarga el archivo Python bajo ninguna circunstancia.
   - Si no existe ningun agente, responde un mensaje claro en texto plano.
 
 Ubicacion obligatoria del ejecutable:
@@ -752,7 +751,7 @@ Archivos del agente:
   inventario/agente/seduc_inventario_agent.exe — ejecutable compilado (colocar aqui)
   inventario/agente/README.txt                 — instrucciones PyInstaller
   inventario/agente/compilar_exe.bat           — ayuda para compilar en Windows
-  inventario/ajax/descargar_agente.php         — endpoint de descarga (sirve .exe o .py)
+  inventario/ajax/descargar_agente.php         — endpoint de descarga (solo sirve .exe)
   inventario/registrar_equipo.php              — panel visual e importador JSON
 
 Datos que captura el agente:
@@ -794,13 +793,13 @@ Mapeo JSON → campos del formulario:
 Compatibilidad del agente:
   - Windows 7 / 8 / 10 / 11 (32 y 64 bits)
   - Sin dependencias externas pip (usa PowerShell y ctypes de stdlib)
-  - Compilar con: pyinstaller --onefile --console seduc_inventario_agent.py
+  - Compilar con: pyinstaller --onefile --console --name seduc_inventario_agent seduc_inventario_agent.py
 
 Coexistencia con registro manual:
   - Ambas formas son independientes.
   - La importacion solo pre-rellena campos; el usuario puede editar antes de guardar.
   - Si no se importa archivo, el formulario funciona igual que siempre.
-  - Si el .exe no existe en agente/, el endpoint sirve el .py como alternativa.
+  - Si el .exe no existe en agente/, el endpoint muestra un mensaje para contactar al administrador.
 
 
 40. Carga masiva de monitores
