@@ -1,28 +1,41 @@
-AGENTE SEDUC INVENTARIO v1.1
+AGENTE SEDUC INVENTARIO v1.7
 ============================
 
-El agente ahora es un archivo .bat nativo de Windows.
-No requiere Python, PyInstaller ni ninguna dependencia externa.
+El agente es un archivo .bat autocontenido.
+No requiere Python, PyInstaller, compilacion ni ninguna dependencia externa.
 
-ARCHIVO QUE DESCARGA EL TECNICO
---------------------------------
+ARCHIVO QUE DISTRIBUYE EL SISTEMA
+----------------------------------
   inventario/agente/seduc_inventario_agent.bat
 
-Este archivo ya esta listo. No necesita compilacion ni preparacion previa.
+Este archivo ya esta listo en el repositorio.
+No se compila ni se prepara de ninguna forma adicional.
 Solo copiarlo al equipo objetivo y ejecutarlo.
 
-COMO FUNCIONA
--------------
-El .bat incrusta un script PowerShell que:
-  - Se ejecuta con las herramientas nativas de Windows (WMI, PowerShell)
-  - No modifica el equipo ni accede a la red
-  - Genera inventario_NOMBREEQUIPO.json en la misma carpeta donde se ejecuto
+COMO FUNCIONA INTERNAMENTE
+--------------------------
+La cabecera batch:
+  1. Detecta si se ejecuta como Administrador (net session).
+  2. Si NO es admin, se relanza a si mismo con permisos elevados (UAC).
+  3. Si ES admin, extrae el bloque PowerShell incrustado (marcador ##PS1START##),
+     lo escribe en %TEMP%\seduc_agent.ps1 con encoding UTF-8 y CRLF,
+     lo ejecuta con powershell -File y lo borra al terminar.
 
-COMPATIBILIDAD
---------------
-  Windows 7 SP1 / 8 / 8.1 / 10 / 11
-  Requiere PowerShell 3.0 o superior (incluido por defecto desde Windows 8;
-  en Windows 7 SP1 se instala automaticamente con las actualizaciones).
+El bloque PowerShell:
+  - Recopila hardware via WMI (Win32_ComputerSystem, Win32_BIOS, Win32_Processor,
+    Win32_PhysicalMemory, Win32_DiskDrive, Win32_OperatingSystem, WmiMonitorID,
+    System.Windows.Forms.Screen).
+  - Genera inventario_NOMBREEQUIPO.json en el Escritorio del usuario.
+
+REGLAS DEL ARCHIVO .BAT
+------------------------
+  - Saltos de linea: CRLF (obligatorio para Windows).
+  - Encoding: UTF-8 sin BOM.
+  - Sin caracteres Unicode fuera de ASCII.
+  - Sin comillas tipograficas. Solo comillas dobles ASCII en el bloque PS.
+  - El marcador ##PS1START## aparece como linea propia al final de la
+    seccion batch y una vez en el comando de extraccion (se usa LastIndexOf
+    para encontrar el marcador real).
 
 INSTRUCCIONES PARA EL TECNICO
 ------------------------------
@@ -33,12 +46,10 @@ INSTRUCCIONES PARA EL TECNICO
      - Si Windows muestra advertencia SmartScreen (archivo de internet),
        hacer clic en "Mas informacion" y luego "Ejecutar de todos modos".
   4. El agente detecta automaticamente si necesita permisos de Administrador.
-     Si no los tiene, vuelve a lanzarse pidiendo elevacion via cuadro UAC.
-     Aceptar el cuadro de permisos para continuar.
-     (Estos permisos son necesarios para leer datos de hardware por WMI.)
+     Aceptar el cuadro UAC que aparece automaticamente.
   5. El agente recopila el hardware y genera:
        inventario_NOMBREEQUIPO.json
-     en la misma carpeta donde se ejecuto el .bat.
+     en el Escritorio del usuario actual.
   6. Volver al sistema SEDUC, abrir Registrar Equipo y usar
      "Importar Inventario Automatico" para cargar el JSON.
 
@@ -49,31 +60,15 @@ DATOS QUE RECOPILA
   - serial (Win32_BIOS)
   - procesador: nombre, fabricante, velocidad
   - ram_gb (Win32_PhysicalMemory)
-  - almacenamiento[]: modelo, capacidad, tipo (SSD/HDD/NVMe) por disco
+  - almacenamiento[]: modelo, capacidad, tipo (SSD NVMe/SSD/HDD) por disco
   - windows (Win32_OperatingSystem.Caption)
   - usuario_windows ($env:USERNAME)
   - monitores[]: modelo y resolucion
   - generado_en (timestamp)
-  - version_agente: "1.1"
+  - version_agente: "1.7"
 
-REFERENCIA PARA DESARROLLADORES
---------------------------------
-El script PowerShell esta incrustado directamente en el .bat.
-El mecanismo es:
-  - La cabecera batch define las variables de entorno y lanza PowerShell.
-  - PowerShell lee el propio .bat como texto y ejecuta todo lo que
-    aparece despues del marcador ::__SEDUC_PS__
-  - No se genera ni se necesita ningun archivo .ps1 temporal en disco.
-
-Para actualizar la logica del agente, editar la seccion PowerShell
-dentro de seduc_inventario_agent.bat a partir del marcador ::__SEDUC_PS__
-
-FUENTE PYTHON (referencia historica)
--------------------------------------
-  inventario/agente/seduc_inventario_agent.py
-  inventario/agente/compilar_exe.bat
-
-Estos archivos se conservan como referencia historica.
-El sistema ya no usa el .py ni el .exe para distribuir el agente.
-El endpoint inventario/ajax/descargar_agente.php sirve el .bat primero.
-Si el .bat no existe pero hay un .exe, sirve el .exe como respaldo.
+PARA MODIFICAR EL AGENTE
+-------------------------
+Editar directamente inventario/agente/seduc_inventario_agent.bat.
+El bloque PowerShell empieza en la linea que sigue al marcador ##PS1START##.
+Asegurarse de guardar con CRLF y encoding UTF-8 sin BOM.
