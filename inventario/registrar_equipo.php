@@ -39,7 +39,8 @@ require __DIR__ . '/componentes/layout_top.php';
                 <ol class="inv-agent-steps mb-0">
                     <li>Descarga el Agente SEDUC.</li>
                     <li>Copia el archivo al equipo que deseas inventariar.</li>
-                    <li>Ejecútalo como Administrador.</li>
+                    <li>Haz doble clic en el archivo. Si Windows muestra una advertencia de seguridad, haz clic en <strong>Más información → Ejecutar de todos modos</strong>.</li>
+                    <li>Acepta el cuadro de permisos de Administrador (UAC) que aparecerá automáticamente. El agente necesita estos permisos para leer el hardware.</li>
                     <li>Espera la generación del archivo JSON.</li>
                     <li>Importa el JSON con el botón <strong>Importar Inventario Automático</strong>.</li>
                 </ol>

@@ -30,12 +30,16 @@ INSTRUCCIONES PARA EL TECNICO
      (boton "Descargar Agente" en la pantalla Registrar Equipo).
   2. Copiar el archivo al equipo que desea inventariar.
   3. Hacer doble clic en seduc_inventario_agent.bat.
-     Si Windows muestra advertencia SmartScreen, hacer clic en
-     "Mas informacion" y luego "Ejecutar de todos modos".
-  4. El agente recopila el hardware y genera:
+     - Si Windows muestra advertencia SmartScreen (archivo de internet),
+       hacer clic en "Mas informacion" y luego "Ejecutar de todos modos".
+  4. El agente detecta automaticamente si necesita permisos de Administrador.
+     Si no los tiene, vuelve a lanzarse pidiendo elevacion via cuadro UAC.
+     Aceptar el cuadro de permisos para continuar.
+     (Estos permisos son necesarios para leer datos de hardware por WMI.)
+  5. El agente recopila el hardware y genera:
        inventario_NOMBREEQUIPO.json
      en la misma carpeta donde se ejecuto el .bat.
-  5. Volver al sistema SEDUC, abrir Registrar Equipo y usar
+  6. Volver al sistema SEDUC, abrir Registrar Equipo y usar
      "Importar Inventario Automatico" para cargar el JSON.
 
 DATOS QUE RECOPILA

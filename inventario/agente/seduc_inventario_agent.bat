@@ -2,22 +2,52 @@
 setlocal
 set "SEDUC_AGENTDIR=%~dp0"
 set "SELF=%~f0"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$c=[IO.File]::ReadAllText($env:SELF,[Text.Encoding]::UTF8);$m='::__SEDUC_PS__';& ([ScriptBlock]::Create($c.Substring($c.LastIndexOf($m)+$m.Length)))"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$c=[IO.File]::ReadAllText($env:SELF,[Text.Encoding]::UTF8);$m='::__SEDUC_PS__';& ([ScriptBlock]::Create($c.Substring($c.LastIndexOf($m)+$m.Length)))" -- "%SEDUC_AGENTDIR%" "%SELF%"
 endlocal
 exit /b
 
 ::__SEDUC_PS__
 # ============================================================
-#  SEDUC Inventario Agent v1.1
+#  SEDUC Inventario Agent v1.2
 #  Agente nativo Windows -- sin Python ni dependencias externas
 #  Compatible: Windows 7 SP1 / 8 / 10 / 11  (PowerShell 3.0+)
 # ============================================================
+
+# Recibir argumentos pasados desde el .bat
+$argDir  = $args[0]
+$argSelf = $args[1]
+
+# --- AUTO-ELEVACION A ADMINISTRADOR -------------------------
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    # Pasar la ruta original como argumento para que el proceso elevado la reciba
+    $escaped = $argSelf -replace '"','\"'
+    $dirEscaped = $argDir -replace '"','\"'
+    Start-Process -FilePath 'cmd.exe' `
+        -ArgumentList "/c `"$escaped`" `"$dirEscaped`"" `
+        -Verb RunAs
+    exit
+}
+
+# --- RESOLVER DIRECTORIO DE SALIDA --------------------------
+# Prioridad: argumento recibido > variable de entorno > carpeta actual
+$scriptDir = ''
+if ($argDir -and (Test-Path $argDir)) {
+    $scriptDir = $argDir.TrimEnd('\').TrimEnd('/')
+}
+if (-not $scriptDir -and $env:SEDUC_AGENTDIR -and (Test-Path $env:SEDUC_AGENTDIR)) {
+    $scriptDir = ($env:SEDUC_AGENTDIR).TrimEnd('\').TrimEnd('/')
+}
+if (-not $scriptDir) {
+    $scriptDir = (Get-Location).Path
+}
+
 $ErrorActionPreference = 'SilentlyContinue'
 
 $SEP = '=' * 55
 Write-Host ''
 Write-Host $SEP
-Write-Host '  SEDUC Inventario Agent v1.1'
+Write-Host '  SEDUC Inventario Agent v1.2'
 Write-Host '  Recopilando informacion del equipo...'
 Write-Host $SEP
 
@@ -116,11 +146,9 @@ $resultado = [ordered]@{
     almacenamiento  = [array]@($discos)
     monitores       = [array]@($monitores)
     generado_en     = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-    version_agente  = '1.1'
+    version_agente  = '1.2'
 }
 
-$scriptDir     = ($env:SEDUC_AGENTDIR).TrimEnd('\').TrimEnd('/')
-if (-not $scriptDir -or -not (Test-Path $scriptDir)) { $scriptDir = (Get-Location).Path }
 $nombreArchivo = "inventario_${nombreEquipo}.json"
 $rutaSalida    = Join-Path $scriptDir $nombreArchivo
 
@@ -129,6 +157,7 @@ $json = ConvertTo-Json -InputObject $resultado -Depth 10
 
 Write-Host ''
 Write-Host "  Archivo generado: $nombreArchivo"
+Write-Host "  Guardado en:      $scriptDir"
 Write-Host ''
 Write-Host "  Equipo:      $nombreEquipo"
 Write-Host "  Fabricante:  $fabricante $modelo"
