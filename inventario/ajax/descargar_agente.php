@@ -6,9 +6,14 @@ ob_start();
 require_once dirname(__DIR__) . '/componentes/boot.php';
 
 $baseDir = dirname(__DIR__) . '/agente/';
+$batPath = $baseDir . 'seduc_inventario_agent.bat';
 $exePath = $baseDir . 'seduc_inventario_agent.exe';
 
-if (is_file($exePath)) {
+if (is_file($batPath)) {
+    $archivo = $batPath;
+    $nombre  = 'seduc_inventario_agent.bat';
+    $mime    = 'application/octet-stream';
+} elseif (is_file($exePath)) {
     $archivo = $exePath;
     $nombre  = 'seduc_inventario_agent.exe';
     $mime    = 'application/octet-stream';
@@ -18,7 +23,7 @@ if (is_file($exePath)) {
     }
     http_response_code(404);
     header('Content-Type: text/plain; charset=utf-8');
-    echo 'No se encontró el agente ejecutable. Contacte al administrador.';
+    echo 'No se encontró el agente. Contacte al administrador del sistema.';
     exit;
 }
 

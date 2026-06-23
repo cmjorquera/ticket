@@ -1,29 +1,75 @@
-COMPILACION DEL AGENTE SEDUC
+AGENTE SEDUC INVENTARIO v1.1
 ============================
 
-El agente se desarrolla en Python, pero se distribuye a usuarios finales solo
-como ejecutable Windows.
+El agente ahora es un archivo .bat nativo de Windows.
+No requiere Python, PyInstaller ni ninguna dependencia externa.
 
-Desde la carpeta:
+ARCHIVO QUE DESCARGA EL TECNICO
+--------------------------------
+  inventario/agente/seduc_inventario_agent.bat
 
-  inventario/agente/
+Este archivo ya esta listo. No necesita compilacion ni preparacion previa.
+Solo copiarlo al equipo objetivo y ejecutarlo.
 
-instalar PyInstaller:
+COMO FUNCIONA
+-------------
+El .bat incrusta un script PowerShell que:
+  - Se ejecuta con las herramientas nativas de Windows (WMI, PowerShell)
+  - No modifica el equipo ni accede a la red
+  - Genera inventario_NOMBREEQUIPO.json en la misma carpeta donde se ejecuto
 
-  pip install pyinstaller
+COMPATIBILIDAD
+--------------
+  Windows 7 SP1 / 8 / 8.1 / 10 / 11
+  Requiere PowerShell 3.0 o superior (incluido por defecto desde Windows 8;
+  en Windows 7 SP1 se instala automaticamente con las actualizaciones).
 
-Generar el ejecutable:
+INSTRUCCIONES PARA EL TECNICO
+------------------------------
+  1. Descargar seduc_inventario_agent.bat desde el sistema SEDUC
+     (boton "Descargar Agente" en la pantalla Registrar Equipo).
+  2. Copiar el archivo al equipo que desea inventariar.
+  3. Hacer doble clic en seduc_inventario_agent.bat.
+     Si Windows muestra advertencia SmartScreen, hacer clic en
+     "Mas informacion" y luego "Ejecutar de todos modos".
+  4. El agente recopila el hardware y genera:
+       inventario_NOMBREEQUIPO.json
+     en la misma carpeta donde se ejecuto el .bat.
+  5. Volver al sistema SEDUC, abrir Registrar Equipo y usar
+     "Importar Inventario Automatico" para cargar el JSON.
 
-  pyinstaller --onefile --console --name seduc_inventario_agent seduc_inventario_agent.py
+DATOS QUE RECOPILA
+------------------
+  - nombre_equipo (hostname)
+  - fabricante y modelo (Win32_ComputerSystem)
+  - serial (Win32_BIOS)
+  - procesador: nombre, fabricante, velocidad
+  - ram_gb (Win32_PhysicalMemory)
+  - almacenamiento[]: modelo, capacidad, tipo (SSD/HDD/NVMe) por disco
+  - windows (Win32_OperatingSystem.Caption)
+  - usuario_windows ($env:USERNAME)
+  - monitores[]: modelo y resolucion
+  - generado_en (timestamp)
+  - version_agente: "1.1"
 
-Una vez compilado, copiar:
+REFERENCIA PARA DESARROLLADORES
+--------------------------------
+El script PowerShell esta incrustado directamente en el .bat.
+El mecanismo es:
+  - La cabecera batch define las variables de entorno y lanza PowerShell.
+  - PowerShell lee el propio .bat como texto y ejecuta todo lo que
+    aparece despues del marcador ::__SEDUC_PS__
+  - No se genera ni se necesita ningun archivo .ps1 temporal en disco.
 
-  dist/seduc_inventario_agent.exe
+Para actualizar la logica del agente, editar la seccion PowerShell
+dentro de seduc_inventario_agent.bat a partir del marcador ::__SEDUC_PS__
 
-a:
+FUENTE PYTHON (referencia historica)
+-------------------------------------
+  inventario/agente/seduc_inventario_agent.py
+  inventario/agente/compilar_exe.bat
 
-  inventario/agente/seduc_inventario_agent.exe
-
-Ese archivo es el unico agente que descarga el Sistema Ticket desde:
-
-  inventario/ajax/descargar_agente.php
+Estos archivos se conservan como referencia historica.
+El sistema ya no usa el .py ni el .exe para distribuir el agente.
+El endpoint inventario/ajax/descargar_agente.php sirve el .bat primero.
+Si el .bat no existe pero hay un .exe, sirve el .exe como respaldo.

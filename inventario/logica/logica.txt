@@ -693,51 +693,46 @@ generado por el agente de inventario SEDUC.
 
 Que hace el agente:
   - Se ejecuta localmente en un computador Windows.
-  - Consulta informacion tecnica del equipo con PowerShell/WMI y ctypes.
+  - Consulta informacion tecnica del equipo con PowerShell/WMI nativo.
   - No modifica datos del equipo ni se conecta a la base de datos.
   - Genera un archivo JSON local para importarlo despues en el formulario.
 
-Por que ahora se usa .exe:
-  - Los computadores de los colegios no deben depender de tener Python instalado.
-  - El ejecutable incluye el runtime necesario para ejecutar el agente en Windows.
-  - La fuente Python se mantiene en el sistema para mantenimiento y recompilacion.
+Por que ahora es un .bat nativo (version 1.1):
+  - El .bat incrusta directamente el script PowerShell usando un marcador interno.
+  - No requiere Python, PyInstaller, ni ninguna instalacion previa.
+  - PowerShell 3.0+ esta disponible en Windows 7 SP1 con actualizaciones y en todas
+    las versiones posteriores de Windows por defecto.
+  - El servidor Linux ya no necesita compilar ni mantener un .exe de Windows.
+  - El .bat se edita directamente en el repositorio sin proceso de build.
 
 Flujo completo:
   1. El tecnico descarga el agente desde: Registrar Equipo → "Descargar Agente".
-  2. Copia seduc_inventario_agent.exe al equipo que desea inventariar.
-  3. Ejecuta el .exe como Administrador.
-  4. El agente recopila hardware con PowerShell/WMI y ctypes.
+  2. Copia seduc_inventario_agent.bat al equipo que desea inventariar.
+  3. Hace doble clic en el .bat (si aparece SmartScreen, "Mas informacion" → "Ejecutar").
+  4. El agente recopila hardware con PowerShell/WMI.
   5. Genera inventario_<NOMBRE_EQUIPO>.json en el mismo directorio donde se ejecuto.
   6. El tecnico vuelve al sistema y usa "Importar Inventario Automatico".
   7. El JS de registrar_equipo.php lee el JSON y completa automaticamente los campos del formulario.
   8. El tecnico revisa, completa los datos manuales y guarda.
 
 Archivo que descarga el sistema:
-  - El endpoint inventario/ajax/descargar_agente.php busca primero:
-      inventario/agente/seduc_inventario_agent.exe
-  - Si el .exe existe y es legible, descarga ese archivo.
-  - No descarga el archivo Python bajo ninguna circunstancia.
-  - Si no existe ningun agente, responde un mensaje claro en texto plano.
+  - El endpoint inventario/ajax/descargar_agente.php busca en orden:
+      1. inventario/agente/seduc_inventario_agent.bat  (prioritario)
+      2. inventario/agente/seduc_inventario_agent.exe  (respaldo legacy)
+  - Si no existe ninguno, responde mensaje claro en texto plano.
 
-Ubicacion obligatoria del ejecutable:
-  - El .exe final debe quedar en:
-      inventario/agente/seduc_inventario_agent.exe
-  - PyInstaller deja inicialmente el resultado en:
-      inventario/agente/dist/seduc_inventario_agent.exe
-  - Despues de compilar, se debe copiar manualmente desde dist/ a inventario/agente/.
-
-Compilacion del agente:
-  - Documentacion principal: inventario/agente/README.txt
-  - Ayuda Windows: inventario/agente/compilar_exe.bat
-  - Comandos base:
-      pip install pyinstaller
-      pyinstaller --onefile --console --name seduc_inventario_agent seduc_inventario_agent.py
+Como funciona el mecanismo interno del .bat:
+  - La cabecera batch define SEDUC_AGENTDIR (ruta del .bat) y SELF (ruta completa del archivo).
+  - Llama a PowerShell que lee el propio archivo como texto.
+  - Extrae todo lo que aparece despues del marcador ::__SEDUC_PS__ y lo ejecuta como script PS.
+  - No se genera ningun archivo .ps1 temporal.
 
 Como se genera el JSON:
-  - El script recopila hardware con PowerShell/WMI y ctypes.
-  - Genera inventario_<NOMBRE_EQUIPO>.json en el mismo directorio.
-  - El nombre del archivo usa el hostname detectado por socket.gethostname().
-  - El JSON se escribe con codificacion UTF-8 e indentacion legible.
+  - El script PS recopila hardware con WMI (Win32_ComputerSystem, Win32_BIOS,
+    Win32_Processor, Win32_PhysicalMemory, Win32_DiskDrive, Win32_OperatingSystem,
+    WmiMonitorID, System.Windows.Forms.Screen).
+  - Genera inventario_<NOMBRE_EQUIPO>.json usando $env:COMPUTERNAME como nombre.
+  - El JSON se escribe con codificacion UTF-8 sin BOM.
 
 Como se importa el JSON:
   - La pantalla inventario/registrar_equipo.php contiene el panel "Inventario Automatico mediante Agente".
@@ -747,26 +742,26 @@ Como se importa el JSON:
   - La importacion solo pre-rellena campos; no guarda automaticamente el equipo.
 
 Archivos del agente:
-  inventario/agente/seduc_inventario_agent.py  — script fuente Python
-  inventario/agente/seduc_inventario_agent.exe — ejecutable compilado (colocar aqui)
-  inventario/agente/README.txt                 — instrucciones PyInstaller
-  inventario/agente/compilar_exe.bat           — ayuda para compilar en Windows
-  inventario/ajax/descargar_agente.php         — endpoint de descarga (solo sirve .exe)
+  inventario/agente/seduc_inventario_agent.bat — agente nativo Windows (distribuir este)
+  inventario/agente/seduc_inventario_agent.py  — fuente Python historica (referencia)
+  inventario/agente/compilar_exe.bat           — helper compilacion Python (referencia)
+  inventario/agente/README_COMPILACION.txt     — documentacion del agente
+  inventario/ajax/descargar_agente.php         — endpoint de descarga (.bat primero, .exe respaldo)
   inventario/registrar_equipo.php              — panel visual e importador JSON
 
 Datos que captura el agente:
-  - nombre_equipo (hostname del equipo)
+  - nombre_equipo (hostname del equipo — $env:COMPUTERNAME)
   - fabricante (Win32_ComputerSystem.Manufacturer)
   - modelo (Win32_ComputerSystem.Model)
   - serial (Win32_BIOS.SerialNumber)
   - procesador: nombre, fabricante detectado (Intel/AMD), velocidad en GHz
-  - ram_gb: total de RAM en GB (Win32_PhysicalMemory o GlobalMemoryStatusEx)
-  - almacenamiento[]: modelo, capacidad (GB/TB), tipo (SSD/NVMe/HDD) por disco
+  - ram_gb: total de RAM en GB (Win32_PhysicalMemory)
+  - almacenamiento[]: modelo, capacidad (GB/TB), tipo (SSD NVMe/SSD/HDD) por disco
   - windows: caption del SO (Win32_OperatingSystem.Caption)
   - usuario_windows: $env:USERNAME de la sesion activa
-  - monitores[]: modelo (WmiMonitorID en root\wmi) y resolucion (EnumDisplayMonitors)
+  - monitores[]: modelo (WmiMonitorID root\wmi) y resolucion (System.Windows.Forms.Screen)
   - generado_en: timestamp de ejecucion
-  - version_agente: "1.0"
+  - version_agente: "1.1"
 
 Datos que NO completa el agente (ingreso manual obligatorio):
   - id_colegio y id_ubicacion (siempre del servidor, no del cliente)
@@ -775,7 +770,7 @@ Datos que NO completa el agente (ingreso manual obligatorio):
   - valor_equipo, proveedor, numero_factura, fecha_compra, observaciones
   - fotos del equipo
 
-Mapeo JSON → campos del formulario:
+Mapeo JSON → campos del formulario (sin cambios desde v1.0):
   nombre_equipo  → input[name="nombre_equipo"]
   fabricante     → input[name="fabricante"]
   modelo         → input[name="producto"]
@@ -791,15 +786,15 @@ Mapeo JSON → campos del formulario:
   monitores[]    → filas de monitor[N][modelo_monitor] y monitor[N][resolucion_monitor]
 
 Compatibilidad del agente:
-  - Windows 7 / 8 / 10 / 11 (32 y 64 bits)
-  - Sin dependencias externas pip (usa PowerShell y ctypes de stdlib)
-  - Compilar con: pyinstaller --onefile --console --name seduc_inventario_agent seduc_inventario_agent.py
+  - Windows 7 SP1 / 8 / 10 / 11 (PowerShell 3.0+)
+  - Sin dependencias externas (usa solo herramientas nativas de Windows)
+  - No requiere Python, pip, PyInstaller ni ningun runtime adicional
 
 Coexistencia con registro manual:
   - Ambas formas son independientes.
   - La importacion solo pre-rellena campos; el usuario puede editar antes de guardar.
   - Si no se importa archivo, el formulario funciona igual que siempre.
-  - Si el .exe no existe en agente/, el endpoint muestra un mensaje para contactar al administrador.
+  - Si el .bat no existe en agente/, el endpoint muestra un mensaje para contactar al administrador.
 
 
 40. Carga masiva de monitores
