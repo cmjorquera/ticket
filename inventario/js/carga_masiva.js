@@ -13,6 +13,9 @@
     var resultSummary = document.getElementById('cmResumenResultados');
     var resultTitle   = document.getElementById('cmTituloResultados');
     var confirmarCantidad = document.getElementById('cmConfirmarCantidad');
+    var confirmarValidas = document.getElementById('cmConfirmarValidas');
+    var confirmarUbicacionesNuevas = document.getElementById('cmConfirmarUbicacionesNuevas');
+    var confirmarErrores = document.getElementById('cmConfirmarErrores');
     var spinnerCargar = document.getElementById('cmSpinner');
     var spinnerInsertar = document.getElementById('cmSpinnerInsertar');
     var dropIcon      = dropZone.querySelector('.cm-dropzone-icon');
@@ -69,13 +72,14 @@
             fileNameLabel.textContent = file.name;
             fileNameLabel.classList.remove('text-muted');
             fileNameLabel.classList.add('text-dark', 'fw-semibold');
-            btnCargar.disabled = false;
+            if (btnCargar) { btnCargar.disabled = false; }
             activarPaso(3);
+            enviarArchivo('preview', []);
         } else {
             fileNameLabel.textContent = 'Ningun archivo seleccionado';
             fileNameLabel.classList.remove('text-dark', 'fw-semibold');
             fileNameLabel.classList.add('text-muted');
-            btnCargar.disabled = true;
+            if (btnCargar) { btnCargar.disabled = true; }
             activarPaso(1);
         }
     }
@@ -94,12 +98,12 @@
         if (!archivoSeleccionado || procesando) return;
 
         procesando = true;
-        btnCargar.disabled = true;
+        if (btnCargar) { btnCargar.disabled = true; }
         btnInsertar.disabled = true;
 
         if (accion === 'preview') {
-            spinnerCargar.classList.remove('d-none');
-            setDropzoneProcesando(true, 'Leyendo archivo...');
+            if (spinnerCargar) { spinnerCargar.classList.remove('d-none'); }
+            setDropzoneProcesando(true, 'Procesando archivo...');
         } else {
             spinnerInsertar.classList.remove('d-none');
             setDropzoneProcesando(true, 'Insertando PC...');
@@ -126,10 +130,10 @@
             })
             .then(function (data) {
                 procesando = false;
-                spinnerCargar.classList.add('d-none');
+                if (spinnerCargar) { spinnerCargar.classList.add('d-none'); }
                 spinnerInsertar.classList.add('d-none');
                 setDropzoneProcesando(false);
-                btnCargar.disabled = false;
+                if (btnCargar) { btnCargar.disabled = false; }
 
                 if (!data.ok) {
                     mostrarAlerta(data.mensaje || 'Error desconocido.');
@@ -149,10 +153,10 @@
             })
             .catch(function (err) {
                 procesando = false;
-                spinnerCargar.classList.add('d-none');
+                if (spinnerCargar) { spinnerCargar.classList.add('d-none'); }
                 spinnerInsertar.classList.add('d-none');
                 setDropzoneProcesando(false);
-                btnCargar.disabled = !archivoSeleccionado;
+                if (btnCargar) { btnCargar.disabled = !archivoSeleccionado; }
                 actualizarBotonInsertar();
                 mostrarAlerta('Error al procesar: ' + err.message);
             });
@@ -198,12 +202,24 @@
     });
 
     fileInput.addEventListener('change', function () {
-        setArchivo(fileInput.files[0] || null);
+        var file = fileInput.files[0] || null;
+        if (file) {
+            var ext = file.name.split('.').pop().toLowerCase();
+            if (ext !== 'xlsx' && ext !== 'xls') {
+                fileInput.value = '';
+                setArchivo(null);
+                mostrarAlerta('El archivo seleccionado no es valido. Debe ser .xlsx o .xls.');
+                return;
+            }
+        }
+        setArchivo(file);
     });
 
-    btnCargar.addEventListener('click', function () {
-        enviarArchivo('preview', []);
-    });
+    if (btnCargar) {
+        btnCargar.addEventListener('click', function () {
+            enviarArchivo('preview', []);
+        });
+    }
 
     seleccionarTodos.addEventListener('change', function () {
         resultTable.querySelectorAll('.cm-row-check:not(:disabled)').forEach(function (chk) {
@@ -224,7 +240,11 @@
             mostrarAlerta('Selecciona al menos una fila valida para insertar.');
             return;
         }
-        confirmarCantidad.textContent = seleccionadas.length;
+        var stats = obtenerEstadisticasSeleccion();
+        confirmarCantidad.textContent = stats.seleccionadas;
+        if (confirmarValidas) { confirmarValidas.textContent = stats.validasSeleccionadas; }
+        if (confirmarUbicacionesNuevas) { confirmarUbicacionesNuevas.textContent = stats.ubicacionesNuevasSeleccionadas; }
+        if (confirmarErrores) { confirmarErrores.textContent = stats.erroresTotales; }
         if (modalConfirmacion) {
             modalConfirmacion.show();
         } else if (confirm('Se insertaran ' + seleccionadas.length + ' equipos seleccionados. ¿Continuar?')) {
@@ -241,6 +261,7 @@
         resultSummary.innerHTML =
             '<span class="badge text-bg-primary me-1 px-3 py-2">Total: ' + (data.total || 0) + '</span>' +
             '<span class="badge text-bg-success me-1 px-3 py-2">Validos: ' + (data.valid_count || 0) + '</span>' +
+            '<span class="badge text-bg-warning me-1 px-3 py-2">Ubicacion nueva: ' + (data.new_location_count || 0) + '</span>' +
             '<span class="badge text-bg-danger me-1 px-3 py-2">Con error: ' + (data.error_count || 0) + '</span>';
 
         var tbody = resultTable.querySelector('tbody');
@@ -253,6 +274,17 @@
                 var d = row.datos || {};
                 var tr = document.createElement('tr');
                 if (!row.ok) { tr.classList.add('table-danger'); }
+                else if (row.ubicacion_nueva) { tr.classList.add('table-warning'); }
+                var mensajes = [];
+                if (row.ok) {
+                    if (row.ubicacion_nueva) {
+                        mensajes.push('<span class="badge text-bg-warning">Ubicacion nueva</span> <span class="text-muted">Se creara al insertar.</span>');
+                    } else {
+                        mensajes.push('<span class="badge text-bg-success">Valida</span>');
+                    }
+                } else {
+                    mensajes.push(escapeHtml((row.errores || []).join(' ')));
+                }
                 tr.innerHTML =
                     '<td class="text-center"><input type="checkbox" class="form-check-input cm-row-check" data-fila="' + row.fila + '"' + (row.ok ? ' checked' : ' disabled') + '></td>' +
                     '<td class="text-center fw-semibold">' + row.fila + '</td>' +
@@ -265,7 +297,7 @@
                     '<td>' + escapeHtml(d.fabricante || '') + '</td>' +
                     '<td>' + escapeHtml(d.producto || '') + '</td>' +
                     '<td>' + escapeHtml(d.valor_equipo || '') + '</td>' +
-                    '<td>' + (row.ok ? '<span class="badge text-bg-success">Valida</span>' : escapeHtml((row.errores || []).join(' '))) + '</td>';
+                    '<td>' + mensajes.join(' ') + '</td>';
                 tbody.appendChild(tr);
             });
         }
@@ -283,6 +315,7 @@
             '<span class="badge text-bg-secondary me-1 px-3 py-2">Omitidos: ' + (data.omitidos || 0) + '</span>' +
             '<span class="badge text-bg-danger me-1 px-3 py-2">Rechazados: ' + (data.rechazados || 0) + '</span>' +
             '<span class="badge text-bg-warning me-1 px-3 py-2">Duplicados: ' + (data.duplicados || 0) + '</span>' +
+            '<span class="badge text-bg-warning me-1 px-3 py-2">Ubicaciones nuevas: ' + (data.ubicaciones_nuevas || 0) + '</span>' +
             '<span class="badge text-bg-info me-1 px-3 py-2">Usuario: ' + (data.errores_usuario || 0) + '</span>' +
             '<span class="badge text-bg-info me-1 px-3 py-2">Ubicacion: ' + (data.errores_ubicacion || 0) + '</span>' +
             '<span class="badge text-bg-info px-3 py-2">Estado/Tipo: ' + (data.errores_estado_tipo || 0) + '</span>';
@@ -317,6 +350,36 @@
         return Array.prototype.slice.call(resultTable.querySelectorAll('.cm-row-check:checked'))
             .map(function (chk) { return parseInt(chk.getAttribute('data-fila'), 10); })
             .filter(function (n) { return n > 0; });
+    }
+
+    function obtenerEstadisticasSeleccion() {
+        var seleccionadas = obtenerFilasSeleccionadas();
+        var seleccionadasSet = {};
+        seleccionadas.forEach(function (fila) { seleccionadasSet[fila] = true; });
+
+        var validasSeleccionadas = 0;
+        var ubicacionesNuevasSeleccionadas = 0;
+        var erroresTotales = 0;
+
+        filasPreview.forEach(function (row) {
+            if (!row.ok) {
+                erroresTotales++;
+                return;
+            }
+            if (seleccionadasSet[row.fila]) {
+                validasSeleccionadas++;
+                if (row.ubicacion_nueva) {
+                    ubicacionesNuevasSeleccionadas++;
+                }
+            }
+        });
+
+        return {
+            seleccionadas: seleccionadas.length,
+            validasSeleccionadas: validasSeleccionadas,
+            ubicacionesNuevasSeleccionadas: ubicacionesNuevasSeleccionadas,
+            erroresTotales: erroresTotales
+        };
     }
 
     function actualizarBotonInsertar() {

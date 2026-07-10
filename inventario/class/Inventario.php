@@ -455,20 +455,39 @@ class Inventario
 
     public function resolverUbicacionCargaMasiva(int $idColegio, string $valorExcel, bool $crearSiNoExiste = true): int
     {
-        if (!$this->tablaExiste('equipo_ubicacion')) {
+        $analisis = $this->analizarUbicacionCargaMasiva($idColegio, $valorExcel);
+        if (!$analisis['nueva']) {
+            return (int)$analisis['id_ubicacion'];
+        }
+
+        if (!$crearSiNoExiste) {
             return 0;
         }
 
-        $valorExcel = preg_replace('/\s+/', ' ', trim($valorExcel));
+        return $this->obtenerOCrearUbicacionEquipo($idColegio, (string)$analisis['nombre_ubicacion']);
+    }
+
+    public function analizarUbicacionCargaMasiva(int $idColegio, string $valorExcel): array
+    {
+        if (!$this->tablaExiste('equipo_ubicacion')) {
+            return [
+                'id_ubicacion' => 0,
+                'nueva' => false,
+                'nombre_ubicacion' => '',
+                'mensaje' => '',
+            ];
+        }
+
+        $valorExcel = $this->normalizarNombreUbicacion($valorExcel);
         if ($valorExcel === '') {
-            throw new RuntimeException('Ubicacion es obligatoria. Seleccionela desde el desplegable o escriba una nueva.');
+            throw new RuntimeException('Ubicacion es obligatoria.');
         }
 
         $idUbicacion = $this->extraerIdDesdeSeleccionExcel($valorExcel);
         if ($idUbicacion > 0) {
             $stmt = mysqli_prepare(
                 $this->cn,
-                "SELECT 1
+                "SELECT id_ubicacion
                  FROM equipo_ubicacion
                  WHERE id_ubicacion = ?
                    AND id_colegio = ?
@@ -477,22 +496,42 @@ class Inventario
             );
             mysqli_stmt_bind_param($stmt, 'ii', $idUbicacion, $idColegio);
             mysqli_stmt_execute($stmt);
-            mysqli_stmt_store_result($stmt);
-            $valida = mysqli_stmt_num_rows($stmt) > 0;
+            $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
             mysqli_stmt_close($stmt);
 
-            if (!$valida) {
+            if (empty($fila['id_ubicacion'])) {
                 throw new RuntimeException('La ubicacion indicada no pertenece al colegio de la plantilla.');
             }
 
-            return $idUbicacion;
+            return [
+                'id_ubicacion' => $idUbicacion,
+                'nueva' => false,
+                'nombre_ubicacion' => '',
+                'mensaje' => '',
+            ];
         }
 
-        if (!$crearSiNoExiste) {
-            return 0;
+        $idExistente = $this->buscarUbicacionPorNombreNormalizado($idColegio, $valorExcel);
+        if ($idExistente > 0) {
+            return [
+                'id_ubicacion' => $idExistente,
+                'nueva' => false,
+                'nombre_ubicacion' => $valorExcel,
+                'mensaje' => '',
+            ];
         }
 
-        return $this->obtenerOCrearUbicacionEquipo($idColegio, $valorExcel);
+        return [
+            'id_ubicacion' => 0,
+            'nueva' => true,
+            'nombre_ubicacion' => $valorExcel,
+            'mensaje' => 'Ubicación nueva detectada. Se creará para este colegio al insertar.',
+        ];
+    }
+
+    public function existeNumeroSerieEquipo(string $numeroSerie): bool
+    {
+        return $this->validarSerieDuplicada($this->normalizarNumeroSerieEquipo($numeroSerie));
     }
 
     private function extraerIdDesdeSeleccionExcel(string $valorExcel): int
@@ -949,6 +988,7 @@ class Inventario
                     e.tipo_pc,
                     e.qr_code,
                     e.id_estado,
+                    c.id_colegio,
                     c.nom_colegio,
                     CONCAT(u.nombre, ' ', u.apellido_paterno, ' ', u.apellido_materno) AS usuario_registra,
                     CONCAT(ua.nombre, ' ', ua.apellido_paterno, ' ', ua.apellido_materno) AS usuario_asignado,
@@ -1763,23 +1803,63 @@ SQL;
         return $idUbicacion;
     }
 
-    private function obtenerOCrearUbicacionEquipo(int $idColegio, string $nombreUbicacion): int
+    private function normalizarNombreUbicacion(string $nombreUbicacion): string
     {
+        return preg_replace('/\s+/', ' ', trim($nombreUbicacion));
+    }
+
+    private function claveNombreUbicacion(string $nombreUbicacion): string
+    {
+        return mb_strtolower($this->normalizarNombreUbicacion($nombreUbicacion), 'UTF-8');
+    }
+
+    private function buscarUbicacionPorNombreNormalizado(int $idColegio, string $nombreUbicacion): int
+    {
+        $claveBuscada = $this->claveNombreUbicacion($nombreUbicacion);
+        if ($idColegio <= 0 || $claveBuscada === '') {
+            return 0;
+        }
+
         $stmt = mysqli_prepare(
             $this->cn,
-            "SELECT id_ubicacion
+            "SELECT id_ubicacion, nombre_ubicacion, estado
              FROM equipo_ubicacion
-             WHERE id_colegio = ?
-               AND LOWER(TRIM(nombre_ubicacion)) = LOWER(TRIM(?))
-             LIMIT 1"
+             WHERE id_colegio = ?"
         );
-        mysqli_stmt_bind_param($stmt, 'is', $idColegio, $nombreUbicacion);
+        mysqli_stmt_bind_param($stmt, 'i', $idColegio);
         mysqli_stmt_execute($stmt);
-        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        $rs = mysqli_stmt_get_result($stmt);
+        $idEncontrado = 0;
+        $estadoEncontrado = 1;
+        while ($fila = mysqli_fetch_assoc($rs)) {
+            if ($this->claveNombreUbicacion((string)($fila['nombre_ubicacion'] ?? '')) === $claveBuscada) {
+                $idEncontrado = (int)($fila['id_ubicacion'] ?? 0);
+                $estadoEncontrado = (int)($fila['estado'] ?? 1);
+                break;
+            }
+        }
         mysqli_stmt_close($stmt);
 
-        if (!empty($fila['id_ubicacion'])) {
-            return (int)$fila['id_ubicacion'];
+        if ($idEncontrado > 0 && $estadoEncontrado !== 1) {
+            $stmtActivo = mysqli_prepare($this->cn, "UPDATE equipo_ubicacion SET estado = 1 WHERE id_ubicacion = ? LIMIT 1");
+            mysqli_stmt_bind_param($stmtActivo, 'i', $idEncontrado);
+            mysqli_stmt_execute($stmtActivo);
+            mysqli_stmt_close($stmtActivo);
+        }
+
+        return $idEncontrado;
+    }
+
+    private function obtenerOCrearUbicacionEquipo(int $idColegio, string $nombreUbicacion): int
+    {
+        $nombreUbicacion = $this->normalizarNombreUbicacion($nombreUbicacion);
+        if ($nombreUbicacion === '') {
+            throw new RuntimeException('Ubicacion es obligatoria.');
+        }
+
+        $idExistente = $this->buscarUbicacionPorNombreNormalizado($idColegio, $nombreUbicacion);
+        if ($idExistente > 0) {
+            return $idExistente;
         }
 
         $tipoUbicacion = 'Otra';
@@ -2600,6 +2680,7 @@ SQL;
                     m.codigo_interno,
                     m.tamano_monitor,
                     m.id_estado,
+                    c.id_colegio,
                     c.nom_colegio,
                     CONCAT(ua.nombre, ' ', ua.apellido_paterno) AS usuario_asignado,
                     {$selectEstado}

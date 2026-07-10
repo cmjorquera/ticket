@@ -428,6 +428,7 @@ window.INVENTARIO_CONFIG = {
     idColegioRestringido: <?= $idColegioRestringido ?>,
     mostrarColumnaColegio: <?= $mostrarColumnaColegio ? 'true' : 'false' ?>,
     qrEquipoBaseUrl: <?= json_encode(inventario_url_absoluta('equipoQRinformacion.php')) ?>,
+    colegioLogoBaseUrl: '../img/colegios/',
     endpoints: {
         listar:          'ajax/listar_equipos.php',
         detalle:         'ajax/obtener_detalle_equipo.php',

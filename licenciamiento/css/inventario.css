@@ -723,6 +723,17 @@
     color: #fff !important;
 }
 
+.inv-swal-confirm.inv-swal-danger {
+    background: #e0313f !important;
+    border-color: #e0313f !important;
+}
+
+.inv-swal-confirm.inv-swal-danger:hover,
+.inv-swal-confirm.inv-swal-danger:focus {
+    background: #c81f35 !important;
+    border-color: #c81f35 !important;
+}
+
 .inv-swal-cancel {
     background: #f8fbff !important;
     border-color: #d8e4ef !important;

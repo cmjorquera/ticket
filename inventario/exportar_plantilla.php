@@ -299,15 +299,15 @@ foreach ($validaciones as $col => $formula) {
     for ($row = 7; $row <= $ultimaFilaValidacion; $row++) {
         $validation = $sheet->getCell($col . $row)->getDataValidation();
         $validation->setType(PHPExcel_Cell_DataValidation::TYPE_LIST);
-        $validation->setErrorStyle(PHPExcel_Cell_DataValidation::STYLE_STOP);
+        $validation->setErrorStyle($col === 'A' ? PHPExcel_Cell_DataValidation::STYLE_INFORMATION : PHPExcel_Cell_DataValidation::STYLE_STOP);
         $validation->setAllowBlank($col === 'B');
         $validation->setShowInputMessage(true);
-        $validation->setShowErrorMessage(true);
+        $validation->setShowErrorMessage($col !== 'A');
         $validation->setShowDropDown(true);
         $validation->setErrorTitle('Valor no valido');
         $validation->setError('Seleccione un valor de la lista.');
-        $validation->setPromptTitle('Seleccione de la lista');
-        $validation->setPrompt('Use el desplegable para elegir un valor disponible.');
+        $validation->setPromptTitle($col === 'A' ? 'Seleccione o escriba' : 'Seleccione de la lista');
+        $validation->setPrompt($col === 'A' ? 'Use el desplegable o escriba una nueva ubicacion. Se creara para este colegio al insertar.' : 'Use el desplegable para elegir un valor disponible.');
         $validation->setFormula1('=' . $formula);
     }
 }

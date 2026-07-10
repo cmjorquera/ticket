@@ -185,14 +185,19 @@ function cm_leer_filas_excel(string $tmpFile): array
 function cm_validar_fila(Inventario $inventario, array $datos, int $idColegio): array
 {
     $errores = [];
+    $advertencias = [];
     $resueltos = [
         'id_estado' => 0,
         'id_ubicacion' => 0,
         'id_usuario_asignado' => 0,
+        'ubicacion_nueva' => false,
+        'nombre_ubicacion_nueva' => '',
     ];
 
     if ($datos['numero_serie'] === '') {
         $errores[] = 'Numero de serie es obligatorio.';
+    } elseif ($inventario->existeNumeroSerieEquipo($datos['numero_serie'])) {
+        $errores[] = 'El numero de serie ya existe en la base de datos.';
     }
 
     if ($datos['tipo_pc'] === '') {
@@ -207,7 +212,13 @@ function cm_validar_fila(Inventario $inventario, array $datos, int $idColegio): 
     }
 
     try {
-        $resueltos['id_ubicacion'] = $inventario->resolverUbicacionCargaMasiva($idColegio, $datos['id_ubicacion'], false);
+        $ubicacion = $inventario->analizarUbicacionCargaMasiva($idColegio, $datos['id_ubicacion']);
+        $resueltos['id_ubicacion'] = (int)$ubicacion['id_ubicacion'];
+        $resueltos['ubicacion_nueva'] = (bool)$ubicacion['nueva'];
+        $resueltos['nombre_ubicacion_nueva'] = (string)$ubicacion['nombre_ubicacion'];
+        if ($resueltos['ubicacion_nueva']) {
+            $advertencias[] = $ubicacion['mensaje'] ?: 'Ubicación nueva detectada. Se creará para este colegio al insertar.';
+        }
     } catch (Throwable $e) {
         $errores[] = $e->getMessage();
     }
@@ -220,6 +231,7 @@ function cm_validar_fila(Inventario $inventario, array $datos, int $idColegio): 
     return [
         'ok' => empty($errores),
         'errores' => $errores,
+        'advertencias' => $advertencias,
         'resueltos' => $resueltos,
     ];
 }
@@ -260,14 +272,20 @@ try {
         $detalle = [];
         $validas = 0;
         $conError = 0;
+        $ubicacionesNuevas = 0;
         foreach ($filas as $fila) {
             $datos = $fila['datos'];
             $validacion = cm_validar_fila($inventario, $datos, $idColegio);
             $validacion['ok'] ? $validas++ : $conError++;
+            if (!empty($validacion['resueltos']['ubicacion_nueva']) && $validacion['ok']) {
+                $ubicacionesNuevas++;
+            }
             $detalle[] = [
                 'fila' => $fila['fila'],
                 'ok' => $validacion['ok'],
                 'seleccionable' => $validacion['ok'],
+                'ubicacion_nueva' => (bool)$validacion['resueltos']['ubicacion_nueva'],
+                'nombre_ubicacion_nueva' => $validacion['resueltos']['nombre_ubicacion_nueva'],
                 'datos' => [
                     'nombre_personalizado' => $datos['nombre_personalizado'],
                     'numero_serie' => $datos['numero_serie'],
@@ -280,6 +298,7 @@ try {
                     'valor_equipo' => $datos['valor_equipo'],
                 ],
                 'errores' => $validacion['errores'],
+                'advertencias' => $validacion['advertencias'],
             ];
         }
 
@@ -288,6 +307,7 @@ try {
             'accion' => 'preview',
             'total' => count($detalle),
             'valid_count' => $validas,
+            'new_location_count' => $ubicacionesNuevas,
             'error_count' => $conError,
             'detalle' => $detalle,
         ]);
@@ -308,6 +328,7 @@ try {
     $errUsuario = 0;
     $errUbicacion = 0;
     $errEstadoTipo = 0;
+    $ubicacionesNuevasInsertadas = 0;
 
     foreach ($filas as $fila) {
         $numFilaExcel = (int)$fila['fila'];
@@ -340,6 +361,7 @@ try {
         }
 
         try {
+            $ubicacionEraNueva = !empty($validacion['resueltos']['ubicacion_nueva']);
             $idUbicacion = $inventario->resolverUbicacionCargaMasiva($idColegio, $datos['id_ubicacion'], true);
             $payload = cm_payload_desde_datos(
                 $datos,
@@ -351,6 +373,9 @@ try {
             );
             $idEquipo = $inventario->guardarEquipoDesdeArray($payload, $idUsuarioSession);
             $insertados++;
+            if ($ubicacionEraNueva) {
+                $ubicacionesNuevasInsertadas++;
+            }
             $resultados[] = [
                 'fila' => $numFilaExcel,
                 'ok' => true,
@@ -382,6 +407,7 @@ try {
         'errores_usuario' => $errUsuario,
         'errores_ubicacion' => $errUbicacion,
         'errores_estado_tipo' => $errEstadoTipo,
+        'ubicaciones_nuevas' => $ubicacionesNuevasInsertadas,
         'detalle' => $resultados,
     ]);
 } catch (Throwable $e) {

@@ -42,6 +42,25 @@
         return base + (base.indexOf('?') === -1 ? '?' : '&') + 'id=' + encodeURIComponent(idEquipo);
     }
 
+    function buildColegioLogoUrl(idColegio) {
+        const cfg = window.INVENTARIO_CONFIG || {};
+        const base = cfg.colegioLogoBaseUrl || '../img/colegios/';
+        return base + 'colegio_' + encodeURIComponent(idColegio) + '.png';
+    }
+
+    function renderColegioCell(row) {
+        const idColegio = parseInt(row.id_colegio, 10) || 0;
+        const nombre = escapeHtml(row.nom_colegio || 'Sin colegio');
+        const logo = idColegio > 0
+            ? '<span class="inv-school-avatar"><img src="' + buildColegioLogoUrl(idColegio) + '" alt="" loading="lazy" onerror="this.closest(\'.inv-school-avatar\').classList.add(\'is-empty\');this.remove();"></span>'
+            : '<span class="inv-school-avatar is-empty"><i class="bi bi-building"></i></span>';
+
+        return '<div class="inv-school-cell">' +
+            '<div class="inv-school-name">' + nombre + '</div>' +
+            '<div class="inv-school-logo-line">' + logo + '</div>' +
+            '</div>';
+    }
+
     // =========================================================================
     // ESTADO SELECT (inline en tabla, reemplaza modal)
     // =========================================================================
@@ -68,25 +87,30 @@
         const id = parseInt(row.id_equipo, 10);
         const tieneAsignado = row.id_usuario_asignado && parseInt(row.id_usuario_asignado, 10) > 0;
         const btnLiberar = tieneAsignado
-            ? '<button type="button" class="btn btn-sm inv-btn-action inv-btn-release"' +
+            ? '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-release"' +
               ' onclick="InventarioFunciones.liberarEquipo(' + id + ')"' +
-              ' title="Liberar equipo" aria-label="Liberar equipo"><i class="bi bi-person-x"></i></button>'
+              '><i class="bi bi-person-x"></i><span>Liberar usuario</span></button></li>'
             : '';
-        return '<div class="inv-action-buttons d-flex flex-wrap gap-2">' +
-            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-view"' +
+        return '<div class="dropdown inv-action-menu">' +
+            '<button type="button" class="btn inv-action-menu-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del equipo">' +
+            '<i class="bi bi-three-dots-vertical"></i></button>' +
+            '<ul class="dropdown-menu dropdown-menu-end inv-action-menu-list">' +
+            '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-view"' +
             ' onclick="InventarioFunciones.verDetalle(' + id + ')"' +
-            ' title="Ver detalle" aria-label="Ver detalle"><i class="bi bi-eye"></i></button>' +
-            '<a href="editar_equipo.php?id_equipo=' + id + '" class="btn btn-sm inv-btn-action inv-btn-edit" title="Editar" aria-label="Editar"><i class="bi bi-pencil"></i></a>' +
-            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-qr"' +
+            '><i class="bi bi-eye"></i><span>Ver detalle</span></button></li>' +
+            '<li><a href="editar_equipo.php?id_equipo=' + id + '" class="dropdown-item inv-menu-item inv-menu-edit"><i class="bi bi-pencil"></i><span>Editar</span></a></li>' +
+            '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-qr"' +
             ' onclick="InventarioFunciones.verQrEquipo(' + id + ')"' +
-            ' title="Ver código QR" aria-label="Ver código QR"><i class="bi bi-qr-code"></i></button>' +
-            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-photo"' +
+            '><i class="bi bi-qr-code"></i><span>Código QR</span></button></li>' +
+            '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-photo"' +
             ' onclick="InventarioFunciones.verFotosEquipo(' + id + ')"' +
-            ' title="Fotos" aria-label="Fotos"><i class="bi bi-images"></i></button>' +
+            '><i class="bi bi-images"></i><span>Fotos</span></button></li>' +
             btnLiberar +
-            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-delete"' +
+            '<li><hr class="dropdown-divider"></li>' +
+            '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-delete"' +
             ' onclick="InventarioFunciones.eliminarEquipo(' + id + ')"' +
-            ' title="Eliminar" aria-label="Eliminar"><i class="bi bi-trash"></i></button>' +
+            '><i class="bi bi-trash"></i><span>Desactivar</span></button></li>' +
+            '</ul>' +
             '</div>';
     }
 
@@ -98,22 +122,27 @@
         const id = parseInt(row.id_monitor, 10);
         const tieneAsignado = row.id_usuario_asignado && parseInt(row.id_usuario_asignado, 10) > 0;
         const btnLiberar = tieneAsignado
-            ? '<button type="button" class="btn btn-sm inv-btn-action inv-btn-release"' +
+            ? '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-release"' +
               ' onclick="InventarioFunciones.liberarMonitor(' + id + ')"' +
-              ' title="Liberar monitor" aria-label="Liberar monitor"><i class="bi bi-person-x"></i></button>'
+              '><i class="bi bi-person-x"></i><span>Liberar usuario</span></button></li>'
             : '';
-        return '<div class="inv-action-buttons d-flex flex-wrap gap-2">' +
-            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-view"' +
+        return '<div class="dropdown inv-action-menu">' +
+            '<button type="button" class="btn inv-action-menu-toggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones del monitor">' +
+            '<i class="bi bi-three-dots-vertical"></i></button>' +
+            '<ul class="dropdown-menu dropdown-menu-end inv-action-menu-list">' +
+            '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-view"' +
             ' onclick="InventarioFunciones.verDetalleMonitor(' + id + ')"' +
-            ' title="Ver detalle" aria-label="Ver detalle"><i class="bi bi-eye"></i></button>' +
-            '<a href="editar_monitor.php?id_monitor=' + id + '" class="btn btn-sm inv-btn-action inv-btn-edit" title="Editar" aria-label="Editar"><i class="bi bi-pencil"></i></a>' +
-            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-photo"' +
+            '><i class="bi bi-eye"></i><span>Ver detalle</span></button></li>' +
+            '<li><a href="editar_monitor.php?id_monitor=' + id + '" class="dropdown-item inv-menu-item inv-menu-edit"><i class="bi bi-pencil"></i><span>Editar</span></a></li>' +
+            '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-photo"' +
             ' onclick="InventarioFunciones.verFotosMonitor(' + id + ')"' +
-            ' title="Fotos" aria-label="Fotos"><i class="bi bi-images"></i></button>' +
+            '><i class="bi bi-images"></i><span>Fotos</span></button></li>' +
             btnLiberar +
-            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-delete"' +
+            '<li><hr class="dropdown-divider"></li>' +
+            '<li><button type="button" class="dropdown-item inv-menu-item inv-menu-delete"' +
             ' onclick="InventarioFunciones.eliminarMonitor(' + id + ')"' +
-            ' title="Eliminar" aria-label="Eliminar"><i class="bi bi-trash"></i></button>' +
+            '><i class="bi bi-trash"></i><span>Desactivar</span></button></li>' +
+            '</ul>' +
             '</div>';
     }
 
@@ -223,7 +252,10 @@
             }
         ];
         if (mostrarColegio) {
-            columnas.push({ data: 'nom_colegio', render: escapeHtml });
+            columnas.push({
+                data: null,
+                render: function (row) { return renderColegioCell(row); }
+            });
         }
         columnas.push(
             { data: 'tipo_pc', render: escapeHtml },
@@ -305,7 +337,10 @@
             }
         ];
         if (mostrarColegio) {
-            columnas.push({ data: 'nom_colegio', render: escapeHtml });
+            columnas.push({
+                data: null,
+                render: function (row) { return renderColegioCell(row); }
+            });
         }
         columnas.push(
             {

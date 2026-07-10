@@ -38,6 +38,10 @@
         };
     }
 
+    function showInventarioSwal(options) {
+        return Swal.fire($.extend(true, {}, getSwalBaseConfig(), options));
+    }
+
     function numeroSeguro(valor) {
         const numero = Number(valor);
         return Number.isFinite(numero) ? numero : 0;
@@ -248,7 +252,11 @@
             renderResumenActivo();
             actualizarLinksPdf();
         }).fail(function () {
-            Swal.fire('Error', 'No fue posible cargar el software.', 'error');
+            showInventarioSwal({
+                icon: 'error',
+                title: 'Error',
+                text: 'No fue posible cargar el software.'
+            });
         });
     }
 
@@ -265,7 +273,11 @@
             renderResumenActivo();
             actualizarLinksPdf();
         }).fail(function () {
-            Swal.fire('Error', 'No fue posible cargar los sitios.', 'error');
+            showInventarioSwal({
+                icon: 'error',
+                title: 'Error',
+                text: 'No fue posible cargar los sitios.'
+            });
         });
     }
 
@@ -288,14 +300,14 @@
                 data: $form.serialize(),
                 dataType: 'json'
             }).done(function (response) {
-                Swal.fire({ icon: 'success', title: 'Guardado correctamente', text: response.mensaje }).then(function () {
+                showInventarioSwal({ icon: 'success', title: 'Guardado correctamente', text: response.mensaje }).then(function () {
                     if (response.redirect) {
                         window.location.href = response.redirect;
                     }
                 });
             }).fail(function (xhr) {
                 const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible guardar.';
-                Swal.fire('Error', mensaje, 'error');
+                showInventarioSwal({ icon: 'error', title: 'Error', text: mensaje });
             });
         });
     }
@@ -303,22 +315,38 @@
     function bindDelete() {
         $(document).on('click', '.btnEliminarSoftware', function () {
             const id = $(this).data('id');
-            Swal.fire({ title: 'Desactivar software', text: 'El registro quedara inactivo.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Si, desactivar', cancelButtonText: 'Cancelar' }).then(function (result) {
+            showInventarioSwal({
+                title: 'Desactivar software',
+                text: 'El registro quedará inactivo.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, desactivar',
+                cancelButtonText: 'Cancelar',
+                customClass: { confirmButton: 'inv-swal-confirm inv-swal-danger' }
+            }).then(function (result) {
                 if (!result.isConfirmed) { return; }
                 $.post(window.INVENTARIO_CONFIG.endpoints.eliminarSoftware, { id_software: id }, null, 'json').done(loadSoftware).fail(function (xhr) {
                     const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible desactivar.';
-                    Swal.fire('Error', mensaje, 'error');
+                    showInventarioSwal({ icon: 'error', title: 'Error', text: mensaje });
                 });
             });
         });
 
         $(document).on('click', '.btnEliminarSitio', function () {
             const id = $(this).data('id');
-            Swal.fire({ title: 'Desactivar sitio', text: 'El registro quedara inactivo.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Si, desactivar', cancelButtonText: 'Cancelar' }).then(function (result) {
+            showInventarioSwal({
+                title: 'Desactivar sitio',
+                text: 'El registro quedará inactivo.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, desactivar',
+                cancelButtonText: 'Cancelar',
+                customClass: { confirmButton: 'inv-swal-confirm inv-swal-danger' }
+            }).then(function (result) {
                 if (!result.isConfirmed) { return; }
                 $.post(window.INVENTARIO_CONFIG.endpoints.eliminarSitio, { id_sitio: id }, null, 'json').done(loadSitios).fail(function (xhr) {
                     const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible desactivar.';
-                    Swal.fire('Error', mensaje, 'error');
+                    showInventarioSwal({ icon: 'error', title: 'Error', text: mensaje });
                 });
             });
         });

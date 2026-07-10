@@ -94,18 +94,21 @@ require __DIR__ . '/componentes/layout_top.php';
                 <!-- Tarjeta 4: Previsualizacion/resultados (oculta hasta procesar) -->
                 <div id="cmResultados" class="card shadow-sm border-0 inv-panel d-none mb-3">
                     <div class="card-body p-4">
-                        <div class="d-flex flex-column flex-xl-row justify-content-between gap-3 mb-3">
+                        <div class="mb-3">
                             <h5 class="mb-0">
                                 <span class="cm-step-num-sm">4</span>
                                 <span id="cmTituloResultados">Previsualizacion de equipos</span>
                             </h5>
+                        </div>
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
+                            <div id="cmResumenResultados" class="d-flex flex-wrap gap-2 align-items-center"></div>
+                            <div>
                             <button type="button" id="btnInsertarPc" class="btn btn-success d-none" disabled>
                                 <span id="cmSpinnerInsertar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
                                 <i class="bi bi-check2-circle me-1"></i>Insertar PC
                             </button>
+                            </div>
                         </div>
-
-                        <div id="cmResumenResultados" class="mb-3 d-flex flex-wrap gap-2 align-items-center"></div>
 
                         <div class="table-responsive">
                             <table class="table table-sm table-hover align-middle border" id="cmTablaResultados">
@@ -143,7 +146,7 @@ require __DIR__ . '/componentes/layout_top.php';
                     </div>
                     <div class="cm-upload-panel-body">
                         <p class="text-muted small mb-3">
-                            Completa la plantilla y sube el archivo para previsualizar.
+                            Completa la plantilla y sube el archivo. La previsualizacion se ejecutara automaticamente.
                             Nada se inserta hasta que selecciones filas y confirmes.
                         </p>
 
@@ -163,7 +166,7 @@ require __DIR__ . '/componentes/layout_top.php';
                             <span id="cmFileName" class="text-muted small">Ningún archivo seleccionado</span>
                         </div>
 
-                        <button id="btnCargarMasiva" class="btn btn-primary w-100" disabled>
+                        <button id="btnCargarMasiva" class="btn btn-primary w-100 d-none" disabled aria-hidden="true" tabindex="-1">
                             <span id="cmSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
                             <i class="bi bi-search me-1"></i>Cargar / previsualizar
                         </button>
@@ -183,7 +186,12 @@ require __DIR__ . '/componentes/layout_top.php';
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-1">Se insertarán <strong id="cmConfirmarCantidad">0</strong> equipos seleccionados.</p>
+                <div id="cmConfirmarResumen" class="d-flex flex-column gap-2 mb-3">
+                    <div class="d-flex justify-content-between gap-3"><span>Total filas seleccionadas</span><strong id="cmConfirmarCantidad">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span>Total validas seleccionadas</span><strong id="cmConfirmarValidas">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span>Con ubicacion nueva</span><strong id="cmConfirmarUbicacionesNuevas">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3 text-danger"><span>Con error</span><strong id="cmConfirmarErrores">0</strong></div>
+                </div>
                 <p class="text-muted mb-0">Las filas no seleccionadas no serán ingresadas.</p>
             </div>
             <div class="modal-footer">
