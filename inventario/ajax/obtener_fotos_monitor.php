@@ -11,6 +11,10 @@ try {
     if (!$monitor) {
         throw new RuntimeException('Monitor no encontrado.');
     }
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->colegioPermitidoPorAlcance((int)($monitor['id_colegio'] ?? 0), $alcanceInventario)) {
+        throw new RuntimeException('No tienes permiso para ver este monitor.');
+    }
 
     $fotos = $monitor['fotos'] ?? [];
     ob_start();

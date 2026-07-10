@@ -17,9 +17,8 @@ try {
         throw new RuntimeException('Estado no valido.');
     }
 
-    $colegioUsuario = $inventario->obtenerColegioDelUsuario($idUsuarioSession);
-    $idColegioUsuario = (int)($colegioUsuario['id_colegio'] ?? 0);
-    if (!$inventario->usuarioPuedeGestionarEquipo($idEquipo, $idColegioUsuario)) {
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->usuarioPuedeGestionarEquipoPorAlcance($idEquipo, $alcanceInventario)) {
         throw new RuntimeException('No tienes permiso para modificar este equipo.');
     }
 

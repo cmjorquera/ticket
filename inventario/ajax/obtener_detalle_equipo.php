@@ -11,6 +11,13 @@ if (!$equipo) {
     exit;
 }
 
+$alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+if (!$inventario->colegioPermitidoPorAlcance((int)($equipo['id_colegio'] ?? 0), $alcanceInventario)) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'mensaje' => 'No tienes permiso para ver este equipo.']);
+    exit;
+}
+
 ob_start();
 $detalleOffcanvas = true;
 require dirname(__DIR__) . '/componentes/detalle_equipo.php';

@@ -7,6 +7,10 @@ try {
     if ($idEquipo <= 0) {
         throw new RuntimeException('No se recibio el identificador del equipo.');
     }
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->usuarioPuedeGestionarEquipoPorAlcance($idEquipo, $alcanceInventario)) {
+        throw new RuntimeException('No tienes permiso para actualizar este equipo.');
+    }
 
     $inventario->actualizarEquipo($idEquipo, $_POST, $_FILES, $idUsuarioSession);
     echo json_encode([

@@ -7,6 +7,10 @@ try {
     if ($idMonitor <= 0) {
         throw new RuntimeException('Monitor no válido.');
     }
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->usuarioPuedeGestionarMonitorPorAlcance($idMonitor, $alcanceInventario)) {
+        throw new RuntimeException('No tienes permiso para liberar este monitor.');
+    }
     $inventario->liberarMonitor($idMonitor, $idUsuarioSession);
     echo json_encode(['ok' => true, 'mensaje' => 'Monitor liberado correctamente.']);
 } catch (Throwable $e) {

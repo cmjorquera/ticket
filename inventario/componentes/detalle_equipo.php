@@ -1,6 +1,7 @@
 <?php
 $detalleOffcanvas = !empty($detalleOffcanvas);
-$qrFichaUrl = inventario_sistema_url_absoluta('codigosQR/inventario/equipoQRinformacion.php?id=' . (int)$equipo['id_equipo']);
+$qrFichaUrl = inventario_url_absoluta('equipoQRinformacion.php?id=' . (int)$equipo['id_equipo']);
+$nombrePersonalizadoEquipo = trim((string)($equipo['nombre_personalizado'] ?? ''));
 $fotoPrincipal = null;
 $fotosGaleria  = [];
 foreach (($equipo['fotos'] ?? []) as $foto) {
@@ -12,11 +13,20 @@ foreach (($equipo['fotos'] ?? []) as $foto) {
 }
 ?>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+<div class="inv-detail-view">
+<div class="inv-detail-hero d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
-        <h1 class="<?= $detalleOffcanvas ? 'h4' : 'h3' ?> mb-1"><?= inventario_h($equipo['nombre_equipo']) ?></h1>
-        <p class="text-muted mb-0">
-            <?= inventario_h($equipo['nom_colegio']) ?> | <?= inventario_h($equipo['tipo_pc']) ?> | Serie <?= inventario_h($equipo['numero_serie']) ?>
+        <span class="inv-detail-eyebrow">Ficha de equipo</span>
+        <?php if ($nombrePersonalizadoEquipo !== ''): ?>
+            <h1 class="<?= $detalleOffcanvas ? 'h4' : 'h3' ?> mb-0"><?= inventario_h($nombrePersonalizadoEquipo) ?></h1>
+            <p class="text-muted small mb-1">(<?= inventario_h($equipo['nombre_equipo']) ?>)</p>
+        <?php else: ?>
+            <h1 class="<?= $detalleOffcanvas ? 'h4' : 'h3' ?> mb-1"><?= inventario_h($equipo['nombre_equipo']) ?></h1>
+        <?php endif; ?>
+        <p class="inv-detail-meta mb-0">
+            <span><?= inventario_h($equipo['nom_colegio']) ?></span>
+            <span><?= inventario_h($equipo['tipo_pc']) ?></span>
+            <span>Serie <?= inventario_h($equipo['numero_serie']) ?></span>
         </p>
     </div>
     <div class="d-flex gap-2">
@@ -30,28 +40,36 @@ foreach (($equipo['fotos'] ?? []) as $foto) {
 <div class="row g-4">
     <div class="<?= $detalleOffcanvas ? 'col-12' : 'col-lg-8' ?>">
 
-        <div class="card shadow-sm border-0 inv-panel mb-4">
+        <div class="card shadow-sm border-0 inv-panel inv-detail-summary-card mb-4">
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-4"><span class="text-muted d-block small">Colegio</span><strong><?= inventario_h($equipo['nom_colegio']) ?></strong></div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Fabricante</span><strong><?= inventario_h($equipo['fabricante'] ?: '-') ?></strong></div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Producto</span><strong><?= inventario_h($equipo['producto'] ?: '-') ?></strong></div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Estado</span><?= $inventario->renderBadgeEstado($equipo['id_estado'], $equipo['nombre_estado'], $equipo['color_badge']) ?></div>
-                    <div class="col-md-4">
-                        <span class="text-muted d-block small">Ubicacion actual</span>
+                    <?php if ($nombrePersonalizadoEquipo !== ''): ?>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Nombre</span><strong><?= inventario_h($nombrePersonalizadoEquipo) ?></strong></div></div>
+                    <?php endif; ?>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Identificador tecnico</span><strong><?= inventario_h($equipo['nombre_equipo']) ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Colegio</span><strong><?= inventario_h($equipo['nom_colegio']) ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Fabricante</span><strong><?= inventario_h($equipo['fabricante'] ?: '-') ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Producto</span><strong><?= inventario_h($equipo['producto'] ?: '-') ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Estado</span><?= $inventario->renderBadgeEstado($equipo['id_estado'], $equipo['nombre_estado'], $equipo['color_badge']) ?></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info">
+                        <span>Ubicacion actual</span>
                         <strong>
                             <?php
                             $nomUbic = $equipo['nombre_ubicacion'] ?? '';
                             $tipUbic = $equipo['tipo_ubicacion'] ?? '';
                             echo $nomUbic !== ''
                                 ? inventario_h($tipUbic ? $tipUbic . ' - ' . $nomUbic : $nomUbic)
-                                : '<span class="text-muted">Sin ubicacion</span>';
+                                : '<span class="inv-table-chip inv-table-chip-warning"><span></span>Pendiente</span>';
                             ?>
                         </strong>
-                    </div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Usuario asignado</span><strong><?= inventario_h($equipo['usuario_asignado'] ?: 'Sin asignar') ?></strong></div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Registrado por</span><strong><?= inventario_h($equipo['nombre_usuario_registra'] ?: $equipo['usuario_registra'] ?: '-') ?></strong></div>
-                    <div class="col-md-4"><span class="text-muted d-block small">QR</span><strong><?= inventario_h($equipo['qr_code']) ?></strong></div>
+                    </div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Usuario asignado</span><strong>
+                        <?= trim((string)($equipo['usuario_asignado'] ?? '')) !== ''
+                            ? inventario_h($equipo['usuario_asignado'])
+                            : '<span class="inv-table-chip inv-table-chip-warning"><span></span>Sin asignar</span>' ?>
+                    </strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Registrado por</span><strong><?= inventario_h($equipo['nombre_usuario_registra'] ?: $equipo['usuario_registra'] ?: '-') ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>QR</span><strong><?= inventario_h($equipo['qr_code']) ?></strong></div></div>
                 </div>
             </div>
         </div>
@@ -214,8 +232,13 @@ foreach (($equipo['fotos'] ?? []) as $foto) {
             <div class="card-body">
                 <h5 class="mb-3">QR del equipo</h5>
                 <div<?= $detalleOffcanvas ? '' : ' id="qrEquipo"' ?> class="d-flex justify-content-center js-qr-equipo" data-qr-text="<?= inventario_h($qrFichaUrl) ?>"></div>
-                <p class="small text-muted text-center mt-2 mb-0"><?= inventario_h($qrFichaUrl) ?></p>
+                <div class="text-center mt-3">
+                    <a href="<?= inventario_h($qrFichaUrl) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Abrir ficha QR
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+</div>
 </div>

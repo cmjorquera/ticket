@@ -7,6 +7,10 @@ try {
     if ($idEquipo <= 0) {
         throw new RuntimeException('Equipo no válido.');
     }
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->usuarioPuedeGestionarEquipoPorAlcance($idEquipo, $alcanceInventario)) {
+        throw new RuntimeException('No tienes permiso para liberar este equipo.');
+    }
     $inventario->liberarEquipo($idEquipo, $idUsuarioSession);
     echo json_encode(['ok' => true, 'mensaje' => 'Equipo liberado correctamente.']);
 } catch (Throwable $e) {

@@ -23,6 +23,25 @@
         return function () { clearTimeout(timer); timer = setTimeout(fn, delay); };
     }
 
+    function normalizarSerieEquipo(value) {
+        return String(value || '').trim().toUpperCase().replace(/\s+/g, ' ').replace(/[^A-Z0-9\-_.\/]/g, '');
+    }
+
+    function nombreEquipoDesdeSerie(value) {
+        const serie = normalizarSerieEquipo(value);
+        return serie ? 'PC-' + serie : '';
+    }
+
+    function badgePendiente(label) {
+        return '<span class="inv-table-chip inv-table-chip-warning"><span></span>' + escapeHtml(label || 'Pendiente') + '</span>';
+    }
+
+    function buildQrFichaUrl(idEquipo) {
+        const cfg = window.INVENTARIO_CONFIG || {};
+        const base = cfg.qrEquipoBaseUrl || 'equipoQRinformacion.php';
+        return base + (base.indexOf('?') === -1 ? '?' : '&') + 'id=' + encodeURIComponent(idEquipo);
+    }
+
     // =========================================================================
     // ESTADO SELECT (inline en tabla, reemplaza modal)
     // =========================================================================
@@ -58,6 +77,9 @@
             ' onclick="InventarioFunciones.verDetalle(' + id + ')"' +
             ' title="Ver detalle" aria-label="Ver detalle"><i class="bi bi-eye"></i></button>' +
             '<a href="editar_equipo.php?id_equipo=' + id + '" class="btn btn-sm inv-btn-action inv-btn-edit" title="Editar" aria-label="Editar"><i class="bi bi-pencil"></i></a>' +
+            '<button type="button" class="btn btn-sm inv-btn-action inv-btn-qr"' +
+            ' onclick="InventarioFunciones.verQrEquipo(' + id + ')"' +
+            ' title="Ver código QR" aria-label="Ver código QR"><i class="bi bi-qr-code"></i></button>' +
             '<button type="button" class="btn btn-sm inv-btn-action inv-btn-photo"' +
             ' onclick="InventarioFunciones.verFotosEquipo(' + id + ')"' +
             ' title="Fotos" aria-label="Fotos"><i class="bi bi-images"></i></button>' +
@@ -103,7 +125,7 @@
         return {
             id_colegio:          $('#filtroColegio').val()    || '',
             id_estado:           $('#filtroEstado').val()     || '',
-            tipo_pc:             $('#filtroTipo').val()       || '',
+            tipo_pc:             '',
             id_ubicacion:        $('#filtroUbicacion').val()  || '',
             id_usuario_asignado: $('#filtroUsuario').val()    || '',
             busqueda:            $('#filtroBusqueda').val()   || ''
@@ -118,6 +140,19 @@
         let html = '<option value="">Todas</option>';
         lista.forEach(function (ub) {
             html += '<option value="' + ub.id_ubicacion + '">' + escapeHtml(ub.nombre_ubicacion) + '</option>';
+        });
+        $sel.html(html).val('');
+    }
+
+    function updateUsuarioSelect(idColegio, selector) {
+        const $sel = $(selector);
+        if (!$sel.length) { return; }
+        const cfg = window.INVENTARIO_CONFIG || {};
+        const mapa = cfg.usuariosPorColegio || {};
+        const lista = idColegio ? (mapa[String(idColegio)] || []) : (cfg.usuariosPermitidos || []);
+        let html = '<option value="">Todos</option>';
+        lista.forEach(function (usuario) {
+            html += '<option value="' + usuario.id + '">' + escapeHtml(usuario.nombre_completo) + '</option>';
         });
         $sel.html(html).val('');
     }
@@ -165,6 +200,57 @@
         const $tabla = $('#tablaInventario');
         if (!$tabla.length) { return; }
 
+        const mostrarColegio = !!((window.INVENTARIO_CONFIG || {}).mostrarColumnaColegio);
+        const columnas = [
+            {
+                data: null, orderable: false, searchable: false,
+                render: function (data, type, row, meta) {
+                    const pageInfo = new $.fn.dataTable.Api(meta.settings).page.info();
+                    return pageInfo.start + meta.row + 1;
+                }
+            },
+            {
+                data: null,
+                render: function (data) {
+                    const nombrePersonalizado = (data.nombre_personalizado || '').trim();
+                    const lineaNombre = nombrePersonalizado
+                        ? '<div class="fw-semibold">' + escapeHtml(nombrePersonalizado) + '</div>' +
+                          '<small class="text-muted">(' + escapeHtml(data.nombre_equipo) + ')</small><br>'
+                        : '<div class="fw-semibold">' + escapeHtml(data.nombre_equipo) + '</div>';
+                    return lineaNombre +
+                           '<small class="text-muted">' + escapeHtml(data.fabricante || '') + ' ' + escapeHtml(data.producto || '') + '</small>';
+                }
+            }
+        ];
+        if (mostrarColegio) {
+            columnas.push({ data: 'nom_colegio', render: escapeHtml });
+        }
+        columnas.push(
+            { data: 'tipo_pc', render: escapeHtml },
+            { data: 'numero_serie', render: escapeHtml },
+            {
+                data: 'nombre_ubicacion',
+                render: function (data) {
+                    return data ? escapeHtml(data) : badgePendiente('Pendiente');
+                }
+            },
+            {
+                data: 'usuario_asignado',
+                render: function (data) { return data ? escapeHtml(data) : badgePendiente('Sin asignar'); }
+            },
+            {
+                data: 'id_estado',
+                render: function (data, type, row) {
+                    if (type === 'sort' || type === 'type') { return data; }
+                    return buildEstadoSelectEquipo(row);
+                }
+            },
+            {
+                data: null, orderable: false, searchable: false,
+                render: function (row) { return buildAccionButtons(row); }
+            }
+        );
+
         tablaInventario = $tabla.DataTable({
             data: [],
             responsive: false,
@@ -183,46 +269,7 @@
                 infoEmpty: 'Sin equipos para mostrar',
                 paginate: { previous: 'Anterior', next: 'Siguiente' }
             },
-            columns: [
-                {
-                    data: null, orderable: false, searchable: false,
-                    render: function (data, type, row, meta) {
-                        const pageInfo = new $.fn.dataTable.Api(meta.settings).page.info();
-                        return pageInfo.start + meta.row + 1;
-                    }
-                },
-                {
-                    data: null,
-                    render: function (data) {
-                        return '<div class="fw-semibold">' + escapeHtml(data.nombre_equipo) + '</div>' +
-                               '<small class="text-muted">' + escapeHtml(data.fabricante || '') + ' ' + escapeHtml(data.producto || '') + '</small>';
-                    }
-                },
-                { data: 'nom_colegio', render: escapeHtml },
-                { data: 'tipo_pc', render: escapeHtml },
-                { data: 'numero_serie', render: escapeHtml },
-                {
-                    data: 'nombre_ubicacion',
-                    render: function (data) {
-                        return data ? escapeHtml(data) : '<span class="text-muted">—</span>';
-                    }
-                },
-                {
-                    data: 'usuario_asignado',
-                    render: function (data) { return escapeHtml(data || 'Sin asignar'); }
-                },
-                {
-                    data: 'id_estado',
-                    render: function (data, type, row) {
-                        if (type === 'sort' || type === 'type') { return data; }
-                        return buildEstadoSelectEquipo(row);
-                    }
-                },
-                {
-                    data: null, orderable: false, searchable: false,
-                    render: function (row) { return buildAccionButtons(row); }
-                }
-            ]
+            columns: columnas
         });
 
         loadInventario();
@@ -237,6 +284,49 @@
     function initTablaMonitores() {
         const $tabla = $('#tablaMonitores');
         if (!$tabla.length) { return; }
+
+        const mostrarColegio = !!((window.INVENTARIO_CONFIG || {}).mostrarColumnaColegio);
+        const columnas = [
+            {
+                data: null, orderable: false, searchable: false,
+                render: function (data, type, row, meta) {
+                    const pageInfo = new $.fn.dataTable.Api(meta.settings).page.info();
+                    return pageInfo.start + meta.row + 1;
+                }
+            },
+            {
+                data: null,
+                render: function (data) {
+                    const nombre = escapeHtml(data.nombre_monitor || '');
+                    const sub    = [data.marca, data.modelo, data.tamano_monitor ? data.tamano_monitor + '"' : '']
+                                    .filter(Boolean).map(escapeHtml).join(' ');
+                    return '<div class="fw-semibold">' + nombre + '</div><small class="text-muted">' + sub + '</small>';
+                }
+            }
+        ];
+        if (mostrarColegio) {
+            columnas.push({ data: 'nom_colegio', render: escapeHtml });
+        }
+        columnas.push(
+            {
+                data: 'nombre_ubicacion',
+                render: function (data, type, row) {
+                    if (!data) { return '<span class="text-muted">Sin ubicación</span>'; }
+                    const tip = row.tipo_ubicacion ? escapeHtml(row.tipo_ubicacion) + ' — ' : '';
+                    return tip + escapeHtml(data);
+                }
+            },
+            { data: 'numero_serie', render: escapeHtml },
+            {
+                data: 'usuario_asignado',
+                render: function (data) { return escapeHtml(data || 'Sin asignar'); }
+            },
+            { data: 'badge_estado' },
+            {
+                data: null, orderable: false, searchable: false,
+                render: function (row) { return buildMonitorAccionButtons(row); }
+            }
+        );
 
         tablaMonitores = $tabla.DataTable({
             data: [],
@@ -256,43 +346,7 @@
                 infoEmpty: 'Sin monitores para mostrar',
                 paginate: { previous: 'Anterior', next: 'Siguiente' }
             },
-            columns: [
-                {
-                    data: null, orderable: false, searchable: false,
-                    render: function (data, type, row, meta) {
-                        const pageInfo = new $.fn.dataTable.Api(meta.settings).page.info();
-                        return pageInfo.start + meta.row + 1;
-                    }
-                },
-                {
-                    data: null,
-                    render: function (data) {
-                        const nombre = escapeHtml(data.nombre_monitor || '');
-                        const sub    = [data.marca, data.modelo, data.tamano_monitor ? data.tamano_monitor + '"' : '']
-                                        .filter(Boolean).map(escapeHtml).join(' ');
-                        return '<div class="fw-semibold">' + nombre + '</div><small class="text-muted">' + sub + '</small>';
-                    }
-                },
-                { data: 'nom_colegio', render: escapeHtml },
-                {
-                    data: 'nombre_ubicacion',
-                    render: function (data, type, row) {
-                        if (!data) { return '<span class="text-muted">Sin ubicación</span>'; }
-                        const tip = row.tipo_ubicacion ? escapeHtml(row.tipo_ubicacion) + ' — ' : '';
-                        return tip + escapeHtml(data);
-                    }
-                },
-                { data: 'numero_serie', render: escapeHtml },
-                {
-                    data: 'usuario_asignado',
-                    render: function (data) { return escapeHtml(data || 'Sin asignar'); }
-                },
-                { data: 'badge_estado' },
-                {
-                    data: null, orderable: false, searchable: false,
-                    render: function (row) { return buildMonitorAccionButtons(row); }
-                }
-            ]
+            columns: columnas
         });
 
         loadMonitores();
@@ -369,21 +423,28 @@
     // =========================================================================
 
     function bindModalCloseFallback() {
-        $(document).on('click', '#modalGaleriaEquipo [data-bs-dismiss="modal"], #modalGaleriaMonitor [data-bs-dismiss="modal"]', function () {
-            const modalEl = this.closest('.modal');
+        function cerrarModalSeguro(modalEl) {
             if (!modalEl) { return; }
             if (window.bootstrap && bootstrap.Modal && bootstrap.Modal.getOrCreateInstance) {
-                bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                return;
+                try { bootstrap.Modal.getOrCreateInstance(modalEl).hide(); } catch (e) { /* fallback manual */ }
+            } else if ($.fn.modal) {
+                try { $(modalEl).modal('hide'); } catch (e) { /* fallback manual */ }
             }
-            if ($.fn.modal) { $(modalEl).modal('hide'); return; }
+
             modalEl.classList.remove('show');
             modalEl.style.display = 'none';
             modalEl.setAttribute('aria-hidden', 'true');
+            modalEl.removeAttribute('aria-modal');
+            modalEl.removeAttribute('role');
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
+        }
+
+        $(document).on('click', '#modalQrEquipo [data-bs-dismiss="modal"], #modalGaleriaEquipo [data-bs-dismiss="modal"], #modalGaleriaMonitor [data-bs-dismiss="modal"]', function () {
+            const modalEl = this.closest('.modal');
+            cerrarModalSeguro(modalEl);
         });
-        $('#modalGaleriaEquipo, #modalGaleriaMonitor').on('hidden.bs.modal', function () {
+        $('#modalQrEquipo, #modalGaleriaEquipo, #modalGaleriaMonitor').on('hidden.bs.modal', function () {
             $('.modal-backdrop').remove();
             $('body').removeClass('modal-open').css({ overflow: '', paddingRight: '' });
         });
@@ -395,15 +456,21 @@
 
     function bindFilters() {
         $('#filtroColegio').on('change', function () {
-            updateUbicacionSelect(parseInt($(this).val(), 10) || 0);
+            const idColegio = parseInt($(this).val(), 10) || 0;
+            updateUbicacionSelect(idColegio);
+            updateUsuarioSelect(idColegio, '#filtroUsuario');
             loadInventario();
         });
-        $('#filtroEstado, #filtroTipo, #filtroUbicacion, #filtroUsuario').on('change', loadInventario);
+        $('#filtroEstado, #filtroUbicacion, #filtroUsuario').on('change', loadInventario);
         $('#filtroBusqueda').on('keyup', debounce(loadInventario, 350));
     }
 
     function bindMonitorFilters() {
-        $('#filtroColegioMon, #filtroEstadoMon, #filtroUsuarioMon').on('change', loadMonitores);
+        $('#filtroColegioMon').on('change', function () {
+            updateUsuarioSelect(parseInt($(this).val(), 10) || 0, '#filtroUsuarioMon');
+            loadMonitores();
+        });
+        $('#filtroEstadoMon, #filtroUsuarioMon').on('change', loadMonitores);
         $('#filtroBusquedaMon').on('keyup', debounce(loadMonitores, 350));
     }
 
@@ -432,6 +499,23 @@
                 Swal.fire('Error', mensaje, 'error');
             });
         });
+    }
+
+    function bindNombreEquipoAuto() {
+        const $serie = $('#numeroSerieEquipo');
+        const $preview = $('#nombreEquipoPreview');
+        const $hidden = $('#nombreEquipoAuto');
+        if (!$serie.length || !$preview.length) { return; }
+
+        function refresh() {
+            const nombre = nombreEquipoDesdeSerie($serie.val());
+            $serie.val(normalizarSerieEquipo($serie.val()));
+            $preview.text(nombre || 'Se genera desde la serie');
+            if ($hidden.length) { $hidden.val(nombre); }
+        }
+
+        $serie.on('input blur change', refresh);
+        refresh();
     }
 
     function bindRepeater() {
@@ -515,6 +599,34 @@
         });
     }
 
+    function renderQrEnContenedor(container, url, size) {
+        if (!container) { return; }
+        container.innerHTML = '';
+        if (!window.QRCode) {
+            container.innerHTML = '<div class="alert alert-warning mb-0">No fue posible cargar el generador QR.</div>';
+            return;
+        }
+        new QRCode(container, { text: url, width: size || 220, height: size || 220 });
+    }
+
+    function obtenerFilaEquipo(idEquipo) {
+        if (!tablaInventario) { return null; }
+        const rows = tablaInventario.rows().data().toArray();
+        for (let i = 0; i < rows.length; i++) {
+            if (parseInt(rows[i].id_equipo, 10) === parseInt(idEquipo, 10)) {
+                return rows[i];
+            }
+        }
+        return null;
+    }
+
+    function bindImprimirQrMasivo() {
+        $('#btnImprimirQrEquipos').on('click', function () {
+            const params = new URLSearchParams(collectFilters());
+            window.open('imprimir_qr_equipos.php?' + params.toString(), '_blank');
+        });
+    }
+
     // =========================================================================
     // TABS
     // =========================================================================
@@ -529,11 +641,17 @@
         function applyTab(tab) {
             if (!$btn.length) { return; }
             if (tab === 'monitores') {
+                if ($btn.length) { $btn.removeClass('d-none'); }
                 $btn.attr('href', $btn.data('href-mon') || 'registrar_monitor.php');
                 if ($label.length)  { $label.text($btn.data('label-mon') || 'Agregar monitor'); }
                 if ($cargaPc.length)  { $cargaPc.addClass('d-none'); }
                 if ($cargaMon.length) { $cargaMon.removeClass('d-none'); }
+            } else if (tab === 'tablet' || tab === 'impresoras') {
+                if ($btn.length) { $btn.addClass('d-none'); }
+                if ($cargaPc.length)  { $cargaPc.addClass('d-none'); }
+                if ($cargaMon.length) { $cargaMon.addClass('d-none'); }
             } else {
+                if ($btn.length) { $btn.removeClass('d-none'); }
                 $btn.attr('href', $btn.data('href-pc') || 'registrar_equipo.php');
                 if ($label.length)  { $label.text($btn.data('label-pc') || 'Agregar PC'); }
                 if ($cargaPc.length)  { $cargaPc.removeClass('d-none'); }
@@ -578,6 +696,51 @@
                     const msg = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible cargar el detalle.';
                     ui.$body.html('<div class="alert alert-danger mb-3">' + escapeHtml(msg) + '</div><a href="' + escapeHtml(href) + '" class="btn btn-outline-primary">Abrir ficha completa</a>');
                 });
+        }
+
+        // --- VER QR EQUIPO ---
+        static verQrEquipo(idEquipo) {
+            const row = obtenerFilaEquipo(idEquipo) || {};
+            const url = buildQrFichaUrl(idEquipo);
+            const nombre = row.nombre_equipo || ('Equipo #' + idEquipo);
+            const serie = row.numero_serie ? ('Serie ' + row.numero_serie) : '';
+            const modalEl = document.getElementById('modalQrEquipo');
+            if (!modalEl) {
+                window.open(url, '_blank');
+                return;
+            }
+
+            $('#modalQrEquipoLabel').text('Código QR del equipo');
+            $('#qrEquipoNombre').text(nombre);
+            $('#qrEquipoSerie').text(serie);
+            $('#btnAbrirFichaQr').attr('href', url);
+            $('#btnImprimirQrIndividual').data('qr-url', url).data('qr-nombre', nombre).data('qr-serie', serie);
+            renderQrEnContenedor(document.getElementById('qrEquipoCanvas'), url, 220);
+
+            if (window.bootstrap && bootstrap.Modal && bootstrap.Modal.getOrCreateInstance) {
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            } else {
+                modalEl.classList.add('show');
+                modalEl.style.display = 'block';
+            }
+        }
+
+        static imprimirQrIndividual(btn) {
+            const $btn = $(btn);
+            const url = $btn.data('qr-url') || '';
+            const nombre = $btn.data('qr-nombre') || 'Equipo';
+            const serie = $btn.data('qr-serie') || '';
+            const canvas = document.querySelector('#qrEquipoCanvas canvas');
+            if (!url || !canvas) { return; }
+            const img = canvas.toDataURL('image/png');
+            const win = window.open('', '_blank', 'width=520,height=680');
+            if (!win) { return; }
+            win.document.write(
+                '<!doctype html><html><head><meta charset="utf-8"><title>QR ' + escapeHtml(nombre) + '</title>' +
+                '<style>body{font-family:Arial,sans-serif;margin:24px;color:#102a43}.label{width:260px;border:1px solid #d9e2ec;border-radius:10px;padding:16px;text-align:center}.label img{width:180px;height:180px}.name{font-weight:700;margin-top:10px}.meta{font-size:12px;color:#64748b;margin-top:4px;word-break:break-all}@media print{body{margin:0}.label{border:0}}</style>' +
+                '</head><body><div class="label"><img src="' + img + '" alt="QR"><div class="name">' + escapeHtml(nombre) + '</div><div class="meta">' + escapeHtml(serie) + '</div></div><script>window.onload=function(){window.print();};<\/script></body></html>'
+            );
+            win.document.close();
         }
 
         // --- VER DETALLE MONITOR (ojo) ---
@@ -629,7 +792,17 @@
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'inv-swal-popup',
+                    icon: 'inv-swal-icon',
+                    title: 'inv-swal-title',
+                    htmlContainer: 'inv-swal-text',
+                    actions: 'inv-swal-actions',
+                    confirmButton: 'btn btn-danger inv-swal-confirm',
+                    cancelButton: 'btn btn-light border inv-swal-cancel'
+                }
             }).then(function (result) {
                 if (!result.isConfirmed) { return; }
                 $.post(window.INVENTARIO_CONFIG.endpoints.eliminar, { id_equipo: idEquipo }, null, 'json')
@@ -779,8 +952,10 @@
         bindOffcanvasClose();
         bindModalCloseFallback();
         bindFormAjax();
+        bindNombreEquipoAuto();
         bindRepeater();
         bindPreview();
+        bindImprimirQrMasivo();
         initQrBlocks(document);
         initTabBehavior();
 

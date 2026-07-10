@@ -14,6 +14,40 @@ function qr_inv_db()
     return new MySQL('', '', '');
 }
 
+function qr_inv_conn(MySQL $db)
+{
+    if (method_exists($db, 'getConexion')) {
+        $cn = $db->getConexion();
+        if ($cn instanceof mysqli) {
+            return $cn;
+        }
+    }
+
+    if (property_exists($db, 'conexion')) {
+        $ref = new ReflectionObject($db);
+        if ($ref->hasProperty('conexion')) {
+            $prop = $ref->getProperty('conexion');
+            $prop->setAccessible(true);
+            $cn = $prop->getValue($db);
+            if ($cn instanceof mysqli) {
+                return $cn;
+            }
+        }
+    }
+
+    throw new RuntimeException('No fue posible abrir la conexion del sistema.');
+}
+
+function qr_inv_fetch_one(mysqli $cn, $sql, $id)
+{
+    $stmt = mysqli_prepare($cn, $sql);
+    mysqli_stmt_bind_param($stmt, 'i', $id);
+    mysqli_stmt_execute($stmt);
+    $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: null;
+    mysqli_stmt_close($stmt);
+    return $fila;
+}
+
 function qr_inv_table_exists(MySQL $db, $table)
 {
     $table = $db->escape_string($table);
@@ -110,6 +144,7 @@ if ($idEquipo <= 0) {
 }
 
 $db = qr_inv_db();
+$cn = qr_inv_conn($db);
 $joinEstado = qr_inv_table_exists($db, 'estado_equipo') ? 'LEFT JOIN estado_equipo ee ON ee.id_estado = e.id_estado' : '';
 $selectEstado = qr_inv_table_exists($db, 'estado_equipo')
     ? "COALESCE(ee.nombre_estado, '') AS nombre_estado"
@@ -133,11 +168,10 @@ $sql = "
     LEFT JOIN usuarios ua ON ua.id = e.id_usuario_asignado
     $joinEstado
     $joinUbic
-    WHERE e.id_equipo = $idEquipo
+    WHERE e.id_equipo = ?
     LIMIT 1
 ";
-$rs = $db->consulta($sql);
-$equipo = $rs ? $db->fetch_assoc($rs) : null;
+$equipo = qr_inv_fetch_one($cn, $sql, $idEquipo);
 
 if (!$equipo) {
     http_response_code(404);
@@ -146,20 +180,17 @@ if (!$equipo) {
 
 $compra = [];
 if (qr_inv_table_exists($db, 'equipos_compra')) {
-    $rsCompra = $db->consulta("SELECT proveedor, numero_factura, fecha_compra, valor_equipo FROM equipos_compra WHERE id_equipo = $idEquipo LIMIT 1");
-    $compra = $rsCompra ? ($db->fetch_assoc($rsCompra) ?: []) : [];
+    $compra = qr_inv_fetch_one($cn, "SELECT proveedor, numero_factura, fecha_compra, valor_equipo FROM equipos_compra WHERE id_equipo = ? LIMIT 1", $idEquipo) ?: [];
 }
 
 $procesador = [];
 if (qr_inv_table_exists($db, 'equipo_procesador')) {
-    $rsCpu = $db->consulta("SELECT equipo_fabricante, equipo_modelo, equipo_velocidad FROM equipo_procesador WHERE id_equipo = $idEquipo LIMIT 1");
-    $procesador = $rsCpu ? ($db->fetch_assoc($rsCpu) ?: []) : [];
+    $procesador = qr_inv_fetch_one($cn, "SELECT equipo_fabricante, equipo_modelo, equipo_velocidad FROM equipo_procesador WHERE id_equipo = ? LIMIT 1", $idEquipo) ?: [];
 }
 
 $almacenamiento = [];
 if (qr_inv_table_exists($db, 'equipo_almacenamiento')) {
-    $rsDisco = $db->consulta("SELECT equipo_modelo, equipo_capacidad, equipo_tamano FROM equipo_almacenamiento WHERE id_equipo = $idEquipo LIMIT 1");
-    $almacenamiento = $rsDisco ? ($db->fetch_assoc($rsDisco) ?: []) : [];
+    $almacenamiento = qr_inv_fetch_one($cn, "SELECT equipo_modelo, equipo_capacidad, equipo_tamano FROM equipo_almacenamiento WHERE id_equipo = ? LIMIT 1", $idEquipo) ?: [];
 }
 
 $estado = trim((string)($equipo['nombre_estado'] ?? ''));
@@ -172,15 +203,21 @@ if ($ubicacion !== '' && trim((string)($equipo['tipo_ubicacion'] ?? '')) !== '')
     $ubicacion = trim((string)$equipo['tipo_ubicacion']) . ' - ' . $ubicacion;
 }
 
+$nombrePersonalizado = trim((string)($equipo['nombre_personalizado'] ?? ''));
+
 $secciones = [
     [
         'titulo' => 'Datos basicos',
-        'items' => [
-            ['Colegio', $equipo['nom_colegio'] ?? ''],
-            ['Tipo', $equipo['tipo_pc'] ?? ''],
-            ['Serie', $equipo['numero_serie'] ?? ''],
-            ['Codigo QR', $equipo['qr_code'] ?? ''],
-        ],
+        'items' => array_merge(
+            $nombrePersonalizado !== '' ? [['Nombre', $nombrePersonalizado]] : [],
+            [
+                ['Identificador tecnico', $equipo['nombre_equipo'] ?? ''],
+                ['Colegio', $equipo['nom_colegio'] ?? ''],
+                ['Tipo', $equipo['tipo_pc'] ?? ''],
+                ['Serie', $equipo['numero_serie'] ?? ''],
+                ['Codigo QR', $equipo['qr_code'] ?? ''],
+            ]
+        ),
     ],
     [
         'titulo' => 'Asignacion',
@@ -211,4 +248,5 @@ $secciones = [
 ];
 
 $subtitulo = trim(($equipo['nom_colegio'] ?? '') . ' | ' . ($equipo['tipo_pc'] ?? '') . ' | Serie ' . ($equipo['numero_serie'] ?? ''));
-qr_inv_render_page($equipo['nombre_equipo'] ?: 'Equipo inventario', $subtitulo, $secciones, $estado);
+$tituloFicha = $nombrePersonalizado !== '' ? $nombrePersonalizado : ($equipo['nombre_equipo'] ?: 'Equipo inventario');
+qr_inv_render_page($tituloFicha, $subtitulo, $secciones, $estado);

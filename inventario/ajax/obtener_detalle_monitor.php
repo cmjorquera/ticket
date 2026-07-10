@@ -15,6 +15,11 @@ try {
         exit;
     }
 
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->colegioPermitidoPorAlcance((int)($monitor['id_colegio'] ?? 0), $alcanceInventario)) {
+        throw new RuntimeException('No tienes permiso para ver este monitor.');
+    }
+
     ob_start();
     $detalleOffcanvas = true;
     require dirname(__DIR__) . '/componentes/detalle_monitor.php';

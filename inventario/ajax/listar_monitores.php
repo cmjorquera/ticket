@@ -3,15 +3,15 @@ require_once dirname(__DIR__) . '/componentes/boot.php';
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    $colegioUsuario   = $inventario->obtenerColegioDelUsuario($idUsuarioSession);
-    $idColegioForzado = (int)($colegioUsuario['id_colegio'] ?? 0);
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
 
     $filtros = [
-        'id_colegio'          => $idColegioForzado > 0 ? $idColegioForzado : (int)($_GET['id_colegio'] ?? 0),
+        'id_colegio'          => (int)($_GET['id_colegio'] ?? 0),
         'id_estado'           => (int)($_GET['id_estado'] ?? 0),
         'id_usuario_asignado' => (int)($_GET['id_usuario_asignado'] ?? 0),
         'busqueda'            => trim((string)($_GET['busqueda'] ?? '')),
     ];
+    $filtros = $inventario->normalizarFiltrosPorAlcance($filtros, $alcanceInventario);
 
     $monitores = $inventario->listarMonitores($filtros);
     $resumen   = $inventario->obtenerResumenMonitores($filtros);

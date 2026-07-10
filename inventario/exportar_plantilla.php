@@ -22,42 +22,44 @@ $nomColegio     = $colegioSession['nom_colegio'] ?? 'Colegio no asignado';
 $rutaLogo = dirname(__DIR__) . '/img/colegios/colegio_' . $idColegioLogo . '.png';
 $tienelogo = ($idColegioLogo > 0 && is_file($rutaLogo));
 
-// ── Mapeo campo interno => etiqueta legible (31 columnas, sin id_colegio/nombre/QR) ────
+// ── Mapeo campo interno => etiqueta legible (33 columnas, sin colegio, fotos ni QR manual) ────
 $columnas = [
-    'A'  => ['campo' => 'id_usuario_asignado',    'etiqueta' => 'Usuario asignado'],
-    'B'  => ['campo' => 'fabricante',              'etiqueta' => 'Fabricante'],
-    'C'  => ['campo' => 'producto',                'etiqueta' => 'Producto / modelo'],
-    'D'  => ['campo' => 'numero_serie',            'etiqueta' => 'Numero de serie'],
+    'A'  => ['campo' => 'id_ubicacion',            'etiqueta' => 'Ubicación'],
+    'B'  => ['campo' => 'id_usuario_asignado',     'etiqueta' => 'Usuario asignado'],
+    'C'  => ['campo' => 'nombre_personalizado',    'etiqueta' => 'Nombre del equipo'],
+    'D'  => ['campo' => 'numero_serie',            'etiqueta' => 'Número de serie'],
     'E'  => ['campo' => 'tipo_pc',                 'etiqueta' => 'Tipo de PC'],
     'F'  => ['campo' => 'id_estado',               'etiqueta' => 'Estado'],
-    'G'  => ['campo' => 'valor_equipo',            'etiqueta' => 'Valor equipo'],
-    'H'  => ['campo' => 'proveedor',               'etiqueta' => 'Proveedor'],
-    'I'  => ['campo' => 'numero_factura',          'etiqueta' => 'Numero factura'],
-    'J'  => ['campo' => 'fecha_compra',            'etiqueta' => 'Fecha compra'],
-    'K'  => ['campo' => 'observacion_compra',      'etiqueta' => 'Observacion compra'],
-    'L'  => ['campo' => 'almacenamiento_modelo',   'etiqueta' => 'Almacenamiento modelo'],
-    'M'  => ['campo' => 'almacenamiento_capacidad','etiqueta' => 'Almacenamiento capacidad'],
-    'N'  => ['campo' => 'almacenamiento_tamano',   'etiqueta' => 'Almacenamiento tipo/tamano'],
-    'O'  => ['campo' => 'procesador_fabricante',   'etiqueta' => 'Procesador fabricante'],
-    'P'  => ['campo' => 'procesador_modelo',       'etiqueta' => 'Procesador modelo'],
-    'Q'  => ['campo' => 'procesador_velocidad',    'etiqueta' => 'Procesador velocidad'],
-    'R'  => ['campo' => 'windows',                 'etiqueta' => 'Windows'],
-    'S'  => ['campo' => 'office',                  'etiqueta' => 'Office'],
-    'T'  => ['campo' => 'antivirus',               'etiqueta' => 'Antivirus'],
-    'U'  => ['campo' => 'memoria_designacion',     'etiqueta' => 'Memoria slot/designacion'],
-    'V'  => ['campo' => 'memoria_formato',         'etiqueta' => 'Memoria formato'],
-    'W'  => ['campo' => 'memoria_tipo',            'etiqueta' => 'Memoria tipo'],
-    'X'  => ['campo' => 'memoria_tamano',          'etiqueta' => 'Memoria tamano'],
-    'Y'  => ['campo' => 'memoria_frecuencia',      'etiqueta' => 'Memoria frecuencia'],
-    'Z'  => ['campo' => 'memoria_marca',           'etiqueta' => 'Memoria marca'],
-    'AA' => ['campo' => 'monitor_modelo',          'etiqueta' => 'Monitor modelo'],
-    'AB' => ['campo' => 'monitor_codigo',          'etiqueta' => 'Monitor codigo'],
-    'AC' => ['campo' => 'monitor_serie',           'etiqueta' => 'Monitor serie'],
-    'AD' => ['campo' => 'monitor_tamano',          'etiqueta' => 'Monitor tamano'],
-    'AE' => ['campo' => 'monitor_resolucion',      'etiqueta' => 'Monitor resolucion'],
+    'G'  => ['campo' => 'fabricante',              'etiqueta' => 'Fabricante'],
+    'H'  => ['campo' => 'producto',                'etiqueta' => 'Producto / modelo'],
+    'I'  => ['campo' => 'valor_equipo',            'etiqueta' => 'Valor equipo'],
+    'J'  => ['campo' => 'proveedor',               'etiqueta' => 'Proveedor'],
+    'K'  => ['campo' => 'numero_factura',          'etiqueta' => 'Número factura'],
+    'L'  => ['campo' => 'fecha_compra',            'etiqueta' => 'Fecha compra'],
+    'M'  => ['campo' => 'observacion_compra',      'etiqueta' => 'Observación compra'],
+    'N'  => ['campo' => 'almacenamiento_modelo',   'etiqueta' => 'Almacenamiento modelo'],
+    'O'  => ['campo' => 'almacenamiento_capacidad','etiqueta' => 'Almacenamiento capacidad'],
+    'P'  => ['campo' => 'almacenamiento_tamano',   'etiqueta' => 'Almacenamiento tipo/tamaño'],
+    'Q'  => ['campo' => 'procesador_fabricante',   'etiqueta' => 'Procesador fabricante'],
+    'R'  => ['campo' => 'procesador_modelo',       'etiqueta' => 'Procesador modelo'],
+    'S'  => ['campo' => 'procesador_velocidad',    'etiqueta' => 'Procesador velocidad'],
+    'T'  => ['campo' => 'windows',                 'etiqueta' => 'Windows'],
+    'U'  => ['campo' => 'office',                  'etiqueta' => 'Office'],
+    'V'  => ['campo' => 'antivirus',               'etiqueta' => 'Antivirus'],
+    'W'  => ['campo' => 'memoria_designacion',     'etiqueta' => 'Memoria slot/designacion'],
+    'X'  => ['campo' => 'memoria_formato',         'etiqueta' => 'Memoria formato'],
+    'Y'  => ['campo' => 'memoria_tipo',            'etiqueta' => 'Memoria tipo'],
+    'Z'  => ['campo' => 'memoria_tamano',          'etiqueta' => 'Memoria tamaño'],
+    'AA' => ['campo' => 'memoria_frecuencia',      'etiqueta' => 'Memoria frecuencia'],
+    'AB' => ['campo' => 'memoria_marca',           'etiqueta' => 'Memoria marca'],
+    'AC' => ['campo' => 'monitor_modelo',          'etiqueta' => 'Monitor modelo'],
+    'AD' => ['campo' => 'monitor_codigo',          'etiqueta' => 'Monitor código'],
+    'AE' => ['campo' => 'monitor_serie',           'etiqueta' => 'Monitor serie'],
+    'AF' => ['campo' => 'monitor_tamano',          'etiqueta' => 'Monitor tamaño'],
+    'AG' => ['campo' => 'monitor_resolucion',      'etiqueta' => 'Monitor resolución'],
 ];
 
-$ultimaCol   = 'AE';     // última columna de datos
+$ultimaCol   = 'AG';     // última columna de datos
 $rangoData   = 'A:' . $ultimaCol;
 
 // ── Crear workbook ────────────────────────────────────────────────────────────
@@ -68,9 +70,9 @@ $objPHPExcel->getProperties()
     ->setSubject('Inventario equipos')
     ->setDescription('Plantilla para importacion masiva de equipos computacionales.');
 
-// ── Hoja 1: Equipos ───────────────────────────────────────────────────────────
+// ── Hoja 1: Inventario ────────────────────────────────────────────────────────
 $sheet = $objPHPExcel->getActiveSheet();
-$sheet->setTitle('Equipos');
+$sheet->setTitle('Inventario');
 
 // ---- Filas 1–5: encabezado institucional ------------------------------------
 
@@ -147,38 +149,50 @@ $sheet->getStyle('A6:' . $ultimaCol . '6')->applyFromArray($estiloEncabezado);
 $sheet->getRowDimension(6)->setRowHeight(34);
 
 // ---- Fila 7: ejemplo en gris (el usuario la elimina antes de subir) ----------
+$ubicacionesPlantilla = $inventario->obtenerUbicacionesPorColegio($idColegioLogo);
+$ubicacionEjemplo = '';
+if (!empty($ubicacionesPlantilla[0])) {
+    $ubEjemplo = $ubicacionesPlantilla[0];
+    $tipoUbEjemplo = trim((string)($ubEjemplo['tipo_ubicacion'] ?? ''));
+    $nombreUbEjemplo = trim((string)($ubEjemplo['nombre_ubicacion'] ?? ''));
+    $labelUbEjemplo = $tipoUbEjemplo !== '' ? $tipoUbEjemplo . ' - ' . $nombreUbEjemplo : $nombreUbEjemplo;
+    $ubicacionEjemplo = (int)$ubEjemplo['id_ubicacion'] . ' - ' . $labelUbEjemplo;
+}
+
 $ejemplo = [
-    'A'  => '0 - Sin asignar',
-    'B'  => 'Dell',
-    'C'  => 'OptiPlex 3080',
+    'A'  => $ubicacionEjemplo,
+    'B'  => '0 - Sin asignar',
+    'C'  => 'PC Direccion',
     'D'  => 'SN-12345ABC',
     'E'  => 'Desktop',
     'F'  => '1 - Activo',
-    'G'  => '350000',
-    'H'  => 'TechShop Ltda',
-    'I'  => 'FAC-2024-001',
-    'J'  => '2024-01-15',
-    'K'  => 'Adquisicion primer semestre',
-    'L'  => 'Samsung 860 EVO',
-    'M'  => '256GB',
-    'N'  => '2.5"',
-    'O'  => 'Intel',
-    'P'  => 'Core i5-10500',
-    'Q'  => '3.1 GHz',
-    'R'  => 'Windows 10 Pro',
-    'S'  => 'Office 2021',
-    'T'  => 'Windows Defender',
-    'U'  => 'DIMM1',
-    'V'  => 'DIMM',
-    'W'  => 'DDR4',
-    'X'  => '8GB',
-    'Y'  => '2666 MHz',
-    'Z'  => 'Kingston',
-    'AA' => 'Dell P2219H',
-    'AB' => 'MON-001',
-    'AC' => 'SN-MON-001',
-    'AD' => '22"',
-    'AE' => '1920x1080',
+    'G'  => 'Dell',
+    'H'  => 'OptiPlex 3080',
+    'I'  => '350000',
+    'J'  => 'TechShop Ltda',
+    'K'  => 'FAC-2024-001',
+    'L'  => '2024-01-15',
+    'M'  => 'Adquisicion primer semestre',
+    'N'  => 'Samsung 860 EVO',
+    'O'  => '256GB',
+    'P'  => '2.5"',
+    'Q'  => 'Intel',
+    'R'  => 'Core i5-10500',
+    'S'  => '3.1 GHz',
+    'T'  => 'Windows 10 Pro',
+    'U'  => 'Office 2021',
+    'V'  => 'Windows Defender',
+    'W'  => 'DIMM1',
+    'X'  => 'DIMM',
+    'Y'  => 'DDR4',
+    'Z'  => '8GB',
+    'AA' => '2666 MHz',
+    'AB' => 'Kingston',
+    'AC' => 'Dell P2219H',
+    'AD' => 'MON-001',
+    'AE' => 'SN-MON-001',
+    'AF' => '22"',
+    'AG' => '1920x1080',
 ];
 
 foreach ($ejemplo as $col => $val) {
@@ -198,81 +212,87 @@ foreach (array_keys($columnas) as $col) {
     $sheet->getColumnDimension($col)->setAutoSize(true);
 }
 // Columnas con listas largas
-$sheet->getColumnDimension('A')->setWidth(42);
+$sheet->getColumnDimension('A')->setWidth(34);
+$sheet->getColumnDimension('B')->setWidth(36);
+$sheet->getColumnDimension('C')->setWidth(42);
+$sheet->getColumnDimension('D')->setWidth(28);
 $sheet->getColumnDimension('E')->setWidth(18);
 $sheet->getColumnDimension('F')->setWidth(22);
 
 // Anclar filas 1-6 (encabezado institucional + nombres de columna)
 $sheet->freezePane('A7');
 
-// ── Hoja 2: Estados (referencia) ──────────────────────────────────────────────
-$sheetEstados = $objPHPExcel->createSheet();
-$sheetEstados->setTitle('Estados');
+// ── Hoja oculta de catalogos (origen de desplegables) ────────────────────────
+$sheetCatalogos = $objPHPExcel->createSheet();
+$sheetCatalogos->setTitle('_catalogos');
+$sheetCatalogos->setSheetState(PHPExcel_Worksheet::SHEETSTATE_HIDDEN);
 
-$sheetEstados->setCellValue('A1', 'id_estado');
-$sheetEstados->setCellValue('B1', 'nombre_estado');
-$sheetEstados->getStyle('A1:B1')->applyFromArray($estiloEncabezado);
-$sheetEstados->getRowDimension(1)->setRowHeight(28);
+$sheetCatalogos->setCellValue('A1', 'id_ubicacion');
+$sheetCatalogos->setCellValue('B1', 'nombre_ubicacion');
+$sheetCatalogos->setCellValue('C1', 'seleccion_ubicacion');
+$sheetCatalogos->setCellValue('E1', 'id_usuario');
+$sheetCatalogos->setCellValue('F1', 'nombre_usuario');
+$sheetCatalogos->setCellValue('G1', 'seleccion_usuario');
+$sheetCatalogos->setCellValue('I1', 'tipo_pc');
+$sheetCatalogos->setCellValue('K1', 'id_estado');
+$sheetCatalogos->setCellValue('L1', 'nombre_estado');
+$sheetCatalogos->setCellValue('M1', 'seleccion_estado');
+$sheetCatalogos->getStyle('A1:M1')->applyFromArray($estiloEncabezado);
 
-$estados = $inventario->obtenerEstados();
-$fila = 2;
-foreach ($estados as $estado) {
-    $sheetEstados->setCellValue('A' . $fila, (int)$estado['id_estado']);
-    $sheetEstados->setCellValue('B' . $fila, $estado['nombre_estado']);
-    $sheetEstados->setCellValue('C' . $fila, (int)$estado['id_estado'] . ' - ' . $estado['nombre_estado']);
-    $fila++;
+$filaUbicacion = 2;
+foreach ($ubicacionesPlantilla as $ubicacion) {
+    $idUbicacion = (int)$ubicacion['id_ubicacion'];
+    $nombreUbicacion = trim((string)($ubicacion['nombre_ubicacion'] ?? ''));
+    $tipoUbicacion = trim((string)($ubicacion['tipo_ubicacion'] ?? ''));
+    $labelUbicacion = $tipoUbicacion !== '' ? $tipoUbicacion . ' - ' . $nombreUbicacion : $nombreUbicacion;
+    $sheetCatalogos->setCellValue('A' . $filaUbicacion, $idUbicacion);
+    $sheetCatalogos->setCellValue('B' . $filaUbicacion, $labelUbicacion);
+    $sheetCatalogos->setCellValue('C' . $filaUbicacion, $idUbicacion . ' - ' . $labelUbicacion);
+    $filaUbicacion++;
 }
-$sheetEstados->getColumnDimension('A')->setAutoSize(true);
-$sheetEstados->getColumnDimension('B')->setWidth(25);
-$sheetEstados->getColumnDimension('C')->setWidth(35);
 
-// ── Hoja 3: Tipos PC (origen del desplegable de columna E) ───────────────────
-$sheetTipos = $objPHPExcel->createSheet();
-$sheetTipos->setTitle('Tipos PC');
-$sheetTipos->setCellValue('A1', 'tipo_pc');
-$sheetTipos->getStyle('A1')->applyFromArray($estiloEncabezado);
-$tiposPc = $inventario->obtenerTiposPc();
-$filaTipo = 2;
-foreach ($tiposPc as $tipoPc) {
-    $sheetTipos->setCellValue('A' . $filaTipo, $tipoPc);
-    $filaTipo++;
-}
-$sheetTipos->getColumnDimension('A')->setWidth(25);
-
-// ── Hoja 4: Usuarios (origen del desplegable de columna A) ───────────────────
-$sheetUsuarios = $objPHPExcel->createSheet();
-$sheetUsuarios->setTitle('Usuarios');
-$sheetUsuarios->setCellValue('A1', 'id_usuario');
-$sheetUsuarios->setCellValue('B1', 'nombre_usuario');
-$sheetUsuarios->setCellValue('C1', 'seleccion_excel');
-$sheetUsuarios->getStyle('A1:C1')->applyFromArray($estiloEncabezado);
-$sheetUsuarios->setCellValue('A2', 0);
-$sheetUsuarios->setCellValue('B2', 'Sin asignar');
-$sheetUsuarios->setCellValue('C2', '0 - Sin asignar');
-$usuarios = $inventario->obtenerUsuarios();
+$sheetCatalogos->setCellValue('E2', 0);
+$sheetCatalogos->setCellValue('F2', 'Sin asignar');
+$sheetCatalogos->setCellValue('G2', '0 - Sin asignar');
+$usuarios = $inventario->obtenerUsuariosAsignablesPorColegio($idColegioLogo);
 $filaUsuario = 3;
 foreach ($usuarios as $usuario) {
     $idUsuario = (int)$usuario['id'];
     $nombreUsuario = trim((string)$usuario['nombre_completo']);
-    $sheetUsuarios->setCellValue('A' . $filaUsuario, $idUsuario);
-    $sheetUsuarios->setCellValue('B' . $filaUsuario, $nombreUsuario);
-    $sheetUsuarios->setCellValue('C' . $filaUsuario, $idUsuario . ' - ' . $nombreUsuario);
+    $sheetCatalogos->setCellValue('E' . $filaUsuario, $idUsuario);
+    $sheetCatalogos->setCellValue('F' . $filaUsuario, $nombreUsuario);
+    $sheetCatalogos->setCellValue('G' . $filaUsuario, $idUsuario . ' - ' . $nombreUsuario);
     $filaUsuario++;
 }
-$sheetUsuarios->getColumnDimension('A')->setWidth(14);
-$sheetUsuarios->getColumnDimension('B')->setWidth(42);
-$sheetUsuarios->getColumnDimension('C')->setWidth(52);
 
-// ── Desplegables en hoja Equipos ─────────────────────────────────────────────
+$tiposPc = $inventario->obtenerTiposPc();
+$filaTipo = 2;
+foreach ($tiposPc as $tipoPc) {
+    $sheetCatalogos->setCellValue('I' . $filaTipo, $tipoPc);
+    $filaTipo++;
+}
+
+$estados = $inventario->obtenerEstados();
+$filaEstado = 2;
+foreach ($estados as $estado) {
+    $sheetCatalogos->setCellValue('K' . $filaEstado, (int)$estado['id_estado']);
+    $sheetCatalogos->setCellValue('L' . $filaEstado, $estado['nombre_estado']);
+    $sheetCatalogos->setCellValue('M' . $filaEstado, (int)$estado['id_estado'] . ' - ' . $estado['nombre_estado']);
+    $filaEstado++;
+}
+
+// ── Desplegables en hoja Inventario ──────────────────────────────────────────
 $ultimaFilaValidacion = 1000;
 $ultimaFilaUsuarios = max(2, $filaUsuario - 1);
 $ultimaFilaTipos = max(2, $filaTipo - 1);
-$ultimaFilaEstados = max(2, $fila - 1);
+$ultimaFilaEstados = max(2, $filaEstado - 1);
+$ultimaFilaUbicaciones = max(2, $filaUbicacion - 1);
 
 $validaciones = [
-    'A' => "'Usuarios'!\$C\$2:\$C\$" . $ultimaFilaUsuarios,
-    'E' => "'Tipos PC'!\$A\$2:\$A\$" . $ultimaFilaTipos,
-    'F' => "'Estados'!\$C\$2:\$C\$" . $ultimaFilaEstados,
+    'A' => "'_catalogos'!\$C\$2:\$C\$" . $ultimaFilaUbicaciones,
+    'B' => "'_catalogos'!\$G\$2:\$G\$" . $ultimaFilaUsuarios,
+    'E' => "'_catalogos'!\$I\$2:\$I\$" . $ultimaFilaTipos,
+    'F' => "'_catalogos'!\$M\$2:\$M\$" . $ultimaFilaEstados,
 ];
 
 foreach ($validaciones as $col => $formula) {
@@ -280,7 +300,7 @@ foreach ($validaciones as $col => $formula) {
         $validation = $sheet->getCell($col . $row)->getDataValidation();
         $validation->setType(PHPExcel_Cell_DataValidation::TYPE_LIST);
         $validation->setErrorStyle(PHPExcel_Cell_DataValidation::STYLE_STOP);
-        $validation->setAllowBlank($col === 'A');
+        $validation->setAllowBlank($col === 'B');
         $validation->setShowInputMessage(true);
         $validation->setShowErrorMessage(true);
         $validation->setShowDropDown(true);
@@ -292,7 +312,7 @@ foreach ($validaciones as $col => $formula) {
     }
 }
 
-// Activar hoja Equipos
+// Activar hoja Inventario
 $objPHPExcel->setActiveSheetIndex(0);
 
 // ── Enviar al navegador ───────────────────────────────────────────────────────

@@ -11,6 +11,10 @@ try {
     if ($idMonitor <= 0) {
         throw new RuntimeException('Monitor no válido.');
     }
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->usuarioPuedeGestionarMonitorPorAlcance($idMonitor, $alcanceInventario)) {
+        throw new RuntimeException('No tienes permiso para actualizar este monitor.');
+    }
 
     $inventario->actualizarMonitor($idMonitor, $_POST, $_FILES, $idUsuarioSession);
 

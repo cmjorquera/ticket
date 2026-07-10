@@ -28,13 +28,3 @@ CREATE TABLE IF NOT EXISTS equipo_fotos (
     fecha_subida DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_equipo_fotos_equipo FOREIGN KEY (id_equipo) REFERENCES equipos(id_equipo) ON DELETE CASCADE
 );
-
-CREATE TABLE IF NOT EXISTS equipo_historial (
-    id_historial INT AUTO_INCREMENT PRIMARY KEY,
-    id_equipo INT NOT NULL,
-    accion VARCHAR(60) NOT NULL,
-    descripcion TEXT NOT NULL,
-    id_usuario INT NOT NULL,
-    fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_equipo_historial_equipo FOREIGN KEY (id_equipo) REFERENCES equipos(id_equipo) ON DELETE CASCADE
-);

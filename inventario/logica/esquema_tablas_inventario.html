@@ -2,598 +2,422 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Esquema de tablas - Módulo Inventario</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esquema de tablas - Modulo Inventario</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1e293b; padding: 2rem; }
-  h1 { font-size: 1.4rem; font-weight: 700; color: #0f4c81; margin-bottom: 0.25rem; }
-  .subtitle { font-size: 0.85rem; color: #64748b; margin-bottom: 2rem; }
-
-  .diagram {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    align-items: flex-start;
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #eef3f8;
+    color: #1f2937;
   }
-
-  /* Columna central: tabla principal */
-  .col-center { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
-  .col-left   { display: flex; flex-direction: column; gap: 1.5rem; }
-  .col-right  { display: flex; flex-direction: column; gap: 1.5rem; }
-
-  /* Tabla / entidad */
-  .entity {
-    background: #fff;
-    border: 2px solid #cbd5e1;
-    border-radius: 10px;
-    min-width: 200px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  header {
+    padding: 24px 28px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid #d9e2ec;
   }
-  .entity-header {
-    padding: 0.55rem 1rem;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #fff;
-  }
-  .entity-fields {
-    padding: 0.5rem 1rem 0.7rem;
-    font-size: 0.78rem;
-    color: #374151;
-    line-height: 1.8;
-  }
-  .field-pk  { color: #b45309; font-weight: 700; }
-  .field-fk  { color: #1d4ed8; }
-  .field-tag { font-size: 0.68rem; background: #f1f5f9; color: #64748b; border-radius: 4px; padding: 0 4px; margin-left: 4px; vertical-align: middle; }
-
-  /* Colores por tipo de entidad */
-  .h-main      { background: #0f4c81; border-color: #0f4c81; }
-  .h-lookup    { background: #0e7490; border-color: #0e7490; }
-  .h-relation  { background: #4f46e5; border-color: #4f46e5; }
-  .h-movement  { background: #7c3aed; border-color: #7c3aed; }
-  .h-support   { background: #059669; border-color: #059669; }
-  .h-ref       { background: #64748b; border-color: #64748b; }
-
-  /* Conectores */
-  .connections {
-    margin-top: 2.5rem;
-    padding: 1.25rem 1.5rem;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    max-width: 900px;
-  }
-  .connections h2 {
-    font-size: 0.85rem;
-    font-weight: 700;
+  h1 {
+    margin: 0;
     color: #0f4c81;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.75rem;
+    font-size: 24px;
+    letter-spacing: 0;
   }
-  .rel-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-  .rel-table th {
-    background: #f8fafc;
-    color: #64748b;
-    font-weight: 600;
-    padding: 0.4rem 0.75rem;
+  .subtitle {
+    margin-top: 6px;
+    color: #5d6f83;
+    font-size: 14px;
+  }
+  main {
+    display: grid;
+    grid-template-columns: minmax(780px, 1fr) 340px;
+    gap: 20px;
+    padding: 20px 28px 28px;
+    align-items: start;
+  }
+  .canvas {
+    display: grid;
+    grid-template-columns: 230px 280px 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .stack {
+    display: grid;
+    gap: 14px;
+  }
+  .group-title {
+    margin: 0 0 8px;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .table-card {
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 7px rgba(15, 23, 42, 0.06);
+  }
+  .table-name {
+    width: 100%;
+    border: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 10px;
+    background: #64748b;
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
     text-align: left;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    cursor: pointer;
   }
-  .rel-table td {
-    padding: 0.45rem 0.75rem;
-    border-bottom: 1px solid #f1f5f9;
+  .table-name:hover,
+  .table-name:focus-visible {
+    outline: 3px solid #bfdbfe;
+    outline-offset: -3px;
+  }
+  .status {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    padding: 2px 7px;
+    background: rgba(255,255,255,0.18);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: none;
+  }
+  .fields {
+    padding: 8px 10px 10px;
+    font-size: 12px;
+    line-height: 1.75;
+  }
+  .pk { color: #b45309; font-weight: 700; }
+  .fk { color: #1d4ed8; }
+  .tag {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 4px;
+    border-radius: 4px;
+    background: #edf2f7;
+    color: #64748b;
+    font-size: 10px;
+  }
+  .main .table-name { background: #0f4c81; }
+  .lookup .table-name { background: #0e7490; }
+  .support .table-name { background: #059669; }
+  .movement .table-name { background: #7c3aed; }
+  .review .table-name { background: #b45309; }
+  .external .table-name { background: #64748b; }
+  .monitor .table-name { background: #0f766e; }
+
+  aside {
+    display: grid;
+    gap: 14px;
+  }
+  .summary,
+  .details {
+    background: #fff;
+    border: 1px solid #d8e1ea;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 7px rgba(15, 23, 42, 0.06);
+  }
+  .summary h2,
+  .details h2 {
+    margin: 0 0 10px;
+    color: #0f4c81;
+    font-size: 16px;
+  }
+  .summary dl {
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .summary dt {
+    font-weight: 800;
     color: #334155;
   }
-  .rel-table tr:last-child td { border-bottom: none; }
-  .badge-rel {
+  .summary dd {
+    margin: 2px 0 0;
+    color: #536579;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .details {
+    position: sticky;
+    top: 16px;
+  }
+  .details h3 {
+    margin: 0 0 8px;
+    color: #111827;
+    font-size: 18px;
+  }
+  .pill {
     display: inline-block;
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 4px;
+    margin-bottom: 12px;
+    border-radius: 999px;
+    padding: 3px 9px;
     background: #e0e7ff;
     color: #3730a3;
+    font-size: 12px;
+    font-weight: 800;
   }
-
-  .legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-    font-size: 0.75rem;
+  .details section {
+    margin-top: 10px;
   }
-  .legend-item { display: flex; align-items: center; gap: 0.4rem; }
-  .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .details h4 {
+    margin: 0 0 4px;
+    color: #475569;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+  .details p {
+    margin: 0;
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .relations {
+    grid-column: 1 / -1;
+    background: #fff;
+    border: 1px solid #d8e1ea;
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .relations h2 {
+    margin: 0 0 10px;
+    color: #0f4c81;
+    font-size: 16px;
+  }
+  .rel-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 8px 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: #334155;
+  }
+  @media (max-width: 1180px) {
+    main { grid-template-columns: 1fr; }
+    .details { position: static; }
+  }
+  @media (max-width: 860px) {
+    .canvas { grid-template-columns: 1fr; }
+    .rel-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
+<header>
+  <h1>Esquema de tablas - Modulo Inventario</h1>
+  <div class="subtitle">SISTEMA TICKET · Documentacion oficial en inventario/logica/ · Click en una tabla para ver detalle</div>
+</header>
 
-<h1>Esquema de tablas — Módulo Inventario</h1>
-<p class="subtitle">Sistema SEDUC TICKET · Base de datos: <code>acceso_sistema_panel</code></p>
-
-<div class="diagram">
-
-  <!-- COLUMNA IZQUIERDA: tablas de lookup y soporte -->
-  <div class="col-left">
-
-    <div class="entity">
-      <div class="entity-header h-ref">colegio</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_colegio <span class="field-tag">PK</span></div>
-        <div>nom_colegio</div>
-        <div>color_principal</div>
-        <div>color_secundario</div>
-        <div class="field-tag" style="margin:0">…</div>
-      </div>
+<main>
+  <div class="canvas">
+    <div class="stack">
+      <p class="group-title">Externas y catalogos</p>
+      <article class="table-card external" data-table="colegio">
+        <button class="table-name" type="button">colegio <span class="status">EXTERNA</span></button>
+        <div class="fields"><div class="pk">id_colegio</div><div>nom_colegio</div><div>branding institucional</div></div>
+      </article>
+      <article class="table-card external" data-table="usuarios">
+        <button class="table-name" type="button">usuarios <span class="status">EXTERNA</span></button>
+        <div class="fields"><div class="pk">id</div><div>nombre</div><div>apellido_paterno</div></div>
+      </article>
+      <article class="table-card external" data-table="usuario_colegio">
+        <button class="table-name" type="button">usuario_colegio <span class="status">EXTERNA</span></button>
+        <div class="fields"><div class="fk">id_usuario</div><div class="fk">id_colegio</div><div>estado</div></div>
+      </article>
+      <article class="table-card lookup" data-table="estado_equipo">
+        <button class="table-name" type="button">estado_equipo <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_estado</div><div>nombre_estado</div><div>color_badge</div></div>
+      </article>
+      <article class="table-card lookup" data-table="equipo_ubicacion">
+        <button class="table-name" type="button">equipo_ubicacion <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_ubicacion</div><div class="fk">id_colegio</div><div>nombre_ubicacion</div></div>
+      </article>
+      <article class="table-card lookup" data-table="tipo_pc_catalogo">
+        <button class="table-name" type="button">tipo_pc_catalogo <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_tipo_pc</div><div>nombre_tipo</div><div>activo</div></div>
+      </article>
     </div>
 
-    <div class="entity">
-      <div class="entity-header h-lookup">estado_equipo</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_estado <span class="field-tag">PK</span></div>
-        <div>nombre_estado</div>
-        <div>color_badge</div>
-        <div>estado <span class="field-tag">1=activo</span></div>
-      </div>
+    <div class="stack">
+      <p class="group-title">Activos principales</p>
+      <article class="table-card main" data-table="equipos">
+        <button class="table-name" type="button">equipos <span class="status">OFICIAL</span></button>
+        <div class="fields">
+          <div class="pk">id_equipo</div><div class="fk">id_colegio</div><div class="fk">id_ubicacion</div>
+          <div class="fk">id_usuario_asignado</div><div class="fk">id_usuario_registra</div>
+          <div>tipo_pc</div><div>qr_code</div><div>eliminado</div>
+        </div>
+      </article>
+      <article class="table-card monitor" data-table="monitores">
+        <button class="table-name" type="button">monitores <span class="status">OFICIAL</span></button>
+        <div class="fields">
+          <div class="pk">id_monitor</div><div>id_monitor_legacy <span class="tag">si existe</span></div>
+          <div class="fk">id_colegio</div><div class="fk">id_ubicacion</div><div class="fk">id_usuario_asignado</div>
+          <div>modelo</div><div>numero_serie</div><div>codigo_interno</div>
+        </div>
+      </article>
+      <article class="table-card review" data-table="equipo_monitor">
+        <button class="table-name" type="button">equipo_monitor <span class="status">EN REVISION</span></button>
+        <div class="fields">
+          <div class="pk">id_monitor</div><div class="fk">id_equipo</div><div>modelo_monitor</div>
+          <div>codigo_monitor</div><div>serie_monitor</div><div>orden_monitor</div>
+        </div>
+      </article>
     </div>
 
-    <div class="entity">
-      <div class="entity-header h-lookup">equipo_ubicacion</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_ubicacion <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_colegio <span class="field-tag">FK → colegio</span></div>
-        <div>nombre_ubicacion</div>
-        <div>tipo_ubicacion</div>
-        <div>descripcion</div>
-        <div>estado <span class="field-tag">1=activa</span></div>
-      </div>
+    <div class="stack">
+      <p class="group-title">Detalle, fotos e historiales</p>
+      <article class="table-card support" data-table="equipos_compra">
+        <button class="table-name" type="button">equipos_compra <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="fk">id_equipo</div><div>valor_equipo</div><div>proveedor</div></div>
+      </article>
+      <article class="table-card support" data-table="equipo_almacenamiento">
+        <button class="table-name" type="button">equipo_almacenamiento <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="fk">id_equipo</div><div>equipo_modelo</div><div>equipo_capacidad</div></div>
+      </article>
+      <article class="table-card support" data-table="equipo_procesador">
+        <button class="table-name" type="button">equipo_procesador <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="fk">id_equipo</div><div>equipo_fabricante</div><div>equipo_modelo</div></div>
+      </article>
+      <article class="table-card support" data-table="equipo_memoria">
+        <button class="table-name" type="button">equipo_memoria <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_memoria</div><div class="fk">id_equipo</div><div>tamano_memoria</div></div>
+      </article>
+      <article class="table-card support" data-table="equipo_software">
+        <button class="table-name" type="button">equipo_software <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="fk">id_equipo</div><div>windows</div><div>office</div><div>antivirus</div></div>
+      </article>
+      <article class="table-card support" data-table="equipo_fotos">
+        <button class="table-name" type="button">equipo_fotos <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_foto</div><div class="fk">id_equipo</div><div>principal</div></div>
+      </article>
+      <article class="table-card movement" data-table="equipo_movimiento">
+        <button class="table-name" type="button">equipo_movimiento <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_movimiento</div><div class="fk">id_equipo</div><div>origen/destino</div></div>
+      </article>
+      <article class="table-card movement" data-table="equipo_estado_historial">
+        <button class="table-name" type="button">equipo_estado_historial <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_historial</div><div class="fk">id_equipo</div><div>estado anterior/nuevo</div></div>
+      </article>
+      <article class="table-card movement" data-table="equipo_asignacion_historial">
+        <button class="table-name" type="button">equipo_asignacion_historial <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_asignacion</div><div class="fk">id_equipo</div><div>usuario anterior/nuevo</div></div>
+      </article>
+      <article class="table-card support" data-table="monitor_compra">
+        <button class="table-name" type="button">monitor_compra <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="fk">id_monitor</div><div>valor_monitor</div><div>proveedor</div></div>
+      </article>
+      <article class="table-card support" data-table="monitor_fotos">
+        <button class="table-name" type="button">monitor_fotos <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_foto</div><div class="fk">id_monitor</div><div>principal</div></div>
+      </article>
+      <article class="table-card movement" data-table="monitor_movimiento">
+        <button class="table-name" type="button">monitor_movimiento <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_movimiento</div><div class="fk">id_monitor</div><div>origen/destino</div></div>
+      </article>
+      <article class="table-card movement" data-table="monitor_asignacion_historial">
+        <button class="table-name" type="button">monitor_asignacion_historial <span class="status">OFICIAL</span></button>
+        <div class="fields"><div class="pk">id_asignacion</div><div class="fk">id_monitor</div><div>usuario anterior/nuevo</div></div>
+      </article>
     </div>
 
-    <div class="entity">
-      <div class="entity-header h-lookup">tipo_pc_catalogo</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_tipo_pc <span class="field-tag">PK</span></div>
-        <div>nombre_tipo <span class="field-tag">UNIQUE</span></div>
-        <div>activo <span class="field-tag">1=visible</span></div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-ref">usuarios</div>
-      <div class="entity-fields">
-        <div class="field-pk">id <span class="field-tag">PK</span></div>
-        <div>nombre</div>
-        <div>apellido_paterno</div>
-        <div class="field-tag" style="margin:0">…</div>
-      </div>
-    </div>
-
+    <section class="relations">
+      <h2>Relaciones clave</h2>
+      <ul class="rel-grid">
+        <li>colegio -> equipos / monitores / equipo_ubicacion</li>
+        <li>usuario_colegio -> filtra responsables por colegio</li>
+        <li>estado_equipo -> estado operativo de equipos y monitores</li>
+        <li>tipo_pc_catalogo -> tipo textual guardado en equipos.tipo_pc</li>
+        <li>equipos -> detalle tecnico, fotos, movimientos, estados y asignaciones</li>
+        <li>monitores -> compra, fotos, movimientos y asignaciones independientes</li>
+        <li>equipo_monitor -> EN REVISION; hoy no es puente real hacia monitores</li>
+        <li>equipo_historial -> no existe en la base real y no es tabla oficial</li>
+      </ul>
+    </section>
   </div>
 
-  <!-- COLUMNA CENTRAL: tabla principal -->
-  <div class="col-center">
+  <aside>
+    <section class="summary">
+      <h2>Resumen funcional del modulo</h2>
+      <dl>
+        <div><dt>Colegio</dt><dd>Todo activo pertenece a un colegio. SEDUC es id_colegio 15 y actua como oficina central.</dd></div>
+        <div><dt>Ubicaciones</dt><dd>Salas, oficinas, bodegas y dependencias se guardan en equipo_ubicacion; no se crea tabla separada de salas.</dd></div>
+        <div><dt>Equipos</dt><dd>La pestana PC administra activos guardados en equipos, con tipo definido por tipo_pc_catalogo.</dd></div>
+        <div><dt>Responsables</dt><dd>El responsable va en id_usuario_asignado y debe filtrarse por usuario_colegio del colegio actual.</dd></div>
+        <div><dt>Monitores</dt><dd>monitores es inventario independiente; equipo_monitor queda en revision por duplicar datos tecnicos.</dd></div>
+        <div><dt>QR</dt><dd>equipos.qr_code identifica la ficha resumida del activo. QR de monitores requiere validar campo real.</dd></div>
+        <div><dt>Agente</dt><dd>El agente Windows llena datos tecnicos y monitores detectados en el formulario PC.</dd></div>
+        <div><dt>Historiales</dt><dd>Movimientos, estados y asignaciones se guardan en tablas especificas. equipo_historial no es oficial.</dd></div>
+      </dl>
+    </section>
 
-    <div class="entity" style="min-width:230px">
-      <div class="entity-header h-main">equipos <span style="font-weight:400;font-size:0.7rem">(tabla principal)</span></div>
-      <div class="entity-fields">
-        <div class="field-pk">id_equipo <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_colegio <span class="field-tag">FK → colegio</span></div>
-        <div class="field-fk">id_ubicacion <span class="field-tag">FK → equipo_ubicacion</span></div>
-        <div class="field-fk">id_estado <span class="field-tag">FK → estado_equipo</span></div>
-        <div class="field-fk">id_usuario <span class="field-tag">FK → usuarios</span></div>
-        <div class="field-fk">id_usuario_asignado <span class="field-tag">FK → usuarios</span></div>
-        <div class="field-fk">id_usuario_registra <span class="field-tag">nullable · FK → usuarios</span></div>
-        <div>nombre_equipo</div>
-        <div>fabricante</div>
-        <div>producto</div>
-        <div>numero_serie</div>
-        <div>tipo_pc <span class="field-tag">← tipo_pc_catalogo</span></div>
-        <div>qr_code</div>
-        <div>eliminado <span class="field-tag">0=visible · 1=eliminado</span></div>
-        <div>fecha_eliminado <span class="field-tag">nullable</span></div>
-        <div>id_usuario_elimina <span class="field-tag">nullable</span></div>
-      </div>
-    </div>
+    <section class="details" id="details">
+      <h2>Detalle de tabla</h2>
+      <h3>Selecciona una tabla</h3>
+      <span class="pill">Sin seleccion</span>
+      <section><h4>Que guarda</h4><p>Haz clic sobre el nombre de cualquier tabla del esquema.</p></section>
+      <section><h4>Responsabilidad</h4><p>El panel mostrara su rol dentro del modulo.</p></section>
+      <section><h4>Relaciones</h4><p>Tambien se indicaran tablas relacionadas y ejemplos reales.</p></section>
+    </section>
+  </aside>
+</main>
 
-  </div>
+<script>
+const info = {
+  colegio: ['EXTERNA DEL SISTEMA', 'Colegios y oficina central SEDUC.', 'Propietario institucional de activos y ubicaciones.', 'equipos, monitores, equipo_ubicacion, usuario_colegio.', 'id_colegio 15 representa SEDUC como oficina central.'],
+  usuarios: ['EXTERNA DEL SISTEMA', 'Usuarios del sistema.', 'Fuente de responsables, registradores y usuarios de accion.', 'equipos, monitores, historiales, usuario_colegio.', 'Un responsable se asigna a equipos.id_usuario_asignado.'],
+  usuario_colegio: ['EXTERNA DEL SISTEMA', 'Relacion usuario-colegio activa.', 'Filtra los usuarios asignables por colegio actual.', 'usuarios, colegio.', 'No se deben listar usuarios de colegios ajenos a la sesion.'],
+  estado_equipo: ['OFICIAL', 'Catalogo de estados operativos.', 'Define estados visibles como Activo, Bodega, Reparacion o Baja.', 'equipos, monitores, equipo_estado_historial.', 'Cambiar a Baja no elimina logicamente el activo.'],
+  equipo_ubicacion: ['OFICIAL', 'Ubicaciones fisicas por colegio.', 'Representa salas, oficinas, bodegas y dependencias.', 'colegio, equipos, monitores, movimientos.', 'Si falta una sala, debe agregarse aqui con el id_colegio actual.'],
+  tipo_pc_catalogo: ['OFICIAL', 'Tipos de activos registrados en equipos.', 'Alimenta el campo textual equipos.tipo_pc.', 'equipos.', 'PC, Notebook, Tablet o All in One pueden convivir como tipos.'],
+  equipos: ['OFICIAL', 'Activos tecnologicos administrados en la pestana PC.', 'Tabla principal de equipos y futuros activos compatibles con tipo_pc_catalogo.', 'colegio, usuarios, equipo_ubicacion, estado_equipo y tablas de detalle.', 'Un notebook con QR, ubicacion, responsable, fotos y estado.'],
+  monitores: ['OFICIAL', 'Inventario independiente de monitores.', 'Permite tratar un monitor como activo propio.', 'monitor_compra, monitor_fotos, monitor_movimiento, monitor_asignacion_historial.', 'Monitor comprado de forma independiente y asignado a un usuario.'],
+  equipo_monitor: ['EN REVISION', 'Datos tecnicos de monitores asociados a un PC.', 'Hoy lo usa codigo activo, pero no es puente real hacia monitores.', 'equipos. No relaciona formalmente con monitores.', 'El agente detecta dos pantallas y las vuelca al formulario PC. Recomendacion: refactor/migracion futura.'],
+  equipos_compra: ['OFICIAL', 'Datos de compra del equipo.', 'Complemento 1:1 de equipos.', 'equipos.', 'Proveedor, factura, fecha y valor del PC.'],
+  equipo_almacenamiento: ['OFICIAL', 'Datos de disco o almacenamiento.', 'Detalle tecnico 1:1 del equipo.', 'equipos.', 'Modelo, capacidad y tipo SSD/NVMe/HDD.'],
+  equipo_procesador: ['OFICIAL', 'Datos de CPU.', 'Detalle tecnico 1:1 del equipo.', 'equipos.', 'Fabricante, modelo y velocidad.'],
+  equipo_memoria: ['OFICIAL', 'Modulos de memoria RAM.', 'Detalle tecnico 1:N del equipo.', 'equipos.', 'Un notebook con uno o varios modulos RAM.'],
+  equipo_software: ['OFICIAL', 'Software base del equipo.', 'Detalle tecnico 1:1 del equipo.', 'equipos.', 'Windows, Office y antivirus.'],
+  equipo_fotos: ['OFICIAL', 'Fotos asociadas al equipo.', 'Galeria e imagen principal.', 'equipos.', 'Foto principal para ficha y galeria.'],
+  equipo_movimiento: ['OFICIAL', 'Cambios de ubicacion del equipo.', 'Historial fisico de traslados.', 'equipos, equipo_ubicacion, usuarios.', 'Equipo movido de bodega a sala de computacion.'],
+  equipo_estado_historial: ['OFICIAL', 'Cambios de estado operativo.', 'Historial de cambios desde el badge/listado.', 'equipos, estado_equipo, usuarios.', 'Activo -> Reparacion con usuario de accion.'],
+  equipo_asignacion_historial: ['OFICIAL', 'Cambios de usuario responsable.', 'Historial de asignacion o liberacion de equipo.', 'equipos, usuarios.', 'Equipo liberado o asignado a nuevo funcionario.'],
+  monitor_compra: ['OFICIAL', 'Datos de compra del monitor.', 'Complemento 1:1 de monitores.', 'monitores.', 'Proveedor y factura del monitor.'],
+  monitor_fotos: ['OFICIAL', 'Fotos asociadas al monitor.', 'Galeria e imagen principal del monitor.', 'monitores.', 'Foto principal del monitor independiente.'],
+  monitor_movimiento: ['OFICIAL', 'Cambios de ubicacion del monitor.', 'Historial fisico de traslados de monitor independiente.', 'monitores, equipo_ubicacion, usuarios.', 'Monitor movido a otra oficina.'],
+  monitor_asignacion_historial: ['OFICIAL', 'Cambios de responsable del monitor.', 'Historial de asignacion o liberacion.', 'monitores, usuarios.', 'Monitor liberado desde un funcionario.']
+};
 
-  <!-- COLUMNA DERECHA: tablas hijas y movimiento -->
-  <div class="col-right">
+function render(key) {
+  const data = info[key];
+  if (!data) return;
+  const box = document.getElementById('details');
+  box.innerHTML = `
+    <h2>Detalle de tabla</h2>
+    <h3>${key}</h3>
+    <span class="pill">${data[0]}</span>
+    <section><h4>Que guarda</h4><p>${data[1]}</p></section>
+    <section><h4>Responsabilidad</h4><p>${data[2]}</p></section>
+    <section><h4>Tablas relacionadas</h4><p>${data[3]}</p></section>
+    <section><h4>Ejemplo de uso real</h4><p>${data[4]}</p></section>
+  `;
+}
 
-    <div class="entity">
-      <div class="entity-header h-support">equipos_compra</div>
-      <div class="entity-fields">
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>valor_equipo</div>
-        <div>proveedor</div>
-        <div>numero_factura</div>
-        <div>fecha_compra</div>
-        <div>observacion</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-support">equipo_almacenamiento</div>
-      <div class="entity-fields">
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>equipo_modelo</div>
-        <div>equipo_capacidad</div>
-        <div>equipo_tamano</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-support">equipo_procesador</div>
-      <div class="entity-fields">
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>equipo_fabricante</div>
-        <div>equipo_modelo</div>
-        <div>equipo_velocidad</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-support">equipo_software</div>
-      <div class="entity-fields">
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>windows</div>
-        <div>office</div>
-        <div>antivirus</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-relation">equipo_memoria</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_memoria <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>designacion_memoria</div>
-        <div>tipo_memoria</div>
-        <div>tamano_memoria</div>
-        <div>frecuencia_memoria</div>
-        <div>orden_memoria</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-relation">equipo_monitor <span style="font-weight:400;font-size:0.65rem">(legacy · monitor de PC)</span></div>
-      <div class="entity-fields">
-        <div class="field-pk">id_monitor <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>modelo_monitor</div>
-        <div>serie_monitor</div>
-        <div>tamano_monitor</div>
-        <div>orden_monitor</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-relation">equipo_fotos</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_foto <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>ruta_foto</div>
-        <div>tipo_foto <span class="field-tag">normal|panoramica</span></div>
-        <div>principal <span class="field-tag">0|1</span></div>
-        <div>orden_foto</div>
-        <div>fecha_subida</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-movement">equipo_movimiento</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_movimiento <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_equipo <span class="field-tag">FK</span></div>
-        <div>id_ubicacion_origen <span class="field-tag">nullable</span></div>
-        <div>id_ubicacion_destino</div>
-        <div class="field-fk">id_usuario_movimiento <span class="field-tag">FK → usuarios</span></div>
-        <div>fecha_movimiento</div>
-        <div>motivo</div>
-        <div>observacion</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-movement">equipo_asignacion_historial</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_asignacion <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_equipo <span class="field-tag">FK → equipos</span></div>
-        <div>id_usuario_anterior <span class="field-tag">nullable</span></div>
-        <div>id_usuario_nuevo <span class="field-tag">nullable · NULL=liberado</span></div>
-        <div class="field-fk">id_usuario_accion <span class="field-tag">FK → usuarios</span></div>
-        <div>fecha_accion <span class="field-tag">auto</span></div>
-        <div>motivo</div>
-        <div>observacion</div>
-      </div>
-    </div>
-
-    <div class="entity">
-      <div class="entity-header h-movement">equipo_estado_historial</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_historial <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_equipo <span class="field-tag">FK → equipos</span></div>
-        <div>id_estado_anterior <span class="field-tag">nullable</span></div>
-        <div>id_estado_nuevo</div>
-        <div class="field-fk">id_usuario_accion <span class="field-tag">FK → usuarios</span></div>
-        <div>fecha_accion <span class="field-tag">auto</span></div>
-        <div>observacion</div>
-      </div>
-    </div>
-
-  </div>
-
-</div>
-
-<!-- Módulo Monitores -->
-<h1 style="margin-top:2.5rem;font-size:1.1rem;color:#7c3aed">Módulo Monitores Independientes</h1>
-<p class="subtitle">Tablas independientes para el inventario de monitores · DISTINTO de equipo_monitor (legacy PC)</p>
-
-<div class="diagram">
-
-  <div class="col-left">
-    <div class="entity">
-      <div class="entity-header h-ref">colegio</div>
-      <div class="entity-fields"><div class="field-pk">id_colegio <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida con PC</div></div>
-    </div>
-    <div class="entity">
-      <div class="entity-header h-lookup">estado_equipo</div>
-      <div class="entity-fields"><div class="field-pk">id_estado <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida con PC</div></div>
-    </div>
-    <div class="entity">
-      <div class="entity-header h-lookup">equipo_ubicacion</div>
-      <div class="entity-fields"><div class="field-pk">id_ubicacion <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida con PC</div></div>
-    </div>
-    <div class="entity">
-      <div class="entity-header h-ref">usuarios</div>
-      <div class="entity-fields"><div class="field-pk">id <span class="field-tag">PK</span></div><div class="field-tag" style="margin:0">compartida</div></div>
-    </div>
-  </div>
-
-  <div class="col-center">
-    <div class="entity" style="min-width:230px">
-      <div class="entity-header h-main">monitores <span style="font-weight:400;font-size:0.7rem">(tabla principal)</span></div>
-      <div class="entity-fields">
-        <div class="field-pk">id_monitor <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_colegio <span class="field-tag">FK → colegio</span></div>
-        <div class="field-fk">id_ubicacion <span class="field-tag">nullable · FK → equipo_ubicacion</span></div>
-        <div class="field-fk">id_estado <span class="field-tag">FK → estado_equipo</span></div>
-        <div class="field-fk">id_usuario_asignado <span class="field-tag">nullable · FK → usuarios</span></div>
-        <div class="field-fk">id_usuario_registra <span class="field-tag">nullable · FK → usuarios</span></div>
-        <div>nombre_monitor</div>
-        <div>marca · modelo</div>
-        <div>numero_serie</div>
-        <div>codigo_interno</div>
-        <div>tamano_monitor · resolucion_monitor</div>
-        <div>tipo_panel · tipo_conexion</div>
-        <div>observacion</div>
-        <div>fecha_registro</div>
-        <div>eliminado <span class="field-tag">0=activo · 1=eliminado</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-right">
-    <div class="entity">
-      <div class="entity-header h-support">monitor_compra <span style="font-weight:400">(1:1)</span></div>
-      <div class="entity-fields">
-        <div class="field-fk">id_monitor <span class="field-tag">PK · FK</span></div>
-        <div>valor_monitor</div>
-        <div>proveedor</div>
-        <div>numero_factura</div>
-        <div>fecha_compra</div>
-        <div>observacion</div>
-      </div>
-    </div>
-    <div class="entity">
-      <div class="entity-header h-relation">monitor_fotos</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_foto <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_monitor <span class="field-tag">FK</span></div>
-        <div>ruta_foto</div>
-        <div>tipo_foto <span class="field-tag">normal|panoramica</span></div>
-        <div>principal <span class="field-tag">0|1</span></div>
-        <div>orden_foto</div>
-        <div>fecha_subida</div>
-      </div>
-    </div>
-    <div class="entity">
-      <div class="entity-header h-movement">monitor_movimiento</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_movimiento <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_monitor <span class="field-tag">FK</span></div>
-        <div>id_ubicacion_origen <span class="field-tag">nullable</span></div>
-        <div>id_ubicacion_destino</div>
-        <div class="field-fk">id_usuario_movimiento <span class="field-tag">FK → usuarios</span></div>
-        <div>fecha_movimiento</div>
-        <div>motivo · observacion</div>
-      </div>
-    </div>
-    <div class="entity">
-      <div class="entity-header h-movement">monitor_asignacion_historial</div>
-      <div class="entity-fields">
-        <div class="field-pk">id_asignacion <span class="field-tag">PK</span></div>
-        <div class="field-fk">id_monitor <span class="field-tag">FK → monitores</span></div>
-        <div>id_usuario_anterior <span class="field-tag">nullable</span></div>
-        <div>id_usuario_nuevo <span class="field-tag">nullable · NULL=liberado</span></div>
-        <div class="field-fk">id_usuario_accion <span class="field-tag">FK → usuarios</span></div>
-        <div>fecha_accion <span class="field-tag">auto</span></div>
-        <div>motivo · observacion</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<!-- Tabla de relaciones -->
-<div class="connections">
-  <h2>Relaciones</h2>
-  <table class="rel-table">
-    <thead>
-      <tr>
-        <th>Tabla origen</th>
-        <th>Relación</th>
-        <th>Tabla destino</th>
-        <th>Campo enlace</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>colegio</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipos</td>
-        <td>equipos.id_colegio → colegio.id_colegio</td>
-      </tr>
-      <tr>
-        <td>colegio</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipo_ubicacion</td>
-        <td>equipo_ubicacion.id_colegio → colegio.id_colegio</td>
-      </tr>
-      <tr>
-        <td>equipo_ubicacion</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipos</td>
-        <td>equipos.id_ubicacion → equipo_ubicacion.id_ubicacion (nullable)</td>
-      </tr>
-      <tr>
-        <td>estado_equipo</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipos</td>
-        <td>equipos.id_estado → estado_equipo.id_estado</td>
-      </tr>
-      <tr>
-        <td>tipo_pc_catalogo</td>
-        <td><span class="badge-rel">lógica</span></td>
-        <td>equipos</td>
-        <td>equipos.tipo_pc (VARCHAR) ← tipo_pc_catalogo.nombre_tipo (sin FK formal)</td>
-      </tr>
-      <tr>
-        <td>usuarios</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipos</td>
-        <td>equipos.id_usuario / id_usuario_asignado / id_usuario_registra → usuarios.id</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:1</span></td>
-        <td>equipos_compra</td>
-        <td>equipos_compra.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:1</span></td>
-        <td>equipo_almacenamiento</td>
-        <td>equipo_almacenamiento.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:1</span></td>
-        <td>equipo_procesador</td>
-        <td>equipo_procesador.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:1</span></td>
-        <td>equipo_software</td>
-        <td>equipo_software.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipo_memoria</td>
-        <td>equipo_memoria.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipo_monitor (legacy)</td>
-        <td>equipo_monitor.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipo_fotos</td>
-        <td>equipo_fotos.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipo_movimiento</td>
-        <td>equipo_movimiento.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipo_asignacion_historial</td>
-        <td>equipo_asignacion_historial.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>equipos</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>equipo_estado_historial</td>
-        <td>equipo_estado_historial.id_equipo → equipos.id_equipo</td>
-      </tr>
-      <tr>
-        <td>colegio</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>monitores</td>
-        <td>monitores.id_colegio → colegio.id_colegio</td>
-      </tr>
-      <tr>
-        <td>estado_equipo</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>monitores</td>
-        <td>monitores.id_estado → estado_equipo.id_estado</td>
-      </tr>
-      <tr>
-        <td>equipo_ubicacion</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>monitores</td>
-        <td>monitores.id_ubicacion → equipo_ubicacion.id_ubicacion (nullable)</td>
-      </tr>
-      <tr>
-        <td>monitores</td>
-        <td><span class="badge-rel">1:1</span></td>
-        <td>monitor_compra</td>
-        <td>monitor_compra.id_monitor → monitores.id_monitor</td>
-      </tr>
-      <tr>
-        <td>monitores</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>monitor_fotos</td>
-        <td>monitor_fotos.id_monitor → monitores.id_monitor</td>
-      </tr>
-      <tr>
-        <td>monitores</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>monitor_movimiento</td>
-        <td>monitor_movimiento.id_monitor → monitores.id_monitor</td>
-      </tr>
-      <tr>
-        <td>monitores</td>
-        <td><span class="badge-rel">1:N</span></td>
-        <td>monitor_asignacion_historial</td>
-        <td>monitor_asignacion_historial.id_monitor → monitores.id_monitor</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:#0f4c81"></div> Tabla principal</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#0e7490"></div> Lookup / catálogo (estado_equipo, equipo_ubicacion, tipo_pc_catalogo)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#059669"></div> Datos de soporte (1:1)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#4f46e5"></div> Datos múltiples (1:N)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div> Movimiento / historial</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#64748b"></div> Tabla de referencia externa</div>
-  </div>
-</div>
-
+document.querySelectorAll('[data-table]').forEach(card => {
+  card.querySelector('button').addEventListener('click', () => render(card.dataset.table));
+});
+</script>
 </body>
 </html>

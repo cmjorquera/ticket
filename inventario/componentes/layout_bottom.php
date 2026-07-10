@@ -15,6 +15,9 @@
 <script src="<?= inventario_h(inventario_sistema_url('vendor/jquery-easing/jquery.easing.min.js')) ?>"></script>
 <script src="<?= inventario_h(inventario_sistema_url('js/sb-admin-2.min.js')) ?>"></script>
 <script src="<?= inventario_h(inventario_sistema_url('vendor/chart.js/Chart.min.js')) ?>"></script>
+<?php foreach (($jsExtraInventario ?? []) as $jsExtra): ?>
+<script src="<?= inventario_h($jsExtra) ?>?v=<?= inventario_h(inventario_asset_version($jsExtra)) ?>"></script>
+<?php endforeach; ?>
 <script src="<?= inventario_h(inventario_sistema_url('js/demo/chart-area-demo.js')) ?>"></script>
 <script src="<?= inventario_h(inventario_sistema_url('js/demo/chart-pie-demo.js')) ?>"></script>
 <script src="<?= inventario_h(inventario_sistema_url('js/funciones.js')) ?>"></script>

@@ -4,7 +4,7 @@ require_once __DIR__ . '/componentes/boot.php';
 $tituloPagina   = 'Registrar equipo';
 $colegioUsuario = $inventario->obtenerColegioDelUsuario($idUsuarioSession);
 $idColegioForm  = (int)($colegioUsuario['id_colegio'] ?? 0);
-$usuarios       = $inventario->obtenerUsuarios();
+$usuarios       = $inventario->obtenerUsuariosAsignablesPorColegio($idColegioForm);
 $estados        = $inventario->obtenerEstados();
 $tiposPc        = $inventario->obtenerTiposPc();
 $ubicaciones    = $inventario->obtenerUbicacionesPorColegio($idColegioForm);
@@ -105,10 +105,13 @@ require __DIR__ . '/componentes/layout_top.php';
         var campos_err = [];
 
         // ── Datos generales ─────────────────────────────────────────────
-        set('nombre_equipo', d.nombre_equipo,   campos_err) && campos_ok++;
         set('fabricante',    d.fabricante,       campos_err) && campos_ok++;
         set('producto',      d.modelo,           campos_err) && campos_ok++;
-        set('numero_serie',  d.serial,           campos_err) && campos_ok++;
+        if (set('numero_serie', d.serial, campos_err)) {
+            campos_ok++;
+            var serieEl = document.querySelector('[name="numero_serie"]');
+            if (serieEl) { serieEl.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
 
         // ── Procesador ──────────────────────────────────────────────────
         set('procesador_fabricante', d.procesador_fab, campos_err) && campos_ok++;
@@ -146,7 +149,7 @@ require __DIR__ . '/componentes/layout_top.php';
         if (d.monitores && d.monitores.length) abrirAcordeon('datosMonitores');
 
         // ── Resumen visual ───────────────────────────────────────────────
-        var equipo  = d.nombre_equipo || '(sin nombre)';
+        var equipo  = d.serial ? ('PC-' + String(d.serial).trim().toUpperCase()) : '(sin serie)';
         var fab     = [d.fabricante, d.modelo].filter(Boolean).join(' ');
         var discos  = Array.isArray(d.almacenamiento)
             ? d.almacenamiento.map(function (dk) { return dk.tipo + ' ' + dk.capacidad; }).join(', ')

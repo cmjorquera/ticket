@@ -7,6 +7,10 @@ try {
     if ($idMonitor <= 0) {
         throw new RuntimeException('Monitor no válido.');
     }
+    $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+    if (!$inventario->usuarioPuedeGestionarMonitorPorAlcance($idMonitor, $alcanceInventario)) {
+        throw new RuntimeException('No tienes permiso para eliminar este monitor.');
+    }
     $inventario->eliminarMonitor($idMonitor);
     echo json_encode(['ok' => true, 'mensaje' => 'Monitor eliminado correctamente.']);
 } catch (Throwable $e) {

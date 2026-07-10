@@ -31,7 +31,7 @@ require __DIR__ . '/componentes/layout_top.php';
                     </p>
                     <div class="d-flex flex-wrap gap-2">
                         <span class="cm-feature-pill"><i class="bi bi-file-earmark-excel me-1"></i>Formato Excel (.xlsx / .xls)</span>
-                        <span class="cm-feature-pill"><i class="bi bi-arrow-repeat me-1"></i>Inserción y actualización automática</span>
+                        <span class="cm-feature-pill"><i class="bi bi-eye me-1"></i>Previsualizacion antes de insertar</span>
                         <span class="cm-feature-pill"><i class="bi bi-list-check me-1"></i>Detalle de errores por fila</span>
                         <span class="cm-feature-pill"><i class="bi bi-building me-1"></i>Colegio asignado por sesión</span>
                     </div>
@@ -81,9 +81,9 @@ require __DIR__ . '/componentes/layout_top.php';
                             Descargar plantilla Excel
                         </h5>
                         <p class="text-muted mb-3 small">
-                            La plantilla incluye el encabezado de tu colegio, las columnas con nombres legibles
-                            y una fila de ejemplo en gris. <strong>Elimina la fila de ejemplo</strong> antes de subir.
-                            La hoja <strong>Estados</strong> lista los IDs de estado disponibles.
+                            La plantilla incluye una sola hoja visible: <strong>Inventario</strong>. Los desplegables
+                            usan catalogos internos ocultos y el colegio se determina por tu sesion.
+                            <strong>Elimina la fila de ejemplo</strong> antes de subir.
                         </p>
                         <a href="exportar_plantilla.php" class="btn btn-success">
                             <i class="bi bi-file-earmark-excel me-2"></i>Descargar plantilla Excel
@@ -91,13 +91,19 @@ require __DIR__ . '/componentes/layout_top.php';
                     </div>
                 </div>
 
-                <!-- Tarjeta 4: Resultados (oculta hasta procesar) -->
+                <!-- Tarjeta 4: Previsualizacion/resultados (oculta hasta procesar) -->
                 <div id="cmResultados" class="card shadow-sm border-0 inv-panel d-none mb-3">
                     <div class="card-body p-4">
-                        <h5 class="mb-3">
-                            <span class="cm-step-num-sm">4</span>
-                            Resultado de la importación
-                        </h5>
+                        <div class="d-flex flex-column flex-xl-row justify-content-between gap-3 mb-3">
+                            <h5 class="mb-0">
+                                <span class="cm-step-num-sm">4</span>
+                                <span id="cmTituloResultados">Previsualizacion de equipos</span>
+                            </h5>
+                            <button type="button" id="btnInsertarPc" class="btn btn-success d-none" disabled>
+                                <span id="cmSpinnerInsertar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-check2-circle me-1"></i>Insertar PC
+                            </button>
+                        </div>
 
                         <div id="cmResumenResultados" class="mb-3 d-flex flex-wrap gap-2 align-items-center"></div>
 
@@ -105,9 +111,20 @@ require __DIR__ . '/componentes/layout_top.php';
                             <table class="table table-sm table-hover align-middle border" id="cmTablaResultados">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="text-center" style="width: 90px;">Fila Excel</th>
-                                        <th class="text-center" style="width: 100px;">Estado</th>
-                                        <th>Mensaje</th>
+                                        <th class="text-center" style="width: 46px;">
+                                            <input type="checkbox" id="cmSeleccionarTodos" class="form-check-input" title="Seleccionar todos los validos">
+                                        </th>
+                                        <th class="text-center" style="width: 70px;">Fila</th>
+                                        <th>Nombre del equipo</th>
+                                        <th>Numero de serie</th>
+                                        <th>Tipo</th>
+                                        <th>Estado</th>
+                                        <th>Ubicacion</th>
+                                        <th>Usuario asignado</th>
+                                        <th>Fabricante</th>
+                                        <th>Producto / modelo</th>
+                                        <th>Valor</th>
+                                        <th>Errores / advertencias</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -126,8 +143,8 @@ require __DIR__ . '/componentes/layout_top.php';
                     </div>
                     <div class="cm-upload-panel-body">
                         <p class="text-muted small mb-3">
-                            Completa la plantilla con los datos y sube el archivo aquí.
-                            Cada fila se procesa de forma <strong>independiente</strong>.
+                            Completa la plantilla y sube el archivo para previsualizar.
+                            Nada se inserta hasta que selecciones filas y confirmes.
                         </p>
 
                         <div id="cmDropZone"
@@ -148,13 +165,34 @@ require __DIR__ . '/componentes/layout_top.php';
 
                         <button id="btnCargarMasiva" class="btn btn-primary w-100" disabled>
                             <span id="cmSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                            <i class="bi bi-upload me-1"></i>Cargar y mostrar
+                            <i class="bi bi-search me-1"></i>Cargar / previsualizar
                         </button>
                     </div>
                 </div>
             </div><!-- /col-lg-4 -->
 
         </div><!-- /row -->
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirmarInsertarPc" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">¿Está seguro de insertar estos PC?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1">Se insertarán <strong id="cmConfirmarCantidad">0</strong> equipos seleccionados.</p>
+                <p class="text-muted mb-0">Las filas no seleccionadas no serán ingresadas.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarInsertarPc">
+                    Sí, insertar PC
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 

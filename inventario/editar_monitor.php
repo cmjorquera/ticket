@@ -9,6 +9,12 @@ if (!$monitor) {
     exit;
 }
 
+$alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+if (!$inventario->colegioPermitidoPorAlcance((int)($monitor['id_colegio'] ?? 0), $alcanceInventario)) {
+    header('Location: index.php?tab=monitores');
+    exit;
+}
+
 $tituloPagina   = 'Editar monitor';
 $idColegioForm  = (int)($monitor['id_colegio'] ?? 0);
 $colegioUsuario = ['id_colegio' => $idColegioForm, 'nom_colegio' => ($monitor['nom_colegio'] ?? '')];

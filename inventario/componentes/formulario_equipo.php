@@ -11,6 +11,14 @@ $fotos             = $equipo['fotos'] ?? [];
 $colegioUsuario    = $colegioUsuario ?? [];
 $ubicaciones       = $ubicaciones ?? [];
 $idUbicacionActual = (int)($equipo['id_ubicacion'] ?? 0);
+$idUsuarioAsignadoActual = (int)($equipo['id_usuario_asignado'] ?? 0);
+$responsableEnListado = false;
+foreach (($usuarios ?? []) as $usuarioTmp) {
+    if ((int)($usuarioTmp['id'] ?? 0) === $idUsuarioAsignadoActual) {
+        $responsableEnListado = true;
+        break;
+    }
+}
 $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equipo.php';
 ?>
 
@@ -48,9 +56,14 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
                         <div class="col-md-4">
                             <label class="form-label">Usuario asignado</label>
                             <select name="id_usuario_asignado" class="form-select">
-                                <option value="0">Sin asignar</option>
+                                <option value="0" <?= $idUsuarioAsignadoActual === 0 ? 'selected' : '' ?>>Sin asignar</option>
+                                <?php if ($idUsuarioAsignadoActual > 0 && !$responsableEnListado): ?>
+                                    <option value="<?= $idUsuarioAsignadoActual ?>" selected>
+                                        Responsable actual no disponible para este colegio
+                                    </option>
+                                <?php endif; ?>
                                 <?php foreach ($usuarios as $usuario): ?>
-                                    <option value="<?= (int)$usuario['id'] ?>" <?= (int)($equipo['id_usuario_asignado'] ?? 0) === (int)$usuario['id'] ? 'selected' : '' ?>>
+                                    <option value="<?= (int)$usuario['id'] ?>" <?= $idUsuarioAsignadoActual === (int)$usuario['id'] ? 'selected' : '' ?>>
                                         <?= inventario_h($usuario['nombre_completo']) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -84,19 +97,38 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
                                         <?= inventario_h($label) ?>
                                     </option>
                                 <?php endforeach; ?>
+                                <option value="__nueva__">Agregar nueva ubicacion...</option>
                             </select>
                         </div>
 
-                        <!-- Nombre equipo -->
+                        <div class="col-md-4 d-none" id="grupoNuevaUbicacion">
+                            <label class="form-label">Nueva ubicacion <span class="text-danger">*</span></label>
+                            <input type="text" name="nombre_ubicacion_nueva" id="nombreUbicacionNueva" class="form-control" placeholder="Ej: Sala A1">
+                        </div>
+
+                        <!-- Nombre del equipo (amigable, escrito por el usuario) -->
                         <div class="col-md-4">
-                            <label class="form-label">Nombre equipo <span class="text-danger">*</span></label>
-                            <input type="text" name="nombre_equipo" class="form-control" value="<?= inventario_h($equipo['nombre_equipo'] ?? '') ?>" required>
+                            <label class="form-label">Nombre del equipo</label>
+                            <input type="text" name="nombre_personalizado" class="form-control"
+                                   value="<?= inventario_h($equipo['nombre_personalizado'] ?? '') ?>"
+                                   placeholder="Ej: PC Direccion, Notebook Inspectoria, Equipo Sala A3">
+                            <div class="form-text">Nombre amigable, opcional. No reemplaza el identificador tecnico.</div>
                         </div>
 
                         <!-- Numero de serie -->
                         <div class="col-md-4">
                             <label class="form-label">Numero de serie <span class="text-danger">*</span></label>
-                            <input type="text" name="numero_serie" class="form-control" value="<?= inventario_h($equipo['numero_serie'] ?? '') ?>" required>
+                            <input type="text" name="numero_serie" id="numeroSerieEquipo" class="form-control" value="<?= inventario_h($equipo['numero_serie'] ?? '') ?>" required>
+                        </div>
+
+                        <!-- Identificador tecnico calculado -->
+                        <div class="col-md-4">
+                            <label class="form-label">Identificador tecnico</label>
+                            <div class="form-control bg-light fw-semibold" id="nombreEquipoPreview">
+                                <?= inventario_h($equipo['nombre_equipo'] ?? 'Se genera desde la serie') ?>
+                            </div>
+                            <input type="hidden" name="nombre_equipo" id="nombreEquipoAuto" value="<?= inventario_h($equipo['nombre_equipo'] ?? '') ?>">
+                            <div class="form-text">Se genera automaticamente como PC-{SERIE}.</div>
                         </div>
 
                         <!-- Tipo de PC -->
@@ -412,5 +444,25 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
             reader.readAsDataURL(file);
         });
     });
+
+    /* ---- Ubicacion nueva: mostrar input solo cuando corresponde ---- */
+    var selectUbicacion = document.getElementById('selectUbicacion');
+    var grupoNuevaUbicacion = document.getElementById('grupoNuevaUbicacion');
+    var inputNuevaUbicacion = document.getElementById('nombreUbicacionNueva');
+
+    function sincronizarNuevaUbicacion() {
+        if (!selectUbicacion || !grupoNuevaUbicacion || !inputNuevaUbicacion) return;
+        var creando = selectUbicacion.value === '__nueva__';
+        grupoNuevaUbicacion.classList.toggle('d-none', !creando);
+        inputNuevaUbicacion.required = creando;
+        if (!creando) {
+            inputNuevaUbicacion.value = '';
+        }
+    }
+
+    if (selectUbicacion) {
+        selectUbicacion.addEventListener('change', sincronizarNuevaUbicacion);
+        sincronizarNuevaUbicacion();
+    }
 }());
 </script>

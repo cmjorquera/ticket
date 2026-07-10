@@ -9,10 +9,16 @@ if (!$equipo) {
     exit;
 }
 
+$alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
+if (!$inventario->colegioPermitidoPorAlcance((int)($equipo['id_colegio'] ?? 0), $alcanceInventario)) {
+    header('Location: index.php');
+    exit;
+}
+
 $tituloPagina   = 'Editar equipo';
 $idColegioForm  = (int)($equipo['id_colegio'] ?? 0);
 $colegioUsuario = ['id_colegio' => $idColegioForm, 'nom_colegio' => ($equipo['nom_colegio'] ?? '')];
-$usuarios       = $inventario->obtenerUsuarios();
+$usuarios       = $inventario->obtenerUsuariosAsignablesPorColegio($idColegioForm);
 $estados        = $inventario->obtenerEstados();
 $tiposPc        = $inventario->obtenerTiposPc();
 $ubicaciones    = $inventario->obtenerUbicacionesPorColegio($idColegioForm);

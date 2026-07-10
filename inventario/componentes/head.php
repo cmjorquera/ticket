@@ -18,5 +18,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/inventario.css?v=<?= inventario_h(inventario_asset_version('css/inventario.css')) ?>">
+    <?php foreach (($cssExtraInventario ?? []) as $cssExtra): ?>
+    <link rel="stylesheet" href="<?= inventario_h($cssExtra) ?>?v=<?= inventario_h(inventario_asset_version($cssExtra)) ?>">
+    <?php endforeach; ?>
 </head>
 <body id="page-top" class="inventario-body">

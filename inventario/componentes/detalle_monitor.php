@@ -12,15 +12,17 @@ foreach (($monitor['fotos'] ?? []) as $foto) {
 }
 ?>
 
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+<div class="inv-detail-view">
+<div class="inv-detail-hero d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <div>
+        <span class="inv-detail-eyebrow">Ficha de monitor</span>
         <h1 class="<?= $detalleOffcanvas ? 'h4' : 'h3' ?> mb-1"><?= inventario_h($monitor['nombre_monitor']) ?></h1>
-        <p class="text-muted mb-0">
-            <?= inventario_h($monitor['nom_colegio']) ?>
+        <p class="inv-detail-meta mb-0">
+            <span><?= inventario_h($monitor['nom_colegio']) ?></span>
             <?php if ($monitor['marca'] || $monitor['modelo']): ?>
-                | <?= inventario_h(trim(($monitor['marca'] ?? '') . ' ' . ($monitor['modelo'] ?? ''))) ?>
+                <span><?= inventario_h(trim(($monitor['marca'] ?? '') . ' ' . ($monitor['modelo'] ?? ''))) ?></span>
             <?php endif; ?>
-            | Serie <?= inventario_h($monitor['numero_serie']) ?>
+            <span>Serie <?= inventario_h($monitor['numero_serie']) ?></span>
         </p>
     </div>
     <div class="d-flex gap-2">
@@ -37,16 +39,16 @@ foreach (($monitor['fotos'] ?? []) as $foto) {
 
 <div class="row g-4">
     <div class="<?= $detalleOffcanvas ? 'col-12' : 'col-lg-8' ?>">
-        <div class="card shadow-sm border-0 inv-panel mb-4">
+        <div class="card shadow-sm border-0 inv-panel inv-detail-summary-card mb-4">
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-4"><span class="text-muted d-block small">Colegio</span><strong><?= inventario_h($monitor['nom_colegio']) ?></strong></div>
-                    <div class="col-md-4">
-                        <span class="text-muted d-block small">Estado</span>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Colegio</span><strong><?= inventario_h($monitor['nom_colegio']) ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info">
+                        <span>Estado</span>
                         <?= $inventario->renderBadgeEstado($monitor['id_estado'], $monitor['nombre_estado'] ?? '', $monitor['color_badge'] ?? 'dark') ?>
-                    </div>
-                    <div class="col-md-4">
-                        <span class="text-muted d-block small">Ubicacion actual</span>
+                    </div></div>
+                    <div class="col-md-4"><div class="inv-detail-info">
+                        <span>Ubicacion actual</span>
                         <strong>
                             <?php
                             $nomUbic = $monitor['nombre_ubicacion'] ?? '';
@@ -56,10 +58,10 @@ foreach (($monitor['fotos'] ?? []) as $foto) {
                                 : '<span class="text-muted">Sin ubicacion</span>';
                             ?>
                         </strong>
-                    </div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Usuario asignado</span><strong><?= inventario_h($monitor['usuario_asignado'] ?: 'Sin asignar') ?></strong></div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Registrado por</span><strong><?= inventario_h($monitor['nombre_usuario_registra'] ?: '-') ?></strong></div>
-                    <div class="col-md-4"><span class="text-muted d-block small">Codigo interno</span><strong><?= inventario_h($monitor['codigo_interno'] ?: '-') ?></strong></div>
+                    </div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Usuario asignado</span><strong><?= inventario_h($monitor['usuario_asignado'] ?: 'Sin asignar') ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Registrado por</span><strong><?= inventario_h($monitor['nombre_usuario_registra'] ?: '-') ?></strong></div></div>
+                    <div class="col-md-4"><div class="inv-detail-info"><span>Codigo interno</span><strong><?= inventario_h($monitor['codigo_interno'] ?: '-') ?></strong></div></div>
                 </div>
             </div>
         </div>
@@ -195,4 +197,5 @@ foreach (($monitor['fotos'] ?? []) as $foto) {
             </div>
         </div>
     </div>
+</div>
 </div>
