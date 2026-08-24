@@ -23,6 +23,25 @@
         return function () { clearTimeout(timer); timer = setTimeout(fn, delay); };
     }
 
+    // =========================================================================
+    // PANTALLA DE CARGA
+    // Delegan en window.mostrarPantallaCarga/ocultarPantallaCarga definidas por
+    // /include/pantallaCargando.php (incluido en inventario/index.php). Ese
+    // script ya maneja el timer de fallback (8s) y el ajuste de viewport.
+    // =========================================================================
+
+    function mostrarPantallaCarga(mensaje) {
+        if (typeof window.mostrarPantallaCarga === 'function') {
+            window.mostrarPantallaCarga(mensaje, 8000);
+        }
+    }
+
+    function ocultarPantallaCarga() {
+        if (typeof window.ocultarPantallaCarga === 'function') {
+            window.ocultarPantallaCarga();
+        }
+    }
+
     function normalizarSerieEquipo(value) {
         return String(value || '').trim().toUpperCase().replace(/\s+/g, ' ').replace(/[^A-Z0-9\-_.\/]/g, '');
     }
@@ -201,24 +220,28 @@
 
     function loadInventario() {
         if (!window.INVENTARIO_CONFIG || !window.INVENTARIO_CONFIG.endpoints) { return; }
+        mostrarPantallaCarga('Cargando equipos...');
         $.getJSON(window.INVENTARIO_CONFIG.endpoints.listar, collectFilters())
             .done(function (response) {
                 if (!response.ok) { return; }
                 $('#contenedorResumen').html(response.resumen_html);
                 if (tablaInventario) { tablaInventario.clear().rows.add(response.data || []).draw(); }
             })
-            .fail(function () { Swal.fire('Error', 'No fue posible cargar el inventario.', 'error'); });
+            .fail(function () { Swal.fire('Error', 'No fue posible cargar el inventario.', 'error'); })
+            .always(function () { ocultarPantallaCarga(); });
     }
 
     function loadMonitores() {
         if (!window.INVENTARIO_CONFIG || !window.INVENTARIO_CONFIG.endpoints) { return; }
+        mostrarPantallaCarga('Cargando monitores...');
         $.getJSON(window.INVENTARIO_CONFIG.endpoints.listarMonitores, collectMonitorFilters())
             .done(function (response) {
                 if (!response.ok) { return; }
                 $('#contenedorResumenMonitores').html(response.resumen_html);
                 if (tablaMonitores) { tablaMonitores.clear().rows.add(response.data || []).draw(); }
             })
-            .fail(function () { Swal.fire('Error', 'No fue posible cargar los monitores.', 'error'); });
+            .fail(function () { Swal.fire('Error', 'No fue posible cargar los monitores.', 'error'); })
+            .always(function () { ocultarPantallaCarga(); });
     }
 
     // =========================================================================
@@ -665,7 +688,11 @@
     function bindDescargarPdfInventario() {
         $('#btnDescargarPdfInventario').on('click', function () {
             const params = new URLSearchParams(collectFilters());
+            // window.open no notifica cuando termina la descarga, asi que se oculta
+            // con un temporizador corto; el fallback de 8s del overlay cubre el resto.
+            mostrarPantallaCarga('Generando PDF...');
             window.open('descargar_pdf_equipos.php?' + params.toString(), '_blank');
+            setTimeout(ocultarPantallaCarga, 2500);
         });
     }
 
@@ -728,6 +755,7 @@
             const href = 'ver_equipo.php?id_equipo=' + idEquipo;
             const ui = setDetalleOffcanvasLoading('Detalle del equipo');
             if (!ui || !idEquipo) { window.location.href = href; return; }
+            mostrarPantallaCarga('Cargando detalle del equipo...');
             $.getJSON(window.INVENTARIO_CONFIG.endpoints.detalle, { id_equipo: idEquipo })
                 .done(function (response) {
                     if (!response.ok) {
@@ -741,7 +769,8 @@
                 .fail(function (xhr) {
                     const msg = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible cargar el detalle.';
                     ui.$body.html('<div class="alert alert-danger mb-3">' + escapeHtml(msg) + '</div><a href="' + escapeHtml(href) + '" class="btn btn-outline-primary">Abrir ficha completa</a>');
-                });
+                })
+                .always(function () { ocultarPantallaCarga(); });
         }
 
         // --- VER QR EQUIPO ---

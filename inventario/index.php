@@ -91,6 +91,13 @@ $_heroStyle   = $_heroBranded ? ' style="background: linear-gradient(135deg, ' .
 
 $idPagActual = '9';
 require __DIR__ . '/componentes/layout_top.php';
+
+// Pantalla de carga fullscreen (overlay). Se muestra/oculta desde inventario.js
+// en filtros, AJAX de tabla, descarga de PDF y detalle de equipo.
+$textoCarga = 'Cargando inventario...';
+$loaderVisibleInicialmente = false; // la pagina ya viene renderizada por PHP, no se muestra al cargar
+$loaderFallbackMs = 8000; // seguridad: se oculta solo si algo no llama a ocultarPantallaCarga()
+require __DIR__ . '/../include/pantallaCargando.php';
 ?>
 <div class="row mx-1 mx-md-3">
     <div class="col-12">

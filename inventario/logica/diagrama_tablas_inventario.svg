@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1400" height="900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .tabla-principal { fill: #1e3a8a; stroke: #0f172a; stroke-width: 2; }
+      .tabla-detalle { fill: #3b82f6; stroke: #1e40af; stroke-width: 2; }
+      .tabla-catalogo { fill: #10b981; stroke: #047857; stroke-width: 2; }
+      .tabla-historial { fill: #f59e0b; stroke: #d97706; stroke-width: 2; }
+      .texto-blanco { fill: white; font-weight: bold; font-size: 13px; }
+      .texto-pequeño { fill: white; font-size: 11px; }
+      .linea-relacion { stroke: #64748b; stroke-width: 2; fill: none; stroke-dasharray: 5,5; }
+      .linea-directa { stroke: #64748b; stroke-width: 2; fill: none; }
+      .titulo { fill: #0f172a; font-size: 20px; font-weight: bold; }
+      .subtitulo { fill: #475569; font-size: 14px; }
+    </style>
+  </defs>
+  
+  <!-- TÍTULO -->
+  <text x="700" y="30" text-anchor="middle" class="titulo">DIAGRAMA DE TABLAS - MÓDULO INVENTARIO</text>
+  <text x="700" y="50" text-anchor="middle" class="subtitulo">Relaciones y flujo de datos</text>
+  
+  <!-- TABLA CENTRAL: EQUIPOS -->
+  <rect x="550" y="80" width="300" height="120" class="tabla-principal" rx="5"/>
+  <text x="700" y="105" text-anchor="middle" class="texto-blanco">EQUIPOS (CORE)</text>
+  <line x1="550" y1="115" x2="850" y2="115" stroke="white" stroke-width="1"/>
+  <text x="560" y="130" class="texto-pequeño">• id_equipo (PK)</text>
+  <text x="560" y="145" class="texto-pequeño">• id_colegio (FK)</text>
+  <text x="560" y="160" class="texto-pequeño">• id_ubicacion (FK)</text>
+  <text x="560" y="175" class="texto-pequeño">• id_usuario_asignado</text>
+  <text x="560" y="190" class="texto-pequeño">• nombre, serial, tipo_pc</text>
+  
+  <!-- TABLA: EQUIPOS_COMPRA -->
+  <rect x="50" y="260" width="200" height="100" class="tabla-detalle" rx="5"/>
+  <text x="150" y="280" text-anchor="middle" class="texto-blanco">EQUIPOS_COMPRA</text>
+  <line x1="50" y1="290" x2="250" y2="290" stroke="white" stroke-width="1"/>
+  <text x="60" y="305" class="texto-pequeño">• id_compra (PK)</text>
+  <text x="60" y="320" class="texto-pequeño">• id_equipo (FK)</text>
+  <text x="60" y="335" class="texto-pequeño">• valor_equipo</text>
+  <text x="60" y="350" class="texto-pequeño">• fecha_compra</text>
+  
+  <!-- TABLA: EQUIPO_PROCESADOR -->
+  <rect x="300" y="260" width="200" height="100" class="tabla-detalle" rx="5"/>
+  <text x="400" y="280" text-anchor="middle" class="texto-blanco">EQUIPO_PROCESADOR</text>
+  <line x1="300" y1="290" x2="500" y2="290" stroke="white" stroke-width="1"/>
+  <text x="310" y="305" class="texto-pequeño">• id_procesador (PK)</text>
+  <text x="310" y="320" class="texto-pequeño">• id_equipo (FK)</text>
+  <text x="310" y="335" class="texto-pequeño">• fabricante, modelo</text>
+  <text x="310" y="350" class="texto-pequeño">• velocidad</text>
+  
+  <!-- TABLA: EQUIPO_MEMORIA -->
+  <rect x="550" y="260" width="200" height="100" class="tabla-detalle" rx="5"/>
+  <text x="650" y="280" text-anchor="middle" class="texto-blanco">EQUIPO_MEMORIA</text>
+  <line x1="550" y1="290" x2="750" y2="290" stroke="white" stroke-width="1"/>
+  <text x="560" y="305" class="texto-pequeño">• id_memoria (PK)</text>
+  <text x="560" y="320" class="texto-pequeño">• id_equipo (FK) 1:N</text>
+  <text x="560" y="335" class="texto-pequeño">• designacion, tamano</text>
+  <text x="560" y="350" class="texto-pequeño">• frecuencia, marca</text>
+  
+  <!-- TABLA: EQUIPO_ALMACENAMIENTO -->
+  <rect x="800" y="260" width="220" height="100" class="tabla-detalle" rx="5"/>
+  <text x="910" y="280" text-anchor="middle" class="texto-blanco">EQUIPO_ALMACENAMIENTO</text>
+  <line x1="800" y1="290" x2="1020" y2="290" stroke="white" stroke-width="1"/>
+  <text x="810" y="305" class="texto-pequeño">• id_almacenamiento (PK)</text>
+  <text x="810" y="320" class="texto-pequeño">• id_equipo (FK)</text>
+  <text x="810" y="335" class="texto-pequeño">• modelo, capacidad</text>
+  <text x="810" y="350" class="texto-pequeño">• tamano (2.5", 3.5", M.2)</text>
+  
+  <!-- TABLA: EQUIPO_SOFTWARE -->
+  <rect x="1070" y="260" width="200" height="100" class="tabla-detalle" rx="5"/>
+  <text x="1170" y="280" text-anchor="middle" class="texto-blanco">EQUIPO_SOFTWARE</text>
+  <line x1="1070" y1="290" x2="1270" y2="290" stroke="white" stroke-width="1"/>
+  <text x="1080" y="305" class="texto-pequeño">• id_software (PK)</text>
+  <text x="1080" y="320" class="texto-pequeño">• id_equipo (FK)</text>
+  <text x="1080" y="335" class="texto-pequeño">• windows, office</text>
+  <text x="1080" y="350" class="texto-pequeño">• antivirus</text>
+  
+  <!-- TABLA: EQUIPO_UBICACION (CATÁLOGO) -->
+  <rect x="50" y="450" width="200" height="100" class="tabla-catalogo" rx="5"/>
+  <text x="150" y="470" text-anchor="middle" class="texto-blanco">EQUIPO_UBICACION</text>
+  <line x1="50" y1="480" x2="250" y2="480" stroke="white" stroke-width="1"/>
+  <text x="60" y="495" class="texto-pequeño">• id_ubicacion (PK)</text>
+  <text x="60" y="510" class="texto-pequeño">• id_colegio (FK)</text>
+  <text x="60" y="525" class="texto-pequeño">• nombre</text>
+  <text x="60" y="540" class="texto-pequeño">• descripcion, estado</text>
+  
+  <!-- TABLA: ESTADO_EQUIPO (CATÁLOGO) -->
+  <rect x="300" y="450" width="200" height="100" class="tabla-catalogo" rx="5"/>
+  <text x="400" y="470" text-anchor="middle" class="texto-blanco">ESTADO_EQUIPO</text>
+  <line x1="300" y1="480" x2="500" y2="480" stroke="white" stroke-width="1"/>
+  <text x="310" y="495" class="texto-pequeño">• id_estado (PK)</text>
+  <text x="310" y="510" class="texto-pequeño">• nom_estado</text>
+  <text x="310" y="525" class="texto-pequeño">• Activo, Inactivo</text>
+  <text x="310" y="540" class="texto-pequeño">• En Reparación, Baja</text>
+  
+  <!-- TABLA: EQUIPO_MONITOR -->
+  <rect x="550" y="450" width="200" height="100" class="tabla-detalle" rx="5"/>
+  <text x="650" y="470" text-anchor="middle" class="texto-blanco">EQUIPO_MONITOR</text>
+  <line x1="550" y1="480" x2="750" y2="480" stroke="white" stroke-width="1"/>
+  <text x="560" y="495" class="texto-pequeño">• id_monitor (PK)</text>
+  <text x="560" y="510" class="texto-pequeño">• id_equipo (FK) 1:N</text>
+  <text x="560" y="525" class="texto-pequeño">• modelo, serie</text>
+  <text x="560" y="540" class="texto-pequeño">• resolucion</text>
+  
+  <!-- TABLA: EQUIPO_FOTOS -->
+  <rect x="800" y="450" width="200" height="100" class="tabla-detalle" rx="5"/>
+  <text x="900" y="470" text-anchor="middle" class="texto-blanco">EQUIPO_FOTOS</text>
+  <line x1="800" y1="480" x2="1000" y2="480" stroke="white" stroke-width="1"/>
+  <text x="810" y="495" class="texto-pequeño">• id_foto (PK)</text>
+  <text x="810" y="510" class="texto-pequeño">• id_equipo (FK) 1:N</text>
+  <text x="810" y="525" class="texto-pequeño">• ruta_foto</text>
+  <text x="810" y="540" class="texto-pequeño">• es_principal</text>
+  
+  <!-- TABLA: HISTORIAL ASIGNACIÓN -->
+  <rect x="50" y="640" width="240" height="120" class="tabla-historial" rx="5"/>
+  <text x="170" y="665" text-anchor="middle" class="texto-blanco">EQUIPO_ASIGNACION_HISTORIAL</text>
+  <line x1="50" y1="675" x2="290" y2="675" stroke="white" stroke-width="1"/>
+  <text x="60" y="690" class="texto-pequeño">• id_asignacion_h (PK)</text>
+  <text x="60" y="705" class="texto-pequeño">• id_equipo (FK)</text>
+  <text x="60" y="720" class="texto-pequeño">• id_usuario (FK)</text>
+  <text x="60" y="735" class="texto-pequeño">• fecha_asignacion</text>
+  <text x="60" y="750" class="texto-pequeño">• fecha_desasignacion</text>
+  
+  <!-- TABLA: HISTORIAL ESTADO -->
+  <rect x="350" y="640" width="240" height="120" class="tabla-historial" rx="5"/>
+  <text x="470" y="665" text-anchor="middle" class="texto-blanco">EQUIPO_ESTADO_HISTORIAL</text>
+  <line x1="350" y1="675" x2="590" y2="675" stroke="white" stroke-width="1"/>
+  <text x="360" y="690" class="texto-pequeño">• id_historial (PK)</text>
+  <text x="360" y="705" class="texto-pequeño">• id_equipo (FK)</text>
+  <text x="360" y="720" class="texto-pequeño">• id_estado (FK)</text>
+  <text x="360" y="735" class="texto-pequeño">• fecha_cambio</text>
+  <text x="360" y="750" class="texto-pequeño">• observacion</text>
+  
+  <!-- TABLA: MOVIMIENTO -->
+  <rect x="650" y="640" width="240" height="120" class="tabla-historial" rx="5"/>
+  <text x="770" y="665" text-anchor="middle" class="texto-blanco">EQUIPO_MOVIMIENTO</text>
+  <line x1="650" y1="675" x2="890" y2="675" stroke="white" stroke-width="1"/>
+  <text x="660" y="690" class="texto-pequeño">• id_movimiento (PK)</text>
+  <text x="660" y="705" class="texto-pequeño">• id_equipo (FK)</text>
+  <text x="660" y="720" class="texto-pequeño">• tipo_movimiento</text>
+  <text x="660" y="735" class="texto-pequeño">• descripcion</text>
+  <text x="660" y="750" class="texto-pequeño">• fecha_movimiento</text>
+  
+  <!-- RELACIONES: Líneas conectoras -->
+  <!-- EQUIPOS a EQUIPOS_COMPRA -->
+  <path d="M 550 140 L 250 300" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a EQUIPO_PROCESADOR -->
+  <path d="M 580 140 L 400 260" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a EQUIPO_MEMORIA -->
+  <path d="M 650 200 L 650 260" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a EQUIPO_ALMACENAMIENTO -->
+  <path d="M 750 140 L 910 260" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a EQUIPO_SOFTWARE -->
+  <path d="M 800 140 L 1170 260" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a EQUIPO_UBICACION -->
+  <path d="M 600 200 L 150 450" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a ESTADO_EQUIPO -->
+  <path d="M 650 200 L 400 450" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a EQUIPO_MONITOR -->
+  <path d="M 700 200 L 650 450" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a EQUIPO_FOTOS -->
+  <path d="M 750 200 L 900 450" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a HISTORIAL ASIGNACIÓN -->
+  <path d="M 600 200 L 170 640" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a HISTORIAL ESTADO -->
+  <path d="M 650 200 L 470 640" class="linea-relacion"/>
+  
+  <!-- EQUIPOS a MOVIMIENTO -->
+  <path d="M 700 200 L 770 640" class="linea-relacion"/>
+  
+  <!-- LEYENDA -->
+  <rect x="50" y="820" width="1300" height="60" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" rx="3"/>
+  
+  <rect x="70" y="830" width="15" height="15" class="tabla-principal"/>
+  <text x="95" y="842" class="subtitulo">Tabla Principal (Core)</text>
+  
+  <rect x="350" y="830" width="15" height="15" class="tabla-detalle"/>
+  <text x="375" y="842" class="subtitulo">Tablas de Detalles/Especificaciones (1:N)</text>
+  
+  <rect x="800" y="830" width="15" height="15" class="tabla-catalogo"/>
+  <text x="825" y="842" class="subtitulo">Tablas Catálogo (Datos Estáticos)</text>
+  
+  <rect x="1150" y="830" width="15" height="15" class="tabla-historial"/>
+  <text x="1175" y="842" class="subtitulo">Tablas de Auditoría/Historial</text>
+</svg>
