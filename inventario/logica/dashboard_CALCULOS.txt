@@ -1,0 +1,306 @@
+================================================================================
+            DASHBOARD INVENTARIO - CALCULOS Y FUENTES DE DATOS
+================================================================================
+
+VERSION: 2.0 | FECHA: Agosto 2026 | ARCHIVO: inventario/dashboard.php
+FUENTE DE DATOS: inventario/class/Inventario.php -> obtenerDashboardInventario()
+
+NOTA SOBRE LA VERSION 1.0:
+  La version anterior de este documento describia consultas SQL y nombres de
+  variable que NUNCA se implementaron asi (por ejemplo tabla "estado_equipo"
+  con columna "estado", conteo de "funcionarios" para el eje X del scatter,
+  variables $kpis['equipos_activos'] / $kpis['porcentaje_activos']). Era un
+  documento de diseno/aspiracional, no una descripcion del codigo real. Esta
+  version 2.0 documenta EXACTAMENTE lo que hace el codigo actual.
+
+================================================================================
+1. DE DONDE SALEN TODOS LOS DATOS
+================================================================================
+
+Todo el dashboard se arma a partir de UNA sola llamada en dashboard.php:
+
+  $dashboard = $inventario->obtenerDashboardInventario($filtrosDashboard);
+
+Esa funcion (Inventario.php linea ~771) devuelve un array con:
+
+  $dashboard['kpis']                -> obtenerKpisDashboard()
+  $dashboard['valor']               -> obtenerValorDashboard()
+  $dashboard['valor_por_colegio']   -> obtenerValorPorColegioDashboard()
+  $dashboard['resumen_por_colegio'] -> obtenerResumenPorColegioDashboard()
+  $dashboard['estados']             -> obtenerDistribucionEstadosDashboard()
+  $dashboard['tipos']               -> obtenerDistribucionTiposDashboard()
+  $dashboard['alertas']             -> obtenerAlertasDashboard()
+  $dashboard['ultimos']             -> obtenerUltimosEquiposDashboard()
+  $dashboard['hardware']            -> obtenerHardwareDashboard()
+  $dashboard['detalle_valor']       -> obtenerDetalleValorDashboard()
+
+FUENTE SEGUN TIPO DE EQUIPO (filtro "tipo_equipo"):
+  El metodo privado obtenerFuenteDashboard() decide de que tabla leer segun
+  el filtro tipo_equipo ('pc' | 'tablet' | 'monitor' | 'impresora'):
+    - 'pc' y 'tablet' -> tabla `equipos` (tablet = tipo_pc LIKE '%tablet%',
+      pc = tipo_pc NOT LIKE '%tablet%')
+    - 'monitor'        -> tabla `monitores` (si existe)
+    - 'impresora'       -> modulo en preparacion, no hay tabla, todo vuelve
+      en 0 / vacio ($fuente['disponible'] = false)
+
+  Esto es por lo que $tipoEnPreparacion controla el mensaje "Modulo en
+  preparacion" en la seccion de valor por colegio.
+
+TABLAS REALES INVOLUCRADAS:
+  - equipos            (id_equipo, id_colegio, id_estado, id_ubicacion,
+                         id_usuario_asignado, tipo_pc, numero_serie,
+                         nombre_personalizado, nombre_equipo, fecha_registro,
+                         eliminado, qr_code)
+  - equipos_compra      (subconsulta de valor por id_equipo -> valor_equipo)
+  - estado_equipo       (id_estado, nombre_estado, color_badge)
+  - colegio              (id_colegio, nom_colegio, activo/estado)
+  - monitores / monitor_compra (equivalentes de equipos/equipos_compra
+                         cuando tipo_equipo = 'monitor')
+  - equipo_fotos         (usada solo para la alerta "sin fotografia")
+
+  "Activo", "en reparacion" y "dado de baja" NO son columnas fijas: se
+  detectan con LOWER(nombre_estado) LIKE '%activo%' / '%repar%' / '%baja%'
+  sobre lo que tenga cargado la tabla estado_equipo -- es decir, dependen del
+  texto real que exista en esa tabla catalogo.
+
+================================================================================
+2. TARJETAS KPI (fila superior, 6 tarjetas — .inv-kpi-card)
+================================================================================
+
+Fuente: $dashboard['kpis'] (obtenerKpisDashboard), ya filtrado por colegio y
+tipo de equipo segun lo que el usuario eligio en pantalla.
+
+  KPI                        VARIABLE PHP           CALCULO SQL (resumen)
+  --------------------------------------------------------------------------
+  Total de equipos           $kpis['total_pcs']      COUNT(DISTINCT id)
+  Activos                    $kpis['activos']        COUNT... nombre_estado LIKE '%activo%'
+  Sin ubicacion               $kpis['sin_ubicacion']  COUNT... id_ubicacion IS NULL OR = 0
+  Sin responsable             $kpis['sin_responsable'] COUNT... id_usuario_asignado IS NULL OR = 0
+  En reparacion               $kpis['en_reparacion']  COUNT... nombre_estado LIKE '%repar%'
+  Dados de baja                $kpis['dados_baja']     COUNT... nombre_estado LIKE '%baja%'
+
+  El label de cada tarjeta cambia segun el tipo de equipo elegido
+  (PC/Tablet/Monitor/Impresora) via el array $tipoMeta en dashboard.php.
+
+  Cada tarjeta con tipo_alerta (sin_ubicacion, sin_responsable, en_reparacion,
+  dados_baja) tiene un menu "..." para mandar correo a los responsables del
+  colegio filtrado -> ajax/enviar_alerta_dashboard.php (requiere colegio
+  especifico seleccionado, no funciona con "Todos los colegios").
+
+TARJETAS DE VALOR (fila --value, 3 tarjetas .inv-kpi-card--money):
+  Fuente: $dashboard['valor'] (obtenerValorDashboard)
+    - Valor total del inventario: $valor['valor_total'] = SUM(valor_equipo)
+      de equipos_compra (0 si no tiene compra registrada)
+    - Colegio con mayor valor: $valor['colegio_mayor_valor'] = primera fila
+      de $valorPorColegio (ya viene ordenado DESC por valor_total)
+    - Equipos sin valor registrado: $valor['sin_valor'] = COUNT donde
+      valor_equipo IS NULL o <= 0
+
+================================================================================
+3. TARJETAS DE ESTADO (NUEVO — chips .inv-card-estado bajo el grafico de dona)
+================================================================================
+
+Fuente: $dashboard['estados'] (obtenerDistribucionEstadosDashboard), la MISMA
+consulta que ya alimenta el grafico de dona "chartEstados" -- no es una
+consulta nueva, es la misma data renderizada dos veces (grafico + chips).
+
+  Cada fila trae: etiqueta (nombre_estado), color_badge (nombre de color
+  Bootstrap: primary/secondary/success/danger/warning/info/dark), total.
+
+  HTML (dashboard.php, dentro de la seccion "Estado del inventario"):
+    <div class="inv-card inv-card-estado inv-card-estado--{color_badge}">
+        <strong>{total}</strong>
+        <span>{etiqueta}</span>
+    </div>
+
+  El color de cada chip depende 100% de color_badge en la tabla estado_equipo
+  -- si un estado no tiene color_badge cargado, cae a "secondary" (gris).
+
+================================================================================
+4. GRAFICO SCATTER — Equipos vs. valor por colegio (NUEVO)
+================================================================================
+
+TIPO: scatter (Chart.js) | canvas #chartScatterColegios
+FUENTE PHP: $chartScatterColegios, calculado en dashboard.php a partir de
+  obtenerResumenPorColegioDashboard() -- MISMA funcion que ya usa
+  $resumenPorColegio para la tabla "Resumen por colegio", pero llamada de
+  nuevo forzando id_colegio=0 ($filtrosSistema) para traer SIEMPRE todos los
+  colegios visibles al usuario, sin importar el filtro de colegio activo.
+
+  Por que una segunda llamada y no reusar $resumenPorColegio:
+  cuando hay un colegio filtrado en pantalla, $resumenPorColegio (y
+  $valorPorColegio) colapsan a UNA sola fila -- un scatter de 1 punto no
+  sirve para comparar. $resumenSistema si mantiene todos los colegios del
+  alcance del usuario, esten o no filtrados en la pantalla.
+
+  No es una consulta SQL nueva: es la funcion existente
+  obtenerResumenPorColegioDashboard(), reutilizada.
+
+ESTRUCTURA POR PUNTO:
+  ['colegio' => nom_colegio, 'x' => total_equipos, 'y' => valor_total,
+   'seleccionado' => true/false]
+
+  x = total_equipos y y = valor_total vienen literalmente de las mismas
+  columnas que la tabla "Resumen por colegio" (columna 2 y 8).
+
+  'seleccionado' marca el punto del colegio activo en el filtro (si hay
+  uno), y se pinta en un color distinto (verde) sobre el resto (azul) --
+  ver .chart-legend en la seccion. Sin filtro de colegio, todos los puntos
+  van del mismo color (no hay "seleccionado" que resaltar).
+
+TOOLTIP: nombre del colegio + "N equipos - $valor" (dashboard.js,
+  createScatterChart).
+
+================================================================================
+5. GRAFICO PIE/DONA — Distribucion por estado (YA EXISTIA, sin cambios)
+================================================================================
+
+TIPO: doughnut (Chart.js) | canvas #chartEstados
+FUENTE PHP: $chartEstados = labels/values armados desde $dashboard['estados']
+  (obtenerDistribucionEstadosDashboard), agrupado por nombre_estado con
+  COUNT(DISTINCT id_equipo).
+
+Sin cambios respecto a la version anterior de este documento en cuanto a
+consulta; lo unico nuevo es que esta misma data ahora TAMBIEN se muestra
+como chips .inv-card-estado (ver seccion 3).
+
+================================================================================
+6. GRAFICO BAR — Colegio vs. promedio del sistema (NUEVO)
+================================================================================
+
+TIPO: bar agrupado, 2 series (Chart.js) | canvas #chartComparativaColegio
+FUENTE PHP: $comparativaColegio, calculado en dashboard.php a partir de
+  $resumenSistema (la misma llamada sin filtro de colegio que alimenta el
+  scatter, seccion 4). Solo se calcula si hay un colegio puntual
+  seleccionado en el filtro ($idColegioFiltro > 0); si el filtro esta en
+  "Todos los colegios", $comparativaColegio queda en null y la seccion
+  muestra un mensaje pidiendo elegir un colegio.
+
+CALCULO DEL "COLEGIO":
+  Se busca en $resumenSistema la fila cuyo id_colegio == filtro activo.
+
+CALCULO DEL "PROMEDIO SISTEMA":
+  Para cada metrica (total_equipos, activos, sin_ubicacion, en_reparacion,
+  dados_baja, valor_total): se suman los valores de TODAS las filas de
+  $resumenSistema y se divide por count($resumenSistema) (redondeado).
+  Es un promedio simple en PHP, no una consulta SQL con AVG().
+
+CATEGORIAS DEL GRAFICO (mismo eje/unidad -- cantidad de equipos):
+  Total, Activos, Sin ubicacion, En reparacion, Dados de baja
+
+  El "Valor total" NO entra en este grafico de barras: mezclar una columna
+  en $ (millones) con columnas en unidades (decenas) en el mismo eje Y
+  distorsiona la lectura. En su lugar, valor_colegio y valor_promedio se
+  muestran aparte en dos tarjetas .inv-card-info (etiqueta + monto), junto
+  al grafico.
+
+================================================================================
+7. TABLA — Valor del inventario por colegio (YA EXISTIA, sin cambios)
+================================================================================
+
+Fuente: $valorPorColegio (obtenerValorPorColegioDashboard), ordenado por
+valor_total DESC. Se renderiza como barras horizontales de progreso
+(.inv-value-bar), no como tabla HTML clasica. Colapsa a 1 fila si hay un
+colegio filtrado (a diferencia del scatter/comparativa, que fuerzan traer
+todos los colegios -- ver seccion 4).
+
+================================================================================
+8. TABLA — Resumen por colegio (YA EXISTIA, sin cambios)
+================================================================================
+
+Fuente: $resumenPorColegio (obtenerResumenPorColegioDashboard), FILTRADA por
+el colegio activo en pantalla (si hay uno). Columnas: Colegio, Total,
+Activos, Sin ubicacion, Sin responsable, En reparacion, Dados de baja, Valor
+total. El pie de tabla "TOTAL GENERAL" ($totalGeneral) se calcula sumando
+estas mismas filas en PHP (dashboard.php linea ~84).
+
+================================================================================
+9. ALERTAS (YA EXISTIA, sin cambios)
+================================================================================
+
+Fuente: $dashboard['alertas'] (obtenerAlertasDashboard): sin_ubicacion,
+sin_responsable, sin_qr (qr_code vacio), sin_fotografia (sin filas en
+equipo_fotos), sin_valor, sin_serie (numero_serie vacio). Se listan como
+items informativos (.inv-alert-item), sin umbral de porcentaje -- cualquier
+valor > 0 se muestra.
+
+================================================================================
+10. ULTIMOS EQUIPOS INGRESADOS (YA EXISTIA, sin cambios)
+================================================================================
+
+Fuente: $dashboard['ultimos'] (obtenerUltimosEquiposDashboard, limite 8),
+ordenado por fecha_registro DESC. Columnas: Equipo, Identificador tecnico,
+Tipo, Colegio, Fecha de registro.
+
+================================================================================
+11. RAM Y SISTEMAS OPERATIVOS (YA EXISTIA, sin cambios)
+================================================================================
+
+Fuente: $dashboard['hardware'] (obtenerHardwareDashboard) -> chartRam
+(doughnut) y chartSistemas (bar). No se modificaron en esta iteracion.
+
+================================================================================
+12. FUNCIONES DE FORMATO
+================================================================================
+
+PHP (dashboard.php):
+  inv_dash_money($valor) -> '$' . number_format((int)$valor, 0, ',', '.')
+  inv_dash_int($valor)   -> number_format((int)$valor, 0, ',', '.')
+  inv_dash_section_menu() -> HTML del menu "..." de cada seccion
+
+JS (dashboard.js):
+  formatMoney(value)      -> mismo formato que inv_dash_money, para tooltips
+  formatMoneyShort(value) -> version corta para ejes ($1,2M / $850K)
+
+================================================================================
+13. FILTROS DISPONIBLES
+================================================================================
+
+FILTRO id_colegio (GET):
+  0 = "Todos los colegios visibles" segun el alcance del usuario
+  Normalizado y validado por permisos en normalizarFiltrosDashboard() /
+  normalizarFiltrosPorAlcance() (Inventario.php linea ~184-242) -- un
+  usuario no puede pedir un colegio fuera de su alcance (lanza excepcion).
+
+FILTRO tipo_equipo (GET):
+  'pc' | 'tablet' | 'monitor' | 'impresora', por defecto 'pc'.
+  Cambia la tabla fuente completa (ver seccion 1) y la terminologia en
+  pantalla (singular/plural/genero) via $tipoMeta.
+
+APLICACION: los <select data-dashboard-filter> redirigen la pagina completa
+  (window.location.href) con los nuevos parametros -- no es AJAX, es una
+  recarga de dashboard.php?id_colegio=X&tipo_equipo=Y (dashboard.js,
+  funcion redirectDashboard).
+
+================================================================================
+14. CSS / ASSETS INVOLUCRADOS
+================================================================================
+
+  inventario/css/dashboard.css  -> .inv-kpi-card, .inv-dashboard-section,
+                                    .inv-chart-box, tablas, alertas (sin
+                                    cambios, es el sistema visual original
+                                    del dashboard)
+  css/graficos.css (raiz)        -> .chart-container, .chart-legend,
+                                    .chart-tooltip (NUEVO, sistema-wide)
+  css/cards.css (raiz)            -> .inv-card, .inv-card-kpi,
+                                    .inv-card-estado, .inv-card-info (NUEVO,
+                                    sistema-wide)
+  inventario/js/dashboard.js      -> createChart (existente, 4 graficos) +
+                                    createScatterChart / createComparativaChart
+                                    (NUEVO)
+
+BUG CORREGIDO EN ESTA ITERACION:
+  inventario/componentes/layout_bottom.php NO cargaba dashboard.js (solo
+  cargaba js/inventario.js a pie fijo, ignorando la variable
+  $jsExtraInventario que dashboard.php si definia). Se agrego el loop que
+  lee $jsExtraInventario, igual al patron que head.php ya usaba para
+  $cssExtraInventario. Sin este fix, NINGUN grafico del dashboard se
+  renderizaba (ni los 4 originales ni los 2 nuevos), ni funcionaban los
+  filtros ni el modal de alertas por correo.
+
+================================================================================
+FIN DE DOCUMENTACION
+
+Ultima actualizacion: Agosto 2026
+Mantenedor: Sistema SEDUC - Modulo Inventario
+================================================================================

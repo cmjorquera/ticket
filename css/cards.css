@@ -1,0 +1,161 @@
+/* =============================================================================
+ * cards.css — Estándar de tarjetas para todo el sistema SEDUC
+ * Tokens de color heredados de inventario/css/dashboard.css para que las
+ * tarjetas nuevas (.inv-card-*) convivan visualmente con .inv-kpi-card ya
+ * existente, sin reemplazarla. Pensado para reusarse fuera de inventario.
+ * ========================================================================== */
+
+/* -----------------------------------------------------------------------
+ * 1) TARJETA BASE
+ * --------------------------------------------------------------------- */
+.inv-card {
+    position: relative;
+    box-sizing: border-box;
+    border: 1px solid #dfe5ec;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10);
+    padding: 16px 18px;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+
+.inv-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+/* Contenedor flex para varias .inv-card en fila (envuelve en móvil) */
+.inv-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 18px 24px;
+}
+
+.inv-card-row .inv-card {
+    flex: 1 1 200px;
+}
+
+/* -----------------------------------------------------------------------
+ * 2) INV-CARD-KPI — número grande + etiqueta (mismo lenguaje visual que
+ * .inv-kpi-card de dashboard.css, disponible como clase reusable fuera de
+ * ese archivo).
+ * --------------------------------------------------------------------- */
+.inv-card-kpi {
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+}
+
+.inv-card-kpi__label {
+    display: block;
+    color: #66809e;
+    font-size: .74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.inv-card-kpi__valor {
+    display: block;
+    color: #0b243f;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-top: 12px;
+}
+
+.inv-card-kpi__descripcion {
+    display: block;
+    color: #5f7288;
+    font-size: .78rem;
+    margin-top: 8px;
+}
+
+/* -----------------------------------------------------------------------
+ * 3) INV-CARD-ESTADO — chip de estado (activo/reparación/baja/etc), tipo
+ * las tarjetas de estado usadas en el módulo de tickets. El color viene
+ * del campo `color_badge` que ya devuelve estado_equipo/estados_ticket
+ * (nombres estándar de Bootstrap: primary, secondary, success, danger,
+ * warning, info, dark).
+ * --------------------------------------------------------------------- */
+.inv-card-estado {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 130px;
+    padding: 12px 16px;
+    border-left-width: 4px;
+    border-left-style: solid;
+}
+
+.inv-card-estado strong {
+    color: #0b243f;
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.inv-card-estado span {
+    color: #5f7288;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.inv-card-estado--primary   { border-left-color: #2a78d6; }
+.inv-card-estado--secondary { border-left-color: #94a3b8; }
+.inv-card-estado--success   { border-left-color: #0ca30c; }
+.inv-card-estado--danger    { border-left-color: #d03b3b; }
+.inv-card-estado--warning   { border-left-color: #fab219; }
+.inv-card-estado--info      { border-left-color: #0dcaf0; }
+.inv-card-estado--dark      { border-left-color: #172b43; }
+
+/* -----------------------------------------------------------------------
+ * 4) INV-CARD-INFO — par etiqueta/valor simple (ej: "Valor colegio" vs
+ * "Valor promedio sistema"), sin el peso visual de una KPI principal.
+ * --------------------------------------------------------------------- */
+.inv-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #f8fafc;
+    border-style: dashed;
+}
+
+.inv-card-info span {
+    color: #66809e;
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.inv-card-info strong {
+    color: #0b243f;
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+/* -----------------------------------------------------------------------
+ * 5) RESPONSIVE
+ * --------------------------------------------------------------------- */
+@media (max-width: 575px) {
+    .inv-card-row {
+        padding: 14px;
+        gap: 10px;
+    }
+    .inv-card {
+        padding: 14px;
+    }
+    .inv-card-kpi__valor {
+        font-size: 1.6rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inv-card {
+        transition: none;
+    }
+    .inv-card:hover {
+        transform: none;
+    }
+}

@@ -119,6 +119,156 @@
         });
     }
 
+    // Dinero en formato CLP ($1.234.567), igual que inv_dash_money() en PHP.
+    function formatMoney(value) {
+        var n = Math.round(Number(value) || 0);
+        return '$' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // Version corta para ejes ($1,2M / $850K), donde el numero completo no cabe.
+    function formatMoneyShort(value) {
+        var n = Number(value) || 0;
+        if (Math.abs(n) >= 1000000) { return '$' + (n / 1000000).toFixed(1).replace('.', ',') + 'M'; }
+        if (Math.abs(n) >= 1000) { return '$' + Math.round(n / 1000) + 'K'; }
+        return '$' + n;
+    }
+
+    // Scatter "equipos vs valor por colegio". Un solo punto por colegio;
+    // si hay un colegio filtrado, se resalta en una serie aparte (no se
+    // codifica identidad por color salvo para ese caso puntual).
+    function createScatterChart(id, points) {
+        if (typeof Chart === 'undefined' || !points || !points.length) { return; }
+        var el = document.getElementById(id);
+        if (!el) { return; }
+        if (chartInstances[id]) { chartInstances[id].destroy(); }
+
+        var colorBase = '#2a78d6';
+        var colorSeleccionado = '#008300';
+
+        var normales = points.filter(function (p) { return !p.seleccionado; });
+        var seleccionados = points.filter(function (p) { return p.seleccionado; });
+
+        var datasets = [{
+            label: 'Colegios',
+            data: normales.map(function (p) { return { x: p.x, y: p.y, colegio: p.colegio }; }),
+            backgroundColor: colorBase,
+            borderColor: colorBase,
+            pointRadius: 6,
+            pointHoverRadius: 8
+        }];
+        if (seleccionados.length) {
+            datasets.push({
+                label: 'Colegio seleccionado',
+                data: seleccionados.map(function (p) { return { x: p.x, y: p.y, colegio: p.colegio }; }),
+                backgroundColor: colorSeleccionado,
+                borderColor: colorSeleccionado,
+                pointRadius: 8,
+                pointHoverRadius: 10
+            });
+        }
+
+        chartInstances[id] = new Chart(el, {
+            type: 'scatter',
+            data: { datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                legend: { display: false }, // leyenda HTML propia (.chart-legend) en dashboard.php
+                scales: {
+                    xAxes: [{
+                        scaleLabel: { display: true, labelString: 'Cantidad de equipos', fontColor: '#94a3b8' },
+                        ticks: { beginAtZero: true, precision: 0, fontColor: '#94a3b8' },
+                        gridLines: { color: 'rgba(15, 23, 42, 0.05)', drawBorder: false }
+                    }],
+                    yAxes: [{
+                        scaleLabel: { display: true, labelString: 'Valor del inventario', fontColor: '#94a3b8' },
+                        ticks: { beginAtZero: true, fontColor: '#94a3b8', callback: formatMoneyShort },
+                        gridLines: { color: 'rgba(15, 23, 42, 0.07)', drawBorder: false, zeroLineColor: 'rgba(15, 23, 42, 0.10)' }
+                    }]
+                },
+                tooltips: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFontColor: '#fff',
+                    bodyFontColor: '#fff',
+                    cornerRadius: 8,
+                    xPadding: 12,
+                    yPadding: 10,
+                    callbacks: {
+                        title: function (items, chartData) {
+                            var item = items[0];
+                            var point = chartData.datasets[item.datasetIndex].data[item.index];
+                            return point.colegio;
+                        },
+                        label: function (item, chartData) {
+                            var point = chartData.datasets[item.datasetIndex].data[item.index];
+                            return point.x + ' equipos · ' + formatMoney(point.y);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Bar agrupado "colegio vs promedio del sistema". Solo cantidades
+    // (mismo eje/unidad); el valor monetario se muestra aparte en tarjetas
+    // .inv-card-info para no mezclar dos escalas en un mismo eje Y.
+    function createComparativaChart(id, comparativa) {
+        if (typeof Chart === 'undefined' || !comparativa) { return; }
+        var el = document.getElementById(id);
+        if (!el) { return; }
+        if (chartInstances[id]) { chartInstances[id].destroy(); }
+
+        chartInstances[id] = new Chart(el, {
+            type: 'bar',
+            data: {
+                labels: comparativa.categorias,
+                datasets: [
+                    {
+                        label: comparativa.nombre,
+                        data: comparativa.colegio,
+                        backgroundColor: '#2a78d6',
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.6
+                    },
+                    {
+                        label: 'Promedio sistema',
+                        data: comparativa.promedio,
+                        backgroundColor: '#008300',
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { boxWidth: 10, padding: 14, fontColor: '#64748b', fontSize: 12 }
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: { beginAtZero: true, precision: 0, fontColor: '#94a3b8', padding: 8 },
+                        gridLines: { color: 'rgba(15, 23, 42, 0.07)', drawBorder: false, zeroLineColor: 'rgba(15, 23, 42, 0.10)' }
+                    }],
+                    xAxes: [{
+                        ticks: { fontColor: '#94a3b8', padding: 8, autoSkip: false, maxRotation: 0 },
+                        gridLines: { display: false }
+                    }]
+                },
+                tooltips: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                    titleFontColor: '#fff',
+                    bodyFontColor: '#fff',
+                    cornerRadius: 8,
+                    xPadding: 12,
+                    yPadding: 10
+                }
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         bindDashboardFilters();
         bindAlertModal();
@@ -126,6 +276,8 @@
         createChart('chartTipos', 'bar', data.tipos);
         createChart('chartRam', 'doughnut', data.ram);
         createChart('chartSistemas', 'bar', data.sistemas);
+        createScatterChart('chartScatterColegios', data.scatterColegios);
+        createComparativaChart('chartComparativaColegio', data.comparativa);
     });
 
     function bindDashboardFilters() {

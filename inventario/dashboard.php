@@ -142,7 +142,82 @@ $chartSistemas = [
 $maxValorColegio = max(1, ...array_map(static fn($f) => (int)($f['valor_total'] ?? 0), $valorPorColegio ?: [['valor_total' => 1]]));
 $valorTotalVisible = array_sum(array_map(static fn($f) => (int)($f['valor_total'] ?? 0), $valorPorColegio));
 
-$cssExtraInventario = ['css/dashboard.css'];
+// -----------------------------------------------------------------------
+// SCATTER + COMPARATIVA: reutilizan obtenerResumenPorColegioDashboard()
+// (misma fuente que $resumenPorColegio) pero forzando id_colegio=0, para
+// obtener SIEMPRE todos los colegios visibles al usuario -- $resumenPorColegio
+// colapsa a 1 fila cuando hay un colegio filtrado, y un scatter/promedio
+// con un solo punto no aporta nada.
+// -----------------------------------------------------------------------
+$filtrosSistema = $inventario->normalizarFiltrosDashboard(
+    ['id_colegio' => 0, 'tipo_equipo' => $tipoEquipoFiltro],
+    $alcanceInventario
+);
+$resumenSistema = $inventario->obtenerResumenPorColegioDashboard($filtrosSistema);
+
+// Scatter "equipos vs valor por colegio": un punto por colegio.
+// X = total_equipos, Y = valor_total (misma tabla/consulta que la tabla
+// "Resumen por colegio" de más abajo, solo que sin filtrar por colegio).
+$chartScatterColegios = array_map(static function ($fila) use ($idColegioFiltro) {
+    return [
+        'colegio'      => (string)($fila['nom_colegio'] ?? ''),
+        'x'            => (int)($fila['total_equipos'] ?? 0),
+        'y'            => (int)($fila['valor_total'] ?? 0),
+        'seleccionado' => $idColegioFiltro > 0 && (int)($fila['id_colegio'] ?? 0) === $idColegioFiltro,
+    ];
+}, $resumenSistema);
+
+// Comparativa "colegio vs promedio del sistema": solo aplica si hay un
+// colegio puntual seleccionado en el filtro (si no, no hay "un" colegio
+// que comparar contra el promedio).
+$comparativaColegio = null;
+if ($idColegioFiltro > 0 && !empty($resumenSistema)) {
+    $filaColegioComparativa = null;
+    foreach ($resumenSistema as $filaSistema) {
+        if ((int)($filaSistema['id_colegio'] ?? 0) === $idColegioFiltro) {
+            $filaColegioComparativa = $filaSistema;
+            break;
+        }
+    }
+    if ($filaColegioComparativa !== null) {
+        $totalColegiosSistema = count($resumenSistema);
+        $sumaMetricas = ['total_equipos' => 0, 'activos' => 0, 'sin_ubicacion' => 0, 'en_reparacion' => 0, 'dados_baja' => 0, 'valor_total' => 0];
+        foreach ($resumenSistema as $filaSistema) {
+            foreach ($sumaMetricas as $clave => $acumulado) {
+                $sumaMetricas[$clave] += (int)($filaSistema[$clave] ?? 0);
+            }
+        }
+        $promedioMetricas = [];
+        foreach ($sumaMetricas as $clave => $suma) {
+            $promedioMetricas[$clave] = $totalColegiosSistema > 0 ? (int)round($suma / $totalColegiosSistema) : 0;
+        }
+        $comparativaColegio = [
+            'nombre' => (string)($filaColegioComparativa['nom_colegio'] ?? ''),
+            // Categorias en cantidad de equipos (mismo eje/unidad). El valor
+            // monetario NO entra aca: se muestra aparte en .inv-card-info
+            // para no mezclar dos escalas distintas en un mismo eje Y.
+            'categorias' => ['Total', 'Activos', 'Sin ubicación', 'En reparación', 'Dados de baja'],
+            'colegio' => [
+                (int)($filaColegioComparativa['total_equipos'] ?? 0),
+                (int)($filaColegioComparativa['activos'] ?? 0),
+                (int)($filaColegioComparativa['sin_ubicacion'] ?? 0),
+                (int)($filaColegioComparativa['en_reparacion'] ?? 0),
+                (int)($filaColegioComparativa['dados_baja'] ?? 0),
+            ],
+            'promedio' => [
+                $promedioMetricas['total_equipos'],
+                $promedioMetricas['activos'],
+                $promedioMetricas['sin_ubicacion'],
+                $promedioMetricas['en_reparacion'],
+                $promedioMetricas['dados_baja'],
+            ],
+            'valor_colegio'  => (int)($filaColegioComparativa['valor_total'] ?? 0),
+            'valor_promedio' => $promedioMetricas['valor_total'],
+        ];
+    }
+}
+
+$cssExtraInventario = ['css/dashboard.css', inventario_sistema_url('css/graficos.css'), inventario_sistema_url('css/cards.css')];
 $jsExtraInventario = ['js/dashboard.js'];
 $idPagActual = '9';
 require __DIR__ . '/componentes/layout_top.php';
@@ -343,6 +418,74 @@ require __DIR__ . '/componentes/layout_top.php';
                                     <div class="inv-chart-empty">Sin información disponible para el tipo seleccionado.</div>
                                 <?php endif; ?>
                             </div>
+                            <?php if (!empty($dashboard['estados'])): ?>
+                            <!-- Fuente: $dashboard['estados'] (obtenerDistribucionEstadosDashboard) -->
+                            <div class="inv-card-row inv-card-row--estados">
+                                <?php foreach ($dashboard['estados'] as $estadoFila): ?>
+                                    <div class="inv-card inv-card-estado inv-card-estado--<?= inventario_h($estadoFila['color_badge'] ?? 'secondary') ?>">
+                                        <strong><?= inv_dash_int($estadoFila['total'] ?? 0) ?></strong>
+                                        <span><?= inventario_h($estadoFila['etiqueta'] ?? 'Sin estado') ?></span>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <?php endif; ?>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- ===== SCATTER: equipos vs valor por colegio | BAR: colegio vs promedio del sistema ===== -->
+                <!-- Fuente PHP: $chartScatterColegios / $comparativaColegio, calculados a partir de
+                     $inventario->obtenerResumenPorColegioDashboard() sin filtro de colegio (ver arriba) -->
+                <div class="row g-4 mb-4">
+                    <div class="col-12 col-xl-7">
+                        <section class="inv-dashboard-section h-100">
+                            <div class="inv-dashboard-section__head">
+                                <div class="inv-section-title">
+                                    <h2>Equipos vs. valor por colegio</h2>
+                                    <span>Cada punto es un colegio · eje X cantidad de equipos, eje Y valor</span>
+                                </div>
+                                <?= inv_dash_section_menu() ?>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="chartScatterColegios"></canvas>
+                                <?php if (empty($chartScatterColegios)): ?>
+                                    <div class="chart-empty-state">Sin información disponible para el tipo seleccionado.</div>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($idColegioFiltro > 0): ?>
+                            <div class="chart-legend">
+                                <span class="chart-legend__item"><span class="chart-legend__swatch chart-legend__swatch--muted"></span>Otros colegios</span>
+                                <span class="chart-legend__item"><span class="chart-legend__swatch chart-legend__swatch--accent"></span><?= inventario_h($colegioSeleccionado) ?></span>
+                            </div>
+                            <?php endif; ?>
+                        </section>
+                    </div>
+                    <div class="col-12 col-xl-5">
+                        <section class="inv-dashboard-section h-100">
+                            <div class="inv-dashboard-section__head">
+                                <div class="inv-section-title">
+                                    <h2>Colegio vs. promedio del sistema</h2>
+                                    <span><?= $comparativaColegio ? inventario_h($comparativaColegio['nombre']) : 'Seleccione un colegio' ?></span>
+                                </div>
+                                <?= inv_dash_section_menu() ?>
+                            </div>
+                            <?php if ($comparativaColegio): ?>
+                                <div class="chart-container chart-container--sm">
+                                    <canvas id="chartComparativaColegio"></canvas>
+                                </div>
+                                <div class="inv-card-row">
+                                    <div class="inv-card inv-card-info">
+                                        <span>Valor <?= inventario_h($comparativaColegio['nombre']) ?></span>
+                                        <strong><?= inv_dash_money($comparativaColegio['valor_colegio']) ?></strong>
+                                    </div>
+                                    <div class="inv-card inv-card-info">
+                                        <span>Valor promedio del sistema</span>
+                                        <strong><?= inv_dash_money($comparativaColegio['valor_promedio']) ?></strong>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="inv-empty-state m-3">Seleccione un colegio específico en el filtro para comparar sus métricas contra el promedio del sistema.</div>
+                            <?php endif; ?>
                         </section>
                     </div>
                 </div>
@@ -606,7 +749,9 @@ window.inventarioDashboardCharts = {
     estados: <?= json_encode($chartEstados, JSON_UNESCAPED_UNICODE) ?>,
     tipos: <?= json_encode($chartTipos, JSON_UNESCAPED_UNICODE) ?>,
     ram: <?= json_encode($chartRam, JSON_UNESCAPED_UNICODE) ?>,
-    sistemas: <?= json_encode($chartSistemas, JSON_UNESCAPED_UNICODE) ?>
+    sistemas: <?= json_encode($chartSistemas, JSON_UNESCAPED_UNICODE) ?>,
+    scatterColegios: <?= json_encode($chartScatterColegios, JSON_UNESCAPED_UNICODE) ?>,
+    comparativa: <?= json_encode($comparativaColegio, JSON_UNESCAPED_UNICODE) ?>
 };
 window.inventarioDashboardConfig = {
     idColegio: <?= $idColegioFiltro ?>,

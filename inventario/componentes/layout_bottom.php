@@ -49,5 +49,10 @@
 <!-- Inventario - Scripts del módulo -->
 <script src="js/inventario.js?v=<?= inventario_h(inventario_asset_version('js/inventario.js')) ?>"></script>
 
+<!-- Inventario - Scripts extra por página (ej: dashboard.php agrega js/dashboard.js) -->
+<?php foreach (($jsExtraInventario ?? []) as $jsExtra): ?>
+<script src="<?= inventario_h($jsExtra) ?>?v=<?= inventario_h(inventario_asset_version($jsExtra)) ?>"></script>
+<?php endforeach; ?>
+
 </body>
 </html>

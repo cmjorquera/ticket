@@ -1,104 +1,175 @@
+/* =============================================================================
+ * graficos.css — Estilos centralizados para gráficos (Chart.js) en todo el sistema
+ * Sistema SEDUC | usado por: inventario/dashboard.php (y cualquier módulo futuro
+ * que incruste gráficos Chart.js dentro de un .inv-dashboard-section)
+ *
+ * Paleta y reglas de accesibilidad validadas con el skill "dataviz" del proyecto:
+ *   - Series nuevas: azul #2a78d6 (principal / "colegio seleccionado") y
+ *     verde #008300 (secundario / "promedio del sistema"). Par validado:
+ *     CVD deltaE 26.5, contraste >= 3:1 sobre fondo blanco.
+ *   - Un solo eje por gráfico: nunca mezclar cantidades (equipos) con montos
+ *     ($) en el mismo eje Y. Si se necesita comparar ambos, van en gráficos
+ *     o tarjetas separadas (ver .inv-card-info en cards.css).
+ * ========================================================================== */
 
-body {
-    font-family: Arial, sans-serif;
+/* -----------------------------------------------------------------------
+ * 1) CONTENEDOR DE GRÁFICO
+ * Envoltorio del <canvas>. Reemplaza/complementa a .inv-chart-box: mismo
+ * alto por defecto, pero reusable fuera del módulo inventario.
+ * --------------------------------------------------------------------- */
+.chart-container {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    height: 286px;
+    padding: 24px 24px 18px;
 }
 
-/* Estilo del contenedor principal */
-#page-top {
+/* Variante compacta: gráficos secundarios o en columnas angostas */
+.chart-container--sm {
+    height: 220px;
+    padding: 18px 20px 14px;
+}
+
+/* Variante "hero": gráfico principal a todo lo ancho */
+.chart-container--lg {
+    height: 360px;
+}
+
+.chart-container canvas {
+    /* Entrada suave al renderizar. Se puede omitir agregando
+       .chart-container--sin-animacion si el gráfico se redibuja seguido
+       (p.ej. tras un filtro), para no repetir la animación en cada refresh. */
+    animation: chart-fade-in .45s ease both;
+}
+
+.chart-container--sin-animacion canvas {
+    animation: none;
+}
+
+@keyframes chart-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Estado vacío (sin datos para los filtros actuales) */
+.chart-empty-state,
+.inv-chart-empty {
+    position: absolute;
+    inset: 24px;
+    display: grid;
+    place-items: center;
+    border: 1px dashed #cdd9e5;
+    border-radius: 8px;
+    color: #6b7c93;
+    text-align: center;
+    background: #fbfdff;
+    font-size: .9rem;
+    padding: 0 16px;
+}
+
+/* -----------------------------------------------------------------------
+ * 2) LEYENDA PERSONALIZADA
+ * Para gráficos donde la leyenda nativa de Chart.js se reemplaza por HTML
+ * (necesario en scatter, donde Chart.js v2 no genera leyenda automática
+ * de forma útil). Ubicar bajo el .chart-container.
+ * --------------------------------------------------------------------- */
+.chart-legend {
     display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px 18px;
 }
 
-#wrapper {
+.chart-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #536174;
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.chart-legend__swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+}
+
+/* Roles de color — coinciden con las series de graficos nuevos (scatter,
+   comparativa). No reutilizar estos roles para "serie 3, 4...": son
+   semánticos (principal vs. contexto), no una paleta categórica. */
+.chart-legend__swatch--accent { background: #2a78d6; } /* colegio seleccionado / serie principal */
+.chart-legend__swatch--muted  { background: #94a3b8; } /* resto de colegios / contexto */
+.chart-legend__swatch--good   { background: #0ca30c; }
+.chart-legend__swatch--warn   { background: #fab219; }
+.chart-legend__swatch--bad    { background: #d03b3b; }
+
+/* -----------------------------------------------------------------------
+ * 3) TOOLTIP HTML (para overlays personalizados fuera del tooltip nativo
+ * de Chart.js — por ejemplo, un resumen fijo al hacer hover sobre una
+ * tarjeta o barra de progreso que no es un <canvas>).
+ * --------------------------------------------------------------------- */
+.chart-tooltip {
+    position: absolute;
+    z-index: 20;
+    min-width: 160px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #fff;
+    font-size: .8rem;
+    line-height: 1.4;
+    pointer-events: none;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.20);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+.chart-tooltip.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.chart-tooltip__title {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.chart-tooltip__row {
     display: flex;
-    flex-grow: 1;
+    justify-content: space-between;
+    gap: 12px;
+    color: #cbd5e1;
 }
 
-/* Estilo de la barra lateral */
-#wrapper #content-wrapper {
-    flex-grow: 1;
-}
-
-/* Estilo de la barra de navegación */
-.navbar {
-    padding: 0.5rem 1rem;
-}
-
-/* Estilo de la tarjeta de información relevante */
-.card {
-    margin-bottom: 1rem;
-}
-
-/* Estilo de las tablas */
-.table-responsive {
-    margin-top: 1rem;
-}
-
-.table th,
-.table td {
-    vertical-align: middle;
-}
-
-/* Estilo del scroll-to-top */
-.scroll-to-top {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
-}
-
-/* Consultas de medios */
-@media (max-width: 768px) {
-    .navbar {
-        flex-direction: column;
+/* -----------------------------------------------------------------------
+ * 4) RESPONSIVE
+ * --------------------------------------------------------------------- */
+@media (max-width: 575px) {
+    .chart-container {
+        height: 240px;
+        padding: 18px 14px 14px;
     }
-
-    .navbar .btn-link {
-        margin-bottom: 1rem;
+    .chart-container--sm {
+        height: 200px;
     }
-
-    .card {
-        margin-bottom: 1rem;
-    }
-
-    .datatable-wrapper {
-        overflow-x: auto;
-    }
-
-    .datatable-top,
-    .datatable-bottom {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .datatable-search {
-        margin-top: 0.5rem;
+    .chart-legend {
+        padding: 0 14px 14px;
+        gap: 10px;
     }
 }
 
-@media (max-width: 576px) {
-
-    .datatable-table th,
-    .datatable-table td {
-        font-size: 0.875rem;
+@media (prefers-reduced-motion: reduce) {
+    .chart-container canvas {
+        animation: none;
     }
-
-    .card-title {
-        font-size: 1.25rem;
-    }
-
-    .btn {
-        font-size: 0.875rem;
-        padding: 0.5rem 0.75rem;
-    }
-
-    .scroll-to-top {
-        width: 2.5rem;
-        height: 2.5rem;
-    }
-
-    .scroll-to-top i {
-        font-size: 1.25rem;
+    .chart-tooltip {
+        transition: none;
     }
 }
-/*  */
