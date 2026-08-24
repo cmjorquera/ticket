@@ -17,23 +17,21 @@ require __DIR__ . '/componentes/layout_top.inc';
 ?>
 <div class="row mx-1 mx-md-3">
     <div class="col-12">
-        
-            <div class="card-body">
+        <div class="card shadow mb-4 px-0 border-0 inv-panel">
+            <div class="card-body p-4 p-lg-5">
                 <div class="inv-hero mb-4">
                         <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                             <div>
-                                <!--<span class="inv-kicker">Modulo operativo</span>-->
+                                <span class="inv-kicker">Módulo Licenciamiento</span>
                                 <h1 class="inv-title mb-2">Inventario de Software</h1>
                                 <p class="inv-subtitle mb-0">Controla licencias, programas, cuentas relacionadas y registros de sitios web, apps o clientes.</p>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
-                                <a href="consulta_nueva.php" class="btn btn-primary btn-icon-split inv-main-cta">
-                                    <span class="icon"><i class="bi bi-search"></i></span>
-                                    <span class="text">Consulta</span>
+                                <a href="consulta_nueva.php" class="module-btn module-btn--primary">
+                                    <i class="bi bi-search"></i>Consulta
                                 </a>
-                                <a href="dashboard.php" class="btn btn-secondary btn-icon-split inv-main-cta">
-                                    <span class="icon"><i class="bi bi-bar-chart-line"></i></span>
-                                    <span class="text">Dashboard</span>
+                                <a href="dashboard.php" class="module-btn module-btn--secondary">
+                                    <i class="bi bi-bar-chart-line"></i>Dashboard
                                 </a>
                             </div>
                         </div>
@@ -66,13 +64,11 @@ require __DIR__ . '/componentes/layout_top.inc';
                                         <p class="text-muted mb-0">Registro de nombre, version, cantidad, licenciamiento, pago y datos de almacenamiento.</p>
                                     </div>
                                     <div class="d-flex gap-2 flex-wrap">
-                                        <a href="descargar_pdf.php?tipo=software_listado" id="btnPdfSoftware" class="btn btn-danger btn-icon-split inv-main-cta" target="_blank">
-                                            <span class="icon"><i class="bi bi-file-earmark-pdf"></i></span>
-                                            <span class="text">Descargar PDF</span>
+                                        <a href="descargar_pdf.php?tipo=software_listado" id="btnPdfSoftware" class="module-btn module-btn--primary" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>Descargar PDF
                                         </a>
-                                        <a href="registrar_software.php" class="btn btn-primary btn-icon-split inv-main-cta">
-                                            <span class="icon"><i class="bi bi-plus-circle"></i></span>
-                                            <span class="text">Agregar software</span>
+                                        <a href="registrar_software.php" class="module-btn module-btn--primary">
+                                            <i class="bi bi-plus-circle"></i>Agregar software
                                         </a>
                                     </div>
                                 </div>
@@ -98,13 +94,11 @@ require __DIR__ . '/componentes/layout_top.inc';
                                         <p class="text-muted mb-0">Registro de tipo web, app o cliente, url, proveedor y estado.</p>
                                     </div>
                                     <div class="d-flex gap-2 flex-wrap">
-                                        <a href="descargar_pdf.php?tipo=sitios_listado" id="btnPdfSitios" class="btn btn-danger btn-icon-split inv-main-cta" target="_blank">
-                                            <span class="icon"><i class="bi bi-file-earmark-pdf"></i></span>
-                                            <span class="text">Descargar PDF</span>
+                                        <a href="descargar_pdf.php?tipo=sitios_listado" id="btnPdfSitios" class="module-btn module-btn--primary" target="_blank">
+                                            <i class="bi bi-file-earmark-pdf"></i>Descargar PDF
                                         </a>
-                                        <a href="registrar_sitio_web.php" class="btn btn-primary btn-icon-split inv-main-cta">
-                                            <span class="icon"><i class="bi bi-globe"></i></span>
-                                            <span class="text">Agregar sitio web</span>
+                                        <a href="registrar_sitio_web.php" class="module-btn module-btn--primary">
+                                            <i class="bi bi-globe"></i>Agregar sitio web
                                         </a>
                                     </div>
                                 </div>
@@ -127,7 +121,8 @@ require __DIR__ . '/componentes/layout_top.inc';
                     </div>
                 </div>
             </div>
-       
+            </div>
+        </div>
     </div>
 </div>
 <script>

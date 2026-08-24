@@ -67,12 +67,8 @@ require __DIR__ . '/componentes/layout_top.php';
             </div>
         </div>
 
-        <!-- ── Layout dos columnas: contenido | panel de carga ───────────── -->
-        <div class="row g-4 align-items-start">
-
-            <!-- Columna izquierda: instrucciones + resultados -->
-            <div class="col-lg-8">
-
+        <div class="cm-layout">
+            <main class="cm-main">
                 <!-- Tarjeta 1: Descargar plantilla -->
                 <div class="card shadow-sm border-0 inv-panel mb-3">
                     <div class="card-body p-4">
@@ -92,7 +88,7 @@ require __DIR__ . '/componentes/layout_top.php';
                 </div>
 
                 <!-- Tarjeta 4: Previsualizacion/resultados (oculta hasta procesar) -->
-                <div id="cmResultados" class="card shadow-sm border-0 inv-panel d-none mb-3">
+                <div id="cmResultados" class="card shadow-sm border-0 inv-panel d-none mt-4 mb-3">
                     <div class="card-body p-4">
                         <div class="mb-3">
                             <h5 class="mb-0">
@@ -100,47 +96,45 @@ require __DIR__ . '/componentes/layout_top.php';
                                 <span id="cmTituloResultados">Previsualizacion de equipos</span>
                             </h5>
                         </div>
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
-                            <div id="cmResumenResultados" class="d-flex flex-wrap gap-2 align-items-center"></div>
-                            <div>
-                            <button type="button" id="btnInsertarPc" class="btn btn-success d-none" disabled>
-                                <span id="cmSpinnerInsertar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
-                                <i class="bi bi-check2-circle me-1"></i>Insertar PC
-                            </button>
+                        <div class="cm-preview-main">
+                            <div class="cm-preview-header">
+                                <div id="cmResumenResultados" class="cm-summary-badges"></div>
+                                <button type="button" id="btnInsertarPc" class="btn btn-success d-none" disabled>
+                                    <span id="cmSpinnerInsertar" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+                                    <i class="bi bi-check2-circle me-1"></i>Insertar PC seleccionados
+                                </button>
                             </div>
-                        </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle border" id="cmTablaResultados">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="text-center" style="width: 46px;">
-                                            <input type="checkbox" id="cmSeleccionarTodos" class="form-check-input" title="Seleccionar todos los validos">
-                                        </th>
-                                        <th class="text-center" style="width: 70px;">Fila</th>
-                                        <th>Nombre del equipo</th>
-                                        <th>Numero de serie</th>
-                                        <th>Tipo</th>
-                                        <th>Estado</th>
-                                        <th>Ubicacion</th>
-                                        <th>Usuario asignado</th>
-                                        <th>Fabricante</th>
-                                        <th>Producto / modelo</th>
-                                        <th>Valor</th>
-                                        <th>Errores / advertencias</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                            <div class="cm-table-wrap">
+                                <table class="table table-sm table-hover align-middle" id="cmTablaResultados">
+                                    <thead>
+                                        <tr>
+                                            <th class="cm-check-col text-center">
+                                                <input type="checkbox" id="cmSeleccionarTodos" class="form-check-input" title="Seleccionar todos los validos">
+                                            </th>
+                                            <th class="cm-row-col text-center">N°</th>
+                                            <th>Nombre del equipo</th>
+                                            <th>Numero de serie</th>
+                                            <th>Tipo</th>
+                                            <th>Estado</th>
+                                            <th>Ubicacion</th>
+                                            <th>Usuario asignado</th>
+                                            <th>Fabricante</th>
+                                            <th>Producto / modelo</th>
+                                            <th>Valor</th>
+                                            <th class="cm-col-advertencias">Errores / advertencias</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </main>
 
-            </div><!-- /col-lg-8 -->
-
-            <!-- Columna derecha: panel de carga -->
-            <div class="col-lg-4">
-                <div class="cm-upload-panel sticky-top" style="top: 1.5rem;">
+            <aside class="cm-side">
+                <div class="cm-upload-panel">
                     <div class="cm-upload-panel-header">
                         <i class="bi bi-file-earmark-arrow-up me-2"></i>CARGAR EQUIPOS (.XLSX)
                     </div>
@@ -172,9 +166,18 @@ require __DIR__ . '/componentes/layout_top.php';
                         </button>
                     </div>
                 </div>
-            </div><!-- /col-lg-4 -->
 
-        </div><!-- /row -->
+                <div class="cm-review-panel mt-3">
+                    <div class="cm-review-head">
+                        <span class="cm-review-kicker">Revisión del archivo</span>
+                        <h6 class="mb-0">Resumen de carga</h6>
+                    </div>
+                    <div id="cmPanelRevision" class="cm-review-list">
+                        <div class="cm-review-empty">Adjunta un Excel para ver el resumen de revisión.</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
     </div>
 </div>
 
@@ -183,24 +186,34 @@ require __DIR__ . '/componentes/layout_top.php';
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">¿Está seguro de insertar estos PC?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" id="btnCerrarModalInsertarPc" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <div id="cmConfirmarResumen" class="d-flex flex-column gap-2 mb-3">
-                    <div class="d-flex justify-content-between gap-3"><span>Total filas seleccionadas</span><strong id="cmConfirmarCantidad">0</strong></div>
-                    <div class="d-flex justify-content-between gap-3"><span>Total validas seleccionadas</span><strong id="cmConfirmarValidas">0</strong></div>
-                    <div class="d-flex justify-content-between gap-3"><span>Con ubicacion nueva</span><strong id="cmConfirmarUbicacionesNuevas">0</strong></div>
-                    <div class="d-flex justify-content-between gap-3 text-danger"><span>Con error</span><strong id="cmConfirmarErrores">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span>Total seleccionados</span><strong id="cmConfirmarCantidad">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span>Validos</span><strong id="cmConfirmarValidas">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3 text-warning"><span>Con advertencias</span><strong id="cmConfirmarAdvertencias">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3 text-danger"><span>Con errores omitidos</span><strong id="cmConfirmarErrores">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span>Ubicaciones nuevas que se crearan</span><strong id="cmConfirmarUbicacionesNuevas">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span>Sin ubicacion que quedaran pendientes</span><strong id="cmConfirmarSinUbicacion">0</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span>Sin responsable que quedaran sin asignar</span><strong id="cmConfirmarSinResponsable">0</strong></div>
                 </div>
-                <p class="text-muted mb-0">Las filas no seleccionadas no serán ingresadas.</p>
+                <p class="text-muted mb-0">Se insertarán las filas seleccionadas. Las advertencias no bloquean la inserción. Las filas con errores reales serán omitidas.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-light border" id="btnCancelarInsertarPc" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-success" id="btnConfirmarInsertarPc">
                     Sí, insertar PC
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="cmOverlayCarga" class="cm-loading-overlay d-none" aria-live="polite" aria-busy="true">
+    <div class="cm-loading-card">
+        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+        <strong id="cmOverlayMensaje">Insertando equipos, por favor espere...</strong>
     </div>
 </div>
 

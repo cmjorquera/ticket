@@ -11,6 +11,18 @@ function inv_dash_int($valor): string
     return number_format((int)$valor, 0, ',', '.');
 }
 
+function inv_dash_section_menu(): string
+{
+    $html = '<div class="dropdown">';
+    $html .= '<button type="button" class="btn inv-section-menu-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acciones del gráfico">';
+    $html .= '<i class="bi bi-three-dots-vertical"></i>';
+    $html .= '</button>';
+    $html .= '<ul class="dropdown-menu dropdown-menu-end inv-kpi-menu">';
+    $html .= '<li><span class="dropdown-item-text text-muted">Ver detalle</span></li>';
+    $html .= '</ul></div>';
+    return $html;
+}
+
 try {
     $tituloPagina = 'Dashboard Inventario';
     $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
@@ -23,13 +35,13 @@ try {
 
     $filtrosDashboard = $inventario->normalizarFiltrosDashboard([
         'id_colegio' => (int)($_GET['id_colegio'] ?? 0),
-        'fecha_desde' => trim((string)($_GET['fecha_desde'] ?? '')),
-        'fecha_hasta' => trim((string)($_GET['fecha_hasta'] ?? '')),
+        'tipo_equipo' => trim((string)($_GET['tipo_equipo'] ?? 'pc')),
     ], $alcanceInventario);
 
     $dashboard = $inventario->obtenerDashboardInventario($filtrosDashboard);
     $coloresColegio = $inventario->obtenerColoresColegio($idUsuarioSession);
     $colegios = $alcanceInventario['colegios'] ?? [];
+    $estadosInventario = $inventario->obtenerEstados();
 } catch (Throwable $e) {
     inventario_responder_error('Error al cargar el dashboard de inventario: ' . $e->getMessage());
 }
@@ -47,7 +59,18 @@ $alertas = $dashboard['alertas'] ?? [];
 $ultimos = $dashboard['ultimos'] ?? [];
 $detalleValor = $dashboard['detalle_valor'] ?? [];
 $hardware = $dashboard['hardware'] ?? [];
-$fechaRegistroDisponible = (bool)($dashboard['fecha_registro_disponible'] ?? false);
+$idColegioFiltro = (int)($filtrosDashboard['id_colegio'] ?? 0);
+$tipoMeta = [
+    'pc' => ['singular' => 'PC', 'plural' => 'PC', 'genero' => 'm', 'activos' => 'PC ACTIVOS', 'baja' => 'PC DADOS DE BAJA'],
+    'tablet' => ['singular' => 'Tablet', 'plural' => 'Tablet', 'genero' => 'f', 'activos' => 'TABLET ACTIVAS', 'baja' => 'TABLET DADAS DE BAJA'],
+    'monitor' => ['singular' => 'Monitor', 'plural' => 'Monitores', 'genero' => 'm', 'activos' => 'MONITORES ACTIVOS', 'baja' => 'MONITORES DADOS DE BAJA'],
+    'impresora' => ['singular' => 'Impresora', 'plural' => 'Impresoras', 'genero' => 'f', 'activos' => 'IMPRESORAS ACTIVAS', 'baja' => 'IMPRESORAS DADAS DE BAJA'],
+];
+$tipoEquipoFiltro = (string)($filtrosDashboard['tipo_equipo'] ?? 'pc');
+$tipoSeleccionado = $tipoMeta[$tipoEquipoFiltro] ?? $tipoMeta['pc'];
+$tipoPluralUpper = mb_strtoupper($tipoSeleccionado['plural'], 'UTF-8');
+$tipoSingularUpper = mb_strtoupper($tipoSeleccionado['singular'], 'UTF-8');
+$tipoEnPreparacion = $tipoEquipoFiltro === 'impresora';
 
 $totalGeneral = [
     'total_equipos' => 0,
@@ -73,6 +96,33 @@ foreach ($colegios as $colegio) {
 }
 
 $colegioMayor = $valor['colegio_mayor_valor'] ?? null;
+$alertaMeta = [
+    'sin_ubicacion' => [
+        'titulo' => $tipoSeleccionado['plural'] . ' sin ubicación',
+        'asunto' => 'Alerta inventario - ' . $tipoSeleccionado['plural'] . ' sin ubicación',
+        'mensaje' => 'El colegio seleccionado tiene {total} ' . $tipoSeleccionado['plural'] . ' sin ubicación asignada.',
+    ],
+    'sin_responsable' => [
+        'titulo' => $tipoSeleccionado['plural'] . ' sin responsable',
+        'asunto' => 'Alerta inventario - ' . $tipoSeleccionado['plural'] . ' sin responsable',
+        'mensaje' => 'El colegio seleccionado tiene {total} ' . $tipoSeleccionado['plural'] . ' sin responsable asignado.',
+    ],
+    'en_reparacion' => [
+        'titulo' => $tipoSeleccionado['plural'] . ' en reparación',
+        'asunto' => 'Alerta inventario - ' . $tipoSeleccionado['plural'] . ' en reparación',
+        'mensaje' => 'El colegio seleccionado tiene {total} ' . $tipoSeleccionado['plural'] . ' en reparación.',
+    ],
+    'dados_baja' => [
+        'titulo' => $tipoSeleccionado['plural'] . ' dados de baja',
+        'asunto' => 'Alerta inventario - ' . $tipoSeleccionado['plural'] . ' dados de baja',
+        'mensaje' => 'El colegio seleccionado tiene {total} ' . $tipoSeleccionado['plural'] . ' dados de baja.',
+    ],
+    'sin_valor' => [
+        'titulo' => $tipoSeleccionado['plural'] . ' sin valor registrado',
+        'asunto' => 'Alerta inventario - ' . $tipoSeleccionado['plural'] . ' sin valor registrado',
+        'mensaje' => 'El colegio seleccionado tiene {total} ' . $tipoSeleccionado['plural'] . ' sin valor de compra registrado.',
+    ],
+];
 $chartEstados = [
     'labels' => array_map(static fn($f) => (string)$f['etiqueta'], $dashboard['estados'] ?? []),
     'values' => array_map(static fn($f) => (int)$f['total'], $dashboard['estados'] ?? []),
@@ -90,6 +140,7 @@ $chartSistemas = [
     'values' => array_map(static fn($f) => (int)$f['total'], $hardware['sistemas'] ?? []),
 ];
 $maxValorColegio = max(1, ...array_map(static fn($f) => (int)($f['valor_total'] ?? 0), $valorPorColegio ?: [['valor_total' => 1]]));
+$valorTotalVisible = array_sum(array_map(static fn($f) => (int)($f['valor_total'] ?? 0), $valorPorColegio));
 
 $cssExtraInventario = ['css/dashboard.css'];
 $jsExtraInventario = ['js/dashboard.js'];
@@ -116,11 +167,11 @@ require __DIR__ . '/componentes/layout_top.php';
                     </div>
                 </div>
 
-                <form method="get" class="inv-dashboard-filters mb-4">
+                <div class="inv-dashboard-filters mb-4">
                     <div class="row g-3 align-items-end">
-                        <div class="col-12 col-lg-4">
+                        <div class="col-12 col-md-6 col-xl-5">
                             <label for="id_colegio" class="form-label">Colegio</label>
-                            <select name="id_colegio" id="id_colegio" class="form-select">
+                            <select name="id_colegio" id="id_colegio" class="form-select" data-dashboard-filter>
                                 <option value="0">Todos los colegios</option>
                                 <?php foreach ($colegios as $colegio): ?>
                                     <option value="<?= (int)$colegio['id_colegio'] ?>" <?= (int)($filtrosDashboard['id_colegio'] ?? 0) === (int)$colegio['id_colegio'] ? 'selected' : '' ?>>
@@ -129,71 +180,116 @@ require __DIR__ . '/componentes/layout_top.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-6 col-lg-2">
-                            <label for="fecha_desde" class="form-label">Desde</label>
-                            <input type="date" name="fecha_desde" id="fecha_desde" class="form-control"
-                                   value="<?= inventario_h($filtrosDashboard['fecha_desde'] ?? '') ?>"
-                                   <?= $fechaRegistroDisponible ? '' : 'disabled' ?>>
-                        </div>
-                        <div class="col-6 col-lg-2">
-                            <label for="fecha_hasta" class="form-label">Hasta</label>
-                            <input type="date" name="fecha_hasta" id="fecha_hasta" class="form-control"
-                                   value="<?= inventario_h($filtrosDashboard['fecha_hasta'] ?? '') ?>"
-                                   <?= $fechaRegistroDisponible ? '' : 'disabled' ?>>
-                        </div>
-                        <div class="col-12 col-lg-4 d-flex gap-2 flex-wrap">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-funnel me-1"></i>Aplicar filtros
-                            </button>
-                            <a href="dashboard.php" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Limpiar
-                            </a>
-                            <?php if (!$fechaRegistroDisponible): ?>
-                                <span class="inv-dashboard-note">Filtro de fecha no disponible: equipos.fecha_registro no existe en la estructura actual.</span>
-                            <?php endif; ?>
+                        <div class="col-12 col-md-6 col-xl-4">
+                            <label for="tipo_equipo" class="form-label">Tipo de equipamiento</label>
+                            <select name="tipo_equipo" id="tipo_equipo" class="form-select" data-dashboard-filter>
+                                <option value="pc" <?= $tipoEquipoFiltro === 'pc' ? 'selected' : '' ?>>PC</option>
+                                <option value="tablet" <?= $tipoEquipoFiltro === 'tablet' ? 'selected' : '' ?>>Tablet</option>
+                                <option value="monitor" <?= $tipoEquipoFiltro === 'monitor' ? 'selected' : '' ?>>Monitores</option>
+                                <option value="impresora" <?= $tipoEquipoFiltro === 'impresora' ? 'selected' : '' ?>>Impresoras</option>
+                            </select>
                         </div>
                     </div>
-                </form>
+                </div>
 
                 <div class="inv-dashboard-grid inv-dashboard-grid--kpis mb-4">
                     <?php
                     $cardsKpi = [
-                        ['TOTAL DE PCS', $kpis['total_pcs'] ?? 0, 'Equipos visibles con filtros'],
-                        ['ACTIVOS', $kpis['activos'] ?? 0, 'Operativos actualmente'],
-                        ['SIN UBICACIÓN', $kpis['sin_ubicacion'] ?? 0, 'Pendientes de corregir'],
-                        ['SIN RESPONSABLE', $kpis['sin_responsable'] ?? 0, 'Sin usuario asignado'],
-                        ['EN REPARACIÓN', $kpis['en_reparacion'] ?? 0, 'Equipos en revisión'],
-                        ['DADOS DE BAJA', $kpis['dados_baja'] ?? 0, 'Fuera de operación'],
-                        ['INGRESADOS ESTE MES', $kpis['ingresados_mes'] ?? 0, $fechaRegistroDisponible ? 'Según fecha_registro' : 'Sin fecha_registro'],
+                        ['label' => 'TOTAL DE ' . $tipoPluralUpper, 'valor' => $kpis['total_pcs'] ?? 0, 'descripcion' => $tipoSeleccionado['plural'] . ' visibles con filtros', 'icono' => 'bi-pc-display'],
+                        ['label' => $tipoSeleccionado['activos'], 'valor' => $kpis['activos'] ?? 0, 'descripcion' => 'Operativos actualmente', 'icono' => 'bi-check-circle'],
+                        ['label' => $tipoPluralUpper . ' SIN UBICACIÓN', 'valor' => $kpis['sin_ubicacion'] ?? 0, 'descripcion' => 'Pendientes de corregir', 'icono' => 'bi-geo-alt', 'tipo_alerta' => 'sin_ubicacion'],
+                        ['label' => $tipoPluralUpper . ' SIN RESPONSABLE', 'valor' => $kpis['sin_responsable'] ?? 0, 'descripcion' => 'Sin usuario asignado', 'icono' => 'bi-person-x', 'tipo_alerta' => 'sin_responsable'],
+                        ['label' => $tipoPluralUpper . ' EN REPARACIÓN', 'valor' => $kpis['en_reparacion'] ?? 0, 'descripcion' => $tipoSeleccionado['plural'] . ' en revisión', 'icono' => 'bi-tools', 'tipo_alerta' => 'en_reparacion'],
+                        ['label' => $tipoSeleccionado['baja'], 'valor' => $kpis['dados_baja'] ?? 0, 'descripcion' => 'Fuera de operación', 'icono' => 'bi-x-octagon', 'tipo_alerta' => 'dados_baja'],
                     ];
-                    foreach ($cardsKpi as $card): ?>
+                    foreach ($cardsKpi as $card):
+                        $totalCard = (int)($card['valor'] ?? 0);
+                        $tipoAlerta = (string)($card['tipo_alerta'] ?? '');
+                        $puedeCorreo = $tipoAlerta !== '' && $totalCard > 0 && $idColegioFiltro > 0;
+                        $sinColegio = $tipoAlerta !== '' && $totalCard > 0 && $idColegioFiltro <= 0;
+                    ?>
                         <div class="inv-kpi-card">
-                            <span><?= inventario_h($card[0]) ?></span>
-                            <strong><?= inv_dash_int($card[1]) ?></strong>
-                            <small><?= inventario_h($card[2]) ?></small>
+                            <div class="inv-kpi-card__top">
+                                <span><?= inventario_h($card['label']) ?></span>
+                                <div class="dropdown">
+                                    <button type="button" class="btn inv-kpi-menu-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acciones de <?= inventario_h($card['label']) ?>">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end inv-kpi-menu">
+                                        <?php if ($puedeCorreo): ?>
+                                            <li>
+                                                <button type="button"
+                                                        class="dropdown-item inv-dashboard-alert-action"
+                                                        data-alert-type="<?= inventario_h($tipoAlerta) ?>"
+                                                        data-alert-total="<?= $totalCard ?>">
+                                                    <i class="bi bi-envelope me-2"></i>Mandar correo
+                                                </button>
+                                            </li>
+                                        <?php elseif ($sinColegio): ?>
+                                            <li><span class="dropdown-item-text text-muted">Seleccione un colegio específico para enviar correos a sus responsables.</span></li>
+                                        <?php else: ?>
+                                            <li><span class="dropdown-item-text text-muted">Sin acciones disponibles</span></li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
+                            </div>
+                            <strong><?= inv_dash_int($totalCard) ?></strong>
+                            <small><?= inventario_h($card['descripcion']) ?></small>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
                 <div class="inv-dashboard-grid inv-dashboard-grid--value mb-4">
                     <div class="inv-kpi-card inv-kpi-card--money">
-                        <span>VALOR TOTAL DEL INVENTARIO</span>
+                        <div class="inv-kpi-card__top">
+                            <span>VALOR TOTAL DEL INVENTARIO DE <?= inventario_h($tipoPluralUpper) ?></span>
+                            <button type="button" class="btn inv-kpi-menu-btn" disabled aria-label="Sin acciones disponibles">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                        </div>
                         <strong><?= inv_dash_money($valor['valor_total'] ?? 0) ?></strong>
-                        <small>Suma de equipos_compra.valor_equipo</small>
+                        <small>Consolidado de colegios activos visibles</small>
                     </div>
                     <div class="inv-kpi-card inv-kpi-card--money">
-                        <span>VALOR PROMEDIO POR EQUIPO</span>
-                        <strong><?= inv_dash_money($valor['valor_promedio'] ?? 0) ?></strong>
-                        <small>Promedio sobre equipos visibles</small>
-                    </div>
-                    <div class="inv-kpi-card inv-kpi-card--money">
-                        <span>COLEGIO CON MAYOR VALOR EN PCS</span>
+                        <div class="inv-kpi-card__top">
+                            <span>COLEGIO CON MAYOR VALOR EN <?= inventario_h($tipoPluralUpper) ?></span>
+                            <button type="button" class="btn inv-kpi-menu-btn" disabled aria-label="Sin acciones disponibles">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                        </div>
                         <strong><?= inventario_h($colegioMayor['nom_colegio'] ?? 'Sin datos') ?></strong>
                         <small><?= inv_dash_money($colegioMayor['valor_total'] ?? 0) ?></small>
                     </div>
                     <div class="inv-kpi-card inv-kpi-card--money">
-                        <span>EQUIPOS SIN VALOR REGISTRADO</span>
-                        <strong><?= inv_dash_int($valor['sin_valor'] ?? 0) ?></strong>
+                        <?php
+                        $totalSinValor = (int)($valor['sin_valor'] ?? 0);
+                        $puedeCorreoSinValor = $totalSinValor > 0 && $idColegioFiltro > 0;
+                        ?>
+                        <div class="inv-kpi-card__top">
+                            <span>EQUIPOS SIN VALOR REGISTRADO</span>
+                            <div class="dropdown">
+                                <button type="button" class="btn inv-kpi-menu-btn" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acciones de equipos sin valor">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end inv-kpi-menu">
+                                    <?php if ($puedeCorreoSinValor): ?>
+                                        <li>
+                                            <button type="button"
+                                                    class="dropdown-item inv-dashboard-alert-action"
+                                                    data-alert-type="sin_valor"
+                                                    data-alert-total="<?= $totalSinValor ?>">
+                                                <i class="bi bi-envelope me-2"></i>Mandar correo
+                                            </button>
+                                        </li>
+                                    <?php elseif ($totalSinValor > 0 && $idColegioFiltro <= 0): ?>
+                                        <li><span class="dropdown-item-text text-muted">Seleccione un colegio específico para enviar correos a sus responsables.</span></li>
+                                    <?php else: ?>
+                                        <li><span class="dropdown-item-text text-muted">Sin acciones disponibles</span></li>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
+                        </div>
+                        <strong><?= inv_dash_int($totalSinValor) ?></strong>
                         <small>Sin compra o con valor cero</small>
                     </div>
                 </div>
@@ -202,11 +298,20 @@ require __DIR__ . '/componentes/layout_top.php';
                     <div class="col-12 col-xl-7">
                         <section class="inv-dashboard-section h-100">
                             <div class="inv-dashboard-section__head">
-                                <h2>Valor del inventario PC por colegio</h2>
+                                <div class="inv-section-title">
+                                    <h2>Valor del inventario <?= inventario_h($tipoSeleccionado['plural']) ?> por colegio</h2>
+                                    <span>Valores de compra registrados</span>
+                                </div>
+                                <?= inv_dash_section_menu() ?>
                             </div>
                             <div class="inv-value-bars">
+                                <?php if ($tipoEnPreparacion): ?>
+                                    <div class="inv-empty-state">Módulo en preparación. Sin información disponible para el dashboard.</div>
+                                <?php endif; ?>
                                 <?php if (empty($valorPorColegio)): ?>
                                     <div class="inv-empty-state">No hay equipos para los filtros seleccionados.</div>
+                                <?php elseif ($valorTotalVisible <= 0): ?>
+                                    <div class="inv-empty-state">No hay valores de compra registrados para los filtros seleccionados.</div>
                                 <?php endif; ?>
                                 <?php foreach ($valorPorColegio as $fila): ?>
                                     <?php $porcentaje = ((int)$fila['valor_total'] / $maxValorColegio) * 100; ?>
@@ -226,10 +331,17 @@ require __DIR__ . '/componentes/layout_top.php';
                     <div class="col-12 col-xl-5">
                         <section class="inv-dashboard-section h-100">
                             <div class="inv-dashboard-section__head">
-                                <h2>Estado del inventario</h2>
+                                <div class="inv-section-title">
+                                    <h2>Estado del inventario <?= inventario_h($tipoSeleccionado['plural']) ?></h2>
+                                    <span><?= inventario_h($tipoSeleccionado['plural']) ?> por estado actual</span>
+                                </div>
+                                <?= inv_dash_section_menu() ?>
                             </div>
                             <div class="inv-chart-box">
                                 <canvas id="chartEstados"></canvas>
+                                <?php if (empty($chartEstados['labels'])): ?>
+                                    <div class="inv-chart-empty">Sin información disponible para el tipo seleccionado.</div>
+                                <?php endif; ?>
                             </div>
                         </section>
                     </div>
@@ -246,7 +358,7 @@ require __DIR__ . '/componentes/layout_top.php';
                                     <thead>
                                         <tr>
                                             <th>Colegio</th>
-                                            <th>Total equipos</th>
+                                            <th>Total <?= inventario_h($tipoSeleccionado['plural']) ?></th>
                                             <th>Activos</th>
                                             <th>Sin ubicación</th>
                                             <th>Sin responsable</th>
@@ -288,7 +400,11 @@ require __DIR__ . '/componentes/layout_top.php';
                     <div class="col-12 col-xl-4">
                         <section class="inv-dashboard-section h-100">
                             <div class="inv-dashboard-section__head">
-                                <h2>Distribución de equipos</h2>
+                                <div class="inv-section-title">
+                                    <h2>Distribución de <?= inventario_h($tipoSeleccionado['plural']) ?></h2>
+                                    <span>Clasificación registrada</span>
+                                </div>
+                                <?= inv_dash_section_menu() ?>
                             </div>
                             <div class="inv-chart-box">
                                 <canvas id="chartTipos"></canvas>
@@ -306,12 +422,12 @@ require __DIR__ . '/componentes/layout_top.php';
                             <div class="inv-alert-list">
                                 <?php
                                 $itemsAlerta = [
-                                    ['bi-geo-alt', $alertas['sin_ubicacion'] ?? 0, 'equipos sin ubicación asignada'],
-                                    ['bi-person-x', $alertas['sin_responsable'] ?? 0, 'equipos sin responsable'],
-                                    ['bi-qr-code', $alertas['sin_qr'] ?? 0, 'equipos sin código QR'],
-                                    ['bi-image', $alertas['sin_fotografia'] ?? 0, 'equipos sin fotografía'],
-                                    ['bi-cash-coin', $alertas['sin_valor'] ?? 0, 'equipos sin valor de compra'],
-                                    ['bi-upc-scan', $alertas['sin_serie'] ?? 0, 'equipos sin número de serie'],
+                                    ['bi-geo-alt', $alertas['sin_ubicacion'] ?? 0, $tipoSeleccionado['plural'] . ' sin ubicación asignada'],
+                                    ['bi-person-x', $alertas['sin_responsable'] ?? 0, $tipoSeleccionado['plural'] . ' sin responsable'],
+                                    ['bi-qr-code', $alertas['sin_qr'] ?? 0, $tipoSeleccionado['plural'] . ' sin código QR'],
+                                    ['bi-image', $alertas['sin_fotografia'] ?? 0, $tipoSeleccionado['plural'] . ' sin fotografía'],
+                                    ['bi-cash-coin', $alertas['sin_valor'] ?? 0, $tipoSeleccionado['plural'] . ' sin valor de compra'],
+                                    ['bi-upc-scan', $alertas['sin_serie'] ?? 0, $tipoSeleccionado['plural'] . ' sin número de serie'],
                                 ];
                                 foreach ($itemsAlerta as $alerta): ?>
                                     <div class="inv-alert-item">
@@ -328,7 +444,7 @@ require __DIR__ . '/componentes/layout_top.php';
                     <div class="col-12 col-xl-7">
                         <section class="inv-dashboard-section h-100">
                             <div class="inv-dashboard-section__head">
-                                <h2>Últimos equipos ingresados</h2>
+                                <h2>Últimos <?= inventario_h($tipoSeleccionado['plural']) ?> ingresados</h2>
                             </div>
                             <div class="table-responsive">
                                 <table class="table inv-dashboard-table align-middle">
@@ -349,7 +465,7 @@ require __DIR__ . '/componentes/layout_top.php';
                                             <td><?= inventario_h($equipo['nombre_equipo'] ?? '-') ?></td>
                                             <td><?= inventario_h($equipo['tipo_pc'] ?? '-') ?></td>
                                             <td><?= inventario_h($equipo['nom_colegio'] ?? '-') ?></td>
-                                            <td><?= inventario_h($equipo['fecha_registro'] ?? 'No disponible') ?></td>
+                                            <td><?= inventario_h($equipo['fecha_registro'] ?? '-') ?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>
@@ -363,8 +479,11 @@ require __DIR__ . '/componentes/layout_top.php';
                     <div class="col-12 col-xl-4">
                         <section class="inv-dashboard-section h-100">
                             <div class="inv-dashboard-section__head">
-                                <h2>Distribución de RAM</h2>
-                                <span><?= inv_dash_int($hardware['ram_baja'] ?? 0) ?> con menos de 8 GB</span>
+                                <div class="inv-section-title">
+                                    <h2>Distribución de RAM</h2>
+                                    <span><?= inv_dash_int($hardware['ram_baja'] ?? 0) ?> con menos de 8 GB</span>
+                                </div>
+                                <?= inv_dash_section_menu() ?>
                             </div>
                             <div class="inv-chart-box inv-chart-box--sm">
                                 <canvas id="chartRam"></canvas>
@@ -374,7 +493,11 @@ require __DIR__ . '/componentes/layout_top.php';
                     <div class="col-12 col-xl-4">
                         <section class="inv-dashboard-section h-100">
                             <div class="inv-dashboard-section__head">
-                                <h2>Sistemas operativos</h2>
+                                <div class="inv-section-title">
+                                    <h2>Sistemas operativos</h2>
+                                    <span>Versiones detectadas</span>
+                                </div>
+                                <?= inv_dash_section_menu() ?>
                             </div>
                             <div class="inv-chart-box inv-chart-box--sm">
                                 <canvas id="chartSistemas"></canvas>
@@ -388,7 +511,7 @@ require __DIR__ . '/componentes/layout_top.php';
                             </div>
                             <div class="inv-detail-value">
                                 <span><?= inventario_h($colegioSeleccionado) ?></span>
-                                <strong><?= inv_dash_int($totalGeneral['total_equipos']) ?> PC</strong>
+                                <strong><?= inv_dash_int($totalGeneral['total_equipos']) ?> <?= inventario_h($tipoSeleccionado['plural']) ?></strong>
                                 <strong><?= inv_dash_money($valor['valor_total'] ?? 0) ?></strong>
                                 <small>Promedio: <?= inv_dash_money($valor['valor_promedio'] ?? 0) ?></small>
                                 <small>Sin valor: <?= inv_dash_int($valor['sin_valor'] ?? 0) ?></small>
@@ -399,7 +522,7 @@ require __DIR__ . '/componentes/layout_top.php';
 
                 <section class="inv-dashboard-section">
                     <div class="inv-dashboard-section__head">
-                        <h2>Equipos valorizados</h2>
+                        <h2><?= inventario_h($tipoSeleccionado['plural']) ?> valorizados</h2>
                         <span><?= inventario_h($colegioSeleccionado) ?></span>
                     </div>
                     <div class="table-responsive">
@@ -437,12 +560,60 @@ require __DIR__ . '/componentes/layout_top.php';
     </div>
 </div>
 
+<div class="modal fade" id="modalAlertaInventario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content inv-dashboard-mail-modal">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAlertaInventarioLabel">Enviar alerta de inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="invMailAlertBox" class="alert alert-info d-none mb-3"></div>
+                <div class="mb-3">
+                    <label class="form-label">Responsables del colegio</label>
+                    <div class="inv-mail-recipients">
+                        <label class="form-check inv-mail-select-all">
+                            <input class="form-check-input" type="checkbox" id="invMailSelectAll">
+                            <span class="form-check-label">Seleccionar todos</span>
+                        </label>
+                        <div id="invMailRecipientsList" class="inv-mail-recipients-list">
+                            <div class="text-muted small">Cargando responsables...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="invMailSubject" class="form-label">Asunto</label>
+                    <input type="text" id="invMailSubject" class="form-control">
+                </div>
+                <div>
+                    <label for="invMailMessage" class="form-label">Mensaje</label>
+                    <textarea id="invMailMessage" class="form-control" rows="5"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnEnviarAlertaInventario">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" id="invMailSpinner" role="status" aria-hidden="true"></span>
+                    Enviar correo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 window.inventarioDashboardCharts = {
     estados: <?= json_encode($chartEstados, JSON_UNESCAPED_UNICODE) ?>,
     tipos: <?= json_encode($chartTipos, JSON_UNESCAPED_UNICODE) ?>,
     ram: <?= json_encode($chartRam, JSON_UNESCAPED_UNICODE) ?>,
     sistemas: <?= json_encode($chartSistemas, JSON_UNESCAPED_UNICODE) ?>
+};
+window.inventarioDashboardConfig = {
+    idColegio: <?= $idColegioFiltro ?>,
+    tipoEquipo: <?= json_encode($tipoEquipoFiltro, JSON_UNESCAPED_UNICODE) ?>,
+    tipoLabel: <?= json_encode($tipoSeleccionado['plural'], JSON_UNESCAPED_UNICODE) ?>,
+    endpointAlertas: 'ajax/enviar_alerta_dashboard.php',
+    alertas: <?= json_encode($alertaMeta, JSON_UNESCAPED_UNICODE) ?>
 };
 </script>
 <?php require __DIR__ . '/componentes/layout_bottom.php'; ?>

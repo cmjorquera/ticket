@@ -211,21 +211,29 @@ function cm_validar_fila(Inventario $inventario, array $datos, int $idColegio): 
         $errores[] = 'Estado es obligatorio y debe existir activo en estado_equipo.';
     }
 
-    try {
-        $ubicacion = $inventario->analizarUbicacionCargaMasiva($idColegio, $datos['id_ubicacion']);
-        $resueltos['id_ubicacion'] = (int)$ubicacion['id_ubicacion'];
-        $resueltos['ubicacion_nueva'] = (bool)$ubicacion['nueva'];
-        $resueltos['nombre_ubicacion_nueva'] = (string)$ubicacion['nombre_ubicacion'];
-        if ($resueltos['ubicacion_nueva']) {
-            $advertencias[] = $ubicacion['mensaje'] ?: 'Ubicación nueva detectada. Se creará para este colegio al insertar.';
+    $ubicacionExcel = trim((string)$datos['id_ubicacion']);
+    if ($ubicacionExcel === '') {
+        $resueltos['id_ubicacion'] = 0;
+        $advertencias[] = 'Sin ubicación. Se insertará como pendiente.';
+    } else {
+        try {
+            $ubicacion = $inventario->analizarUbicacionCargaMasiva($idColegio, $ubicacionExcel);
+            $resueltos['id_ubicacion'] = (int)$ubicacion['id_ubicacion'];
+            $resueltos['ubicacion_nueva'] = (bool)$ubicacion['nueva'];
+            $resueltos['nombre_ubicacion_nueva'] = (string)$ubicacion['nombre_ubicacion'];
+            if ($resueltos['ubicacion_nueva']) {
+                $advertencias[] = 'Ubicación nueva. Se creará al insertar.';
+            }
+        } catch (Throwable $e) {
+            $errores[] = $e->getMessage();
         }
-    } catch (Throwable $e) {
-        $errores[] = $e->getMessage();
     }
 
     $resueltos['id_usuario_asignado'] = $inventario->resolverUsuarioAsignadoCargaMasiva($idColegio, $datos['id_usuario_asignado']);
     if ($resueltos['id_usuario_asignado'] < 0) {
         $errores[] = 'Usuario asignado no existe, no esta activo o no pertenece al colegio.';
+    } elseif (trim((string)$datos['id_usuario_asignado']) === '') {
+        $advertencias[] = 'Sin responsable. Se insertará como Sin asignar.';
     }
 
     return [
@@ -362,7 +370,9 @@ try {
 
         try {
             $ubicacionEraNueva = !empty($validacion['resueltos']['ubicacion_nueva']);
-            $idUbicacion = $inventario->resolverUbicacionCargaMasiva($idColegio, $datos['id_ubicacion'], true);
+            $idUbicacion = trim((string)$datos['id_ubicacion']) === ''
+                ? 0
+                : $inventario->resolverUbicacionCargaMasiva($idColegio, $datos['id_ubicacion'], true);
             $payload = cm_payload_desde_datos(
                 $datos,
                 $idColegio,

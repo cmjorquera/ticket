@@ -107,22 +107,25 @@ require __DIR__ . '/componentes/layout_top.php';
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
                             <?php if ((int)($alcanceInventario['id_perfil'] ?? 1) >= 2): ?>
-                            <a href="dashboard.php" class="btn btn-outline-primary">
-                                <i class="bi bi-bar-chart-line me-1"></i>Ir al Dashboard
+                            <a href="dashboard.php" class="module-btn module-btn--secondary">
+                                <i class="bi bi-bar-chart-line"></i>Ir al Dashboard
                             </a>
                             <?php endif; ?>
-                            <a href="carga_masiva.php" class="btn btn-outline-primary inv-btn-carga-masiva">
-                                <i class="bi bi-cloud-upload me-1"></i>Carga masiva
+                            <a href="carga_masiva.php" class="module-btn module-btn--secondary inv-btn-carga-masiva">
+                                <i class="bi bi-cloud-upload"></i>Carga masiva
                             </a>
-                            <a href="carga_masiva_monitores.php" class="btn btn-outline-primary inv-btn-carga-masiva-mon d-none">
-                                <i class="bi bi-cloud-upload me-1"></i>Carga masiva monitores
+                            <a href="carga_masiva_monitores.php" class="module-btn module-btn--secondary inv-btn-carga-masiva-mon d-none">
+                                <i class="bi bi-cloud-upload"></i>Carga masiva monitores
                             </a>
-                            <a href="registrar_equipo.php" class="btn btn-primary" id="btnAgregarPrincipal"
+                            <button type="button" class="module-btn module-btn--secondary inv-btn-pdf-equipos" id="btnDescargarPdfInventario">
+                                <i class="bi bi-file-earmark-pdf"></i>Descargar PDF
+                            </button>
+                            <a href="registrar_equipo.php" class="module-btn module-btn--primary" id="btnAgregarPrincipal"
                                data-href-pc="registrar_equipo.php"
                                data-href-mon="registrar_monitor.php"
                                data-label-pc="Agregar PC"
                                data-label-mon="Agregar monitor">
-                                <i class="bi bi-plus-circle me-1"></i><span id="btnAgregarLabel">Agregar PC</span>
+                                <i class="bi bi-plus-circle"></i><span id="btnAgregarLabel">Agregar PC</span>
                             </a>
                         </div>
                     </div>

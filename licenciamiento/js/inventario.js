@@ -59,15 +59,15 @@
     }
 
     function crearTarjetaResumenEstado(opciones) {
-        return `<div class="lic-kpi-card fade-in" style="background: ${escapeHtml(opciones.fondo)};">
-            <div class="lic-kpi-card__content">
-                <div class="lic-kpi-card__copy">
-                    <div class="lic-kpi-card__title">${escapeHtml(opciones.titulo)}</div>
-                    <div class="lic-kpi-card__value">${escapeHtml(opciones.valor)}</div>
-                    <div class="lic-kpi-card__description">${escapeHtml(opciones.descripcion)}</div>
-                </div>
-                <div class="lic-kpi-card__icon">
-                    <i class="bi ${escapeHtml(opciones.icono)}"></i>
+        const variante = opciones.variante || 'primary';
+        return `<div class="col-12 col-md-6 col-xl-2">
+            <div class="inv-stat-card inv-stat-${escapeHtml(variante)}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <span class="inv-stat-label">${escapeHtml(opciones.titulo)}</span>
+                        <strong>${escapeHtml(opciones.valor)}</strong>
+                        <small>${escapeHtml(opciones.descripcion)}</small>
+                    </div>
                 </div>
             </div>
         </div>`;
@@ -84,13 +84,13 @@
         const suscripciones = softwareActual.filter(item => String(item.tipo_licenciamiento || '').toLowerCase() === 'suscripcion').length;
         const gratuitas = softwareActual.filter(item => String(item.tipo_licenciamiento || '').toLowerCase() === 'gratuita').length;
 
-        $wrap.html(`<div class="lic-kpi-row">
-            ${crearTarjetaResumenEstado({ titulo: 'Total programas', valor: formatoEntero(totalRegistros), descripcion: 'Registros visibles con filtros', icono: 'bi-box-seam', fondo: 'linear-gradient(135deg, #255ca8 0%, #4d88ec 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Licencias', valor: formatoEntero(totalLicencias), descripcion: 'Cantidad total visible', icono: 'bi-key', fondo: 'linear-gradient(135deg, #15835a 0%, #1fa455 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Colegios', valor: formatoEntero(totalColegios), descripcion: 'Colegios con software visible', icono: 'bi-building', fondo: 'linear-gradient(135deg, #22a8ea 0%, #47b7eb 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Suscripciones', valor: formatoEntero(suscripciones), descripcion: 'Registros por suscripcion', icono: 'bi-arrow-repeat', fondo: 'linear-gradient(135deg, #e88800 0%, #f6a300 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Gratuitos', valor: formatoEntero(gratuitas), descripcion: 'Software sin costo', icono: 'bi-gift', fondo: 'linear-gradient(135deg, #15988e 0%, #28b7ab 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Gasto total', valor: formatoMonedaUsd(totalCosto), descripcion: 'Plata total declarada', icono: 'bi-cash-stack', fondo: 'linear-gradient(135deg, #cf2228 0%, #ee3a3a 100%)' })}
+        $wrap.html(`<div class="row g-3">
+            ${crearTarjetaResumenEstado({ titulo: 'Total programas', valor: formatoEntero(totalRegistros), descripcion: 'Registros visibles con filtros', variante: 'primary' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Licencias', valor: formatoEntero(totalLicencias), descripcion: 'Cantidad total visible', variante: 'success' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Colegios', valor: formatoEntero(totalColegios), descripcion: 'Colegios con software visible', variante: 'info' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Suscripciones', valor: formatoEntero(suscripciones), descripcion: 'Registros por suscripcion', variante: 'warning' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Gratuitos', valor: formatoEntero(gratuitas), descripcion: 'Software sin costo', variante: 'teal' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Gasto total', valor: formatoMonedaUsd(totalCosto), descripcion: 'Plata total declarada', variante: 'danger' })}
         </div>
         <div class="row g-3 mt-1">
             <div class="col-12">
@@ -122,13 +122,13 @@
         const totalUrls = sitiosActuales.filter(item => String(item.url_sitio || '').trim() !== '').length;
         const gastoTotal = softwareActual.reduce((acc, item) => acc + numeroSeguro(item.costo), 0);
 
-        $wrap.html(`<div class="lic-kpi-row">
-            ${crearTarjetaResumenEstado({ titulo: 'Total sitios', valor: formatoEntero(totalSitios), descripcion: 'Sitios visibles con filtros', icono: 'bi-globe2', fondo: 'linear-gradient(135deg, #255ca8 0%, #4d88ec 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Web', valor: formatoEntero(totalWeb), descripcion: 'Portales y paginas', icono: 'bi-window', fondo: 'linear-gradient(135deg, #15835a 0%, #1fa455 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Apps', valor: formatoEntero(totalApp), descripcion: 'Aplicaciones registradas', icono: 'bi-phone', fondo: 'linear-gradient(135deg, #22a8ea 0%, #47b7eb 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Clientes', valor: formatoEntero(totalCliente), descripcion: 'Clientes o accesos locales', icono: 'bi-pc-display', fondo: 'linear-gradient(135deg, #e88800 0%, #f6a300 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Responsables', valor: formatoEntero(totalResponsables), descripcion: 'Encargados visibles', icono: 'bi-person-badge', fondo: 'linear-gradient(135deg, #15988e 0%, #28b7ab 100%)' })}
-            ${crearTarjetaResumenEstado({ titulo: 'Gasto total', valor: formatoMonedaUsd(gastoTotal), descripcion: 'Plata total declarada', icono: 'bi-cash-stack', fondo: 'linear-gradient(135deg, #cf2228 0%, #ee3a3a 100%)' })}
+        $wrap.html(`<div class="row g-3">
+            ${crearTarjetaResumenEstado({ titulo: 'Total sitios', valor: formatoEntero(totalSitios), descripcion: 'Sitios visibles con filtros', variante: 'primary' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Web', valor: formatoEntero(totalWeb), descripcion: 'Portales y paginas', variante: 'success' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Apps', valor: formatoEntero(totalApp), descripcion: 'Aplicaciones registradas', variante: 'info' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Clientes', valor: formatoEntero(totalCliente), descripcion: 'Clientes o accesos locales', variante: 'warning' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Responsables', valor: formatoEntero(totalResponsables), descripcion: 'Encargados visibles', variante: 'teal' })}
+            ${crearTarjetaResumenEstado({ titulo: 'Gasto total', valor: formatoMonedaUsd(gastoTotal), descripcion: 'Plata total declarada', variante: 'danger' })}
         </div>
         <div class="row g-3 mt-1">
             <div class="col-12">
@@ -202,7 +202,19 @@
                 { data: 'tipo_licenciamiento', className: 'celda-fecha-respuesta', render: escapeHtml },
                 { data: 'pagado_por', className: 'celda-dias-restantes', render: escapeHtml },
                 { data: 'responsable', className: 'celda-tecnico', render: data => escapeHtml(data || 'Sin asignar') },
-                { data: null, className: 'celda-opciones p-2', orderable: false, searchable: false, render: row => `<div class="d-flex flex-nowrap align-items-center justify-content-start gap-2"><a href="ver_software.php?id_software=${parseInt(row.id_software, 10)}" class="btn btn-secondary" title="Ver software"><i class="bi bi-eye"></i></a><a href="editar_software.php?id_software=${parseInt(row.id_software, 10)}" class="btn btn-primary" title="Editar software"><i class="bi bi-pencil"></i></a><button type="button" class="btn btn-danger btnEliminarSoftware" data-id="${parseInt(row.id_software, 10)}" title="Eliminar software"><i class="bi bi-trash"></i></button></div>` }
+                { data: null, className: 'celda-opciones p-2', orderable: false, searchable: false, render: row => {
+                    const id = parseInt(row.id_software, 10);
+                    return `<div class="dropdown lic-actions-dropdown">
+                        <button class="btn btn-light border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Más opciones" aria-label="Más opciones">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="ver_software.php?id_software=${id}"><i class="bi bi-eye me-2"></i>Ver</a></li>
+                            <li><a class="dropdown-item" href="editar_software.php?id_software=${id}"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                            <li><a class="dropdown-item text-danger btnEliminarSoftware" href="#" data-id="${id}"><i class="bi bi-trash me-2"></i>Eliminar</a></li>
+                        </ul>
+                    </div>`;
+                } }
             ]
         });
         loadSoftware();
@@ -233,7 +245,19 @@
                 { data: 'url_sitio', className: 'celda-dias-restantes', render: data => `<span class="inv-url-cell">${escapeHtml(data || '-')}</span>` },
                 { data: 'estado_sitio', className: 'celda-estado', render: escapeHtml },
                 { data: 'responsable', className: 'celda-tecnico', render: data => escapeHtml(data || 'Sin asignar') },
-                { data: null, className: 'celda-opciones p-2', orderable: false, searchable: false, render: row => `<div class="d-flex flex-nowrap align-items-center justify-content-start gap-2"><a href="ver_sitio_web.php?id_sitio=${parseInt(row.id_sitio, 10)}" class="btn btn-secondary" title="Ver sitio"><i class="bi bi-eye"></i></a><a href="editar_sitio_web.php?id_sitio=${parseInt(row.id_sitio, 10)}" class="btn btn-primary" title="Editar sitio"><i class="bi bi-pencil"></i></a><button type="button" class="btn btn-danger btnEliminarSitio" data-id="${parseInt(row.id_sitio, 10)}" title="Eliminar sitio"><i class="bi bi-trash"></i></button></div>` }
+                { data: null, className: 'celda-opciones p-2', orderable: false, searchable: false, render: row => {
+                    const id = parseInt(row.id_sitio, 10);
+                    return `<div class="dropdown lic-actions-dropdown">
+                        <button class="btn btn-light border" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Más opciones" aria-label="Más opciones">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="ver_sitio_web.php?id_sitio=${id}"><i class="bi bi-eye me-2"></i>Ver</a></li>
+                            <li><a class="dropdown-item" href="editar_sitio_web.php?id_sitio=${id}"><i class="bi bi-pencil me-2"></i>Editar</a></li>
+                            <li><a class="dropdown-item text-danger btnEliminarSitio" href="#" data-id="${id}"><i class="bi bi-trash me-2"></i>Eliminar</a></li>
+                        </ul>
+                    </div>`;
+                } }
             ]
         });
         loadSitios();
@@ -281,6 +305,15 @@
         });
     }
 
+    function bindActionsDropdownOverflowFix() {
+        $(document).on('show.bs.dropdown', '.lic-actions-dropdown', function () {
+            $(this).closest('.table-responsive').addClass('lic-table-responsive-overflow-visible');
+        });
+        $(document).on('hide.bs.dropdown', '.lic-actions-dropdown', function () {
+            $(this).closest('.table-responsive').removeClass('lic-table-responsive-overflow-visible');
+        });
+    }
+
     function bindFiltros() {
         $('#filtroSoftwareColegio, #filtroSoftwareUsuario, #filtroSoftwareLicencia').on('change', loadSoftware);
         $('#filtroSoftwareBusqueda').on('keyup', debounce(loadSoftware, 300));
@@ -313,7 +346,8 @@
     }
 
     function bindDelete() {
-        $(document).on('click', '.btnEliminarSoftware', function () {
+        $(document).on('click', '.btnEliminarSoftware', function (e) {
+            e.preventDefault();
             const id = $(this).data('id');
             showInventarioSwal({
                 title: 'Desactivar software',
@@ -332,7 +366,8 @@
             });
         });
 
-        $(document).on('click', '.btnEliminarSitio', function () {
+        $(document).on('click', '.btnEliminarSitio', function (e) {
+            e.preventDefault();
             const id = $(this).data('id');
             showInventarioSwal({
                 title: 'Desactivar sitio',
@@ -591,6 +626,7 @@
         initTablaSitios();
         initDashboard();
         bindFiltros();
+        bindActionsDropdownOverflowFix();
         bindFormAjax();
         bindDelete();
         bindRepeater();

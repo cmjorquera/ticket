@@ -123,14 +123,279 @@
     font-size: 1.75rem;
 }
 
+/* ============================================================
+   Hero principal de Licenciamiento (referencia visual: hero de /inventario/)
+   Clases encapsuladas con prefijo lic-module-hero para no afectar
+   .inv-hero / .inv-kicker / .inv-title / .inv-subtitle usados en otras
+   secciones del modulo (p.ej. los botones de Descargar PDF / Agregar).
+   ============================================================ */
+.lic-module-hero {
+    background: linear-gradient(110deg, #173f91 0%, #563b73 48%, #c92f2f 100%);
+    border-radius: 24px;
+    box-shadow: 0 18px 45px rgba(23, 63, 145, 0.22);
+    padding: 2rem;
+    color: #fff;
+}
+
+.lic-module-hero__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.lic-module-hero__content {
+    min-width: 0;
+    flex: 1 1 320px;
+}
+
+.lic-module-hero__badge {
+    display: inline-block;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.lic-module-hero__title {
+    color: #fff;
+    font-size: clamp(1.9rem, 2.8vw, 2.8rem);
+    font-weight: 800;
+    margin: 0.6rem 0 0.35rem;
+}
+
+.lic-module-hero__description {
+    color: rgba(255, 255, 255, 0.88);
+    max-width: 46rem;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.lic-module-hero__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.lic-module-hero__button {
+    min-height: 42px;
+    border-radius: 14px;
+    padding: 0.6rem 1.1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: #fff;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.lic-module-hero__button:hover,
+.lic-module-hero__button:focus {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+}
+
+.lic-module-hero__button--primary {
+    background: #ffffff;
+    color: #173f91;
+    border-color: #ffffff;
+}
+
+.lic-module-hero__button--primary:hover,
+.lic-module-hero__button--primary:focus {
+    background: #eef2ff;
+    color: #173f91;
+    border-color: #eef2ff;
+}
+
+@media (max-width: 768px) {
+    .lic-module-hero {
+        padding: 1.25rem;
+    }
+
+    .lic-module-hero__inner {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .lic-module-hero__actions {
+        width: 100%;
+    }
+
+    .lic-module-hero__button {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}
+
+/* ============================================================
+   Sistema de botones compartido (mismo API de clases en
+   /inventario/css/inventario.css). Paleta sobria institucional.
+   ============================================================ */
+.module-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 18px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: none;
+    border: 1px solid transparent;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.module-btn i {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.module-btn:hover,
+.module-btn:focus {
+    text-decoration: none;
+}
+
+.module-btn--primary {
+    background: #006aa6;
+    border-color: #075f9f;
+    color: #fff;
+}
+
+.module-btn--primary:hover,
+.module-btn--primary:focus {
+    background: #00598e;
+    border-color: #00598e;
+    color: #fff;
+}
+
+.module-btn--secondary {
+    background: #ffffff;
+    border-color: #cbd8e3;
+    color: #16324f;
+}
+
+.module-btn--secondary:hover,
+.module-btn--secondary:focus {
+    background: #f3f8fc;
+    border-color: #9eb7ca;
+    color: #16324f;
+}
+
+.module-btn--danger {
+    background: #ffffff;
+    border-color: #f3b9c0;
+    color: #c81f35;
+}
+
+.module-btn--danger:hover,
+.module-btn--danger:focus {
+    background: #fff1f3;
+    border-color: #e98b96;
+    color: #a81729;
+}
+
+@media (max-width: 576px) {
+    .module-btn {
+        flex: 1 1 auto;
+    }
+}
+
+.inv-stat-card {
+    height: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+    background: var(--inv-surface);
+    box-shadow: 0 4px 18px rgba(15, 76, 129, 0.06);
+    padding: 1.35rem 1.2rem;
+    border: 1px solid var(--inv-border);
+    color: var(--inv-text);
+}
+
+/* Variantes: solo diferencia el color del icono; fondo siempre blanco */
+.inv-stat-primary,
+.inv-stat-success,
+.inv-stat-info,
+.inv-stat-warning,
+.inv-stat-teal,
+.inv-stat-danger { }
+
+.inv-stat-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #8a9db5;
+}
+
+.inv-stat-card strong {
+    display: block;
+    font-size: 2.1rem;
+    line-height: 1.1;
+    font-weight: 800;
+    margin-top: 0.3rem;
+    color: var(--inv-text);
+}
+
+.inv-stat-card small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.77rem;
+    color: #8a9db5;
+}
+
+.inv-stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 1.3rem;
+    flex: 0 0 auto;
+}
+
+.inv-stat-primary .inv-stat-icon { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
+.inv-stat-success .inv-stat-icon { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.inv-stat-info    .inv-stat-icon { background: rgba(14, 165, 233, 0.13); color: #0284c7; }
+.inv-stat-warning .inv-stat-icon { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.inv-stat-teal    .inv-stat-icon { background: rgba(20, 184, 166, 0.12); color: #0f766e; }
+.inv-stat-danger  .inv-stat-icon { background: rgba(225, 29, 72, 0.10);  color: #e11d48; }
+
 .inv-colegio-pill {
     border: 1px solid rgba(15, 76, 129, 0.08);
     border-radius: 16px;
     padding: .95rem 1rem;
     display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
     justify-content: space-between;
     align-items: center;
     background: #fff;
+}
+
+.inv-colegio-pill .badge {
+    white-space: normal;
+    text-align: right;
 }
 
 .inv-main-cta {
@@ -530,7 +795,47 @@
 
 #tablaSitios td:last-child,
 #tablaSoftware td:last-child {
-    min-width: 165px;
+    min-width: 64px;
+    text-align: center;
+}
+
+.lic-actions-dropdown .btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+}
+
+.lic-actions-dropdown .dropdown-menu {
+    border-radius: 12px;
+    border: 1px solid var(--inv-border);
+    box-shadow: var(--inv-shadow);
+    padding: .4rem;
+}
+
+.lic-actions-dropdown .dropdown-item {
+    border-radius: 8px;
+    padding: .5rem .75rem;
+    font-size: .92rem;
+    display: flex;
+    align-items: center;
+}
+
+.lic-actions-dropdown .dropdown-item:hover,
+.lic-actions-dropdown .dropdown-item:focus {
+    background: var(--inv-soft);
+}
+
+.lic-actions-dropdown .dropdown-item.text-danger:hover,
+.lic-actions-dropdown .dropdown-item.text-danger:focus {
+    background: #fff1f3;
+}
+
+.table-responsive.lic-table-responsive-overflow-visible {
+    overflow: visible;
 }
 
 .inv-url-cell {
@@ -844,5 +1149,9 @@
 @media (min-width: 769px) and (max-width: 1200px) {
     .inv-user-types-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .lic-kpi-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }

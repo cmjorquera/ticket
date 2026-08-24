@@ -1,0 +1,123 @@
+# ============================================================
+# .htaccess - Modulo Inventario | SEDUC SPA
+# Hosting compartido (cPanel) - PHP 8.1
+# ============================================================
+# Ajusta limites de PHP para permitir carga masiva de archivos
+# (Excel, fotos de equipos, PDFs) y protege archivos sensibles.
+# ============================================================
+
+
+# ------------------------------------------------------------
+# 1. LIMITES DE PHP (subida de archivos y memoria)
+# ------------------------------------------------------------
+# En hosting compartido normalmente no se puede usar php_admin_value
+# (solo el administrador del servidor puede). Se usa php_value / php_flag,
+# que funcionan si el hosting corre PHP como modulo Apache (mod_php)
+# o via php.ini per-directorio. Si el hosting usa PHP-FPM/CGI,
+# estas directivas seran ignoradas y se debera usar un php.ini local
+# o el selector de PHP del panel de cPanel ("MultiPHP INI Editor").
+
+<IfModule mod_php7.c>
+    php_value upload_max_filesize 128M
+    php_value post_max_size 128M
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value max_input_vars 3000
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 128M
+    php_value post_max_size 128M
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value max_input_vars 3000
+</IfModule>
+
+# Algunos hostings exponen el modulo PHP sin numero de version fija
+<IfModule mod_php.c>
+    php_value upload_max_filesize 128M
+    php_value post_max_size 128M
+    php_value memory_limit 256M
+    php_value max_execution_time 300
+    php_value max_input_time 300
+    php_value max_input_vars 3000
+</IfModule>
+
+
+# ------------------------------------------------------------
+# 2. TIMEOUTS DEL SERVIDOR (Apache)
+# ------------------------------------------------------------
+# Complementa max_execution_time de PHP a nivel de Apache,
+# util para cargas masivas de Excel que tardan en procesarse.
+
+<IfModule mod_reqtimeout.c>
+    RequestReadTimeout header=40-60,MinRate=500 body=20-300,MinRate=500
+</IfModule>
+
+<IfModule mod_env.c>
+    SetEnv TZ America/Santiago
+</IfModule>
+
+
+# ------------------------------------------------------------
+# 3. SEGURIDAD BASICA
+# ------------------------------------------------------------
+
+# Deshabilitar listado de directorios
+Options -Indexes
+
+# Evitar que el navegador intente adivinar el tipo MIME (mitiga XSS)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Bloquear acceso directo a archivos de configuracion, backups y logs
+<FilesMatch "\.(env|log|sql|bak|ini|conf|zip|rar|gitignore|git)$">
+    Require all denied
+</FilesMatch>
+
+# Bloquear acceso a carpetas de plantillas de correo si estan dentro del modulo
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} ^/inventario/(class|modelos)/ [NC]
+    RewriteRule \.(php)$ - [L]
+</IfModule>
+
+# Evitar ejecucion de PHP dentro de carpetas de subida (si existiera una)
+# Ajustar el nombre de carpeta segun corresponda (ej: uploads/, archivos/)
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} ^/inventario/(uploads|archivos)/ [NC]
+    RewriteRule \.(php|phtml|php3|php4|php5|php7|pht)$ - [F,L]
+</IfModule>
+
+
+# ------------------------------------------------------------
+# 4. CACHE DE ARCHIVOS ESTATICOS (opcional, mejora rendimiento)
+# ------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/webp "access plus 1 month"
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
+
+
+# ------------------------------------------------------------
+# NOTAS
+# ------------------------------------------------------------
+# - Si al subir un archivo de 100M+ sigue fallando, revisa tambien:
+#     * El valor de "MultiPHP INI Editor" en cPanel (puede sobreescribir esto)
+#     * Que el hosting no use PHP-FPM (en ese caso, contactar soporte
+#       para subir los limites o crear un php.ini en esta carpeta)
+# - Prueba los valores actuales creando un archivo temporal con:
+#     <?php phpinfo(); ?>
+#   y busca "upload_max_filesize", "post_max_size" y "memory_limit".
+#   IMPORTANTE: eliminar ese archivo despues de la prueba (expone info del servidor).

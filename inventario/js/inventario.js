@@ -662,6 +662,13 @@
         });
     }
 
+    function bindDescargarPdfInventario() {
+        $('#btnDescargarPdfInventario').on('click', function () {
+            const params = new URLSearchParams(collectFilters());
+            window.open('descargar_pdf_equipos.php?' + params.toString(), '_blank');
+        });
+    }
+
     // =========================================================================
     // TABS
     // =========================================================================
@@ -672,6 +679,7 @@
         const $label    = $('#btnAgregarLabel');
         const $cargaPc  = $('.inv-btn-carga-masiva');
         const $cargaMon = $('.inv-btn-carga-masiva-mon');
+        const $pdfPc    = $('.inv-btn-pdf-equipos');
 
         function applyTab(tab) {
             if (!$btn.length) { return; }
@@ -681,16 +689,19 @@
                 if ($label.length)  { $label.text($btn.data('label-mon') || 'Agregar monitor'); }
                 if ($cargaPc.length)  { $cargaPc.addClass('d-none'); }
                 if ($cargaMon.length) { $cargaMon.removeClass('d-none'); }
+                if ($pdfPc.length)    { $pdfPc.addClass('d-none'); }
             } else if (tab === 'tablet' || tab === 'impresoras') {
                 if ($btn.length) { $btn.addClass('d-none'); }
                 if ($cargaPc.length)  { $cargaPc.addClass('d-none'); }
                 if ($cargaMon.length) { $cargaMon.addClass('d-none'); }
+                if ($pdfPc.length)    { $pdfPc.addClass('d-none'); }
             } else {
                 if ($btn.length) { $btn.removeClass('d-none'); }
                 $btn.attr('href', $btn.data('href-pc') || 'registrar_equipo.php');
                 if ($label.length)  { $label.text($btn.data('label-pc') || 'Agregar PC'); }
                 if ($cargaPc.length)  { $cargaPc.removeClass('d-none'); }
                 if ($cargaMon.length) { $cargaMon.addClass('d-none'); }
+                if ($pdfPc.length)    { $pdfPc.removeClass('d-none'); }
             }
         }
 
@@ -991,6 +1002,7 @@
         bindRepeater();
         bindPreview();
         bindImprimirQrMasivo();
+        bindDescargarPdfInventario();
         initQrBlocks(document);
         initTabBehavior();
 

@@ -33,7 +33,8 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#datosGenerales">
-                    Datos generales
+                    <span class="inv-accordion-step">1</span>
+                    <span><strong class="d-block">Datos generales</strong><small class="text-muted">Colegio, ubicación, responsable, estado e identificación del equipo.</small></span>
                 </button>
             </h2>
             <div id="datosGenerales" class="accordion-collapse collapse show" data-bs-parent="#accordionInventario">
@@ -179,7 +180,8 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosCompra">
-                    Compra y adquisicion
+                    <span class="inv-accordion-step">2</span>
+                    <span><strong class="d-block">Compra y adquisición</strong><small class="text-muted">Proveedor, documento, valor, fechas y garantía del equipo.</small></span>
                 </button>
             </h2>
             <div id="datosCompra" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
@@ -199,7 +201,8 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosHardware">
-                    Almacenamiento, procesador y software
+                    <span class="inv-accordion-step">3</span>
+                    <span><strong class="d-block">Almacenamiento, procesador y software</strong><small class="text-muted">Características técnicas, sistema operativo y componentes principales.</small></span>
                 </button>
             </h2>
             <div id="datosHardware" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
@@ -247,7 +250,8 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosRam">
-                    Memorias RAM
+                    <span class="inv-accordion-step">4</span>
+                    <span><strong class="d-block">Memorias RAM</strong><small class="text-muted">Módulos de memoria instalados y capacidad total del equipo.</small></span>
                 </button>
             </h2>
             <div id="datosRam" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
@@ -280,7 +284,8 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosMonitores">
-                    Monitores asociados al PC
+                    <span class="inv-accordion-step">5</span>
+                    <span><strong class="d-block">Monitores asociados al PC</strong><small class="text-muted">Pantallas relacionadas, conexión y datos técnicos.</small></span>
                 </button>
             </h2>
             <div id="datosMonitores" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">
@@ -316,7 +321,8 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
         <div class="accordion-item">
             <h2 class="accordion-header">
                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#datosFotos">
-                    Fotos del equipo
+                    <span class="inv-accordion-step">6</span>
+                    <span><strong class="d-block">Fotos del equipo</strong><small class="text-muted">Imágenes generales, etiquetas, conexiones y estado físico.</small></span>
                 </button>
             </h2>
             <div id="datosFotos" class="accordion-collapse collapse" data-bs-parent="#accordionInventario">

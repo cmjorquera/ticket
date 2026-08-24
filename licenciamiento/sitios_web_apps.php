@@ -17,30 +17,29 @@ require __DIR__ . '/componentes/layout_top.inc';
 
 <div class="row mx-1 mx-md-3">
     <div class="col-12">
-        <div class="card-body">
+        <div class="card shadow mb-4 px-0 border-0 inv-panel">
+            <div class="card-body p-4 p-lg-5">
 
             <!-- Cabecera -->
-            <div class="inv-hero mb-4">
-                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
-                    <div>
-                        <h1 class="inv-title mb-1">Sitios Web, Apps y Clientes</h1>
-                        <p class="inv-subtitle mb-0">
+            <div class="lic-module-hero mb-4">
+                <div class="lic-module-hero__inner">
+                    <div class="lic-module-hero__content">
+                        <span class="lic-module-hero__badge">Módulo Licenciamiento</span>
+                        <h1 class="lic-module-hero__title">Sitios Web, Apps y Clientes</h1>
+                        <p class="lic-module-hero__description">
                             Registro de tipo web, app o cliente, URL, proveedor y estado de cada servicio.
                         </p>
                     </div>
-                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                    <div class="lic-module-hero__actions">
                         <!-- Navegación entre las dos páginas -->
-                        <a href="sofware_licenciamiento.php" class="btn btn-outline-secondary btn-icon-split inv-main-cta">
-                            <span class="icon"><i class="bi bi-box-seam"></i></span>
-                            <span class="text">Software</span>
+                        <a href="sofware_licenciamiento.php" class="lic-module-hero__button">
+                            <i class="bi bi-box-seam"></i>Software
                         </a>
-                        <a href="consulta_nueva.php" class="btn btn-primary btn-icon-split inv-main-cta">
-                            <span class="icon"><i class="bi bi-search"></i></span>
-                            <span class="text">Consulta</span>
+                        <a href="consulta_nueva.php" class="lic-module-hero__button lic-module-hero__button--primary">
+                            <i class="bi bi-search"></i>Consulta
                         </a>
-                        <a href="dashboard.php" class="btn btn-secondary btn-icon-split inv-main-cta">
-                            <span class="icon"><i class="bi bi-bar-chart-line"></i></span>
-                            <span class="text">Dashboard</span>
+                        <a href="dashboard.php" class="lic-module-hero__button">
+                            <i class="bi bi-bar-chart-line"></i>Dashboard
                         </a>
                     </div>
                 </div>
@@ -71,15 +70,13 @@ require __DIR__ . '/componentes/layout_top.inc';
                         <div class="d-flex gap-2 flex-wrap">
                             <a href="descargar_pdf.php?tipo=sitios_listado"
                                id="btnPdfSitios"
-                               class="btn btn-danger btn-icon-split inv-main-cta"
+                               class="module-btn module-btn--primary"
                                target="_blank">
-                                <span class="icon"><i class="bi bi-file-earmark-pdf"></i></span>
-                                <span class="text">Descargar PDF</span>
+                                <i class="bi bi-file-earmark-pdf"></i>Descargar PDF
                             </a>
                             <a href="registrar_sitio_web.php"
-                               class="btn btn-primary btn-icon-split inv-main-cta">
-                                <span class="icon"><i class="bi bi-globe"></i></span>
-                                <span class="text">Agregar sitio web</span>
+                               class="module-btn module-btn--primary">
+                                <i class="bi bi-globe"></i>Agregar sitio web
                             </a>
                         </div>
                     </div>
@@ -151,6 +148,7 @@ require __DIR__ . '/componentes/layout_top.inc';
                 </div>
             </div>
 
+            </div>
         </div>
     </div>
 </div>

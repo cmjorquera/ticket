@@ -85,7 +85,12 @@ class Inventario
     public function obtenerColegios()
     {
         $datos = [];
-        $whereActivo = $this->columnaExiste('colegio', 'estado') ? 'WHERE estado = 1' : '';
+        $whereActivo = '';
+        if ($this->columnaExiste('colegio', 'activo')) {
+            $whereActivo = 'WHERE activo = 1';
+        } elseif ($this->columnaExiste('colegio', 'estado')) {
+            $whereActivo = 'WHERE estado = 1';
+        }
         $rs = $this->db->consulta("SELECT id_colegio, nom_colegio FROM colegio {$whereActivo} ORDER BY nom_colegio ASC");
         while ($fila = $this->db->fetch_assoc($rs)) {
             $datos[] = $fila;
@@ -106,13 +111,20 @@ class Inventario
             ];
         }
 
+        $condicionColegioActivo = '';
+        if ($this->columnaExiste('colegio', 'activo')) {
+            $condicionColegioActivo = 'AND c.activo = 1';
+        } elseif ($this->columnaExiste('colegio', 'estado')) {
+            $condicionColegioActivo = 'AND c.estado = 1';
+        }
+
         $stmt = mysqli_prepare($this->cn, "
             SELECT uc.id_colegio, uc.id_perfil, c.nom_colegio
             FROM usuario_colegio uc
             INNER JOIN colegio c ON c.id_colegio = uc.id_colegio
             WHERE uc.id_usuario = ?
               AND uc.estado = 1
-              " . ($this->columnaExiste('colegio', 'estado') ? 'AND c.estado = 1' : '') . "
+              {$condicionColegioActivo}
             ORDER BY uc.id_perfil DESC, c.nom_colegio ASC
         ");
         mysqli_stmt_bind_param($stmt, 'i', $idUsuario);
@@ -216,32 +228,17 @@ class Inventario
 
     public function normalizarFiltrosDashboard(array $filtros, array $alcance): array
     {
+        $tipoEquipo = strtolower(trim((string)($filtros['tipo_equipo'] ?? 'pc')));
+        if (!in_array($tipoEquipo, ['pc', 'tablet', 'monitor', 'impresora'], true)) {
+            $tipoEquipo = 'pc';
+        }
+
         $normalizados = [
             'id_colegio' => (int)($filtros['id_colegio'] ?? 0),
-            'fecha_desde' => trim((string)($filtros['fecha_desde'] ?? '')),
-            'fecha_hasta' => trim((string)($filtros['fecha_hasta'] ?? '')),
+            'tipo_equipo' => $tipoEquipo,
         ];
 
-        $normalizados = $this->normalizarFiltrosPorAlcance($normalizados, $alcance);
-
-        foreach (['fecha_desde', 'fecha_hasta'] as $campoFecha) {
-            if ($normalizados[$campoFecha] !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $normalizados[$campoFecha])) {
-                $normalizados[$campoFecha] = '';
-            }
-        }
-
-        if (!$this->columnaExiste('equipos', 'fecha_registro')) {
-            $normalizados['fecha_desde'] = '';
-            $normalizados['fecha_hasta'] = '';
-        }
-
-        if ($normalizados['fecha_desde'] !== '' && $normalizados['fecha_hasta'] !== '' && $normalizados['fecha_desde'] > $normalizados['fecha_hasta']) {
-            $tmp = $normalizados['fecha_desde'];
-            $normalizados['fecha_desde'] = $normalizados['fecha_hasta'];
-            $normalizados['fecha_hasta'] = $tmp;
-        }
-
-        return $normalizados;
+        return $this->normalizarFiltrosPorAlcance($normalizados, $alcance);
     }
 
     public function colegioPermitidoPorAlcance(int $idColegio, array $alcance): bool
@@ -251,6 +248,23 @@ class Inventario
         }
         $ids = array_values(array_map('intval', $alcance['ids_colegio'] ?? []));
         return in_array($idColegio, $ids, true);
+    }
+
+    private function estadoEquipoActivoExiste(int $idEstado): bool
+    {
+        if ($idEstado <= 0 || !$this->tablaExiste('estado_equipo')) {
+            return false;
+        }
+
+        $whereActivo = $this->columnaExiste('estado_equipo', 'estado') ? 'AND estado = 1' : '';
+        $stmt = mysqli_prepare($this->cn, "SELECT 1 FROM estado_equipo WHERE id_estado = ? {$whereActivo} LIMIT 1");
+        mysqli_stmt_bind_param($stmt, 'i', $idEstado);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_store_result($stmt);
+        $existe = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+
+        return $existe;
     }
 
     private function validarResponsableFiltroPorColegios(array $filtros, array $idsColegio): void
@@ -390,6 +404,62 @@ class Inventario
         return $datos;
     }
 
+    public function obtenerResponsablesCorreoDashboard(int $idColegio, array $idsUsuarios = []): array
+    {
+        if ($idColegio <= 0 || !$this->tablaExiste('usuario_colegio') || !$this->tablaExiste('usuarios')) {
+            return [];
+        }
+
+        $estadoUsuario = $this->columnaExiste('usuarios', 'estado')
+            ? "AND (u.estado = 1 OR LOWER(COALESCE(u.estado, '')) = 'activo')"
+            : '';
+
+        $idsUsuarios = array_values(array_unique(array_filter(array_map('intval', $idsUsuarios))));
+        $types = 'i';
+        $params = [$idColegio];
+        $filtroUsuarios = '';
+
+        if (!empty($idsUsuarios)) {
+            $filtroUsuarios = 'AND u.id IN (' . implode(',', array_fill(0, count($idsUsuarios), '?')) . ')';
+            $types .= str_repeat('i', count($idsUsuarios));
+            array_push($params, ...$idsUsuarios);
+        }
+
+        $stmt = mysqli_prepare(
+            $this->cn,
+            "SELECT DISTINCT
+                    u.id AS id_usuario,
+                    TRIM(CONCAT_WS(' ', u.nombre, u.apellido_paterno, u.apellido_materno)) AS nombre,
+                    TRIM(COALESCE(u.email, '')) AS email
+             FROM usuario_colegio uc
+             INNER JOIN usuarios u ON u.id = uc.id_usuario
+             WHERE uc.id_colegio = ?
+               AND uc.estado = 1
+               {$estadoUsuario}
+               {$filtroUsuarios}
+             ORDER BY u.nombre ASC, u.apellido_paterno ASC, u.apellido_materno ASC"
+        );
+        $this->bindParams($stmt, $types, $params);
+        mysqli_stmt_execute($stmt);
+        $rs = mysqli_stmt_get_result($stmt);
+
+        $datos = [];
+        while ($fila = mysqli_fetch_assoc($rs)) {
+            $email = trim((string)($fila['email'] ?? ''));
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            $datos[] = [
+                'id_usuario' => (int)($fila['id_usuario'] ?? 0),
+                'nombre' => trim((string)($fila['nombre'] ?? '')) ?: 'Usuario sin nombre',
+                'email' => $email,
+            ];
+        }
+        mysqli_stmt_close($stmt);
+
+        return $datos;
+    }
+
     public function resolverUsuarioAsignadoCargaMasiva(int $idColegio, string $valorExcel): int
     {
         $valorExcel = trim($valorExcel);
@@ -480,35 +550,37 @@ class Inventario
 
         $valorExcel = $this->normalizarNombreUbicacion($valorExcel);
         if ($valorExcel === '') {
-            throw new RuntimeException('Ubicacion es obligatoria.');
+            throw new RuntimeException('Debe indicar una ubicación o escribir una nueva.');
         }
 
-        $idUbicacion = $this->extraerIdDesdeSeleccionExcel($valorExcel);
-        if ($idUbicacion > 0) {
-            $stmt = mysqli_prepare(
-                $this->cn,
-                "SELECT id_ubicacion
-                 FROM equipo_ubicacion
-                 WHERE id_ubicacion = ?
-                   AND id_colegio = ?
-                   AND estado = 1
-                 LIMIT 1"
-            );
-            mysqli_stmt_bind_param($stmt, 'ii', $idUbicacion, $idColegio);
-            mysqli_stmt_execute($stmt);
-            $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
-            mysqli_stmt_close($stmt);
-
-            if (empty($fila['id_ubicacion'])) {
-                throw new RuntimeException('La ubicacion indicada no pertenece al colegio de la plantilla.');
+        $tieneFormatoId = preg_match('/^(\d+)\s*-\s*(.*)$/u', $valorExcel, $m);
+        if ($tieneFormatoId || ctype_digit($valorExcel)) {
+            $idUbicacion = $tieneFormatoId ? (int)$m[1] : (int)$valorExcel;
+            $nombreDespuesId = $tieneFormatoId ? trim((string)$m[2]) : '';
+            if ($tieneFormatoId && $nombreDespuesId === '') {
+                throw new RuntimeException('La ubicación indicada está incompleta. Seleccione una ubicación válida o escriba una nueva sin número adelante.');
             }
 
+            $ubicacion = $this->obtenerDatosUbicacionPorId($idUbicacion);
+            if (empty($ubicacion)) {
+                throw new RuntimeException('La ubicación indicada no existe. Seleccione una ubicación válida o escriba una nueva sin número adelante.');
+            }
+            if ((int)($ubicacion['id_colegio'] ?? 0) !== $idColegio) {
+                throw new RuntimeException('La ubicación indicada pertenece a otro colegio. Seleccione una ubicación válida o escriba una nueva sin número adelante.');
+            }
+            if ((int)($ubicacion['estado'] ?? 0) !== 1) {
+                throw new RuntimeException('La ubicación indicada está inactiva. Seleccione una ubicación activa o escriba una nueva sin número adelante.');
+            }
             return [
                 'id_ubicacion' => $idUbicacion,
                 'nueva' => false,
                 'nombre_ubicacion' => '',
                 'mensaje' => '',
             ];
+        }
+
+        if (preg_match('/^\d/u', $valorExcel)) {
+            throw new RuntimeException('Formato de ubicación inválido. Seleccione una ubicación válida o escriba una nueva sin número adelante.');
         }
 
         $idExistente = $this->buscarUbicacionPorNombreNormalizado($idColegio, $valorExcel);
@@ -548,6 +620,27 @@ class Inventario
         return ctype_digit($valorExcel) ? (int)$valorExcel : 0;
     }
 
+    private function obtenerDatosUbicacionPorId(int $idUbicacion): array
+    {
+        if ($idUbicacion <= 0 || !$this->tablaExiste('equipo_ubicacion')) {
+            return [];
+        }
+
+        $stmt = mysqli_prepare(
+            $this->cn,
+            "SELECT id_ubicacion, id_colegio, estado, nombre_ubicacion
+             FROM equipo_ubicacion
+             WHERE id_ubicacion = ?
+             LIMIT 1"
+        );
+        mysqli_stmt_bind_param($stmt, 'i', $idUbicacion);
+        mysqli_stmt_execute($stmt);
+        $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+
+        return $fila;
+    }
+
     public function obtenerEstados()
     {
         if (!$this->tablaExiste('estado_equipo')) {
@@ -555,10 +648,11 @@ class Inventario
         }
 
         $datos = [];
+        $whereEstado = $this->columnaExiste('estado_equipo', 'estado') ? 'WHERE estado = 1' : '';
         $rs = $this->db->consulta("
             SELECT id_estado, nombre_estado, color_badge
             FROM estado_equipo
-            WHERE estado = 1
+            {$whereEstado}
             ORDER BY id_estado ASC
         ");
         while ($fila = $this->db->fetch_assoc($rs)) {
@@ -687,42 +781,214 @@ class Inventario
             'ultimos' => $this->obtenerUltimosEquiposDashboard($filtros),
             'hardware' => $this->obtenerHardwareDashboard($filtros),
             'detalle_valor' => $this->obtenerDetalleValorDashboard($filtros),
-            'fecha_registro_disponible' => $this->columnaExiste('equipos', 'fecha_registro'),
+        ];
+    }
+
+    private function obtenerFuenteDashboard(array $filtros): array
+    {
+        $tipo = strtolower(trim((string)($filtros['tipo_equipo'] ?? 'pc')));
+        if (!in_array($tipo, ['pc', 'tablet', 'monitor', 'impresora'], true)) {
+            $tipo = 'pc';
+        }
+
+        if ($tipo === 'monitor') {
+            if (!$this->tablaExiste('monitores')) {
+                return ['tipo' => $tipo, 'disponible' => false];
+            }
+            $compraJoin = $this->tablaExiste('monitor_compra')
+                ? "LEFT JOIN (SELECT id_monitor, MAX(COALESCE(valor_monitor, 0)) AS valor_equipo FROM monitor_compra GROUP BY id_monitor) compra ON compra.id_monitor = m.id_monitor"
+                : '';
+            return [
+                'tipo' => $tipo,
+                'disponible' => true,
+                'tabla' => 'monitores',
+                'alias' => 'm',
+                'id' => 'm.id_monitor',
+                'colegio' => 'm.id_colegio',
+                'estado' => 'm.id_estado',
+                'ubicacion' => $this->columnaExiste('monitores', 'id_ubicacion') ? 'm.id_ubicacion' : 'NULL',
+                'usuario' => $this->columnaExiste('monitores', 'id_usuario_asignado') ? 'm.id_usuario_asignado' : 'NULL',
+                'serie' => $this->columnaExiste('monitores', 'numero_serie') ? 'm.numero_serie' : "''",
+                'nombre' => $this->columnaExiste('monitores', 'nombre_monitor') ? 'm.nombre_monitor' : "CONCAT('Monitor ', m.id_monitor)",
+                'tipo_label' => "'Monitor'",
+                'fecha' => $this->columnaExiste('monitores', 'fecha_registro') ? 'm.fecha_registro' : 'NULL',
+                'eliminado' => $this->columnaExiste('monitores', 'eliminado') ? 'm.eliminado' : null,
+                'compra_join' => $compraJoin,
+                'valor' => $this->tablaExiste('monitor_compra') ? 'COALESCE(compra.valor_equipo, 0)' : '0',
+                'extra_sql' => '',
+                'extra_types' => '',
+                'extra_params' => [],
+            ];
+        }
+
+        if ($tipo === 'impresora') {
+            return ['tipo' => $tipo, 'disponible' => false];
+        }
+
+        if (!$this->tablaExiste('equipos')) {
+            return ['tipo' => $tipo, 'disponible' => false];
+        }
+
+        $extraSql = $tipo === 'tablet'
+            ? "LOWER(COALESCE(e.tipo_pc, '')) LIKE ?"
+            : "LOWER(COALESCE(e.tipo_pc, '')) NOT LIKE ?";
+        $extraParam = $tipo === 'tablet' ? '%tablet%' : '%tablet%';
+        $compraSql = $this->subconsultaValorCompra();
+
+        return [
+            'tipo' => $tipo,
+            'disponible' => true,
+            'tabla' => 'equipos',
+            'alias' => 'e',
+            'id' => 'e.id_equipo',
+            'colegio' => 'e.id_colegio',
+            'estado' => 'e.id_estado',
+            'ubicacion' => $this->columnaExiste('equipos', 'id_ubicacion') ? 'e.id_ubicacion' : 'NULL',
+            'usuario' => $this->columnaExiste('equipos', 'id_usuario_asignado') ? 'e.id_usuario_asignado' : 'NULL',
+            'serie' => 'e.numero_serie',
+            'nombre' => $this->columnaExiste('equipos', 'nombre_personalizado')
+                ? "COALESCE(NULLIF(e.nombre_personalizado, ''), e.nombre_equipo)"
+                : 'e.nombre_equipo',
+            'tipo_label' => 'e.tipo_pc',
+            'fecha' => $this->columnaExiste('equipos', 'fecha_registro') ? 'e.fecha_registro' : 'NULL',
+            'eliminado' => $this->columnaExiste('equipos', 'eliminado') ? 'e.eliminado' : null,
+            'compra_join' => "LEFT JOIN {$compraSql} compra ON compra.id_equipo = e.id_equipo",
+            'valor' => 'COALESCE(compra.valor_equipo, 0)',
+            'extra_sql' => $extraSql,
+            'extra_types' => 's',
+            'extra_params' => [$extraParam],
+        ];
+    }
+
+    private function condicionColegioActivoDashboard(string $alias = 'c'): string
+    {
+        if ($this->columnaExiste('colegio', 'activo')) {
+            return "{$alias}.activo = 1";
+        }
+        if ($this->columnaExiste('colegio', 'estado')) {
+            return "{$alias}.estado = 1";
+        }
+        return '1=1';
+    }
+
+    private function construirWhereDashboardFuente(array $filtros, array $fuente): array
+    {
+        if (empty($fuente['disponible'])) {
+            return ['sql' => 'WHERE 1=0', 'types' => '', 'params' => []];
+        }
+
+        $alias = $fuente['alias'];
+        $condiciones = [$this->condicionColegioActivoDashboard('c')];
+        $types = '';
+        $params = [];
+
+        if (!empty($fuente['eliminado'])) {
+            $condiciones[] = "COALESCE({$fuente['eliminado']}, 0) = 0";
+        }
+        if (!empty($fuente['extra_sql'])) {
+            $condiciones[] = $fuente['extra_sql'];
+            $types .= $fuente['extra_types'];
+            $params = array_merge($params, $fuente['extra_params']);
+        }
+        if (!empty($filtros['id_colegio'])) {
+            $condiciones[] = "{$fuente['colegio']} = ?";
+            $types .= 'i';
+            $params[] = (int)$filtros['id_colegio'];
+        } elseif (!empty($filtros['ids_colegio']) && is_array($filtros['ids_colegio'])) {
+            $idsColegio = array_values(array_unique(array_filter(array_map('intval', $filtros['ids_colegio']))));
+            if (!empty($idsColegio)) {
+                $condiciones[] = "{$fuente['colegio']} IN (" . implode(',', array_fill(0, count($idsColegio), '?')) . ")";
+                $types .= str_repeat('i', count($idsColegio));
+                $params = array_merge($params, $idsColegio);
+            }
+        }
+
+        return [
+            'sql' => 'WHERE ' . implode(' AND ', $condiciones),
+            'types' => $types,
+            'params' => $params,
+        ];
+    }
+
+    private function construirWhereColegioDashboardFuente(array $filtros, array $fuente): array
+    {
+        $condicionesColegio = [$this->condicionColegioActivoDashboard('c')];
+        $condicionesEquipo = [];
+        $typesColegio = '';
+        $paramsColegio = [];
+        $typesEquipo = '';
+        $paramsEquipo = [];
+
+        if (!empty($filtros['id_colegio'])) {
+            $condicionesColegio[] = 'c.id_colegio = ?';
+            $typesColegio .= 'i';
+            $paramsColegio[] = (int)$filtros['id_colegio'];
+        } elseif (!empty($filtros['ids_colegio']) && is_array($filtros['ids_colegio'])) {
+            $idsColegio = array_values(array_unique(array_filter(array_map('intval', $filtros['ids_colegio']))));
+            if (!empty($idsColegio)) {
+                $condicionesColegio[] = 'c.id_colegio IN (' . implode(',', array_fill(0, count($idsColegio), '?')) . ')';
+                $typesColegio .= str_repeat('i', count($idsColegio));
+                $paramsColegio = array_merge($paramsColegio, $idsColegio);
+            }
+        }
+
+        if (!empty($fuente['disponible'])) {
+            if (!empty($fuente['eliminado'])) {
+                $condicionesEquipo[] = "COALESCE({$fuente['eliminado']}, 0) = 0";
+            }
+            if (!empty($fuente['extra_sql'])) {
+                $condicionesEquipo[] = $fuente['extra_sql'];
+                $typesEquipo .= $fuente['extra_types'];
+                $paramsEquipo = array_merge($paramsEquipo, $fuente['extra_params']);
+            }
+        } else {
+            $condicionesEquipo[] = '1=0';
+        }
+
+        return [
+            'sql' => 'WHERE ' . implode(' AND ', $condicionesColegio),
+            'join_equipos' => count($condicionesEquipo) ? ' AND ' . implode(' AND ', $condicionesEquipo) : '',
+            'types' => $typesEquipo . $typesColegio,
+            'params' => array_merge($paramsEquipo, $paramsColegio),
         ];
     }
 
     public function obtenerKpisDashboard(array $filtros = []): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $conFechaRegistro = $this->columnaExiste('equipos', 'fecha_registro');
-        $selectMes = $conFechaRegistro
-            ? "SUM(CASE WHEN e.fecha_registro >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND e.fecha_registro < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH) THEN 1 ELSE 0 END)"
-            : "0";
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (empty($fuente['disponible'])) {
+            return ['total_pcs' => 0, 'activos' => 0, 'sin_ubicacion' => 0, 'sin_responsable' => 0, 'en_reparacion' => 0, 'dados_baja' => 0];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
 
         $sql = "SELECT
-                    COUNT(*) AS total_pcs,
-                    SUM(CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%activo%' THEN 1 ELSE 0 END) AS activos,
-                    SUM(CASE WHEN e.id_ubicacion IS NULL OR e.id_ubicacion = 0 THEN 1 ELSE 0 END) AS sin_ubicacion,
-                    SUM(CASE WHEN e.id_usuario_asignado IS NULL OR e.id_usuario_asignado = 0 THEN 1 ELSE 0 END) AS sin_responsable,
-                    SUM(CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%repar%' THEN 1 ELSE 0 END) AS en_reparacion,
-                    SUM(CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%baja%' THEN 1 ELSE 0 END) AS dados_baja,
-                    {$selectMes} AS ingresados_mes
-                FROM equipos e
-                LEFT JOIN estado_equipo ee ON ee.id_estado = e.id_estado
+                    COUNT(DISTINCT {$fuente['id']}) AS total_pcs,
+                    COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%activo%' THEN {$fuente['id']} END) AS activos,
+                    COUNT(DISTINCT CASE WHEN {$fuente['ubicacion']} IS NULL OR {$fuente['ubicacion']} = 0 THEN {$fuente['id']} END) AS sin_ubicacion,
+                    COUNT(DISTINCT CASE WHEN {$fuente['usuario']} IS NULL OR {$fuente['usuario']} = 0 THEN {$fuente['id']} END) AS sin_responsable,
+                    COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%repar%' THEN {$fuente['id']} END) AS en_reparacion,
+                    COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%baja%' THEN {$fuente['id']} END) AS dados_baja
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                INNER JOIN colegio c ON c.id_colegio = {$fuente['colegio']}
+                LEFT JOIN estado_equipo ee ON ee.id_estado = {$fuente['estado']}
                 {$where['sql']}";
         return $this->obtenerFilaPreparada($sql, $where['types'], $where['params']);
     }
 
     public function obtenerValorDashboard(array $filtros = []): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $compraSql = $this->subconsultaValorCompra();
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (empty($fuente['disponible'])) {
+            return ['total_equipos' => 0, 'valor_total' => 0, 'sin_valor' => 0, 'valor_promedio' => 0, 'colegio_mayor_valor' => null];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
         $sql = "SELECT
-                    COUNT(*) AS total_equipos,
-                    COALESCE(SUM(CASE WHEN compra.valor_equipo > 0 THEN compra.valor_equipo ELSE 0 END), 0) AS valor_total,
-                    SUM(CASE WHEN compra.valor_equipo IS NULL OR compra.valor_equipo <= 0 THEN 1 ELSE 0 END) AS sin_valor
-                FROM equipos e
-                LEFT JOIN {$compraSql} compra ON compra.id_equipo = e.id_equipo
+                    COUNT(DISTINCT {$fuente['id']}) AS total_equipos,
+                    COALESCE(SUM(CASE WHEN {$fuente['valor']} > 0 THEN {$fuente['valor']} ELSE 0 END), 0) AS valor_total,
+                    COUNT(DISTINCT CASE WHEN {$fuente['valor']} IS NULL OR {$fuente['valor']} <= 0 THEN {$fuente['id']} END) AS sin_valor
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                INNER JOIN colegio c ON c.id_colegio = {$fuente['colegio']}
+                {$fuente['compra_join']}
                 {$where['sql']}";
         $fila = $this->obtenerFilaPreparada($sql, $where['types'], $where['params']);
         $totalEquipos = max(0, (int)($fila['total_equipos'] ?? 0));
@@ -736,16 +1002,23 @@ class Inventario
 
     public function obtenerValorPorColegioDashboard(array $filtros = []): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $compraSql = $this->subconsultaValorCompra();
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        $where = $this->construirWhereColegioDashboardFuente($filtros, $fuente);
+        if (empty($fuente['disponible'])) {
+            $sql = "SELECT c.id_colegio, c.nom_colegio, 0 AS total_equipos, 0 AS valor_total
+                    FROM colegio c
+                    {$where['sql']}
+                    ORDER BY c.nom_colegio ASC";
+            return $this->obtenerFilasPreparadas($sql, $where['types'], $where['params']);
+        }
         $sql = "SELECT
                     c.id_colegio,
                     c.nom_colegio,
-                    COUNT(*) AS total_equipos,
-                    COALESCE(SUM(CASE WHEN compra.valor_equipo > 0 THEN compra.valor_equipo ELSE 0 END), 0) AS valor_total
-                FROM equipos e
-                INNER JOIN colegio c ON c.id_colegio = e.id_colegio
-                LEFT JOIN {$compraSql} compra ON compra.id_equipo = e.id_equipo
+                    COUNT(DISTINCT {$fuente['id']}) AS total_equipos,
+                    COALESCE(SUM(CASE WHEN {$fuente['valor']} > 0 THEN {$fuente['valor']} ELSE 0 END), 0) AS valor_total
+                FROM colegio c
+                LEFT JOIN {$fuente['tabla']} {$fuente['alias']} ON {$fuente['colegio']} = c.id_colegio{$where['join_equipos']}
+                {$fuente['compra_join']}
                 {$where['sql']}
                 GROUP BY c.id_colegio, c.nom_colegio
                 ORDER BY valor_total DESC, total_equipos DESC, c.nom_colegio ASC";
@@ -754,22 +1027,30 @@ class Inventario
 
     public function obtenerResumenPorColegioDashboard(array $filtros = []): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $compraSql = $this->subconsultaValorCompra();
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        $where = $this->construirWhereColegioDashboardFuente($filtros, $fuente);
+        if (empty($fuente['disponible'])) {
+            $sql = "SELECT c.id_colegio, c.nom_colegio, 0 AS total_equipos, 0 AS activos, 0 AS sin_ubicacion,
+                           0 AS sin_responsable, 0 AS en_reparacion, 0 AS dados_baja, 0 AS valor_total
+                    FROM colegio c
+                    {$where['sql']}
+                    ORDER BY c.nom_colegio ASC";
+            return $this->obtenerFilasPreparadas($sql, $where['types'], $where['params']);
+        }
         $sql = "SELECT
                     c.id_colegio,
                     c.nom_colegio,
-                    COUNT(*) AS total_equipos,
-                    SUM(CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%activo%' THEN 1 ELSE 0 END) AS activos,
-                    SUM(CASE WHEN e.id_ubicacion IS NULL OR e.id_ubicacion = 0 THEN 1 ELSE 0 END) AS sin_ubicacion,
-                    SUM(CASE WHEN e.id_usuario_asignado IS NULL OR e.id_usuario_asignado = 0 THEN 1 ELSE 0 END) AS sin_responsable,
-                    SUM(CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%repar%' THEN 1 ELSE 0 END) AS en_reparacion,
-                    SUM(CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%baja%' THEN 1 ELSE 0 END) AS dados_baja,
-                    COALESCE(SUM(CASE WHEN compra.valor_equipo > 0 THEN compra.valor_equipo ELSE 0 END), 0) AS valor_total
-                FROM equipos e
-                INNER JOIN colegio c ON c.id_colegio = e.id_colegio
-                LEFT JOIN estado_equipo ee ON ee.id_estado = e.id_estado
-                LEFT JOIN {$compraSql} compra ON compra.id_equipo = e.id_equipo
+                    COUNT(DISTINCT {$fuente['id']}) AS total_equipos,
+                    COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%activo%' THEN {$fuente['id']} END) AS activos,
+                    COUNT(DISTINCT CASE WHEN {$fuente['ubicacion']} IS NULL OR {$fuente['ubicacion']} = 0 THEN {$fuente['id']} END) AS sin_ubicacion,
+                    COUNT(DISTINCT CASE WHEN {$fuente['usuario']} IS NULL OR {$fuente['usuario']} = 0 THEN {$fuente['id']} END) AS sin_responsable,
+                    COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%repar%' THEN {$fuente['id']} END) AS en_reparacion,
+                    COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%baja%' THEN {$fuente['id']} END) AS dados_baja,
+                    COALESCE(SUM(CASE WHEN {$fuente['valor']} > 0 THEN {$fuente['valor']} ELSE 0 END), 0) AS valor_total
+                FROM colegio c
+                LEFT JOIN {$fuente['tabla']} {$fuente['alias']} ON {$fuente['colegio']} = c.id_colegio{$where['join_equipos']}
+                LEFT JOIN estado_equipo ee ON ee.id_estado = {$fuente['estado']}
+                {$fuente['compra_join']}
                 {$where['sql']}
                 GROUP BY c.id_colegio, c.nom_colegio
                 ORDER BY c.nom_colegio ASC";
@@ -778,13 +1059,18 @@ class Inventario
 
     public function obtenerDistribucionEstadosDashboard(array $filtros = []): array
     {
-        $where = $this->construirWhereDashboard($filtros);
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (empty($fuente['disponible'])) {
+            return [];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
         $sql = "SELECT
                     COALESCE(ee.nombre_estado, 'Sin estado') AS etiqueta,
                     COALESCE(ee.color_badge, 'secondary') AS color_badge,
-                    COUNT(*) AS total
-                FROM equipos e
-                LEFT JOIN estado_equipo ee ON ee.id_estado = e.id_estado
+                    COUNT(DISTINCT {$fuente['id']}) AS total
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                INNER JOIN colegio c ON c.id_colegio = {$fuente['colegio']}
+                LEFT JOIN estado_equipo ee ON ee.id_estado = {$fuente['estado']}
                 {$where['sql']}
                 GROUP BY etiqueta, color_badge
                 ORDER BY total DESC, etiqueta ASC";
@@ -793,9 +1079,14 @@ class Inventario
 
     public function obtenerDistribucionTiposDashboard(array $filtros = []): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $sql = "SELECT COALESCE(NULLIF(TRIM(e.tipo_pc), ''), 'Sin tipo') AS etiqueta, COUNT(*) AS total
-                FROM equipos e
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (empty($fuente['disponible'])) {
+            return [];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
+        $sql = "SELECT COALESCE(NULLIF(TRIM({$fuente['tipo_label']}), ''), 'Sin tipo') AS etiqueta, COUNT(DISTINCT {$fuente['id']}) AS total
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                INNER JOIN colegio c ON c.id_colegio = {$fuente['colegio']}
                 {$where['sql']}
                 GROUP BY etiqueta
                 ORDER BY total DESC, etiqueta ASC";
@@ -804,45 +1095,51 @@ class Inventario
 
     public function obtenerAlertasDashboard(array $filtros = []): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $compraSql = $this->subconsultaValorCompra();
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (empty($fuente['disponible'])) {
+            return ['sin_ubicacion' => 0, 'sin_responsable' => 0, 'sin_qr' => 0, 'sin_fotografia' => 0, 'sin_valor' => 0, 'sin_serie' => 0];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
+        $sinQr = $fuente['tipo'] === 'monitor' ? '0' : "COUNT(DISTINCT CASE WHEN e.qr_code IS NULL OR TRIM(e.qr_code) = '' THEN {$fuente['id']} END)";
+        $sinFoto = $fuente['tipo'] === 'monitor'
+            ? ($this->tablaExiste('monitor_fotos') ? "COUNT(DISTINCT CASE WHEN NOT EXISTS (SELECT 1 FROM monitor_fotos mf WHERE mf.id_monitor = {$fuente['id']}) THEN {$fuente['id']} END)" : '0')
+            : ($this->tablaExiste('equipo_fotos') ? "COUNT(DISTINCT CASE WHEN NOT EXISTS (SELECT 1 FROM equipo_fotos ef WHERE ef.id_equipo = {$fuente['id']}) THEN {$fuente['id']} END)" : '0');
         $sql = "SELECT
-                    SUM(CASE WHEN e.id_ubicacion IS NULL OR e.id_ubicacion = 0 THEN 1 ELSE 0 END) AS sin_ubicacion,
-                    SUM(CASE WHEN e.id_usuario_asignado IS NULL OR e.id_usuario_asignado = 0 THEN 1 ELSE 0 END) AS sin_responsable,
-                    SUM(CASE WHEN e.qr_code IS NULL OR TRIM(e.qr_code) = '' THEN 1 ELSE 0 END) AS sin_qr,
-                    SUM(CASE WHEN NOT EXISTS (SELECT 1 FROM equipo_fotos ef WHERE ef.id_equipo = e.id_equipo) THEN 1 ELSE 0 END) AS sin_fotografia,
-                    SUM(CASE WHEN compra.valor_equipo IS NULL OR compra.valor_equipo <= 0 THEN 1 ELSE 0 END) AS sin_valor,
-                    SUM(CASE WHEN e.numero_serie IS NULL OR TRIM(e.numero_serie) = '' THEN 1 ELSE 0 END) AS sin_serie
-                FROM equipos e
-                LEFT JOIN {$compraSql} compra ON compra.id_equipo = e.id_equipo
+                    COUNT(DISTINCT CASE WHEN {$fuente['ubicacion']} IS NULL OR {$fuente['ubicacion']} = 0 THEN {$fuente['id']} END) AS sin_ubicacion,
+                    COUNT(DISTINCT CASE WHEN {$fuente['usuario']} IS NULL OR {$fuente['usuario']} = 0 THEN {$fuente['id']} END) AS sin_responsable,
+                    {$sinQr} AS sin_qr,
+                    {$sinFoto} AS sin_fotografia,
+                    COUNT(DISTINCT CASE WHEN {$fuente['valor']} IS NULL OR {$fuente['valor']} <= 0 THEN {$fuente['id']} END) AS sin_valor,
+                    COUNT(DISTINCT CASE WHEN {$fuente['serie']} IS NULL OR TRIM({$fuente['serie']}) = '' THEN {$fuente['id']} END) AS sin_serie
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                INNER JOIN colegio c ON c.id_colegio = {$fuente['colegio']}
+                {$fuente['compra_join']}
                 {$where['sql']}";
         return $this->obtenerFilaPreparada($sql, $where['types'], $where['params']);
     }
 
     public function obtenerUltimosEquiposDashboard(array $filtros = [], int $limite = 8): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $selectNombrePersonalizado = $this->columnaExiste('equipos', 'nombre_personalizado')
-            ? "e.nombre_personalizado,"
-            : "NULL AS nombre_personalizado,";
-        $selectFecha = $this->columnaExiste('equipos', 'fecha_registro')
-            ? "e.fecha_registro"
-            : "NULL AS fecha_registro";
-        $order = $this->columnaExiste('equipos', 'fecha_registro')
-            ? "e.fecha_registro DESC, e.id_equipo DESC"
-            : "e.id_equipo DESC";
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (empty($fuente['disponible'])) {
+            return [];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
+        $order = $fuente['fecha'] !== 'NULL'
+            ? "{$fuente['fecha']} DESC, {$fuente['id']} DESC"
+            : "{$fuente['id']} DESC";
         $limite = max(1, min(20, $limite));
 
         $sql = "SELECT
-                    e.id_equipo,
-                    {$selectNombrePersonalizado}
-                    e.nombre_equipo,
-                    e.numero_serie,
-                    e.tipo_pc,
+                    {$fuente['id']} AS id_equipo,
+                    {$fuente['nombre']} AS nombre_personalizado,
+                    {$fuente['nombre']} AS nombre_equipo,
+                    {$fuente['serie']} AS numero_serie,
+                    {$fuente['tipo_label']} AS tipo_pc,
                     c.nom_colegio,
-                    {$selectFecha}
-                FROM equipos e
-                INNER JOIN colegio c ON c.id_colegio = e.id_colegio
+                    {$fuente['fecha']} AS fecha_registro
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                INNER JOIN colegio c ON c.id_colegio = {$fuente['colegio']}
                 {$where['sql']}
                 ORDER BY {$order}
                 LIMIT {$limite}";
@@ -851,32 +1148,32 @@ class Inventario
 
     public function obtenerDetalleValorDashboard(array $filtros = [], int $limite = 25): array
     {
-        $where = $this->construirWhereDashboard($filtros);
-        $compraSql = $this->subconsultaValorCompra();
-        $selectNombrePersonalizado = $this->columnaExiste('equipos', 'nombre_personalizado')
-            ? "e.nombre_personalizado,"
-            : "NULL AS nombre_personalizado,";
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (empty($fuente['disponible'])) {
+            return [];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
         $limite = max(1, min(50, $limite));
 
         $sql = "SELECT
-                    e.id_equipo,
-                    {$selectNombrePersonalizado}
-                    e.nombre_equipo,
-                    e.numero_serie,
-                    e.tipo_pc,
+                    {$fuente['id']} AS id_equipo,
+                    {$fuente['nombre']} AS nombre_personalizado,
+                    {$fuente['nombre']} AS nombre_equipo,
+                    {$fuente['serie']} AS numero_serie,
+                    {$fuente['tipo_label']} AS tipo_pc,
                     c.nom_colegio,
                     COALESCE(eu.nombre_ubicacion, '') AS nombre_ubicacion,
                     CONCAT(ua.nombre, ' ', ua.apellido_paterno, ' ', ua.apellido_materno) AS usuario_asignado,
                     COALESCE(ee.nombre_estado, 'Sin estado') AS nombre_estado,
-                    COALESCE(compra.valor_equipo, 0) AS valor_equipo
-                FROM equipos e
-                INNER JOIN colegio c ON c.id_colegio = e.id_colegio
-                LEFT JOIN equipo_ubicacion eu ON eu.id_ubicacion = e.id_ubicacion
-                LEFT JOIN usuarios ua ON ua.id = e.id_usuario_asignado
-                LEFT JOIN estado_equipo ee ON ee.id_estado = e.id_estado
-                LEFT JOIN {$compraSql} compra ON compra.id_equipo = e.id_equipo
+                    {$fuente['valor']} AS valor_equipo
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                INNER JOIN colegio c ON c.id_colegio = {$fuente['colegio']}
+                LEFT JOIN equipo_ubicacion eu ON eu.id_ubicacion = {$fuente['ubicacion']}
+                LEFT JOIN usuarios ua ON ua.id = {$fuente['usuario']}
+                LEFT JOIN estado_equipo ee ON ee.id_estado = {$fuente['estado']}
+                {$fuente['compra_join']}
                 {$where['sql']}
-                ORDER BY valor_equipo DESC, e.id_equipo DESC
+                ORDER BY valor_equipo DESC, {$fuente['id']} DESC
                 LIMIT {$limite}";
         return $this->obtenerFilasPreparadas($sql, $where['types'], $where['params']);
     }
@@ -892,9 +1189,14 @@ class Inventario
 
     private function obtenerDistribucionRamDashboard(array $filtros): array
     {
-        $where = $this->construirWhereDashboard($filtros);
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (($fuente['tabla'] ?? '') !== 'equipos') {
+            return [];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
         $sql = "SELECT e.id_equipo, COALESCE(SUM(NULLIF(em.tamano_memoria, 0)), 0) AS ram_total
                 FROM equipos e
+                INNER JOIN colegio c ON c.id_colegio = e.id_colegio
                 LEFT JOIN equipo_memoria em ON em.id_equipo = e.id_equipo
                 {$where['sql']}
                 GROUP BY e.id_equipo";
@@ -927,11 +1229,16 @@ class Inventario
 
     private function obtenerEquiposRamBajaDashboard(array $filtros): int
     {
-        $where = $this->construirWhereDashboard($filtros);
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (($fuente['tabla'] ?? '') !== 'equipos') {
+            return 0;
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
         $sql = "SELECT COUNT(*) AS total
                 FROM (
                     SELECT e.id_equipo, COALESCE(SUM(NULLIF(em.tamano_memoria, 0)), 0) AS ram_total
                     FROM equipos e
+                    INNER JOIN colegio c ON c.id_colegio = e.id_colegio
                     LEFT JOIN equipo_memoria em ON em.id_equipo = e.id_equipo
                     {$where['sql']}
                     GROUP BY e.id_equipo
@@ -943,7 +1250,11 @@ class Inventario
 
     private function obtenerSistemasOperativosDashboard(array $filtros): array
     {
-        $where = $this->construirWhereDashboard($filtros);
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        if (($fuente['tabla'] ?? '') !== 'equipos') {
+            return [];
+        }
+        $where = $this->construirWhereDashboardFuente($filtros, $fuente);
         $sql = "SELECT
                     CASE
                         WHEN es.windows IS NULL OR TRIM(es.windows) = '' THEN 'Sin dato'
@@ -951,8 +1262,9 @@ class Inventario
                         WHEN LOWER(es.windows) LIKE '%windows 10%' THEN 'Windows 10'
                         ELSE LEFT(TRIM(es.windows), 40)
                     END AS etiqueta,
-                    COUNT(*) AS total
+                    COUNT(DISTINCT e.id_equipo) AS total
                 FROM equipos e
+                INNER JOIN colegio c ON c.id_colegio = e.id_colegio
                 LEFT JOIN equipo_software es ON es.id_equipo = e.id_equipo
                 {$where['sql']}
                 GROUP BY etiqueta
@@ -1400,25 +1712,59 @@ SQL;
 
     private function construirWhereDashboard(array $filtros): array
     {
-        $where = $this->construirWhere([
+        return $this->construirWhere([
             'id_colegio' => (int)($filtros['id_colegio'] ?? 0),
             'ids_colegio' => $filtros['ids_colegio'] ?? [],
+            'id_estado' => (int)($filtros['id_estado'] ?? 0),
         ]);
+    }
 
-        if ($this->columnaExiste('equipos', 'fecha_registro')) {
-            if (!empty($filtros['fecha_desde'])) {
-                $where['sql'] .= ($where['sql'] === '' ? 'WHERE ' : ' AND ') . 'e.fecha_registro >= ?';
-                $where['types'] .= 's';
-                $where['params'][] = $filtros['fecha_desde'] . ' 00:00:00';
-            }
-            if (!empty($filtros['fecha_hasta'])) {
-                $where['sql'] .= ($where['sql'] === '' ? 'WHERE ' : ' AND ') . 'e.fecha_registro <= ?';
-                $where['types'] .= 's';
-                $where['params'][] = $filtros['fecha_hasta'] . ' 23:59:59';
+    private function construirWhereColegioDashboard(array $filtros): array
+    {
+        $condicionesColegio = [];
+        $condicionesEquipo = [];
+        $typesColegio = '';
+        $paramsColegio = [];
+        $typesEquipo = '';
+        $paramsEquipo = [];
+
+        if ($this->columnaExiste('colegio', 'activo')) {
+            $condicionesColegio[] = 'c.activo = 1';
+        } elseif ($this->columnaExiste('colegio', 'estado')) {
+            $condicionesColegio[] = 'c.estado = 1';
+        }
+
+        if (!empty($filtros['id_colegio'])) {
+            $condicionesColegio[] = 'c.id_colegio = ?';
+            $typesColegio .= 'i';
+            $paramsColegio[] = (int)$filtros['id_colegio'];
+        } elseif (!empty($filtros['ids_colegio']) && is_array($filtros['ids_colegio'])) {
+            $idsColegio = array_values(array_unique(array_filter(array_map('intval', $filtros['ids_colegio']))));
+            if (!empty($idsColegio)) {
+                $condicionesColegio[] = 'c.id_colegio IN (' . implode(',', array_fill(0, count($idsColegio), '?')) . ')';
+                $typesColegio .= str_repeat('i', count($idsColegio));
+                foreach ($idsColegio as $idColegio) {
+                    $paramsColegio[] = $idColegio;
+                }
             }
         }
 
-        return $where;
+        if ($this->columnaExiste('equipos', 'eliminado')) {
+            $condicionesEquipo[] = 'e.eliminado = 0';
+        }
+
+        if (!empty($filtros['id_estado'])) {
+            $condicionesEquipo[] = 'e.id_estado = ?';
+            $typesEquipo .= 'i';
+            $paramsEquipo[] = (int)$filtros['id_estado'];
+        }
+
+        return [
+            'sql' => count($condicionesColegio) ? 'WHERE ' . implode(' AND ', $condicionesColegio) : '',
+            'join_equipos' => count($condicionesEquipo) ? ' AND ' . implode(' AND ', $condicionesEquipo) : '',
+            'types' => $typesEquipo . $typesColegio,
+            'params' => array_merge($paramsEquipo, $paramsColegio),
+        ];
     }
 
     private function subconsultaValorCompra(): string
@@ -1810,7 +2156,15 @@ SQL;
 
     private function claveNombreUbicacion(string $nombreUbicacion): string
     {
-        return mb_strtolower($this->normalizarNombreUbicacion($nombreUbicacion), 'UTF-8');
+        $nombreUbicacion = mb_strtolower($this->normalizarNombreUbicacion($nombreUbicacion), 'UTF-8');
+        return strtr($nombreUbicacion, [
+            'á' => 'a', 'à' => 'a', 'ä' => 'a', 'â' => 'a',
+            'é' => 'e', 'è' => 'e', 'ë' => 'e', 'ê' => 'e',
+            'í' => 'i', 'ì' => 'i', 'ï' => 'i', 'î' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ô' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'ü' => 'u', 'û' => 'u',
+            'ñ' => 'n',
+        ]);
     }
 
     private function buscarUbicacionPorNombreNormalizado(int $idColegio, string $nombreUbicacion): int
@@ -1854,7 +2208,7 @@ SQL;
     {
         $nombreUbicacion = $this->normalizarNombreUbicacion($nombreUbicacion);
         if ($nombreUbicacion === '') {
-            throw new RuntimeException('Ubicacion es obligatoria.');
+            throw new RuntimeException('Debe indicar una ubicación o escribir una nueva.');
         }
 
         $idExistente = $this->buscarUbicacionPorNombreNormalizado($idColegio, $nombreUbicacion);
@@ -1863,13 +2217,24 @@ SQL;
         }
 
         $tipoUbicacion = 'Otra';
-        $stmt = mysqli_prepare(
-            $this->cn,
-            "INSERT INTO equipo_ubicacion
-                (id_colegio, nombre_ubicacion, tipo_ubicacion, estado)
-             VALUES (?, ?, ?, 1)"
-        );
-        mysqli_stmt_bind_param($stmt, 'iss', $idColegio, $nombreUbicacion, $tipoUbicacion);
+        $descripcion = 'Creada desde carga masiva de inventario';
+        if ($this->columnaExiste('equipo_ubicacion', 'descripcion')) {
+            $stmt = mysqli_prepare(
+                $this->cn,
+                "INSERT INTO equipo_ubicacion
+                    (id_colegio, nombre_ubicacion, tipo_ubicacion, descripcion, estado)
+                 VALUES (?, ?, ?, ?, 1)"
+            );
+            mysqli_stmt_bind_param($stmt, 'isss', $idColegio, $nombreUbicacion, $tipoUbicacion, $descripcion);
+        } else {
+            $stmt = mysqli_prepare(
+                $this->cn,
+                "INSERT INTO equipo_ubicacion
+                    (id_colegio, nombre_ubicacion, tipo_ubicacion, estado)
+                 VALUES (?, ?, ?, 1)"
+            );
+            mysqli_stmt_bind_param($stmt, 'iss', $idColegio, $nombreUbicacion, $tipoUbicacion);
+        }
         mysqli_stmt_execute($stmt);
         mysqli_stmt_close($stmt);
 
