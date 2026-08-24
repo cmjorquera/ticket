@@ -1312,3 +1312,115 @@ Datos repetibles:
   - Cada fila permite un solo monitor asociado al PC.
   - Para mas memorias o monitores del mismo equipo se requiere extender el
     diseno de carga masiva o registrar los datos despues desde la edicion.
+
+17. Dashboard: pestanas de tipo de equipo, branding por colegio filtrado (Agosto 2026)
+
+- El `<select id="tipo_equipo">` de dashboard.php fue reemplazado por pestanas
+  Bootstrap (`nav nav-tabs`, una por tipo: pc/tablet/monitor/impresora).
+  SON ENLACES REALES (`<a href="dashboard.php?id_colegio=..&tipo_equipo=..">`),
+  NO `data-bs-toggle="tab"`: esta pagina no tiene un panel de contenido por
+  tipo ya cargado en el DOM (serian 4 dashboards completos a la vez). Cada
+  click recarga la pagina completa con el nuevo tipo_equipo, igual que el
+  select anterior. El select de colegio (`#id_colegio`) no cambio.
+
+- Nuevo metodo `Inventario::obtenerColoresPorColegio(int $idColegio): array`
+  (class/Inventario.php). Diferencia con el ya existente
+  `obtenerColoresColegio(int $idUsuario)`:
+    - `obtenerColoresColegio($idUsuario)` -> colores del colegio DEL USUARIO
+      EN SESION (fijo, usado en el hero de index.php/carga_masiva.php).
+    - `obtenerColoresPorColegio($idColegio)` -> colores de UN colegio
+      especifico por su id. Se usa en dashboard.php para pintar con los
+      colores del colegio que el usuario tiene SELECCIONADO EN EL FILTRO,
+      que puede no ser el suyo (p.ej. un usuario de RRHH viendo el
+      inventario de un colegio especifico).
+    - dashboard.php combina ambos: si hay colegio filtrado Y tiene
+      color_principal cargado, se usa ese; si no, se cae al del usuario en
+      sesion ($coloresActivos en dashboard.php).
+
+- Foto del colegio en el dashboard: `img/colegios/colegio_{id_colegio}.png`
+  (MISMO prefijo "colegio_" que ya usaban exportar_plantilla.php e
+  inventario.js -- NO es solo "{id}.png"). Se verifica con `is_file()` sobre
+  la ruta fisica (`dirname(__DIR__) . '/img/colegios/colegio_' . $id . '.png'`)
+  antes de mostrar el `<img>`, para no romper el layout con un icono roto si
+  el colegio no tiene foto cargada.
+
+- Logo institucional SEDUC (`/include/logo_3d_seduc.php`) se incluye en la
+  tarjeta de la barra lateral del dashboard junto al logo/nombre del
+  colegio filtrado. OJO: ese componente fue disenado para la pantalla de
+  carga (`/include/pantallaCargando.php`) y su animacion de "rayos"
+  gira en loop infinito por CSS -- al usarlo como logo estatico permanente
+  en el dashboard, se mantiene animando todo el tiempo, no solo "cargando".
+  Es una decision de diseno deliberada (se pidio explicitamente), no un bug.
+
+- Tarjetas KPI con degradado del colegio (`.inv-kpi-card--branded` en
+  dashboard.css): solo se activa cuando hay un colegio puntual filtrado
+  ($idColegioFiltro > 0) Y tiene color_principal valido. Con "Todos los
+  colegios" las tarjetas KPI quedan neutras (blancas) -- no existe "un"
+  colegio al que pintarlas. Las 3 tarjetas de valor (`.inv-kpi-card--money`)
+  NO se branded: la de "colegio con mayor valor" compara colegios entre si,
+  pintarla con los colores del colegio filtrado seria enganoso.
+
+- Colores de graficos: `$coloresChartColegio` en dashboard.php SIEMPRE
+  entrega 4 hex validos (usa el respaldo azul/naranja/aqua/amarillo si el
+  colegio no tiene sus 4 colores cargados -- muy comun que terciario/
+  cuaternario esten vacios). Se usan en:
+    - chartEstados (dona): principal/secundario/terciario/cuaternario para
+      las primeras 4 categorias; mas de 4 categorias caen a la paleta
+      generica de dashboard.js.
+    - chartScatterColegios: colorPrincipal = punto del colegio filtrado,
+      colorSecundario = resto de colegios.
+  Los colores de un colegio son un campo varchar editable por un admin, NO
+  una paleta validada por accesibilidad -- solo se valida que sea un HEX
+  con formato correcto (mismo criterio que ya usaba `$_heroBranded`), no
+  contraste ni distincion para daltonismo. El respaldo si esta validado
+  (ver css/graficos.css / skill dataviz de este proyecto).
+
+- CSS afectado: `inventario/css/dashboard.css` (`.inv-kpi-card--branded`).
+  No se toco `css/graficos.css` ni `css/cards.css` (ya cubren `.inv-card`,
+  `.chart-container`, etc. del dashboard).
+
+18. Scatter "equipos vs valor por colegio": logos por colegio + click-to-filter (Agosto 2026)
+
+- Cada punto del scatter ahora es el LOGO del colegio (no un punto de color
+  generico): fondo = color_principal del colegio, borde = color_secundario,
+  logo recortado en circulo encima. Esto es POR COLEGIO -- distinto de
+  `$coloresChartColegio` (que es del colegio FILTRADO, usado en chartEstados).
+  $chartScatterColegios en dashboard.php ahora trae, por cada punto:
+  id_colegio, colegio, x, y, imagen, color_principal, color_secundario,
+  seleccionado. Los colores de cada punto salen de
+  `Inventario::obtenerColoresPorColegio($idColegioDeEsaFila)` (una consulta
+  por colegio -- son pocos, no se pagino/batchea).
+
+- Logo: `img/colegios/colegio_{id}.png` (mismo prefijo real "colegio_" que
+  el resto del modulo). Si no existe el archivo, `imagen` queda null y el
+  punto se dibuja como circulo de color solo (sin logo).
+
+- Implementacion del logo en canvas: plugin LOCAL de Chart.js v2
+  (`scatterLogoPlugin` en dashboard.js, hook `afterDatasetsDraw`). OJO:
+  este proyecto usa Chart.js 2.9.4 (`vendor/chart.js/Chart.min.js`), NO v3/v4
+  -- la API de plugins locales, escalas (`xAxes`/`yAxes` como arrays, no
+  `x`/`y`) y opciones (`tooltips`/`legend` a nivel raiz, no anidadas en
+  `plugins: {}`) es la de v2. Un plugin local SOLO funciona si se pasa en
+  `plugins: [...]` DENTRO del objeto que recibe `new Chart(ctx, config)`;
+  asignarlo despues (`chart.config.plugins = [...]`) no funciona porque v2
+  cachea la lista de plugins de cada chart en el primer draw.
+
+- Las imagenes se precargan con `precargarImagenesScatter()` (cache por
+  URL a nivel de modulo, `scatterImageCache`) y cada `img.onload` fuerza un
+  `chart.update()` -- sin esto, el primer render queda sin logo (el <img>
+  carga async y nada redibuja el canvas solo).
+
+- Click en un punto (o en la leyenda de logos debajo del grafico) navega a
+  `dashboard.php?id_colegio={id}&tipo_equipo={tab_actual}` -- mismo patron
+  que las pestanas de tipo de equipo (enlace real, no fetch/AJAX). El punto
+  del colegio ya filtrado se dibuja con anillo extra + radio mayor
+  (`punto.seleccionado`), ya no se le cambia el color (antes el punto
+  "seleccionado" usaba un color distinto al resto; ahora cada punto ya
+  tiene su propio color de colegio, la seleccion se marca con el anillo).
+
+- Leyenda: se reemplazo la leyenda de 2 franjas ("Otros colegios" /
+  "[colegio filtrado]") por una grilla de logos+nombres (uno por colegio en
+  `$chartScatterColegios`), cada uno clickeable -- ademas de ser mas
+  informativa, es mas facil de tocar en movil que un punto pequeno del
+  canvas. CSS: `.chart-legend--colegios` / `.chart-legend__item--colegio` /
+  `.chart-legend__logo` en `css/graficos.css`.

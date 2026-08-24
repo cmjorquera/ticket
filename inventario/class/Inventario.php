@@ -342,6 +342,34 @@ class Inventario
         }
     }
 
+    // Igual que obtenerColoresColegio(), pero por id_colegio en vez de id_usuario.
+    // obtenerColoresColegio() da el branding DEL COLEGIO DEL USUARIO EN SESION
+    // (fijo, no cambia con los filtros de pantalla). Este metodo se usa donde
+    // se necesita el branding del colegio que el usuario tiene SELECCIONADO en
+    // un filtro (p.ej. dashboard.php), que puede ser distinto al suyo propio.
+    public function obtenerColoresPorColegio(int $idColegio): array
+    {
+        if ($idColegio <= 0) {
+            return [];
+        }
+        try {
+            $stmt = mysqli_prepare(
+                $this->cn,
+                "SELECT color_principal, color_secundario, color_terciario, color_cuaternario
+                 FROM colegio
+                 WHERE id_colegio = ?
+                 LIMIT 1"
+            );
+            mysqli_stmt_bind_param($stmt, 'i', $idColegio);
+            mysqli_stmt_execute($stmt);
+            $fila = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+            mysqli_stmt_close($stmt);
+            return $fila;
+        } catch (Throwable $e) {
+            return [];
+        }
+    }
+
     public function obtenerUsuarios()
     {
         $datos = [];

@@ -46,11 +46,6 @@ try {
     inventario_responder_error('Error al cargar el dashboard de inventario: ' . $e->getMessage());
 }
 
-$_c1 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_principal'] ?? '') ? $coloresColegio['color_principal'] : '';
-$_c2 = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresColegio['color_secundario'] ?? '') ? $coloresColegio['color_secundario'] : '';
-$_heroBranded = $_c1 !== '';
-$_heroStyle = $_heroBranded ? ' style="background: linear-gradient(135deg, ' . $_c1 . ' 0%, ' . ($_c2 ?: $_c1) . ' 100%)"' : '';
-
 $kpis = $dashboard['kpis'] ?? [];
 $valor = $dashboard['valor'] ?? [];
 $valorPorColegio = $dashboard['valor_por_colegio'] ?? [];
@@ -92,6 +87,67 @@ foreach ($colegios as $colegio) {
     if ((int)$colegio['id_colegio'] === (int)($filtrosDashboard['id_colegio'] ?? 0)) {
         $colegioSeleccionado = $colegio['nom_colegio'];
         break;
+    }
+}
+
+// -----------------------------------------------------------------------
+// BRANDING: colores + foto del colegio SELECCIONADO EN EL FILTRO.
+// obtenerColoresColegio($idUsuarioSession) (arriba) trae el branding del
+// colegio del USUARIO EN SESION -- fijo, no cambia al filtrar. Aqui se
+// busca el branding del colegio filtrado (puede ser otro) y, si existe,
+// tiene prioridad; si no hay colegio filtrado o no tiene colores propios,
+// se usa el del usuario en sesion como respaldo.
+// -----------------------------------------------------------------------
+$coloresColegioFiltro = $idColegioFiltro > 0 ? $inventario->obtenerColoresPorColegio($idColegioFiltro) : [];
+$coloresActivos = !empty($coloresColegioFiltro['color_principal']) ? $coloresColegioFiltro : $coloresColegio;
+
+// Los colores vienen de una columna varchar editable por un admin, no de
+// una paleta validada: solo se valida el FORMATO hex (mismo criterio que ya
+// usaba el hero de index.php/carga_masiva.php), no legibilidad ni contraste.
+// Si un color no es un hex valido, se cae al respaldo de graficos.css.
+$_hex = static function (?string $valor): string {
+    return preg_match('/^#[0-9a-fA-F]{3,8}$/', (string)$valor) ? (string)$valor : '';
+};
+$_c1 = $_hex($coloresActivos['color_principal'] ?? null);
+$_c2 = $_hex($coloresActivos['color_secundario'] ?? null);
+$_c3 = $_hex($coloresActivos['color_terciario'] ?? null);
+$_c4 = $_hex($coloresActivos['color_cuaternario'] ?? null);
+
+// Respaldo para graficos cuando el colegio no tiene 4 colores propios
+// cargados (muy comun: terciario/cuaternario suelen estar vacios). Es el
+// mismo orden azul/naranja/aqua/amarillo validado por el skill "dataviz"
+// para 4 series adyacentes (dona/barra) -- ver css/graficos.css.
+$_coloresChartFallback = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'];
+$coloresChartColegio = [
+    'principal'   => $_c1 ?: $_coloresChartFallback[0],
+    'secundario'  => $_c2 ?: $_coloresChartFallback[1],
+    'terciario'   => $_c3 ?: $_coloresChartFallback[2],
+    'cuaternario' => $_c4 ?: $_coloresChartFallback[3],
+];
+
+$_heroBranded = $_c1 !== '';
+$_heroStyle = $_heroBranded ? ' style="background: linear-gradient(135deg, ' . $_c1 . ' 0%, ' . ($_c2 ?: $_c1) . ' 100%)"' : '';
+
+// Tarjetas KPI con degradado del colegio: solo cuando hay UN colegio puntual
+// filtrado (con "Todos los colegios" no hay un solo colegio al que pintar
+// las tarjetas, y usar igual el color del usuario en sesion confundiria).
+$_kpiBranded = $_heroBranded && $idColegioFiltro > 0;
+$_kpiBrandClass = $_kpiBranded ? ' inv-kpi-card--branded' : '';
+$_kpiBrandStyle = $_kpiBranded
+    ? ' style="background: linear-gradient(135deg, ' . $_c1 . ' 0%, ' . ($_c2 ?: $_c1) . ' 100%);"'
+    : '';
+
+// Foto del colegio: archivo fisico img/colegios/colegio_{id}.png (prefijo
+// "colegio_" real segun exportar_plantilla.php e inventario.js -- NO es
+// "{id}.png" solo). Se valida existencia en disco antes de mostrar el <img>
+// para no romper el layout con un icono de imagen rota.
+$fotoColegioExiste = false;
+$fotoColegioUrl = '';
+if ($idColegioFiltro > 0) {
+    $fotoColegioRuta = dirname(__DIR__) . '/img/colegios/colegio_' . $idColegioFiltro . '.png';
+    if (is_file($fotoColegioRuta)) {
+        $fotoColegioExiste = true;
+        $fotoColegioUrl = inventario_sistema_url('img/colegios/colegio_' . $idColegioFiltro . '.png');
     }
 }
 
@@ -155,15 +211,45 @@ $filtrosSistema = $inventario->normalizarFiltrosDashboard(
 );
 $resumenSistema = $inventario->obtenerResumenPorColegioDashboard($filtrosSistema);
 
-// Scatter "equipos vs valor por colegio": un punto por colegio.
+// Scatter "equipos vs valor por colegio": un punto por colegio, con el
+// logo y los colores propios de CADA colegio (no los del colegio filtrado
+// como en $coloresChartColegio -- aca cada punto necesita SU PROPIO color,
+// para poder distinguirse entre si en el mismo grafico).
 // X = total_equipos, Y = valor_total (misma tabla/consulta que la tabla
 // "Resumen por colegio" de más abajo, solo que sin filtrar por colegio).
-$chartScatterColegios = array_map(static function ($fila) use ($idColegioFiltro) {
+$chartScatterColegios = array_map(function ($fila) use ($idColegioFiltro, $inventario) {
+    $idColegioFila = (int)($fila['id_colegio'] ?? 0);
+
+    // Colores propios del colegio de ESTA fila (obtenerColoresPorColegio,
+    // por id_colegio -- NO obtenerColoresColegio, que espera un id_usuario
+    // y devolveria datos incorrectos si se le pasa un id_colegio).
+    $coloresFila = $idColegioFila > 0 ? $inventario->obtenerColoresPorColegio($idColegioFila) : [];
+    $colorPrincipalFila = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresFila['color_principal'] ?? '')
+        ? $coloresFila['color_principal'] : '#2a78d6';
+    $colorSecundarioFila = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresFila['color_secundario'] ?? '')
+        ? $coloresFila['color_secundario'] : '#008300';
+
+    // Logo: img/colegios/colegio_{id}.png (prefijo real "colegio_", ver
+    // exportar_plantilla.php / inventario.js). Se valida en disco antes de
+    // mandar la URL al frontend -- si no existe, 'imagen' queda null y el
+    // plugin de dashboard.js cae al circulo de color solo.
+    $imagenFila = null;
+    if ($idColegioFila > 0) {
+        $rutaImagenFila = dirname(__DIR__) . '/img/colegios/colegio_' . $idColegioFila . '.png';
+        if (is_file($rutaImagenFila)) {
+            $imagenFila = inventario_sistema_url('img/colegios/colegio_' . $idColegioFila . '.png');
+        }
+    }
+
     return [
-        'colegio'      => (string)($fila['nom_colegio'] ?? ''),
-        'x'            => (int)($fila['total_equipos'] ?? 0),
-        'y'            => (int)($fila['valor_total'] ?? 0),
-        'seleccionado' => $idColegioFiltro > 0 && (int)($fila['id_colegio'] ?? 0) === $idColegioFiltro,
+        'id_colegio'       => $idColegioFila,
+        'colegio'          => (string)($fila['nom_colegio'] ?? ''),
+        'x'                => (int)($fila['total_equipos'] ?? 0),
+        'y'                => (int)($fila['valor_total'] ?? 0),
+        'imagen'           => $imagenFila,
+        'color_principal'  => $colorPrincipalFila,
+        'color_secundario' => $colorSecundarioFila,
+        'seleccionado'     => $idColegioFiltro > 0 && $idColegioFila === $idColegioFiltro,
     ];
 }, $resumenSistema);
 
@@ -255,17 +341,60 @@ require __DIR__ . '/componentes/layout_top.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-12 col-md-6 col-xl-4">
-                            <label for="tipo_equipo" class="form-label">Tipo de equipamiento</label>
-                            <select name="tipo_equipo" id="tipo_equipo" class="form-select" data-dashboard-filter>
-                                <option value="pc" <?= $tipoEquipoFiltro === 'pc' ? 'selected' : '' ?>>PC</option>
-                                <option value="tablet" <?= $tipoEquipoFiltro === 'tablet' ? 'selected' : '' ?>>Tablet</option>
-                                <option value="monitor" <?= $tipoEquipoFiltro === 'monitor' ? 'selected' : '' ?>>Monitores</option>
-                                <option value="impresora" <?= $tipoEquipoFiltro === 'impresora' ? 'selected' : '' ?>>Impresoras</option>
-                            </select>
-                        </div>
                     </div>
                 </div>
+
+                <?php
+                // Pestañas de tipo de equipo: reemplazan el <select> anterior.
+                // Son enlaces reales (no data-bs-toggle="tab"): esta pagina NO
+                // tiene un panel de contenido por tipo ya cargado en el DOM
+                // (serian 4 dashboards completos a la vez, con 4x las consultas).
+                // Cada click recarga dashboard.php con el nuevo tipo_equipo -- el
+                // mismo comportamiento que el <select> con data-dashboard-filter
+                // tenia antes, solo que ahora es un <a> normal (funciona sin JS).
+                $tabsTipoEquipo = [
+                    'pc' => ['label' => 'PC', 'icono' => 'bi-display'],
+                    'tablet' => ['label' => 'Tablet', 'icono' => 'bi-tablet'],
+                    'monitor' => ['label' => 'Monitor', 'icono' => 'bi-tv'],
+                    'impresora' => ['label' => 'Impresora', 'icono' => 'bi-printer'],
+                ];
+                ?>
+                <ul class="nav nav-tabs mb-4" role="tablist">
+                    <?php foreach ($tabsTipoEquipo as $tabValor => $tabMeta): ?>
+                        <?php $tabActivo = $tipoEquipoFiltro === $tabValor; ?>
+                        <li class="nav-item" role="presentation">
+                            <a class="nav-link<?= $tabActivo ? ' active' : '' ?>"
+                               href="dashboard.php?id_colegio=<?= $idColegioFiltro ?>&amp;tipo_equipo=<?= inventario_h($tabValor) ?>"
+                               role="tab"
+                               <?= $tabActivo ? 'aria-current="page"' : '' ?>>
+                                <i class="bi <?= inventario_h($tabMeta['icono']) ?> me-1"></i><?= inventario_h($tabMeta['label']) ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+
+                <div class="row g-4">
+                    <!-- Info + branding del colegio filtrado -->
+                    <!-- Fuente: $coloresActivos / $fotoColegioUrl / $colegioSeleccionado (calculados arriba) -->
+                    <div class="col-12 col-lg-3">
+                        <div class="inv-card text-center h-100">
+                            <?php include __DIR__ . '/../include/logo_3d_seduc.php'; ?>
+
+                            <?php if ($fotoColegioExiste): ?>
+                                <img src="<?= inventario_h($fotoColegioUrl) ?>"
+                                     alt="Foto de <?= inventario_h($colegioSeleccionado) ?>"
+                                     class="img-fluid rounded mt-3"
+                                     style="max-width: 160px; height: auto;">
+                            <?php endif; ?>
+
+                            <h5 class="mt-3 mb-0"><?= inventario_h($colegioSeleccionado) ?></h5>
+                            <?php if ($idColegioFiltro <= 0): ?>
+                                <small class="text-muted d-block mt-1">Seleccione un colegio para ver su logo y colores</small>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-9">
 
                 <div class="inv-dashboard-grid inv-dashboard-grid--kpis mb-4">
                     <?php
@@ -283,7 +412,7 @@ require __DIR__ . '/componentes/layout_top.php';
                         $puedeCorreo = $tipoAlerta !== '' && $totalCard > 0 && $idColegioFiltro > 0;
                         $sinColegio = $tipoAlerta !== '' && $totalCard > 0 && $idColegioFiltro <= 0;
                     ?>
-                        <div class="inv-kpi-card">
+                        <div class="inv-kpi-card<?= $_kpiBrandClass ?>"<?= $_kpiBrandStyle ?>>
                             <div class="inv-kpi-card__top">
                                 <span><?= inventario_h($card['label']) ?></span>
                                 <div class="dropdown">
@@ -452,10 +581,27 @@ require __DIR__ . '/componentes/layout_top.php';
                                     <div class="chart-empty-state">Sin información disponible para el tipo seleccionado.</div>
                                 <?php endif; ?>
                             </div>
-                            <?php if ($idColegioFiltro > 0): ?>
-                            <div class="chart-legend">
-                                <span class="chart-legend__item"><span class="chart-legend__swatch chart-legend__swatch--muted"></span>Otros colegios</span>
-                                <span class="chart-legend__item"><span class="chart-legend__swatch chart-legend__swatch--accent"></span><?= inventario_h($colegioSeleccionado) ?></span>
+                            <?php if (!empty($chartScatterColegios)): ?>
+                            <!-- Leyenda manual con logo/colores reales de cada colegio (cada
+                                 punto del scatter tiene SU PROPIO color, ya no hay un unico
+                                 "seleccionado vs resto"). Tambien sirve de alternativa clickeable
+                                 al punto del grafico (mas facil de tocar en movil). -->
+                            <div class="chart-legend chart-legend--colegios">
+                                <?php foreach ($chartScatterColegios as $puntoColegio): ?>
+                                    <a class="chart-legend__item chart-legend__item--colegio<?= $puntoColegio['seleccionado'] ? ' is-active' : '' ?>"
+                                       href="dashboard.php?id_colegio=<?= (int)$puntoColegio['id_colegio'] ?>&amp;tipo_equipo=<?= inventario_h($tipoEquipoFiltro) ?>"
+                                       title="Filtrar por <?= inventario_h($puntoColegio['colegio']) ?>">
+                                        <?php if ($puntoColegio['imagen']): ?>
+                                            <img src="<?= inventario_h($puntoColegio['imagen']) ?>"
+                                                 alt=""
+                                                 class="chart-legend__logo"
+                                                 style="border-color: <?= inventario_h($puntoColegio['color_secundario']) ?>; background: <?= inventario_h($puntoColegio['color_principal']) ?>;">
+                                        <?php else: ?>
+                                            <span class="chart-legend__swatch" style="background: <?= inventario_h($puntoColegio['color_principal']) ?>; border-color: <?= inventario_h($puntoColegio['color_secundario']) ?>;"></span>
+                                        <?php endif; ?>
+                                        <?= inventario_h($puntoColegio['colegio']) ?>
+                                    </a>
+                                <?php endforeach; ?>
                             </div>
                             <?php endif; ?>
                         </section>
@@ -698,6 +844,9 @@ require __DIR__ . '/componentes/layout_top.php';
                         </table>
                     </div>
                 </section>
+
+                    </div><!-- /.col-lg-9 -->
+                </div><!-- /.row (sidebar colegio + contenido) -->
             </div>
         </div>
     </div>
@@ -758,7 +907,11 @@ window.inventarioDashboardConfig = {
     tipoEquipo: <?= json_encode($tipoEquipoFiltro, JSON_UNESCAPED_UNICODE) ?>,
     tipoLabel: <?= json_encode($tipoSeleccionado['plural'], JSON_UNESCAPED_UNICODE) ?>,
     endpointAlertas: 'ajax/enviar_alerta_dashboard.php',
-    alertas: <?= json_encode($alertaMeta, JSON_UNESCAPED_UNICODE) ?>
+    alertas: <?= json_encode($alertaMeta, JSON_UNESCAPED_UNICODE) ?>,
+    // Colores del colegio filtrado, con respaldo cuando no tiene los 4
+    // cargados (ver $coloresChartColegio arriba). Usados en dashboard.js
+    // para pintar chartEstados y reforzar la serie "colegio" del scatter.
+    colores: <?= json_encode($coloresChartColegio, JSON_UNESCAPED_UNICODE) ?>
 };
 </script>
 <?php require __DIR__ . '/componentes/layout_bottom.php'; ?>

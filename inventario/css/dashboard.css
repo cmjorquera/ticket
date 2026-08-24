@@ -73,6 +73,40 @@
     font-size: 1.38rem;
 }
 
+/* Tarjeta KPI con degradado del colegio filtrado (dashboard.php, $_kpiBranded).
+   Mismo criterio que .inv-hero--branded en inventario.css: texto blanco,
+   controles adaptados a fondo oscuro/saturado. El fondo en si es inline
+   (color dinamico por colegio), esta clase solo resuelve el contraste. */
+.inv-kpi-card--branded {
+    border-color: transparent;
+}
+
+.inv-kpi-card--branded span,
+.inv-kpi-card--branded strong,
+.inv-kpi-card--branded small {
+    color: #fff;
+}
+
+.inv-kpi-card--branded span {
+    opacity: .92;
+}
+
+.inv-kpi-card--branded small {
+    opacity: .85;
+}
+
+.inv-kpi-card--branded .inv-kpi-menu-btn {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.inv-kpi-card--branded .inv-kpi-menu-btn:hover,
+.inv-kpi-card--branded .inv-kpi-menu-btn:focus,
+.inv-kpi-card--branded .dropdown.show .inv-kpi-menu-btn {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.30);
+}
+
 .inv-kpi-menu-btn {
     width: 34px;
     height: 34px;

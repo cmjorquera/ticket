@@ -136,20 +136,35 @@ FUENTE PHP: $chartScatterColegios, calculado en dashboard.php a partir de
   No es una consulta SQL nueva: es la funcion existente
   obtenerResumenPorColegioDashboard(), reutilizada.
 
-ESTRUCTURA POR PUNTO:
-  ['colegio' => nom_colegio, 'x' => total_equipos, 'y' => valor_total,
-   'seleccionado' => true/false]
+ESTRUCTURA POR PUNTO (actualizada — version con logos, Agosto 2026):
+  ['id_colegio' => int, 'colegio' => nom_colegio, 'x' => total_equipos,
+   'y' => valor_total, 'imagen' => url o null, 'color_principal' => hex,
+   'color_secundario' => hex, 'seleccionado' => true/false]
 
   x = total_equipos y y = valor_total vienen literalmente de las mismas
   columnas que la tabla "Resumen por colegio" (columna 2 y 8).
 
-  'seleccionado' marca el punto del colegio activo en el filtro (si hay
-  uno), y se pinta en un color distinto (verde) sobre el resto (azul) --
-  ver .chart-legend en la seccion. Sin filtro de colegio, todos los puntos
-  van del mismo color (no hay "seleccionado" que resaltar).
+  'imagen', 'color_principal' y 'color_secundario' son PROPIOS de cada
+  colegio de la fila (no del colegio filtrado): imagen sale de
+  img/colegios/colegio_{id}.png (null si el archivo no existe), colores
+  salen de Inventario::obtenerColoresPorColegio($id_colegio_de_la_fila),
+  con respaldo #2a78d6/#008300 si el colegio no tiene colores cargados.
 
-TOOLTIP: nombre del colegio + "N equipos - $valor" (dashboard.js,
-  createScatterChart).
+  Cada punto se dibuja en dashboard.js (scatterLogoPlugin, plugin local de
+  Chart.js) como: circulo de fondo color_principal -> logo recortado en
+  circulo (si 'imagen' existe y ya cargo) -> borde color_secundario. El
+  punto 'seleccionado' (colegio activo en el filtro) se dibuja igual pero
+  con un anillo extra alrededor -- ya NO se le cambia el color (antes de
+  esta iteracion, "seleccionado" pintaba el punto de otro color; ahora cada
+  punto ya tiene su propio color de colegio todo el tiempo).
+
+  CLICK en un punto (o en un item de la leyenda de logos debajo del
+  grafico) navega a dashboard.php?id_colegio={id}&tipo_equipo={tab_actual}
+  -- filtra el dashboard completo por ese colegio.
+
+TOOLTIP: nombre del colegio (+ "(filtro actual)" si es el seleccionado),
+  "N equipos", "$valor" y una linea "Click para filtrar por este colegio"
+  (dashboard.js, createScatterChart).
 
 ================================================================================
 5. GRAFICO PIE/DONA — Distribucion por estado (YA EXISTIA, sin cambios)

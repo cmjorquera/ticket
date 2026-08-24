@@ -7,6 +7,11 @@
     var alertaActual = null;
     var chartInstances = {};
 
+    // Cache de <img> del scatter de colegios (logo por id_colegio). Vive a
+    // nivel de modulo para no recargar la imagen si el chart se redibuja
+    // (p.ej. al hacer resize) dentro de la misma carga de pagina.
+    var scatterImageCache = {};
+
     function chartColors(count) {
         var palette = ['#0d6efd', '#3a9131', '#f2b705', '#dc3545', '#20c997', '#6f42c1', '#0dcaf0', '#6c757d'];
         var colors = [];
@@ -16,7 +21,23 @@
         return colors;
     }
 
-    function createChart(id, type, source) {
+    // Colores del colegio filtrado (principal/secundario/terciario/cuaternario),
+    // con respaldo ya resuelto en PHP ($coloresChartColegio) -- siempre vienen
+    // 4 hex validos, nunca vacio. Para mas de 4 series se completa con la
+    // paleta generica chartColors().
+    function colegioColorPalette(count) {
+        var c = config.colores || {};
+        var propios = [c.principal, c.secundario, c.terciario, c.cuaternario].filter(Boolean);
+        if (!propios.length) { return chartColors(count); }
+        var respaldo = chartColors(count);
+        var colors = [];
+        for (var i = 0; i < count; i += 1) {
+            colors.push(i < propios.length ? propios[i] : respaldo[i]);
+        }
+        return colors;
+    }
+
+    function createChart(id, type, source, colorPalette) {
         if (typeof Chart === 'undefined' || !source || !source.labels || !source.labels.length) {
             return;
         }
@@ -26,7 +47,7 @@
         }
 
         var isBar = type === 'bar';
-        var colors = isBar ? source.labels.map(function () { return '#3a9131'; }) : chartColors(source.labels.length);
+        var colors = isBar ? source.labels.map(function () { return '#3a9131'; }) : (colorPalette || chartColors(source.labels.length));
         if (chartInstances[id]) {
             chartInstances[id].destroy();
         }
@@ -136,44 +157,142 @@
     // Scatter "equipos vs valor por colegio". Un solo punto por colegio;
     // si hay un colegio filtrado, se resalta en una serie aparte (no se
     // codifica identidad por color salvo para ese caso puntual).
+    // Precarga los logos de colegio usados en el scatter y pide un redibujo
+    // del chart cada vez que uno termina de cargar (si no, Chart.js ya
+    // pinto el frame inicial sin la imagen -- <img>.onload es asincronico
+    // y nada lo redibuja solo). Cachea por URL: si dos colegios repiten
+    // imagen (no deberia pasar, pero por si acaso) no la pide dos veces.
+    function precargarImagenesScatter(id, points) {
+        points.forEach(function (p) {
+            if (!p.imagen) { return; }
+            if (scatterImageCache[p.imagen]) { return; }
+            var img = new Image();
+            scatterImageCache[p.imagen] = { img: img, cargada: false };
+            img.onload = function () {
+                scatterImageCache[p.imagen].cargada = true;
+                if (chartInstances[id]) { chartInstances[id].update(); }
+            };
+            img.onerror = function () {
+                // Imagen rota/404: se cae al circulo de color (ver plugin).
+                delete scatterImageCache[p.imagen];
+            };
+            img.src = p.imagen;
+        });
+    }
+
+    // Plugin Chart.js v2 (proyecto usa Chart.js 2.9.4 -- OJO si se
+    // actualiza la libreria, la firma de plugins locales cambia en v3+).
+    // Dibuja, sobre cada punto del scatter, un circulo con el logo del
+    // colegio recortado (clip circular), fondo color_principal y borde
+    // color_secundario. Sin imagen (o mientras carga) cae al circulo solo.
+    var scatterLogoPlugin = {
+        afterDatasetsDraw: function (chart) {
+            var ctx = chart.ctx;
+            var dataset = chart.data.datasets[0];
+            var meta = chart.getDatasetMeta(0);
+
+            meta.data.forEach(function (element, index) {
+                var point = dataset.data[index];
+                var pos = element.getCenterPoint ? element.getCenterPoint() : { x: element._model.x, y: element._model.y };
+                var radio = (dataset.pointRadius && dataset.pointRadius[index]) || 14;
+                var colorPrincipal = point.color_principal || '#2a78d6';
+                var colorSecundario = point.color_secundario || '#008300';
+                var cache = point.imagen ? scatterImageCache[point.imagen] : null;
+
+                ctx.save();
+
+                // Fondo (color_principal)
+                ctx.fillStyle = colorPrincipal;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radio, 0, 2 * Math.PI);
+                ctx.fill();
+
+                if (cache && cache.cargada) {
+                    // Logo recortado en circulo
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, radio - 2, 0, 2 * Math.PI);
+                    ctx.clip();
+                    ctx.drawImage(cache.img, pos.x - (radio - 2), pos.y - (radio - 2), (radio - 2) * 2, (radio - 2) * 2);
+                    ctx.restore();
+                }
+
+                // Borde (color_secundario). El colegio filtrado lleva un
+                // segundo anillo exterior para distinguirse del resto.
+                ctx.lineWidth = point.seleccionado ? 4 : 2.5;
+                ctx.strokeStyle = colorSecundario;
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, radio, 0, 2 * Math.PI);
+                ctx.stroke();
+
+                if (point.seleccionado) {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = colorPrincipal;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, radio + 4, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            });
+        }
+    };
+
+    // Scatter "equipos vs valor por colegio": cada punto es el logo del
+    // colegio (fondo color_principal, borde color_secundario -- ver
+    // scatterLogoPlugin arriba), clickeable para filtrar el dashboard por
+    // ese colegio. $chartScatterColegios en PHP ya trae id_colegio, x, y,
+    // imagen e id_colegio validados (con respaldo si el colegio no tiene
+    // colores/foto propios).
     function createScatterChart(id, points) {
         if (typeof Chart === 'undefined' || !points || !points.length) { return; }
         var el = document.getElementById(id);
         if (!el) { return; }
         if (chartInstances[id]) { chartInstances[id].destroy(); }
 
-        var colorBase = '#2a78d6';
-        var colorSeleccionado = '#008300';
+        precargarImagenesScatter(id, points);
 
-        var normales = points.filter(function (p) { return !p.seleccionado; });
-        var seleccionados = points.filter(function (p) { return p.seleccionado; });
+        var radios = points.map(function (p) { return p.seleccionado ? 18 : 14; });
+        var hoverRadios = points.map(function (p) { return p.seleccionado ? 22 : 18; });
 
-        var datasets = [{
-            label: 'Colegios',
-            data: normales.map(function (p) { return { x: p.x, y: p.y, colegio: p.colegio }; }),
-            backgroundColor: colorBase,
-            borderColor: colorBase,
-            pointRadius: 6,
-            pointHoverRadius: 8
-        }];
-        if (seleccionados.length) {
-            datasets.push({
-                label: 'Colegio seleccionado',
-                data: seleccionados.map(function (p) { return { x: p.x, y: p.y, colegio: p.colegio }; }),
-                backgroundColor: colorSeleccionado,
-                borderColor: colorSeleccionado,
-                pointRadius: 8,
-                pointHoverRadius: 10
-            });
-        }
-
-        chartInstances[id] = new Chart(el, {
+        var chart = new Chart(el, {
             type: 'scatter',
-            data: { datasets: datasets },
+            // Plugin LOCAL (solo este chart, no global): debe ir aca, en el
+            // objeto de config que recibe "new Chart(...)". Registrarlo
+            // despues de construido el chart (chart.config.plugins = ...)
+            // NO funciona en Chart.js v2: la lista de plugins de cada chart
+            // se cachea en la primera pasada y no vuelve a leerse.
+            plugins: [scatterLogoPlugin],
+            data: {
+                datasets: [{
+                    label: 'Colegios',
+                    data: points, // cada item ya trae x, y, colegio, imagen, colores, seleccionado
+                    backgroundColor: 'transparent', // el plugin pinta el fondo real por punto
+                    borderColor: 'transparent',     // idem el borde -- ver scatterLogoPlugin
+                    pointRadius: radios,
+                    pointHoverRadius: hoverRadios
+                }]
+            },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                legend: { display: false }, // leyenda HTML propia (.chart-legend) en dashboard.php
+                legend: { display: false }, // leyenda con logos propia debajo del chart (dashboard.php)
+                onHover: function (event, activeElements) {
+                    // Se usa "el" (el <canvas>, cerrado por closure) en vez de
+                    // event.target: en Chart.js v2 el evento de onHover no
+                    // siempre expone .target de forma confiable entre navegadores.
+                    el.style.cursor = activeElements.length ? 'pointer' : 'default';
+                },
+                // Click en un punto = filtrar el dashboard por ese colegio.
+                // Se preserva el tab de tipo_equipo activo (config.tipoEquipo).
+                onClick: function (event, activeElements) {
+                    if (!activeElements || !activeElements.length) { return; }
+                    var idx = activeElements[0]._index;
+                    var punto = points[idx];
+                    if (!punto || !punto.id_colegio) { return; }
+                    window.location.href = 'dashboard.php?id_colegio=' + punto.id_colegio +
+                        '&tipo_equipo=' + encodeURIComponent(config.tipoEquipo || 'pc');
+                },
                 scales: {
                     xAxes: [{
                         scaleLabel: { display: true, labelString: 'Cantidad de equipos', fontColor: '#94a3b8' },
@@ -197,16 +316,18 @@
                         title: function (items, chartData) {
                             var item = items[0];
                             var point = chartData.datasets[item.datasetIndex].data[item.index];
-                            return point.colegio;
+                            return point.colegio + (point.seleccionado ? ' (filtro actual)' : '');
                         },
                         label: function (item, chartData) {
                             var point = chartData.datasets[item.datasetIndex].data[item.index];
-                            return point.x + ' equipos · ' + formatMoney(point.y);
+                            return [point.x + ' equipos', formatMoney(point.y), 'Click para filtrar por este colegio'];
                         }
                     }
                 }
             }
         });
+
+        chartInstances[id] = chart;
     }
 
     // Bar agrupado "colegio vs promedio del sistema". Solo cantidades
@@ -272,7 +393,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         bindDashboardFilters();
         bindAlertModal();
-        createChart('chartEstados', 'doughnut', data.estados);
+        createChart('chartEstados', 'doughnut', data.estados, colegioColorPalette((data.estados && data.estados.labels || []).length));
         createChart('chartTipos', 'bar', data.tipos);
         createChart('chartRam', 'doughnut', data.ram);
         createChart('chartSistemas', 'bar', data.sistemas);

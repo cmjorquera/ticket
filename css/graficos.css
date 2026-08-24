@@ -97,6 +97,46 @@
     height: 10px;
     border-radius: 999px;
     flex: 0 0 auto;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+/* Variante "colegios": leyenda del scatter con logo por colegio (dashboard.php).
+   Cada item es un <a> clickeable -- alternativa mas facil de tocar en movil
+   que el punto del canvas, filtra el dashboard por ese colegio igual que un
+   click en el punto. */
+.chart-legend--colegios {
+    gap: 10px 18px;
+}
+
+.chart-legend__item--colegio {
+    color: #536174;
+    text-decoration: none;
+    border-radius: 999px;
+    padding: 4px 10px 4px 4px;
+    transition: background .2s ease, color .2s ease;
+}
+
+.chart-legend__item--colegio:hover,
+.chart-legend__item--colegio:focus {
+    background: #f1f5f9;
+    color: #0b243f;
+}
+
+.chart-legend__item--colegio.is-active {
+    background: #eaf4ff;
+    color: #0b243f;
+    font-weight: 700;
+}
+
+.chart-legend__logo {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    flex: 0 0 auto;
 }
 
 /* Roles de color — coinciden con las series de graficos nuevos (scatter,
