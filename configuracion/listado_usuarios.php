@@ -29,6 +29,32 @@ $areas    = [];
 $colegios = [];
 while ($r = $bdato->fetch_assoc($resAreas))    { $areas[]    = $r; }
 while ($r = $bdato->fetch_assoc($resColegios)) { $colegios[] = $r; }
+
+// ── ¿El usuario en sesión es Super Admin? (id_perfil = 3) ────────────────────
+$perfilesUsuario = [];
+$resPerfilesUsuario = $bdato->consulta(
+    "SELECT id_perfil FROM usuario_perfil WHERE id_usuario = " . (int) $idUsuarioSession
+);
+while ($rp = $bdato->fetch_assoc($resPerfilesUsuario)) { $perfilesUsuario[] = (int) $rp['id_perfil']; }
+$esSuperAdmin = in_array(3, $perfilesUsuario, true);
+
+// ── Colegios activos sin administrador asignado (solo para el aviso) ─────────
+$colegiosSinAdmin = [];
+if ($esSuperAdmin) {
+    $resSinAdmin = $bdato->consulta("
+        SELECT c.nom_colegio
+        FROM colegio c
+        WHERE c.estado = 1
+          AND NOT EXISTS (
+              SELECT 1 FROM usuario_colegio uc
+              WHERE uc.id_colegio = c.id_colegio
+                AND uc.estado = 1
+                AND uc.es_admin_colegio = 1
+          )
+        ORDER BY c.nom_colegio ASC
+    ");
+    while ($cs = $bdato->fetch_assoc($resSinAdmin)) { $colegiosSinAdmin[] = $cs['nom_colegio']; }
+}
 ?>
 <?php require __DIR__ . '/componentes/head.php'; ?>
     <link  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -89,6 +115,19 @@ while ($r = $bdato->fetch_assoc($resColegios)) { $colegios[] = $r; }
                                         </a>
                                     </div>
                                 </div>
+
+                                <?php if ($esSuperAdmin && !empty($colegiosSinAdmin)): ?>
+                                <!-- ── Aviso: colegios sin administrador ── -->
+                                <div id="lu-alert-sinadmin" class="lu-alert-sinadmin" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <div>
+                                        <strong>Colegios sin administrador asignado (<span data-count><?php echo count($colegiosSinAdmin); ?></span>):</strong>
+                                        <span id="lu-sinadmin-lista"><?php echo htmlspecialchars(implode(', ', $colegiosSinAdmin), ENT_QUOTES, 'UTF-8'); ?></span>
+                                    </div>
+                                    <button type="button" class="lu-alert-close" aria-label="Cerrar"
+                                            onclick="document.getElementById('lu-alert-sinadmin').remove()">&times;</button>
+                                </div>
+                                <?php endif; ?>
 
                                 <!-- ── Toolbar: tabs de estado + filtros compactos ── -->
                                 <div class="lu-toolbar">
@@ -170,8 +209,10 @@ while ($r = $bdato->fetch_assoc($resColegios)) { $colegios[] = $r; }
                                                     u.estado,
                                                     u.id_area_trabajo,
                                                     at.nombre_area,
-                                                    GROUP_CONCAT(DISTINCT uc.id_colegio   ORDER BY uc.id_colegio   ASC SEPARATOR ',') AS colegios_ids,
-                                                    GROUP_CONCAT(DISTINCT c.nom_colegio   ORDER BY c.nom_colegio   ASC SEPARATOR '||') AS colegios_nombres
+                                                    GROUP_CONCAT(uc.id_colegio                    ORDER BY uc.id_colegio ASC SEPARATOR ',')  AS colegios_ids,
+                                                    GROUP_CONCAT(uc.id                            ORDER BY uc.id_colegio ASC SEPARATOR ',')  AS colegios_rel_ids,
+                                                    GROUP_CONCAT(COALESCE(uc.es_admin_colegio, 0) ORDER BY uc.id_colegio ASC SEPARATOR ',')  AS colegios_admin_flags,
+                                                    GROUP_CONCAT(c.nom_colegio                    ORDER BY uc.id_colegio ASC SEPARATOR '||') AS colegios_nombres
                                                 FROM usuarios u
                                                 LEFT JOIN area_trabajo  at ON at.id_area    = u.id_area_trabajo
                                                 LEFT JOIN usuario_colegio uc ON uc.id_usuario = u.id AND uc.estado = 1
@@ -196,19 +237,47 @@ while ($r = $bdato->fetch_assoc($resColegios)) { $colegios[] = $r; }
                                                 $esActivo    = ($estadoTipo === 'activo');
                                                 $esTecnico   = ($idArea === 1);
 
-                                                // Colegios → chips dentro de la celda Usuario
-                                                $colegiosIds     = array_filter(array_map('trim', explode(',',  (string)($row['colegios_ids']     ?? ''))));
-                                                $colegiosNombres = array_filter(array_map('trim', explode('||', (string)($row['colegios_nombres'] ?? ''))));
-                                                $colegiosIdsJson = htmlspecialchars(json_encode(array_values($colegiosIds)));
+                                                // Colegios → chips dentro de la celda Usuario (arrays alineados por índice)
+                                                $rawColegiosIds = trim((string)($row['colegios_ids'] ?? ''));
+                                                if ($rawColegiosIds === '') {
+                                                    $colegiosIds = $colegiosRelIds = $colegiosNombres = $colegiosAdminFlags = [];
+                                                } else {
+                                                    $colegiosIds        = explode(',',  $rawColegiosIds);
+                                                    $colegiosRelIds     = explode(',',  (string) $row['colegios_rel_ids']);
+                                                    $colegiosAdminFlags = explode(',',  (string) $row['colegios_admin_flags']);
+                                                    $colegiosNombres    = explode('||', (string) $row['colegios_nombres']);
+                                                }
+                                                $colegiosIdsJson = htmlspecialchars(json_encode(array_map('strval', $colegiosIds)));
 
                                                 $colegiosChips = '';
                                                 foreach ($colegiosIds as $ci => $idC) {
-                                                    $idC  = (int) $idC;
-                                                    $nom  = htmlspecialchars($colegiosNombres[$ci] ?? "Colegio $idC", ENT_QUOTES, 'UTF-8');
-                                                    $logo = '../img/colegios/colegio_' . $idC . '.png';
-                                                    $colegiosChips .= '<span class="lu-colegio-chip" title="' . $nom . '">'
+                                                    $idC     = (int) $idC;
+                                                    $relId   = (int) ($colegiosRelIds[$ci] ?? 0);
+                                                    $nom     = htmlspecialchars($colegiosNombres[$ci] ?? "Colegio $idC", ENT_QUOTES, 'UTF-8');
+                                                    $logo    = '../img/colegios/colegio_' . $idC . '.png';
+                                                    $adminC  = (isset($colegiosAdminFlags[$ci]) && (int) $colegiosAdminFlags[$ci] === 1);
+
+                                                    if ($esSuperAdmin) {
+                                                        $ctrl = '<button type="button" class="lu-admin-toggle' . ($adminC ? ' is-admin' : '') . '"'
+                                                            . ' data-rel-id="' . $relId . '"'
+                                                            . ' data-usuario-id="' . $userId . '"'
+                                                            . ' data-colegio-id="' . $idC . '"'
+                                                            . ' data-colegio-nom="' . $nom . '"'
+                                                            . ' aria-pressed="' . ($adminC ? 'true' : 'false') . '"'
+                                                            . ' title="' . ($adminC ? 'Quitar como admin de ' : 'Marcar como admin de ') . $nom . '"'
+                                                            . ' onclick="toggleAdminColegio(this)">'
+                                                            . '<i class="bi ' . ($adminC ? 'bi-star-fill' : 'bi-star') . '"></i></button>';
+                                                    } elseif ($adminC) {
+                                                        $ctrl = '<span class="lu-admin-badge" title="Administrador de ' . $nom . '"><i class="bi bi-star-fill"></i></span>';
+                                                    } else {
+                                                        $ctrl = '';
+                                                    }
+
+                                                    $colegiosChips .= '<span class="lu-colegio-chip' . ($adminC ? ' is-admin' : '') . '" title="' . $nom . '">'
                                                         . '<img src="' . $logo . '" alt="" loading="lazy" onerror="this.remove();">'
-                                                        . '<span>' . $nom . '</span></span>';
+                                                        . '<span>' . $nom . '</span>'
+                                                        . $ctrl
+                                                        . '</span>';
                                                 }
 
                                                 // ¿Puede reenviarse el correo de activación?
@@ -436,6 +505,111 @@ while ($r = $bdato->fetch_assoc($resColegios)) { $colegios[] = $r; }
         return $('<span class="lu-chip"></span>')
             .html('<i class="bi ' + icon + '"></i>' + label + ' <i class="bi bi-x"></i>')
             .on('click', onRemove);
+    }
+
+    // ── Admin de colegio (solo Super Admin) ───────────────────────────────
+    function toggleAdminColegio(btn) {
+        if (btn.dataset.busy === '1') { return; }
+
+        var relId      = btn.getAttribute('data-rel-id');
+        var usuarioId  = btn.getAttribute('data-usuario-id');
+        var colegioId  = btn.getAttribute('data-colegio-id');
+        var colegioNom = btn.getAttribute('data-colegio-nom') || 'este colegio';
+        var activar    = !btn.classList.contains('is-admin');
+
+        Swal.fire({
+            title: '<div class="alert alert-dark" role="alert">CONFIRMACIÓN</div>',
+            html: activar
+                ? '¿Marcar a este usuario como <b>administrador</b> de <b>' + colegioNom + '</b>?'
+                  + '<br><small>Si otro usuario ya es admin de ese colegio, será reemplazado.</small>'
+                : '¿Quitar a este usuario como administrador de <b>' + colegioNom + '</b>?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: activar ? 'Sí, asignar' : 'Sí, quitar',
+            cancelButtonText: 'Cancelar'
+        }).then(function (res) {
+            if (!res.isConfirmed) { return; }
+
+            btn.dataset.busy = '1';
+            $.ajax({
+                url: configuracionUrl('modelos/guardar/guardar_admin_colegio.php'),
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    id_relacion:      relId,
+                    id_usuario:       usuarioId,
+                    id_colegio:       colegioId,
+                    es_admin_colegio: activar ? 1 : 0
+                },
+                success: function (data) {
+                    if (data && data.success) {
+                        aplicarEstadoAdminColegio(colegioId, activar ? usuarioId : null);
+                        if (data.colegios_sin_admin !== undefined) {
+                            actualizarAvisoSinAdmin(data.colegios_sin_admin);
+                        }
+                        Swal.fire({
+                            icon: 'success', title: 'Listo',
+                            text: data.message || 'Cambio guardado',
+                            timer: 1600, showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: (data && data.message) || 'No se pudo guardar.' });
+                    }
+                },
+                error: function () {
+                    Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'Intenta nuevamente.' });
+                },
+                complete: function () { btn.dataset.busy = '0'; }
+            });
+        });
+    }
+
+    // Deja a <usuarioIdAdmin> como único admin de <colegioId> en la tabla (o ninguno si es null).
+    // Recorre todas las filas de DataTables (incluidas las de otras páginas) para que el
+    // cambio persista al paginar / filtrar / ordenar.
+    function aplicarEstadoAdminColegio(colegioId, usuarioIdAdmin) {
+        var filas = table ? table.rows().nodes().toArray() : [document];
+        filas.forEach(function (tr) {
+            tr.querySelectorAll('.lu-admin-toggle[data-colegio-id="' + colegioId + '"]').forEach(function (b) {
+                var esEste = usuarioIdAdmin !== null && b.getAttribute('data-usuario-id') === String(usuarioIdAdmin);
+                b.classList.toggle('is-admin', esEste);
+                b.setAttribute('aria-pressed', esEste ? 'true' : 'false');
+                var chipEl = b.closest('.lu-colegio-chip');
+                if (chipEl) { chipEl.classList.toggle('is-admin', esEste); }
+                var icon = b.querySelector('i');
+                if (icon) { icon.className = 'bi ' + (esEste ? 'bi-star-fill' : 'bi-star'); }
+                var nom = b.getAttribute('data-colegio-nom') || '';
+                b.title = (esEste ? 'Quitar como admin de ' : 'Marcar como admin de ') + nom;
+            });
+        });
+    }
+
+    // Refresca (o crea/elimina) el aviso de colegios sin administrador
+    function actualizarAvisoSinAdmin(lista) {
+        var box = document.getElementById('lu-alert-sinadmin');
+
+        if (!Array.isArray(lista) || lista.length === 0) {
+            if (box) { box.remove(); }
+            return;
+        }
+
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'lu-alert-sinadmin';
+            box.className = 'lu-alert-sinadmin';
+            box.setAttribute('role', 'alert');
+            box.innerHTML =
+                '<i class="bi bi-exclamation-triangle-fill"></i>'
+                + '<div><strong>Colegios sin administrador asignado (<span data-count></span>):</strong> '
+                + '<span id="lu-sinadmin-lista"></span></div>'
+                + '<button type="button" class="lu-alert-close" aria-label="Cerrar">&times;</button>';
+            box.querySelector('.lu-alert-close').addEventListener('click', function () { box.remove(); });
+            var anchor = document.querySelector('.lu-toolbar');
+            anchor.parentNode.insertBefore(box, anchor);
+        }
+
+        box.querySelector('[data-count]').textContent = lista.length;
+        box.querySelector('#lu-sinadmin-lista').textContent = lista.join(', ');
     }
     </script>
 </body>

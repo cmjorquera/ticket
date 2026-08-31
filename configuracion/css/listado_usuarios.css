@@ -319,6 +319,65 @@
 .lu-btn-icon--ok { color: #1cc88a; }
 .lu-btn-icon--ok:hover { background: #1cc88a; border-color: #1cc88a; color: #fff; }
 
+/* ── Admin de colegio (toggle sobre el chip) ───────────────────────────── */
+.lu-colegio-chip.is-admin {
+    border-color: #f3dfa6;
+    background: #fef6e0;
+    color: #9a6b00;
+}
+.lu-admin-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #c7ccd6;
+    font-size: .8rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color .12s, transform .12s;
+}
+.lu-admin-toggle:hover { color: #f6c23e; transform: scale(1.15); }
+.lu-admin-toggle.is-admin { color: #f0b429; }
+.lu-admin-badge {
+    display: inline-flex;
+    align-items: center;
+    color: #f0b429;
+    font-size: .8rem;
+}
+
+/* ── Aviso: colegios sin administrador ─────────────────────────────────── */
+.lu-alert-sinadmin {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin: 0;
+    padding: .8rem 1.25rem;
+    background: #fef6e0;
+    border-top: 1px solid #f3dfa6;
+    border-bottom: 1px solid #f3dfa6;
+    color: #7a5500;
+    font-size: .84rem;
+    line-height: 1.4;
+}
+.lu-alert-sinadmin > i { font-size: 1rem; margin-top: .1rem; color: #d9a200; flex: 0 0 auto; }
+.lu-alert-sinadmin strong { color: #5f4200; }
+.lu-alert-sinadmin .lu-alert-close {
+    margin-left: auto;
+    border: none;
+    background: transparent;
+    color: #9a6b00;
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 .2rem;
+}
+.lu-alert-sinadmin .lu-alert-close:hover { color: #5f4200; }
+
 /* ── Paginación / info de DataTables ───────────────────────────────────── */
 div.dataTables_wrapper div.dataTables_filter { display: none; } /* usamos el buscador propio */
 div.dataTables_wrapper div.dataTables_length { padding: .75rem 1.25rem 0; }
