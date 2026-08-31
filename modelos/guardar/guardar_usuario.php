@@ -210,6 +210,25 @@ switch ($action) {
             guardarPerfilInicial($db, $idUsuarioNuevo);
             guardarColegioInicial($db, $idUsuarioNuevo, $idColegio);
 
+            // Flujo "asignar admin de colegio": marcar al usuario recién creado como
+            // administrador del colegio (uno solo por colegio). Solo si el usuario en
+            // sesión es Super Admin (id_perfil = 3).
+            if (isset($_POST['esAdminColegio']) && (int) $_POST['esAdminColegio'] === 1 && $idColegio > 0) {
+                if (session_status() === PHP_SESSION_NONE) {
+                    session_start();
+                }
+                $idSesion = isset($_SESSION['id']) ? (int) $_SESSION['id'] : 0;
+                $puedeAdmin = false;
+                if ($idSesion > 0) {
+                    $resPerm = $db->consulta("SELECT 1 FROM usuario_perfil WHERE id_usuario = '$idSesion' AND id_perfil = 3 LIMIT 1");
+                    $puedeAdmin = (bool) $db->fetch_assoc($resPerm);
+                }
+                if ($puedeAdmin) {
+                    $db->consulta("UPDATE usuario_colegio SET es_admin_colegio = 0 WHERE id_colegio = '$idColegio' AND estado = 1");
+                    $db->consulta("UPDATE usuario_colegio SET es_admin_colegio = 1 WHERE id_usuario = '$idUsuarioNuevo' AND id_colegio = '$idColegio' AND estado = 1");
+                }
+            }
+
             $nombreCompleto = trim($nombre . ' ' . $apellidoPaterno . ' ' . $apellidoMaterno);
             $sqlArea = "SELECT nombre_area FROM area_trabajo WHERE id_area = '$areaTrabajo' LIMIT 1";
             $resArea = $db->consulta($sqlArea);

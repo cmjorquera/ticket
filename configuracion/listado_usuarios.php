@@ -42,7 +42,7 @@ $esSuperAdmin = in_array(3, $perfilesUsuario, true);
 $colegiosSinAdmin = [];
 if ($esSuperAdmin) {
     $resSinAdmin = $bdato->consulta("
-        SELECT c.nom_colegio
+        SELECT c.id_colegio, c.nom_colegio
         FROM colegio c
         WHERE c.estado = 1
           AND NOT EXISTS (
@@ -53,7 +53,9 @@ if ($esSuperAdmin) {
           )
         ORDER BY c.nom_colegio ASC
     ");
-    while ($cs = $bdato->fetch_assoc($resSinAdmin)) { $colegiosSinAdmin[] = $cs['nom_colegio']; }
+    while ($cs = $bdato->fetch_assoc($resSinAdmin)) {
+        $colegiosSinAdmin[] = ['id' => (int) $cs['id_colegio'], 'nom' => $cs['nom_colegio']];
+    }
 }
 ?>
 <?php require __DIR__ . '/componentes/head.php'; ?>
@@ -70,6 +72,7 @@ if ($esSuperAdmin) {
     <script src="<?php echo $assetPrefix; ?>js/funciones.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/permisos.js"></script>
     <script>window.CONFIG_RELATIVE_ROOT = '<?php echo $assetPrefix; ?>';</script>
+    <script>window.LU_ES_SUPER_ADMIN = <?php echo $esSuperAdmin ? 'true' : 'false'; ?>;</script>
     <script src="<?php echo $assetPrefix; ?>configuracion/js/comun.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/comunes.js"></script>
 
@@ -122,7 +125,15 @@ if ($esSuperAdmin) {
                                     <i class="bi bi-exclamation-triangle-fill"></i>
                                     <div>
                                         <strong>Colegios sin administrador asignado (<span data-count><?php echo count($colegiosSinAdmin); ?></span>):</strong>
-                                        <span id="lu-sinadmin-lista"><?php echo htmlspecialchars(implode(', ', $colegiosSinAdmin), ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <span id="lu-sinadmin-lista">
+                                            <?php foreach ($colegiosSinAdmin as $csa): ?>
+                                            <button type="button" class="lu-sinadmin-item" data-id="<?php echo $csa['id']; ?>"
+                                                    onclick="verificarAdminColegio(<?php echo $csa['id']; ?>, { force: true })"
+                                                    title="Asignar administrador a este colegio">
+                                                <?php echo htmlspecialchars($csa['nom'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </button>
+                                            <?php endforeach; ?>
+                                        </span>
                                     </div>
                                     <button type="button" class="lu-alert-close" aria-label="Cerrar"
                                             onclick="document.getElementById('lu-alert-sinadmin').remove()">&times;</button>
@@ -441,7 +452,14 @@ if ($esSuperAdmin) {
         });
 
         // Selects de colegio / área
-        $('#lu-colegio, #lu-area').on('change', filtrarTabla);
+        $('#lu-area').on('change', filtrarTabla);
+        $('#lu-colegio').on('change', function () {
+            filtrarTabla();
+            // Al filtrar por un colegio concreto, avisar si no tiene administrador
+            if (window.LU_ES_SUPER_ADMIN && this.value) {
+                setTimeout(function () { verificarAdminColegio($('#lu-colegio').val()); }, 400);
+            }
+        });
 
         // Tabs de estado
         $('.lu-tab-btn').on('click', function () {
@@ -584,7 +602,8 @@ if ($esSuperAdmin) {
         });
     }
 
-    // Refresca (o crea/elimina) el aviso de colegios sin administrador
+    // Refresca (o crea/elimina) el aviso de colegios sin administrador.
+    // `lista` = [{ id, nom }, ...]
     function actualizarAvisoSinAdmin(lista) {
         var box = document.getElementById('lu-alert-sinadmin');
 
@@ -609,7 +628,132 @@ if ($esSuperAdmin) {
         }
 
         box.querySelector('[data-count]').textContent = lista.length;
-        box.querySelector('#lu-sinadmin-lista').textContent = lista.join(', ');
+
+        var cont = box.querySelector('#lu-sinadmin-lista');
+        cont.innerHTML = '';
+        lista.forEach(function (c) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'lu-sinadmin-item';
+            b.setAttribute('data-id', c.id);
+            b.title = 'Asignar administrador a este colegio';
+            b.textContent = c.nom;
+            b.addEventListener('click', function () { verificarAdminColegio(c.id, { force: true }); });
+            cont.appendChild(b);
+        });
+    }
+
+    // ── Asignación de administrador de colegio (modal) ────────────────────
+    function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    // Consulta si el colegio tiene admin; abre el modal si no lo tiene (o si force).
+    function verificarAdminColegio(idColegio, opts) {
+        opts = opts || {};
+        if (!idColegio) { return; }
+
+        $.ajax({
+            url: configuracionUrl('modelos/rescatar/verificar_admin_colegio.php'),
+            type: 'POST',
+            dataType: 'json',
+            data: { id_colegio: idColegio },
+            success: function (data) {
+                if (!data || data.error) { return; }
+                if (data.tiene_admin && !opts.force) { return; }
+                if (data.tiene_admin && opts.force) {
+                    Swal.fire({ icon: 'info', title: 'Ese colegio ya tiene administrador',
+                                timer: 1800, showConfirmButton: false });
+                    return;
+                }
+                mostrarModalAsignarAdmin(data.id_colegio, data.nom_colegio, data.usuarios || []);
+            }
+        });
+    }
+
+    function mostrarModalAsignarAdmin(idColegio, nomColegio, usuarios) {
+        var optionsHtml = '<option value="">— Selecciona un usuario —</option>';
+        if (usuarios.length) {
+            usuarios.forEach(function (u) {
+                var extra = (u.estado && String(u.estado).toLowerCase() !== 'activo') ? ' · ' + u.estado : '';
+                optionsHtml += '<option value="' + u.id_relacion + '"'
+                    + ' data-usuario-id="' + u.id_usuario + '"'
+                    + ' data-colegio-id="' + u.id_colegio + '">'
+                    + escapeHtml(u.nombre + ' ' + u.apellido_paterno + ' (' + u.email + ')' + extra)
+                    + '</option>';
+            });
+        } else {
+            optionsHtml += '<option value="" disabled>No hay usuarios en este colegio</option>';
+        }
+
+        Swal.fire({
+            title: '<div class="alert alert-warning" role="alert" style="margin:0">Asignar administrador de colegio</div>',
+            html:
+                '<div style="text-align:left">'
+              + '<p><b>' + escapeHtml(nomColegio) + '</b> no tiene administrador asignado.<br>'
+              + '<small class="text-muted">Elige un usuario del colegio o crea uno nuevo.</small></p>'
+              + '<label style="font-weight:600;display:block;margin-bottom:.25rem">Usuario existente</label>'
+              + '<select id="lu-admin-select" class="form-select">' + optionsHtml + '</select>'
+              + '<div style="text-align:center;margin:.75rem 0;color:#9aa0ac">— o —</div>'
+              + '<button type="button" id="lu-admin-nuevo" class="btn btn-primary btn-sm w-100">'
+              + '<i class="bi bi-plus-circle me-1"></i>Crear usuario nuevo (será admin)</button>'
+              + '</div>',
+            showCancelButton: true,
+            confirmButtonText: 'Asignar como admin',
+            cancelButtonText: 'Cancelar',
+            didOpen: function () {
+                var btnNuevo = document.getElementById('lu-admin-nuevo');
+                if (btnNuevo) {
+                    btnNuevo.addEventListener('click', function () {
+                        Swal.close();
+                        if (typeof agregarUsuario === 'function') {
+                            agregarUsuario({ colegioId: idColegio, esAdminColegio: true, nomColegio: nomColegio });
+                        }
+                    });
+                }
+            },
+            preConfirm: function () {
+                var sel = document.getElementById('lu-admin-select');
+                if (!sel || !sel.value) {
+                    Swal.showValidationMessage('Selecciona un usuario o crea uno nuevo.');
+                    return false;
+                }
+                var opt = sel.options[sel.selectedIndex];
+                return {
+                    id_relacion: sel.value,
+                    id_usuario:  opt.getAttribute('data-usuario-id'),
+                    id_colegio:  opt.getAttribute('data-colegio-id') || idColegio
+                };
+            }
+        }).then(function (res) {
+            if (!res.isConfirmed || !res.value) { return; }
+
+            $.ajax({
+                url: configuracionUrl('modelos/guardar/guardar_admin_colegio.php'),
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    id_relacion:      res.value.id_relacion,
+                    id_usuario:       res.value.id_usuario,
+                    id_colegio:       res.value.id_colegio,
+                    es_admin_colegio: 1
+                },
+                success: function (data) {
+                    if (data && data.success) {
+                        Swal.fire({
+                            icon: 'success', title: '¡Asignado!',
+                            text: data.message || 'El usuario ahora es administrador del colegio.',
+                            timer: 1800, showConfirmButton: false
+                        }).then(function () { location.reload(); });
+                    } else {
+                        Swal.fire('Error', (data && data.message) || 'No se pudo asignar.', 'error');
+                    }
+                },
+                error: function () { Swal.fire('Error', 'Error de conexión.', 'error'); }
+            });
+        });
     }
     </script>
 </body>

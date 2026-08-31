@@ -24,7 +24,14 @@ function mostrarConfirmacionConfiguracion(titulo, mensaje, onClose) {
     });
 }
 
-function agregarUsuario() {
+function agregarUsuario(opts) {
+    // Guard: se invoca como agregarUsuario() desde el HTML (sin args) y también
+    // como agregarUsuario({colegioId, esAdminColegio, nomColegio}) desde el flujo
+    // "asignar admin de colegio".
+    if (!opts || typeof opts !== 'object' || opts.nodeType || opts.target || opts.originalEvent) {
+        opts = {};
+    }
+
     $.ajax({
         url: configuracionUrl('modelos/rescatar/area_trabajo.php'),
         type: 'GET',
@@ -251,7 +258,8 @@ function agregarUsuario() {
                                                 sexo: sexo.value,
                                                 areaTrabajo: areaTrabajo.value,
                                                 idColegio: idColegio.value,
-                                                menuIds: menuIds
+                                                menuIds: menuIds,
+                                                esAdminColegio: opts.esAdminColegio ? 1 : 0
                                             });
                                         }
                                     },
@@ -352,6 +360,24 @@ function agregarUsuario() {
                             actualizarResumenColegio();
                             $(colegioSelect).on('change', actualizarResumenColegio);
 
+                            // Flujo "asignar admin de colegio": precargar y bloquear el colegio
+                            if (opts.colegioId) {
+                                colegioSelect.value = String(opts.colegioId);
+                                colegioSelect.setAttribute('disabled', 'disabled');
+                                actualizarResumenColegio();
+
+                                const cont = popup.querySelector('.swal-usuario');
+                                if (cont && !popup.querySelector('#lu-admin-note')) {
+                                    const note = document.createElement('div');
+                                    note.id = 'lu-admin-note';
+                                    note.className = 'alert alert-info';
+                                    note.style.margin = '0 0 12px';
+                                    note.innerHTML = '<b>Nota:</b> este usuario quedará como <b>administrador</b> de <b>'
+                                        + (opts.nomColegio ? String(opts.nomColegio) : 'el colegio') + '</b> al crearlo.';
+                                    cont.insertBefore(note, cont.firstChild);
+                                }
+                            }
+
                             $(emailInput).on('blur', function () {
                                 validarEmailDisponibilidad($(this).val().trim());
                             }).on('input', function () {
@@ -378,7 +404,11 @@ function agregarUsuario() {
                                             }
                                         } catch (e) {}
 
-                                        mostrarConfirmacionConfiguracion('GUARDADO', mensaje);
+                                        mostrarConfirmacionConfiguracion(
+                                            'GUARDADO',
+                                            mensaje,
+                                            opts.esAdminColegio ? function () { location.reload(); } : undefined
+                                        );
                                     },
                                     error: function (xhr, status, error) {
                                         console.error('Error al guardar el usuario:', error);

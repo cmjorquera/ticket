@@ -88,7 +88,7 @@ if ($db->guardar("UPDATE usuario_colegio SET es_admin_colegio = $esAdmin WHERE i
 // ── Recalcular colegios sin administrador (para refrescar el aviso) ────────
 $colegiosSinAdmin = [];
 $resSin = $db->consulta("
-    SELECT c.nom_colegio
+    SELECT c.id_colegio, c.nom_colegio
     FROM colegio c
     WHERE c.estado = 1
       AND NOT EXISTS (
@@ -97,7 +97,9 @@ $resSin = $db->consulta("
       )
     ORDER BY c.nom_colegio ASC
 ");
-while ($s = $db->fetch_assoc($resSin)) { $colegiosSinAdmin[] = $s['nom_colegio']; }
+while ($s = $db->fetch_assoc($resSin)) {
+    $colegiosSinAdmin[] = ['id' => (int) $s['id_colegio'], 'nom' => $s['nom_colegio']];
+}
 
 responder(
     true,
