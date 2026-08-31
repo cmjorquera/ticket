@@ -58,7 +58,33 @@ if ($esSuperAdmin) {
     }
 }
 ?>
-<?php require __DIR__ . '/componentes/head.php'; ?>
+<?php
+// componentes/head.php migró al shell nuevo (tokens/layout/components + DM Sans y
+// ya abre <body>). Esta página sigue en el shell clásico (menuLateral2 + sb-admin-2),
+// así que arma aquí su propio <head> con el tema antiguo. No abre <body>: lo hace
+// la propia página más abajo (<body id="page-top">).
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($tituloPagina, ENT_QUOTES, 'UTF-8'); ?></title>
+    <link rel="icon" type="image/x-icon" href="<?php echo $assetPrefix; ?>imagenes/logo_seduc.png">
+
+    <link href="<?php echo $assetPrefix; ?>vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>css/modalesTicket.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>css/estilo.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>css/bitacora.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>css/contenedor.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>css/principal.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>css/ticket_admin.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>configuracion/css/modales.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>configuracion/css/index.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>configuracion/css/mantenimiento_tickets.css" rel="stylesheet">
+    <link href="<?php echo $assetPrefix; ?>configuracion/css/listado_usuarios.css" rel="stylesheet">
+
     <link  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link  href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"     rel="stylesheet">
     <link  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">

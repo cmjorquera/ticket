@@ -71,7 +71,7 @@ while ($r = $bdato->fetch_assoc($resTecNuevaCategoria)) {
 // Contar cuántas categorías tiene cada técnico asignadas
 // (para el resumen del header)
 ?>
-<?php require __DIR__ . '/componentes/head.php'; ?>
+<?php require __DIR__ . '/componentes/head_legacy.php'; ?>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/buscadores.js"></script>
     <script src="<?php echo $assetPrefix; ?>js/funciones.js"></script>

@@ -1,0 +1,171 @@
+/* ==========================================================================
+   mantenedor_colegios.css
+   Dashboard de colegios (configuracion/mantenedor_colegios.php)
+   Shell clásico (sb-admin-2). No carga tokens.css: la paleta se replica abajo.
+   ========================================================================== */
+
+:root {
+    --blue: #005B96;
+    --blue-mid: rgba(0, 91, 150, .18);
+    --green: #3C8D2F;
+    --green-light: rgba(60, 141, 47, .12);
+    --danger: #C0392B;
+    --bg: #F4F5F7;
+    --card: #FFFFFF;
+    --border: #E5E7EB;
+    --muted: #6B7280;
+    --fg: #3F424A;
+    --radius: 8px;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, .04), 0 1px 4px rgba(0, 0, 0, .06);
+    --shadow-elevated: 0 8px 24px -8px rgba(30, 40, 70, .18);
+}
+
+.mc-subtitle { font-size: .82rem; }
+
+/* ── Grid de tarjetas ─────────────────────────────────────────────────────── */
+.mc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.1rem;
+}
+
+.mc-card {
+    display: flex;
+    flex-direction: column;
+    gap: .8rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.15rem 1.2rem 1.25rem;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+}
+.mc-card:hover {
+    box-shadow: var(--shadow-elevated);
+    border-color: var(--blue-mid);
+    transform: translateY(-2px);
+}
+
+/* ── Encabezado de la tarjeta ─────────────────────────────────────────────── */
+.mc-card__head {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+}
+.mc-avatar {
+    position: relative;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--blue);
+}
+.mc-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.mc-avatar__ini {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: .02em;
+}
+.mc-card__id { min-width: 0; }
+.mc-card__name {
+    margin: 0;
+    font-size: .98rem;
+    font-weight: 700;
+    color: var(--fg);
+    line-height: 1.25;
+}
+.mc-card__rza {
+    margin: .15rem 0 0;
+    font-size: .76rem;
+    color: var(--muted);
+    line-height: 1.3;
+}
+
+/* ── Badge estado ─────────────────────────────────────────────────────────── */
+.mc-badge {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 700;
+    background: var(--green-light);
+    color: var(--green);
+    border: 1px solid rgba(60, 141, 47, .3);
+}
+
+/* ── Datos de contacto ───────────────────────────────────────────────────── */
+.mc-contact {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+.mc-contact li {
+    display: flex;
+    align-items: flex-start;
+    gap: .45rem;
+    font-size: .78rem;
+    color: var(--muted);
+    word-break: break-word;
+}
+.mc-contact li i {
+    color: var(--blue);
+    margin-top: .1rem;
+    flex: 0 0 auto;
+}
+
+/* ── Estadísticas ────────────────────────────────────────────────────────── */
+.mc-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+    border-top: 1px solid var(--border);
+    padding-top: .85rem;
+    margin-top: auto;
+}
+.mc-stat { text-align: center; }
+.mc-stat__num {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--blue);
+    line-height: 1.1;
+}
+.mc-stat__lbl {
+    display: block;
+    margin-top: .2rem;
+    font-size: .66rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+}
+
+/* ── Estado vacío ────────────────────────────────────────────────────────── */
+.mc-empty {
+    text-align: center;
+    padding: 3.5rem 1rem;
+    color: var(--muted);
+}
+.mc-empty i { font-size: 2.6rem; opacity: .5; display: block; margin-bottom: .6rem; }
+.mc-empty p { margin: 0; font-size: .95rem; }
+
+@media (max-width: 575px) {
+    .mc-grid { grid-template-columns: 1fr; }
+}

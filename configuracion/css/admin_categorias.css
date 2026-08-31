@@ -1,13 +1,32 @@
+/* ── Paleta ────────────────────────────────────────────────────────────────
+   Replica los tokens de configuracion/css/tokens.css. Esta página sigue en el
+   shell antiguo (sb-admin-2) y no carga tokens.css; cuando migre, borrar este
+   bloque :root sin tocar nada más. */
+:root {
+    --blue: #005B96;
+    --blue-light: rgba(0, 91, 150, .1);
+    --blue-mid: rgba(0, 91, 150, .18);
+    --green: #3C8D2F;
+    --green-light: rgba(60, 141, 47, .12);
+    --yellow: #F4B000;
+    --danger: #C0392B;
+    --danger-light: rgba(192, 57, 43, .1);
+    --bg: #F4F5F7;
+    --border: #E5E7EB;
+    --muted: #6B7280;
+    --fg: #3F424A;
+}
+
 .ac-card {
     border-radius: 14px;
-    border: 1px solid #e3e6f0;
+    border: 1px solid var(--border);
     background: #fff;
 }
 
 .ac-card__header {
     padding: .85rem 1.2rem;
-    background: #f8f9fc;
-    border-bottom: 1px solid #e3e6f0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
     border-radius: 14px 14px 0 0;
     display: flex;
     align-items: center;
@@ -19,7 +38,7 @@
     height: 44px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #e3e6f0;
+    border: 2px solid var(--border);
     background: #eef0f5;
     flex-shrink: 0;
 }
@@ -27,13 +46,13 @@
 .ac-card__name {
     font-size: .95rem;
     font-weight: 700;
-    color: #1f2a44;
+    color: var(--fg);
     line-height: 1.2;
 }
 
 .ac-card__meta {
     font-size: .75rem;
-    color: #6c757d;
+    color: var(--muted);
 }
 
 .ac-card__body {
@@ -46,7 +65,7 @@
 
 .ac-badge-count {
     margin-left: auto;
-    background: #4e73df;
+    background: var(--blue);
     color: #fff;
     border-radius: 999px;
     padding: 3px 10px;
@@ -85,23 +104,23 @@
 }
 
 .cat-chip--on {
-    background: #d4edda;
-    color: #155724;
-    border-color: #a8d5b5;
+    background: var(--green-light);
+    color: var(--green);
+    border-color: rgba(60, 141, 47, .35);
 }
 
 .cat-chip--on:hover {
-    background: #c2e8cc;
+    background: rgba(60, 141, 47, .2);
 }
 
 .cat-chip--off {
-    background: #fde8e4;
-    color: #7d2d1f;
-    border-color: #f5bdb5;
+    background: var(--danger-light);
+    color: var(--danger);
+    border-color: rgba(192, 57, 43, .3);
 }
 
 .cat-chip--off:hover {
-    background: #fad5cf;
+    background: rgba(192, 57, 43, .18);
 }
 
 .cat-chip--legend {
@@ -115,7 +134,7 @@
     bottom: 0;
     z-index: 10;
     background: #fff;
-    border-top: 1px solid #e3e6f0;
+    border-top: 1px solid var(--border);
     padding: .75rem 1.5rem;
     display: flex;
     align-items: center;
@@ -125,7 +144,7 @@
 
 .ac-action-bar .ac-hint {
     font-size: .78rem;
-    color: #6c757d;
+    color: var(--muted);
     flex: 1 1 auto;
 }
 
@@ -141,10 +160,10 @@
     gap: 1rem;
     align-items: center;
     padding: .5rem 1.25rem;
-    background: #f8f9fc;
-    border-bottom: 1px solid #e3e6f0;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
     font-size: .78rem;
-    color: #6c757d;
+    color: var(--muted);
     flex-wrap: wrap;
 }
 
@@ -186,7 +205,7 @@
 
 .swal-categoria {
     text-align: left;
-    color: #1f2a44;
+    color: var(--fg);
 }
 
 .swal-categoria__title {
@@ -216,7 +235,7 @@
     margin: 0;
     font-size: .82rem;
     font-weight: 800;
-    color: #1f2a44;
+    color: var(--fg);
     text-transform: uppercase;
     letter-spacing: .03em;
 }
@@ -228,7 +247,7 @@
     border-radius: 12px;
     border: 1px solid #c7d4e5;
     background: #eef4ff;
-    color: #1f2a44;
+    color: var(--fg);
     padding: .65rem .85rem;
     font-size: .92rem;
     outline: none;
@@ -237,8 +256,8 @@
 
 .swal-categoria__input:focus,
 .swal-categoria__select:focus {
-    border-color: #4f83ff;
-    box-shadow: 0 0 0 .16rem rgba(79, 131, 255, .16);
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .16rem var(--blue-mid);
     background: #f7faff;
 }
 
@@ -266,7 +285,7 @@
 }
 
 .swal-categoria__hint a {
-    color: #0d6efd;
+    color: var(--blue);
     font-weight: 700;
     text-decoration: none;
 }

@@ -613,7 +613,7 @@ public function menuLateral($idUsuarioSession, $idPagActual)
           </ul>';
 }
 
-public function menuLateral_antiguo_2($idUsuarioSession, $idPagActual, $archivoActual = null, $tituloSistema = 'SEDUC')
+public function menuLateral2Antiguo($idUsuarioSession, $idPagActual, $archivoActual = null, $tituloSistema = 'SEDUC')
 {
     $bdato = new MySQL("", "", "");
     $idUsuarioSession = intval($idUsuarioSession);
@@ -5355,6 +5355,77 @@ public function invPC_getListadoEquipos($idUsuario, $idColegioSel)
         $out[] = $row;
     }
     return $out;
+}
+
+/**
+ * ====================================================================
+ * MANTENEDOR DE COLEGIOS
+ * ==================================================================== */
+
+/**
+ * Colegios activos (estado = 1) con sus datos de contacto.
+ * @return array<int,array<string,mixed>>
+ */
+public function obtenerColegiosActivos()
+{
+    $bdato = new MySQL('', '', '');
+    $sql = "SELECT id_colegio, nom_colegio, rza_colegio, dir_colegio,
+                   tel_colegio, email_comunicaciones, rbd_colegio, estado
+            FROM colegio
+            WHERE estado = 1
+            ORDER BY nom_colegio ASC";
+    $res = $bdato->consulta($sql);
+    $colegios = [];
+    while ($row = $bdato->fetch_assoc($res)) {
+        $colegios[] = $row;
+    }
+    return $colegios;
+}
+
+/**
+ * Nº de usuarios vinculados (activos) a un colegio.
+ * @param int $idColegio
+ * @return int
+ */
+public function contarUsuariosPorColegio($idColegio)
+{
+    $bdato = new MySQL('', '', '');
+    $idColegio = (int) $idColegio;
+    $res = $bdato->consulta(
+        "SELECT COUNT(DISTINCT id_usuario) AS n
+         FROM usuario_colegio
+         WHERE id_colegio = $idColegio AND estado = 1"
+    );
+    $row = $bdato->fetch_assoc($res);
+    return (int) ($row['n'] ?? 0);
+}
+
+/**
+ * Nº de eventos asociados a un colegio.
+ * Requiere la columna eventos.id_colegio.
+ * @param int $idColegio
+ * @return int
+ */
+public function contarEventosPorColegio($idColegio)
+{
+    $bdato = new MySQL('', '', '');
+    $idColegio = (int) $idColegio;
+    $res = $bdato->consulta(
+        "SELECT COUNT(*) AS n FROM eventos WHERE id_colegio = $idColegio"
+    );
+    $row = $bdato->fetch_assoc($res);
+    return (int) ($row['n'] ?? 0);
+}
+
+/**
+ * Nº de módulos de un colegio.
+ * Placeholder: no hay origen de datos definido todavía.
+ * @param int $idColegio
+ * @return int
+ */
+public function contarModulosPorColegio($idColegio)
+{
+    return 0;
 }
 
 }

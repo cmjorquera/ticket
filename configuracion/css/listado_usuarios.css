@@ -4,6 +4,25 @@
    Reemplaza el bloque <style> inline que vivía dentro del PHP.
    ========================================================================== */
 
+/* ── Paleta ────────────────────────────────────────────────────────────────
+   Estos tokens replican los de configuracion/css/tokens.css. Esta página
+   sigue en el shell antiguo (sb-admin-2) y NO carga tokens.css, por eso se
+   definen aquí. Cuando la página migre al shell nuevo y cargue tokens.css,
+   este bloque :root se puede borrar sin tocar nada más.
+   ---------------------------------------------------------------------------- */
+:root {
+    --blue: #005B96;
+    --blue-light: rgba(0, 91, 150, .1);
+    --blue-mid: rgba(0, 91, 150, .18);
+    --green: #3C8D2F;
+    --yellow: #F4B000;
+    --danger: #C0392B;
+    --bg: #F4F5F7;
+    --border: #E5E7EB;
+    --muted: #6B7280;
+    --fg: #3F424A;
+}
+
 /* ── Card header con buscador a la derecha ───────────────────────────────── */
 .lu-card-header {
     display: flex;
@@ -40,18 +59,18 @@
     height: 36px;
     width: 240px;
     max-width: 60vw;
-    border: 1px solid #d1d3e2;
+    border: 1px solid var(--border);
     border-radius: 999px;
     padding: 0 .9rem 0 2.1rem;
     font-size: .85rem;
-    color: #3d3f52;
+    color: var(--fg);
     background: #fff;
     transition: border-color .15s, box-shadow .15s, width .15s;
 }
 .lu-search-top-right input:focus {
     outline: none;
-    border-color: #4e73df;
-    box-shadow: 0 0 0 .18rem rgba(78,115,223,.18);
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .18rem var(--blue-mid);
 }
 
 /* ── Toolbar: tabs + filtros compactos ──────────────────────────────────── */
@@ -62,9 +81,9 @@
     flex-wrap: wrap;
     gap: .75rem;
     padding: .85rem 1.25rem;
-    background: #f8f9fc;
-    border-top: 1px solid #e3e6f0;
-    border-bottom: 1px solid #e3e6f0;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 }
 
 /* Tabs de estado (segmented control) */
@@ -82,15 +101,15 @@
     border-radius: 8px;
     font-size: .82rem;
     font-weight: 600;
-    color: #6c757d;
+    color: var(--muted);
     cursor: pointer;
     transition: background .15s, color .15s, box-shadow .15s;
     white-space: nowrap;
 }
-.lu-tab-btn:hover { color: #3d3f52; }
+.lu-tab-btn:hover { color: var(--fg); }
 .lu-tab-btn.is-active {
     background: #fff;
-    color: #4e73df;
+    color: var(--blue);
     box-shadow: 0 1px 3px rgba(0,0,0,.12);
 }
 
@@ -104,33 +123,33 @@
 .lu-select {
     height: 34px;
     border-radius: 8px;
-    border: 1px solid #d1d3e2;
+    border: 1px solid var(--border);
     padding: 0 .6rem;
     font-size: .82rem;
-    color: #3d3f52;
+    color: var(--fg);
     background: #fff;
     max-width: 190px;
     transition: border-color .15s, box-shadow .15s;
 }
 .lu-select:focus {
     outline: none;
-    border-color: #4e73df;
-    box-shadow: 0 0 0 .18rem rgba(78,115,223,.18);
+    border-color: var(--blue);
+    box-shadow: 0 0 0 .18rem var(--blue-mid);
 }
 .lu-btn-reset {
     height: 34px;
     padding: 0 .9rem;
     border-radius: 8px;
-    border: 1px solid #d1d3e2;
+    border: 1px solid var(--border);
     background: #fff;
-    color: #6c757d;
+    color: var(--muted);
     font-size: .8rem;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
     transition: background .15s, color .15s;
 }
-.lu-btn-reset:hover { background: #e2e6ea; color: #3d3f52; }
+.lu-btn-reset:hover { background: #e2e6ea; color: var(--fg); }
 
 /* ── Barra de resultados + chips de filtros activos ─────────────────────── */
 .lu-results-bar {
@@ -141,9 +160,9 @@
     flex-wrap: wrap;
     padding: .5rem 1.25rem;
     font-size: .8rem;
-    color: #6c757d;
+    color: var(--muted);
     background: #fff;
-    border-bottom: 1px solid #e3e6f0;
+    border-bottom: 1px solid var(--border);
 }
 .lu-filter-tags { display: flex; gap: .35rem; flex-wrap: wrap; }
 .lu-chip {
@@ -152,9 +171,9 @@
     gap: 4px;
     padding: 2px 8px;
     border-radius: 999px;
-    background: #e8effd;
-    color: #2c56b8;
-    border: 1px solid #b8d0f7;
+    background: var(--blue-light);
+    color: var(--blue);
+    border: 1px solid var(--blue-mid);
     font-size: .74rem;
     font-weight: 600;
     cursor: pointer;
@@ -164,20 +183,20 @@
 /* ── Tabla ─────────────────────────────────────────────────────────────── */
 .usuarios-table-wrap { overflow-x: auto; }
 
-#dataTableUsuarios { border-color: #e6e8f0; }
+#dataTableUsuarios { border-color: var(--border); }
 #dataTableUsuarios thead th {
     white-space: nowrap;
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
-    color: #6c757d;
-    background: #f8f9fc;
-    border-bottom: 2px solid #e3e6f0;
+    color: var(--muted);
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
 }
 #dataTableUsuarios th,
 #dataTableUsuarios td { vertical-align: middle; }
-#dataTableUsuarios tbody td { font-size: .85rem; color: #3d3f52; }
+#dataTableUsuarios tbody td { font-size: .85rem; color: var(--fg); }
 
 .lu-col-num      { width: 46px; text-align: center; color: #9aa0ac; }
 .lu-col-avatar   { width: 58px; text-align: center; }
@@ -202,7 +221,7 @@
 
 /* ── Celda USUARIO ─────────────────────────────────────────────────────── */
 .lu-user { display: flex; flex-direction: column; gap: 2px; }
-.lu-user__name { font-weight: 700; color: #1f2a44; line-height: 1.2; }
+.lu-user__name { font-weight: 700; color: var(--fg); line-height: 1.2; }
 .lu-user__mail {
     display: inline-flex;
     align-items: center;
@@ -222,7 +241,7 @@
     align-items: center;
     gap: .3rem;
     padding: 1px 7px 1px 2px;
-    border: 1px solid #e3e6f0;
+    border: 1px solid var(--border);
     border-radius: 999px;
     background: #f7f8fc;
     font-size: .7rem;
@@ -244,16 +263,16 @@
 
 /* ── Celda ÁREA ────────────────────────────────────────────────────────── */
 .lu-area { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
-.lu-area__name { font-weight: 600; color: #3d3f52; }
+.lu-area__name { font-weight: 600; color: var(--fg); }
 .lu-badge-tecnico {
     display: inline-block;
     padding: 1px 7px;
     border-radius: 999px;
     font-size: .66rem;
     font-weight: 700;
-    background: #e8effd;
-    color: #2c56b8;
-    border: 1px solid #b8d0f7;
+    background: var(--blue-light);
+    color: var(--blue);
+    border: 1px solid var(--blue-mid);
 }
 
 /* ── Badge de estado ───────────────────────────────────────────────────── */
@@ -293,9 +312,9 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    border: 1px solid #e3e6f0;
+    border: 1px solid var(--border);
     background: #fff;
-    color: #6c757d;
+    color: var(--muted);
     font-size: .9rem;
     text-decoration: none;
     cursor: pointer;
@@ -310,14 +329,14 @@
     color: #9aa0ac;
     font-size: .8rem;
 }
-.lu-btn-icon--ghost:hover { color: #4e73df; transform: none; }
+.lu-btn-icon--ghost:hover { color: var(--blue); transform: none; }
 
-.lu-btn-icon--edit:hover  { background: #4e73df; border-color: #4e73df; color: #fff; }
-.lu-btn-icon--perms:hover { background: #1cc88a; border-color: #1cc88a; color: #fff; }
-.lu-btn-icon--danger { color: #e74a3b; }
-.lu-btn-icon--danger:hover { background: #e74a3b; border-color: #e74a3b; color: #fff; }
-.lu-btn-icon--ok { color: #1cc88a; }
-.lu-btn-icon--ok:hover { background: #1cc88a; border-color: #1cc88a; color: #fff; }
+.lu-btn-icon--edit:hover  { background: var(--blue); border-color: var(--blue); color: #fff; }
+.lu-btn-icon--perms:hover { background: var(--green); border-color: var(--green); color: #fff; }
+.lu-btn-icon--danger { color: var(--danger); }
+.lu-btn-icon--danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
+.lu-btn-icon--ok { color: var(--green); }
+.lu-btn-icon--ok:hover { background: var(--green); border-color: var(--green); color: #fff; }
 
 /* ── Admin de colegio (toggle sobre el chip) ───────────────────────────── */
 .lu-colegio-chip.is-admin {
@@ -341,12 +360,12 @@
     cursor: pointer;
     transition: color .12s, transform .12s;
 }
-.lu-admin-toggle:hover { color: #f6c23e; transform: scale(1.15); }
-.lu-admin-toggle.is-admin { color: #f0b429; }
+.lu-admin-toggle:hover { color: var(--yellow); transform: scale(1.15); }
+.lu-admin-toggle.is-admin { color: var(--yellow); }
 .lu-admin-badge {
     display: inline-flex;
     align-items: center;
-    color: #f0b429;
+    color: var(--yellow);
     font-size: .8rem;
 }
 
@@ -394,11 +413,11 @@
 /* ── Paginación / info de DataTables ───────────────────────────────────── */
 div.dataTables_wrapper div.dataTables_filter { display: none; } /* usamos el buscador propio */
 div.dataTables_wrapper div.dataTables_length { padding: .75rem 1.25rem 0; }
-div.dataTables_wrapper div.dataTables_length label { font-size: .8rem; color: #6c757d; }
+div.dataTables_wrapper div.dataTables_length label { font-size: .8rem; color: var(--muted); }
 div.dataTables_wrapper div.dataTables_info {
     padding: .85rem 1.25rem;
     font-size: .8rem;
-    color: #6c757d;
+    color: var(--muted);
 }
 div.dataTables_wrapper div.dataTables_paginate {
     padding: .6rem 1.25rem .85rem;
@@ -407,13 +426,13 @@ div.dataTables_wrapper .dataTables_paginate .paginate_button {
     padding: .3rem .7rem !important;
     margin-left: .2rem;
     border-radius: 8px !important;
-    border: 1px solid #e3e6f0 !important;
+    border: 1px solid var(--border) !important;
     font-size: .8rem;
 }
 div.dataTables_wrapper .dataTables_paginate .paginate_button.current,
 div.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    background: #4e73df !important;
-    border-color: #4e73df !important;
+    background: var(--blue) !important;
+    border-color: var(--blue) !important;
     color: #fff !important;
 }
 div.dataTables_wrapper .dataTables_paginate .paginate_button.disabled { opacity: .45; }
