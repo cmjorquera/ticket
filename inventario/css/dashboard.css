@@ -107,6 +107,44 @@
     background: rgba(255, 255, 255, 0.30);
 }
 
+/* Logo dinamico de la barra lateral (dashboard.php): logo SEDUC animado
+   para "Todos los colegios", o el logo circular del colegio filtrado
+   (borde = color_principal). Como cada cambio de filtro recarga la pagina
+   completa (ver seccion 17/18 de logica), no hay swap client-side: esta
+   transicion es solo un fade suave en el primer render de cada carga. */
+.inv-sidebar-logo {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: chart-fade-in .35s ease both;
+}
+
+.inv-sidebar-logo__img {
+    max-width: 140px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border: 3px solid transparent;
+    box-sizing: border-box;
+    transition: border-color .3s ease;
+}
+
+#colegioNombre {
+    transition: color .3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inv-sidebar-logo {
+        animation: none;
+    }
+    .inv-sidebar-logo__img,
+    #colegioNombre {
+        transition: none;
+    }
+}
+
 .inv-kpi-menu-btn {
     width: 34px;
     height: 34px;
@@ -287,6 +325,28 @@
     padding: 24px;
 }
 
+/* .inv-value-bar es un <a> clickeable (filtra por ese colegio) desde esta
+   iteracion -- antes era un <div> puramente informativo. */
+.inv-value-bar {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 4px;
+    margin: -4px;
+    transition: background .2s ease;
+}
+
+.inv-value-bar:hover,
+.inv-value-bar:focus {
+    background: #f8fafc;
+    color: inherit;
+}
+
+.inv-value-bar.is-active {
+    background: #eaf4ff;
+}
+
 .inv-value-bar__label {
     display: flex;
     justify-content: space-between;
@@ -314,7 +374,18 @@
 .inv-value-bar__fill {
     height: 100%;
     border-radius: inherit;
+    /* background ya NO se fija aca: viene inline por colegio desde
+       dashboard.php (inv_dash_colores_colegio). #3a9131 queda solo como
+       respaldo por si algun caller no manda el inline style. */
     background: #3a9131;
+    transition: width .3s ease, background-color .3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inv-value-bar,
+    .inv-value-bar__fill {
+        transition: none;
+    }
 }
 
 .inv-dashboard-table {

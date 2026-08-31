@@ -11,6 +11,40 @@ function inv_dash_int($valor): string
     return number_format((int)$valor, 0, ',', '.');
 }
 
+// Colores propios de UN colegio puntual (por id_colegio, no por usuario en
+// sesion), con formato validado y respaldo. Centraliza lo que antes estaba
+// duplicado en el mapeo del scatter -- ahora tambien lo usan las barras de
+// "Valor por colegio". NUNCA usar Inventario::obtenerColoresColegio() aqui:
+// ese metodo espera un id_usuario (join por usuario_colegio), no un
+// id_colegio, y devolveria datos incorrectos si se le pasa uno.
+function inv_dash_colores_colegio($inventario, int $idColegio, string $fallbackPrincipal = '#2a78d6', string $fallbackSecundario = '#008300'): array
+{
+    if ($idColegio <= 0) {
+        return ['principal' => $fallbackPrincipal, 'secundario' => $fallbackSecundario];
+    }
+    $colores = $inventario->obtenerColoresPorColegio($idColegio);
+    $principal = preg_match('/^#[0-9a-fA-F]{3,8}$/', $colores['color_principal'] ?? '')
+        ? $colores['color_principal'] : $fallbackPrincipal;
+    $secundario = preg_match('/^#[0-9a-fA-F]{3,8}$/', $colores['color_secundario'] ?? '')
+        ? $colores['color_secundario'] : $fallbackSecundario;
+    return ['principal' => $principal, 'secundario' => $secundario];
+}
+
+// URL del logo de UN colegio (o null si el archivo no existe). Centraliza
+// la ruta real img/colegios/colegio_{id}.png (prefijo "colegio_") y la
+// verificacion en disco antes de exponer la URL al HTML/JSON.
+function inv_dash_logo_colegio(int $idColegio): ?string
+{
+    if ($idColegio <= 0) {
+        return null;
+    }
+    $ruta = dirname(__DIR__) . '/img/colegios/colegio_' . $idColegio . '.png';
+    if (!is_file($ruta)) {
+        return null;
+    }
+    return inventario_sistema_url('img/colegios/colegio_' . $idColegio . '.png');
+}
+
 function inv_dash_section_menu(): string
 {
     $html = '<div class="dropdown">';
@@ -137,19 +171,10 @@ $_kpiBrandStyle = $_kpiBranded
     ? ' style="background: linear-gradient(135deg, ' . $_c1 . ' 0%, ' . ($_c2 ?: $_c1) . ' 100%);"'
     : '';
 
-// Foto del colegio: archivo fisico img/colegios/colegio_{id}.png (prefijo
-// "colegio_" real segun exportar_plantilla.php e inventario.js -- NO es
-// "{id}.png" solo). Se valida existencia en disco antes de mostrar el <img>
-// para no romper el layout con un icono de imagen rota.
-$fotoColegioExiste = false;
-$fotoColegioUrl = '';
-if ($idColegioFiltro > 0) {
-    $fotoColegioRuta = dirname(__DIR__) . '/img/colegios/colegio_' . $idColegioFiltro . '.png';
-    if (is_file($fotoColegioRuta)) {
-        $fotoColegioExiste = true;
-        $fotoColegioUrl = inventario_sistema_url('img/colegios/colegio_' . $idColegioFiltro . '.png');
-    }
-}
+// Foto del colegio filtrado (helper centralizado, ver inv_dash_logo_colegio
+// arriba -- ruta real img/colegios/colegio_{id}.png, prefijo "colegio_").
+$fotoColegioUrl = inv_dash_logo_colegio($idColegioFiltro);
+$fotoColegioExiste = $fotoColegioUrl !== null;
 
 $colegioMayor = $valor['colegio_mayor_valor'] ?? null;
 $alertaMeta = [
@@ -219,36 +244,16 @@ $resumenSistema = $inventario->obtenerResumenPorColegioDashboard($filtrosSistema
 // "Resumen por colegio" de más abajo, solo que sin filtrar por colegio).
 $chartScatterColegios = array_map(function ($fila) use ($idColegioFiltro, $inventario) {
     $idColegioFila = (int)($fila['id_colegio'] ?? 0);
-
-    // Colores propios del colegio de ESTA fila (obtenerColoresPorColegio,
-    // por id_colegio -- NO obtenerColoresColegio, que espera un id_usuario
-    // y devolveria datos incorrectos si se le pasa un id_colegio).
-    $coloresFila = $idColegioFila > 0 ? $inventario->obtenerColoresPorColegio($idColegioFila) : [];
-    $colorPrincipalFila = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresFila['color_principal'] ?? '')
-        ? $coloresFila['color_principal'] : '#2a78d6';
-    $colorSecundarioFila = preg_match('/^#[0-9a-fA-F]{3,8}$/', $coloresFila['color_secundario'] ?? '')
-        ? $coloresFila['color_secundario'] : '#008300';
-
-    // Logo: img/colegios/colegio_{id}.png (prefijo real "colegio_", ver
-    // exportar_plantilla.php / inventario.js). Se valida en disco antes de
-    // mandar la URL al frontend -- si no existe, 'imagen' queda null y el
-    // plugin de dashboard.js cae al circulo de color solo.
-    $imagenFila = null;
-    if ($idColegioFila > 0) {
-        $rutaImagenFila = dirname(__DIR__) . '/img/colegios/colegio_' . $idColegioFila . '.png';
-        if (is_file($rutaImagenFila)) {
-            $imagenFila = inventario_sistema_url('img/colegios/colegio_' . $idColegioFila . '.png');
-        }
-    }
+    $coloresFila = inv_dash_colores_colegio($inventario, $idColegioFila);
 
     return [
         'id_colegio'       => $idColegioFila,
         'colegio'          => (string)($fila['nom_colegio'] ?? ''),
         'x'                => (int)($fila['total_equipos'] ?? 0),
         'y'                => (int)($fila['valor_total'] ?? 0),
-        'imagen'           => $imagenFila,
-        'color_principal'  => $colorPrincipalFila,
-        'color_secundario' => $colorSecundarioFila,
+        'imagen'           => inv_dash_logo_colegio($idColegioFila),
+        'color_principal'  => $coloresFila['principal'],
+        'color_secundario' => $coloresFila['secundario'],
         'seleccionado'     => $idColegioFiltro > 0 && $idColegioFila === $idColegioFiltro,
     ];
 }, $resumenSistema);
@@ -374,27 +379,7 @@ require __DIR__ . '/componentes/layout_top.php';
                 </ul>
 
                 <div class="row g-4">
-                    <!-- Info + branding del colegio filtrado -->
-                    <!-- Fuente: $coloresActivos / $fotoColegioUrl / $colegioSeleccionado (calculados arriba) -->
-                    <div class="col-12 col-lg-3">
-                        <div class="inv-card text-center h-100">
-                            <?php include __DIR__ . '/../include/logo_3d_seduc.php'; ?>
-
-                            <?php if ($fotoColegioExiste): ?>
-                                <img src="<?= inventario_h($fotoColegioUrl) ?>"
-                                     alt="Foto de <?= inventario_h($colegioSeleccionado) ?>"
-                                     class="img-fluid rounded mt-3"
-                                     style="max-width: 160px; height: auto;">
-                            <?php endif; ?>
-
-                            <h5 class="mt-3 mb-0"><?= inventario_h($colegioSeleccionado) ?></h5>
-                            <?php if ($idColegioFiltro <= 0): ?>
-                                <small class="text-muted d-block mt-1">Seleccione un colegio para ver su logo y colores</small>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-lg-9">
+                    <div class="col-12">
 
                 <div class="inv-dashboard-grid inv-dashboard-grid--kpis mb-4">
                     <?php
@@ -518,16 +503,25 @@ require __DIR__ . '/componentes/layout_top.php';
                                     <div class="inv-empty-state">No hay valores de compra registrados para los filtros seleccionados.</div>
                                 <?php endif; ?>
                                 <?php foreach ($valorPorColegio as $fila): ?>
-                                    <?php $porcentaje = ((int)$fila['valor_total'] / $maxValorColegio) * 100; ?>
-                                    <div class="inv-value-bar">
+                                    <?php
+                                    $porcentaje = ((int)$fila['valor_total'] / $maxValorColegio) * 100;
+                                    $idColegioBarra = (int)($fila['id_colegio'] ?? 0);
+                                    // Color propio del colegio de ESTA barra (mismo helper que usa
+                                    // el scatter) -- antes estaba fijo en verde via CSS (.inv-value-bar__fill).
+                                    $coloresBarra = inv_dash_colores_colegio($inventario, $idColegioBarra);
+                                    ?>
+                                    <a class="inv-value-bar<?= $idColegioBarra === $idColegioFiltro && $idColegioFiltro > 0 ? ' is-active' : '' ?>"
+                                       href="dashboard.php?id_colegio=<?= $idColegioBarra ?>&amp;tipo_equipo=<?= inventario_h($tipoEquipoFiltro) ?>"
+                                       title="Filtrar por <?= inventario_h($fila['nom_colegio']) ?>">
                                         <div class="inv-value-bar__label">
                                             <span><?= inventario_h($fila['nom_colegio']) ?></span>
                                             <strong><?= inv_dash_money($fila['valor_total']) ?></strong>
                                         </div>
                                         <div class="inv-value-bar__track">
-                                            <div class="inv-value-bar__fill" style="width: <?= max(3, (int)$porcentaje) ?>%"></div>
+                                            <div class="inv-value-bar__fill"
+                                                 style="width: <?= max(3, (int)$porcentaje) ?>%; background: <?= inventario_h($coloresBarra['principal']) ?>;"></div>
                                         </div>
-                                    </div>
+                                    </a>
                                 <?php endforeach; ?>
                             </div>
                         </section>

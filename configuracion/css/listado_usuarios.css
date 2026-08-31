@@ -1,0 +1,356 @@
+/* ==========================================================================
+   listado_usuarios.css
+   Estilos del listado de usuarios (configuracion/listado_usuarios.php)
+   Reemplaza el bloque <style> inline que vivía dentro del PHP.
+   ========================================================================== */
+
+/* ── Card header con buscador a la derecha ───────────────────────────────── */
+.lu-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+}
+.lu-card-header__title h6 { line-height: 1.25; }
+.lu-subtitle { font-size: .82rem; }
+
+.lu-card-header__actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+
+/* Buscador esquina superior derecha */
+.lu-search-top-right {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.lu-search-top-right i {
+    position: absolute;
+    left: .7rem;
+    font-size: .9rem;
+    color: #9aa0ac;
+    pointer-events: none;
+}
+.lu-search-top-right input {
+    height: 36px;
+    width: 240px;
+    max-width: 60vw;
+    border: 1px solid #d1d3e2;
+    border-radius: 999px;
+    padding: 0 .9rem 0 2.1rem;
+    font-size: .85rem;
+    color: #3d3f52;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s, width .15s;
+}
+.lu-search-top-right input:focus {
+    outline: none;
+    border-color: #4e73df;
+    box-shadow: 0 0 0 .18rem rgba(78,115,223,.18);
+}
+
+/* ── Toolbar: tabs + filtros compactos ──────────────────────────────────── */
+.lu-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: .85rem 1.25rem;
+    background: #f8f9fc;
+    border-top: 1px solid #e3e6f0;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* Tabs de estado (segmented control) */
+.lu-filter-tabs {
+    display: inline-flex;
+    gap: .2rem;
+    padding: .25rem;
+    background: #eceef4;
+    border-radius: 10px;
+}
+.lu-tab-btn {
+    border: none;
+    background: transparent;
+    padding: .38rem .95rem;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #6c757d;
+    cursor: pointer;
+    transition: background .15s, color .15s, box-shadow .15s;
+    white-space: nowrap;
+}
+.lu-tab-btn:hover { color: #3d3f52; }
+.lu-tab-btn.is-active {
+    background: #fff;
+    color: #4e73df;
+    box-shadow: 0 1px 3px rgba(0,0,0,.12);
+}
+
+/* Filtros compactos (colegio / área / limpiar) */
+.lu-filter-bar-compact {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.lu-select {
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #d1d3e2;
+    padding: 0 .6rem;
+    font-size: .82rem;
+    color: #3d3f52;
+    background: #fff;
+    max-width: 190px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.lu-select:focus {
+    outline: none;
+    border-color: #4e73df;
+    box-shadow: 0 0 0 .18rem rgba(78,115,223,.18);
+}
+.lu-btn-reset {
+    height: 34px;
+    padding: 0 .9rem;
+    border-radius: 8px;
+    border: 1px solid #d1d3e2;
+    background: #fff;
+    color: #6c757d;
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+}
+.lu-btn-reset:hover { background: #e2e6ea; color: #3d3f52; }
+
+/* ── Barra de resultados + chips de filtros activos ─────────────────────── */
+.lu-results-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    flex-wrap: wrap;
+    padding: .5rem 1.25rem;
+    font-size: .8rem;
+    color: #6c757d;
+    background: #fff;
+    border-bottom: 1px solid #e3e6f0;
+}
+.lu-filter-tags { display: flex; gap: .35rem; flex-wrap: wrap; }
+.lu-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e8effd;
+    color: #2c56b8;
+    border: 1px solid #b8d0f7;
+    font-size: .74rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.lu-chip i.bi-x { font-size: .85rem; }
+
+/* ── Tabla ─────────────────────────────────────────────────────────────── */
+.usuarios-table-wrap { overflow-x: auto; }
+
+#dataTableUsuarios { border-color: #e6e8f0; }
+#dataTableUsuarios thead th {
+    white-space: nowrap;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #6c757d;
+    background: #f8f9fc;
+    border-bottom: 2px solid #e3e6f0;
+}
+#dataTableUsuarios th,
+#dataTableUsuarios td { vertical-align: middle; }
+#dataTableUsuarios tbody td { font-size: .85rem; color: #3d3f52; }
+
+.lu-col-num      { width: 46px; text-align: center; color: #9aa0ac; }
+.lu-col-avatar   { width: 58px; text-align: center; }
+.lu-col-acciones { width: 118px; text-align: center; }
+
+/* ── Avatar con iniciales ──────────────────────────────────────────────── */
+.lu-avatar-initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.06);
+    user-select: none;
+}
+
+/* ── Celda USUARIO ─────────────────────────────────────────────────────── */
+.lu-user { display: flex; flex-direction: column; gap: 2px; }
+.lu-user__name { font-weight: 700; color: #1f2a44; line-height: 1.2; }
+.lu-user__mail {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .78rem;
+    color: #9aa0ac;
+    word-break: break-word;
+}
+.lu-user__colegios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem;
+    margin-top: 3px;
+}
+.lu-colegio-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: 1px 7px 1px 2px;
+    border: 1px solid #e3e6f0;
+    border-radius: 999px;
+    background: #f7f8fc;
+    font-size: .7rem;
+    color: #5a5c69;
+    max-width: 190px;
+}
+.lu-colegio-chip img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    border-radius: 50%;
+    background: #fff;
+}
+.lu-colegio-chip span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Celda ÁREA ────────────────────────────────────────────────────────── */
+.lu-area { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+.lu-area__name { font-weight: 600; color: #3d3f52; }
+.lu-badge-tecnico {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: .66rem;
+    font-weight: 700;
+    background: #e8effd;
+    color: #2c56b8;
+    border: 1px solid #b8d0f7;
+}
+
+/* ── Badge de estado ───────────────────────────────────────────────────── */
+.lu-badge-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .28rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid transparent;
+}
+.lu-badge-estado__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: 0 0 8px;
+    background: currentColor;
+}
+.lu-badge-estado.is-activo    { background: #e6f8f0; color: #0f7a52; border-color: #b7e6d1; }
+.lu-badge-estado.is-pendiente { background: #fef6e0; color: #9a6b00; border-color: #f3dfa6; }
+.lu-badge-estado.is-bloqueado { background: #fdeceb; color: #a52d22; border-color: #f4c9c4; }
+.lu-badge-estado.is-inactivo  { background: #eef0f4; color: #5a5c69; border-color: #dcdfe7; }
+
+/* ── Botones de acción (solo iconos) ───────────────────────────────────── */
+.lu-actions {
+    display: inline-flex;
+    gap: .3rem;
+    justify-content: center;
+}
+.lu-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #e3e6f0;
+    background: #fff;
+    color: #6c757d;
+    font-size: .9rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s, transform .12s;
+}
+.lu-btn-icon:hover { transform: translateY(-1px); text-decoration: none; }
+.lu-btn-icon--ghost {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: #9aa0ac;
+    font-size: .8rem;
+}
+.lu-btn-icon--ghost:hover { color: #4e73df; transform: none; }
+
+.lu-btn-icon--edit:hover  { background: #4e73df; border-color: #4e73df; color: #fff; }
+.lu-btn-icon--perms:hover { background: #1cc88a; border-color: #1cc88a; color: #fff; }
+.lu-btn-icon--danger { color: #e74a3b; }
+.lu-btn-icon--danger:hover { background: #e74a3b; border-color: #e74a3b; color: #fff; }
+.lu-btn-icon--ok { color: #1cc88a; }
+.lu-btn-icon--ok:hover { background: #1cc88a; border-color: #1cc88a; color: #fff; }
+
+/* ── Paginación / info de DataTables ───────────────────────────────────── */
+div.dataTables_wrapper div.dataTables_filter { display: none; } /* usamos el buscador propio */
+div.dataTables_wrapper div.dataTables_length { padding: .75rem 1.25rem 0; }
+div.dataTables_wrapper div.dataTables_length label { font-size: .8rem; color: #6c757d; }
+div.dataTables_wrapper div.dataTables_info {
+    padding: .85rem 1.25rem;
+    font-size: .8rem;
+    color: #6c757d;
+}
+div.dataTables_wrapper div.dataTables_paginate {
+    padding: .6rem 1.25rem .85rem;
+}
+div.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: .3rem .7rem !important;
+    margin-left: .2rem;
+    border-radius: 8px !important;
+    border: 1px solid #e3e6f0 !important;
+    font-size: .8rem;
+}
+div.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+div.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: #4e73df !important;
+    border-color: #4e73df !important;
+    color: #fff !important;
+}
+div.dataTables_wrapper .dataTables_paginate .paginate_button.disabled { opacity: .45; }
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .lu-toolbar { flex-direction: column; align-items: stretch; }
+    .lu-filter-tabs { flex-wrap: wrap; }
+    .lu-search-top-right input { width: 100%; max-width: none; }
+    .lu-card-header__actions { width: 100%; }
+    .lu-select { max-width: none; flex: 1 1 45%; }
+}

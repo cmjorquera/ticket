@@ -254,6 +254,13 @@
 
         var radios = points.map(function (p) { return p.seleccionado ? 18 : 14; });
         var hoverRadios = points.map(function (p) { return p.seleccionado ? 22 : 18; });
+        // BUG FIX: el area clickeable/hoverable de un point-element en
+        // Chart.js v2 NO es pointRadius -- es pointHitRadius, que por
+        // defecto vale 1px. Sin esto, el circulo se ve de 14-18px pero solo
+        // registra click/hover en el pixel exacto del dato: por eso "el
+        // click no filtraba" (habia que acertar 1px). Se agranda un poco
+        // mas que el radio visual para que sea comodo tocar en movil.
+        var hitRadios = points.map(function (p) { return (p.seleccionado ? 18 : 14) + 6; });
 
         var chart = new Chart(el, {
             type: 'scatter',
@@ -270,7 +277,8 @@
                     backgroundColor: 'transparent', // el plugin pinta el fondo real por punto
                     borderColor: 'transparent',     // idem el borde -- ver scatterLogoPlugin
                     pointRadius: radios,
-                    pointHoverRadius: hoverRadios
+                    pointHoverRadius: hoverRadios,
+                    pointHitRadius: hitRadios
                 }]
             },
             options: {

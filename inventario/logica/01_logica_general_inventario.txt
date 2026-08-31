@@ -1424,3 +1424,43 @@ Datos repetibles:
   informativa, es mas facil de tocar en movil que un punto pequeno del
   canvas. CSS: `.chart-legend--colegios` / `.chart-legend__item--colegio` /
   `.chart-legend__logo` en `css/graficos.css`.
+
+19. Fix click del scatter, barras con color por colegio, logo sidebar reemplaza (no apila) (Agosto 2026)
+
+- BUG REAL encontrado y corregido: el click en los puntos del scatter casi
+  nunca "acertaba". Causa: en Chart.js v2, el area clickeable/hoverable de
+  un point-element NO es `pointRadius` (eso es solo el tamano VISUAL) sino
+  `pointHitRadius`, que por defecto vale 1px. El dataset del scatter
+  (dashboard.js, createScatterChart) dibujaba circulos de 14-18px pero solo
+  detectaba click/hover en el pixel exacto del dato. Fix: se agrego
+  `pointHitRadius` (radio visual + 6px) al dataset.
+
+- Helpers PHP nuevos en dashboard.php (evitan duplicar la logica de colores/
+  logo por colegio que ya estaba solo en el mapeo del scatter):
+    - `inv_dash_colores_colegio($inventario, $idColegio, $fallbackPrincipal,
+      $fallbackSecundario)`: colores validados + respaldo de UN colegio.
+      Usa `Inventario::obtenerColoresPorColegio()` -- NUNCA
+      `obtenerColoresColegio()`, que espera un id_usuario, no un id_colegio.
+    - `inv_dash_logo_colegio($idColegio)`: URL del logo
+      (img/colegios/colegio_{id}.png) o null si el archivo no existe.
+  El scatter, las barras de "Valor por colegio" y el logo del sidebar
+  ahora usan estos mismos dos helpers.
+
+- Barras de "Valor del inventario por colegio" (`.inv-value-bar`): antes
+  siempre verdes (`background: #3a9131` fijo en dashboard.css). Ahora cada
+  barra usa el `color_principal` de SU colegio (inline style, via
+  `inv_dash_colores_colegio`). La barra completa es un `<a>` clickeable que
+  filtra el dashboard por ese colegio (antes era un `<div>` sin accion).
+
+- Logo del sidebar (`#colegioLogoContainer` en dashboard.php): con
+  "Todos los colegios" se muestra el logo SEDUC animado
+  (`/include/logo_3d_seduc.php`); con un colegio filtrado se REEMPLAZA por
+  el logo circular de ESE colegio (borde = su color_principal) -- ya NO se
+  muestran los dos juntos como en la iteracion anterior. No hay JS
+  involucrado: como cualquier cambio de filtro (tabs, select colegio,
+  scatter, barra, leyenda) ya recarga la pagina completa, el logo correcto
+  simplemente sale del render PHP de la nueva carga. (Se descarto a
+  proposito la idea de "actualizar el logo via JS sin recargar": el patron
+  `container.innerHTML = '<?php include ...; ?>'` para inyectar el output
+  de un include PHP dentro de un string JS no es valido -- el include emite
+  HTML multilinea con comillas sin escapar, rompe el literal de string.)
