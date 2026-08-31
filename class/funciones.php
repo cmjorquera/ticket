@@ -853,6 +853,30 @@ public function menuLateral2($idUsuarioSession, $idPagActual)
         }
     }
 
+    // ── Ítem fijo: "Administrar Colegios" ────────────────────────────────────
+    // No vive en menu_1; se muestra a quien tenga acceso al menú de
+    // Configuración (id_menu = 7). Para moverlo a la BD, ver menu_1_sub.
+    $resColegiosMenu = $bdato->consulta(
+        "SELECT 1 FROM permisos_menu_1
+         WHERE id_usuario = $idUsuarioSession AND id_menu1 = 7 AND id_tipo_permiso IN (1, 2)
+         LIMIT 1"
+    );
+    if ($resColegiosMenu && $bdato->fetch_array($resColegiosMenu)) {
+        $rutaColegios  = htmlspecialchars($this->resolverRutaSistema('configuracion/mantenedor_colegios.php'), ENT_QUOTES, 'UTF-8');
+        $iconoColegios = $this->renderizarIconoMenu('bi bi-buildings', 'bi bi-buildings');
+        $colegiosActivo = ($archivoActual === 'mantenedor_colegios.php') ? 'is-active' : '';
+        $menuItems .= "
+                <li class='menuLateralClassic-item {$colegiosActivo}'>
+                    <a class='menuLateralClassic-link' href='{$rutaColegios}' title='Panel de establecimientos SEDUC'>
+                        <span class='menuLateralClassic-link-main'>
+                            <span class='menuLateralClassic-icon'>{$iconoColegios}</span>
+                            <span class='menuLateralClassic-text'>Administrar Colegios</span>
+                        </span>
+                        <span class='menuLateralClassic-dot'></span>
+                    </a>
+                </li>";
+    }
+
     $menuLateralCss = htmlspecialchars($this->resolverRutaSistema('css/menuLateral.css'), ENT_QUOTES, 'UTF-8');
     $logoSistema = htmlspecialchars($this->resolverRutaSistema('imagenes/logo_seduc.png'), ENT_QUOTES, 'UTF-8');
 
