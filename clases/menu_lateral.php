@@ -16,9 +16,9 @@
 function menu_lateral($id_usuario, $db, $modulo_activo = null)
 {
     // 1. Obtener todos los menús que el usuario tiene permiso de ver
+    // Columnas REALES de menu_1: id_menu, nombre, archivo, icono, caracteristica, orden
     $sql_permisos = "
-        SELECT DISTINCT pm.id_menu1, m.id_menu, m.nombre, m.abreviacion, 
-                        m.archivo, m.icono, m.caracteristica, m.orden
+        SELECT DISTINCT m.id_menu, m.nombre, m.archivo, m.icono, m.caracteristica, m.orden
         FROM permisos_menu_1 pm
         JOIN menu_1 m ON pm.id_menu1 = m.id_menu
         WHERE pm.id_usuario = ?
@@ -65,7 +65,7 @@ function menu_lateral($id_usuario, $db, $modulo_activo = null)
                     
                     <!-- MENÚ CON SUBMENÚS (expandible) -->
                     <a href="#" class="menu-link" onclick="toggleSubmenu(event, <?php echo $menu['id_menu']; ?>)" 
-                       title="<?php echo htmlspecialchars($menu['caracteristica']); ?>">
+                       title="<?php echo htmlspecialchars($menu["caracteristica"] ?? ""); ?>">
                         <span class="menu-icon">
                             <?php echo $menu['icono']; ?>
                         </span>
@@ -96,7 +96,7 @@ function menu_lateral($id_usuario, $db, $modulo_activo = null)
                     <!-- MENÚ SIN SUBMENÚS (enlace directo) -->
                     <a href="<?php echo htmlspecialchars($menu['archivo']); ?>" 
                        class="menu-link"
-                       title="<?php echo htmlspecialchars($menu['caracteristica']); ?>">
+                       title="<?php echo htmlspecialchars($menu["caracteristica"] ?? ""); ?>">
                         <span class="menu-icon">
                             <?php echo $menu['icono']; ?>
                         </span>
