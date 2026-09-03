@@ -1,0 +1,258 @@
+================================================================
+  ARQUITECTURA DEL SISTEMA — PANEL CENTRAL
+================================================================
+
+ESTRUCTURA GENERAL
+------------------
+El sistema está construido en PHP puro + JS vanilla + CSS propio.
+Sin frameworks, sin Composer. Compatible con cPanel/hosting compartido.
+
+  index.php          Login (formulario + fetch a api/login.php)
+  dashboard.php      Panel principal después del login
+  clases/            Clases PHP reutilizables (Conexion, Usuario, Session)
+  includes/          Fragmentos comunes (header, footer, validaciones)
+  pages/             Una página por módulo del sistema
+  api/               Endpoints JSON para operaciones CRUD
+  js/                JavaScript del lado cliente
+  css/               Estilos globales
+  assets/            Imágenes, videos, fuentes
+  logica/            Este archivo
+
+
+CÓMO FUNCIONA EL LOGIN
+-----------------------
+1. El usuario llena el formulario en index.php.
+2. JS hace fetch() a api/login.php con POST {correo, password}.
+3. login.php instancia Usuario, llama a ->login() que valida
+   con password_verify().
+4. Si es correcto, guarda en $_SESSION: usuario_id, nombre,
+   apellido, correo, rol.
+5. JS recibe {success: true, usuario: {...}} y redirige a dashboard.php.
+6. dashboard.php llama a validar_sesion.php que verifica la sesión.
+   Si no existe, redirige a index.php.
+
+
+CÓMO AGREGAR UNA NUEVA PÁGINA
+-------------------------------
+1. Crear pages/mi_pagina.php con esta estructura mínima:
+
+   <?php
+   require_once __DIR__ . '/../includes/validar_sesion.php';
+   $pagina_titulo = 'Mi Página';
+   require_once __DIR__ . '/../includes/header.php';
+   ?>
+
+   <!-- HTML de la página aquí -->
+
+   <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+
+2. Crear api/mi_pagina.php como endpoint JSON (ver api/modulos.php
+   como plantilla). Maneja acción por $_GET['accion'] o $_POST['accion'].
+
+3. Agregar el ítem en el array $menu de includes/header.php:
+
+   ['ruta' => 'pages/mi_pagina.php', 'icono' => 'fa-star',
+    'label' => 'Mi Página', 'id' => 'mi_pagina']
+
+
+CÓMO HACER CONSULTAS A LA BASE DE DATOS
+-----------------------------------------
+Siempre usar la clase Conexion. NUNCA concatenar variables en SQL.
+
+  $db = new Conexion('sistema_panel_central');
+
+  // Todos los registros
+  $items = $db->fetchAll("SELECT * FROM tabla WHERE activo = ?", [1]);
+
+  // Un registro
+  $item = $db->fetchOne("SELECT * FROM tabla WHERE id = ?", [$id]);
+
+  // INSERT / UPDATE / DELETE
+  $db->execute("INSERT INTO tabla (nombre) VALUES (?)", ['valor']);
+
+  // Último ID insertado
+  $id = $db->lastInsertId();
+
+
+CÓMO CAMBIAR DE BASE DE DATOS
+-------------------------------
+La clase Conexion recibe el nombre CORTO de la base de datos.
+Internamente construye: "crist271_" . $bd
+
+  $db = new Conexion('sistema_compras');       // crist271_sistema_compras
+  $db = new Conexion('sistema_finanzas');      // crist271_sistema_finanzas
+  $db = new Conexion('sistema_panel_central'); // crist271_sistema_panel_central
+
+Puedes tener múltiples instancias en el mismo archivo:
+
+  $dbPanel   = new Conexion('sistema_panel_central');
+  $dbCompras = new Conexion('sistema_compras');
+
+
+CONVENCIONES DE NOMBRES
+------------------------
+  Archivos PHP      : snake_case (mi_pagina.php)
+  Clases PHP        : PascalCase (MiClase)
+  Métodos PHP       : camelCase (miMetodo)
+  Variables PHP     : snake_case ($mi_variable)
+  IDs HTML          : kebab-case (mi-elemento)
+  Funciones JS      : camelCase (miFuncion)
+  Tablas BD         : snake_case plural (mis_registros)
+  Columnas BD       : snake_case (nombre_campo)
+
+  Rutas API         : api/{recurso_plural}.php?accion={accion}
+  Acciones          : listar, obtener, crear, actualizar, eliminar
+
+
+FLUJO COMPLETO DE UNA OPERACIÓN CRUD
+--------------------------------------
+Ejemplo: listar usuarios en pages/usuarios.php
+
+  1. La página hace fetch('../api/usuarios.php?accion=listar')
+  2. api/usuarios.php verifica sesión, instancia Usuario
+  3. Usuario->getAll() ejecuta SELECT con PDO preparado
+  4. Se retorna JSON {success: true, data: [...]}
+  5. JS procesa la respuesta y construye la tabla HTML
+
+
+SEGURIDAD
+----------
+  - Contraseñas: password_hash(PASSWORD_BCRYPT) al crear,
+    password_verify() al autenticar.
+  - SQL: SIEMPRE prepare() con parámetros. Nunca concatenar.
+  - Salida HTML: siempre htmlspecialchars() en PHP,
+    escHtml() en JS antes de insertar en el DOM.
+  - Sesiones: Session::verificar() en cada página/API protegida.
+  - .htaccess bloquea acceso directo a clases/ e includes/
+
+
+JS DISPONIBLE (funciones.js)
+------------------------------
+  showToast(type, titulo, mensaje)
+    type: 'success' | 'error' | 'warning' | 'info'
+
+  openModal(id) / closeModal(id)
+    Abre/cierra un modal por su id HTML.
+
+  openOC(titulo, html) / closeOC()
+    Abre el panel off-canvas lateral con contenido dinámico.
+    Ideal para formularios de crear/editar.
+
+  toggleDD(btn)
+    Despliega/colapsa el dropdown hijo del botón.
+
+  initAcc()
+    Inicializa los acordeones del DOM con clase .acc-item.
+
+  initTabs(btn, targetId)
+    Activa la pestaña y muestra el contenido indicado.
+
+  escHtml(str)
+    Escapa HTML para inserción segura en el DOM.
+
+  validarEmail(email)
+    Retorna true/false según formato de email.
+
+
+MEJORAS AGREGADAS AL PANEL PHP
+-------------------------------
+La última versión trabaja con index.php como entrada de login y el panel modular en dashboard.php, includes/header.php, css/estilos.css, js/funciones.js y pages/*.php. Se agregó:
+
+  - Modo oscuro con toggle en topbar, variables CSS dinámicas y localStorage.
+  - Breadcrumb dinámico con formato: SEDUC › Sección › Subsección.
+  - Sidebar móvil tipo overlay con backdrop para pantallas menores a 768px.
+  - Tabla inteligente reutilizable crearTabla(containerId, columnas, datos, opciones), usada en Módulos, Usuarios y Colegios.
+  - Skeleton loaders showSkeleton(containerId, filas, columnas) y hideSkeleton(containerId).
+  - Empty state showEmptyState(containerId, titulo, subtítulo).
+  - Upload drag & drop en pages/componentes.php con múltiples archivos, preview de imágenes y progreso simulado.
+  - Panel de notificaciones desde la campana del topbar.
+  - Sparklines con Canvas puro en las tarjetas del dashboard.
+  - Nueva sección pages/estados.php "Estados del sistema" para 404, permisos, conexión, carga y éxito.
+
+
+ARCHIVOS NUEVOS DE CONFIGURACIÓN Y SOPORTE
+------------------------------------------
+config.php
+  Define constantes globales:
+    BASE_URL     URL base pública del sistema.
+    APP_NAME     Nombre visible de la aplicación.
+    DEBUG_MODE   Activa/desactiva modo depuración.
+    DB_PREFIX    Prefijo usado por bases de datos del hosting.
+
+helpers/funciones.php
+  Contiene helpers compatibles con PHP 7.4+:
+    redirect($url)
+      Redirige y detiene la ejecución.
+
+    jsonResponse($success, $mensaje, $data)
+      Entrega respuestas JSON uniformes para endpoints API.
+
+    sanitize($input)
+      Limpia strings o arreglos recursivos antes de usar/mostrar datos.
+
+    formatFecha($fecha)
+      Convierte fechas a formato dd-mm-YYYY.
+
+    formatPeso($numero)
+      Formatea montos en pesos chilenos.
+
+    soloAdmin()
+      Verifica sesión y perfil Administrador.
+
+    log_error($mensaje, $archivo)
+      Registra errores en logica/logs sin depender de permisos especiales.
+
+middlewares/solo_admin.php
+  Middleware para páginas o APIs exclusivas de Administrador.
+  Verifica:
+    $_SESSION['tipo'] === 'Administrador'
+  Si no cumple, guarda mensaje en sesión y redirige a dashboard.php.
+
+middlewares/solo_autenticado.php
+  Reemplazo moderno de includes/validar_sesion.php.
+  Verifica que exista:
+    $_SESSION['usuario_id']
+  Si no existe, redirige al login index.php.
+
+js/api.js
+  Centraliza fetch() con apiCall(endpoint, method, data).
+  Maneja automáticamente:
+    - Errores de red.
+    - Errores HTTP 500.
+    - Sesión expirada HTTP 401.
+    - Respuestas JSON success false.
+    - Toasts automáticos si showToast existe.
+
+js/datatables.js
+  Contiene una versión separada de crearTabla().
+  Permite reutilizar la tabla inteligente fuera de index.html en páginas PHP.
+
+
+USO RECOMENDADO EN PÁGINAS PHP NUEVAS
+--------------------------------------
+Para una página protegida:
+
+  <?php
+  require_once __DIR__ . '/../middlewares/solo_autenticado.php';
+  require_once __DIR__ . '/../helpers/funciones.php';
+  ?>
+
+Para una página solo administrador:
+
+  <?php require_once __DIR__ . '/../middlewares/solo_admin.php'; ?>
+
+Para una API:
+
+  <?php
+  require_once __DIR__ . '/../middlewares/solo_autenticado.php';
+  require_once __DIR__ . '/../helpers/funciones.php';
+
+  try {
+      jsonResponse(true, 'Operación correcta', ['items' => []]);
+  } catch (Throwable $e) {
+      log_error($e->getMessage(), 'api.log');
+      jsonResponse(false, 'Error interno del servidor');
+  }
+  ?>
+
+================================================================

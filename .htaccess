@@ -1,0 +1,43 @@
+Options -Indexes
+DirectoryIndex index.php
+
+# Bloquea acceso directo a carpetas sensibles
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Bloquear acceso directo a clases/
+    RewriteRule ^clases(/.*)?$ - [F,L]
+
+    # Bloquear acceso directo a includes/
+    RewriteRule ^includes/(validar_sesion|cerrar_sesion)\.php$ - [F,L]
+
+    # Bloquear acceso directo a includes/ (todo el directorio)
+    RewriteCond %{REQUEST_URI} ^/includes/ [NC]
+    RewriteCond %{HTTP_REFERER} !^https?://[^/]+/
+    RewriteRule ^ - [F,L]
+</IfModule>
+
+# Bloquear lectura directa de archivos PHP en clases/ e includes/
+<FilesMatch "^(Conexion|Usuario|Session|validar_sesion|cerrar_sesion)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Cabeceras de seguridad
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# PHP: ocultar versión y deshabilitar errores visibles en producción
+<IfModule mod_php.c>
+    php_flag  expose_php       Off
+    php_flag  display_errors   Off
+    php_value error_reporting  0
+</IfModule>

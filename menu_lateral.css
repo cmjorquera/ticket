@@ -1,0 +1,297 @@
+/* ==========================================================================
+   MENÚ LATERAL DINÁMICO  ·  SEDUC Chile - Panel Central
+   --------------------------------------------------------------------------
+   CSS vanilla · tema oscuro · mobile-first · sin frameworks.
+   Personaliza todo desde el bloque :root.
+   Iconos: Bootstrap Icons
+     <link rel="stylesheet"
+       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+   ========================================================================== */
+
+:root {
+    /* --- Colores --- */
+    --sb-bg:              #1e1b4b;   /* fondo del sidebar            */
+    --sb-bg-elev:         #272158;   /* cabecera                     */
+    --sb-text:            #c7d2fe;   /* texto normal                 */
+    --sb-text-muted:      #8b8bc4;   /* texto atenuado / iconos off  */
+    --sb-text-active:     #ffffff;   /* texto del item activo        */
+
+    /* --- Estados --- */
+    --sb-hover-bg:        rgba(199, 210, 254, 0.08);
+    --sb-active-bg:       #4f46e5;
+    --sb-active-bar:      #a5b4fc;
+    --sb-submenu-bg:      rgba(0, 0, 0, 0.20);
+    --sb-submenu-hover:   rgba(199, 210, 254, 0.06);
+    --sb-border:          rgba(199, 210, 254, 0.12);
+
+    /* --- Métricas --- */
+    --sb-width:           264px;
+    --sb-radius:          10px;
+    --sb-item-pad-y:      11px;
+    --sb-item-pad-x:      14px;
+    --sb-icon-size:       20px;
+    --sb-font:            "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --sb-font-size:       14.5px;
+    --sb-font-size-sub:   13.5px;
+
+    /* --- Animación --- */
+    --sb-transition:      0.24s ease;
+    --sb-submenu-max:     1000px;    /* fallback si el JS no carga */
+
+    /* --- Scrollbar --- */
+    --sb-scroll-thumb:    rgba(199, 210, 254, 0.28);
+}
+
+/* ==========================================================================
+   Contenedor
+   ========================================================================== */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    width: var(--sb-width);
+    min-width: var(--sb-width);
+    height: 100vh;
+    background: var(--sb-bg);
+    color: var(--sb-text);
+    font-family: var(--sb-font);
+    font-size: var(--sb-font-size);
+    line-height: 1.35;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-scroll-thumb) transparent;
+}
+.sidebar::-webkit-scrollbar       { width: 8px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--sb-scroll-thumb);
+    border-radius: 8px;
+}
+
+/* ==========================================================================
+   Cabecera
+   ========================================================================== */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 18px var(--sb-item-pad-x);
+    background: var(--sb-bg-elev);
+    border-bottom: 1px solid var(--sb-border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 15.5px;
+    color: var(--sb-text-active);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar-brand i { font-size: 20px; color: var(--sb-active-bar); }
+
+.sidebar-close {
+    display: none;                       /* visible solo en móvil */
+    background: none;
+    border: none;
+    color: var(--sb-text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color var(--sb-transition), background var(--sb-transition);
+}
+.sidebar-close:hover { color: var(--sb-text-active); background: var(--sb-hover-bg); }
+
+/* ==========================================================================
+   Navegación / lista
+   ========================================================================== */
+.sidebar-nav { flex: 1 1 auto; }
+
+.menu-list,
+.submenu-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.menu-list { padding: 10px 8px 24px; }
+.menu-item { margin-bottom: 2px; }
+
+/* --- Enlace de un menú --- */
+.menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: var(--sb-item-pad-y) var(--sb-item-pad-x);
+    border-radius: var(--sb-radius);
+    color: var(--sb-text);
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    transition: background var(--sb-transition), color var(--sb-transition);
+}
+.menu-link:hover { background: var(--sb-hover-bg); color: var(--sb-text-active); }
+.menu-link:focus-visible {
+    outline: 2px solid var(--sb-active-bar);
+    outline-offset: -2px;
+}
+
+.menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sb-icon-size);
+    min-width: var(--sb-icon-size);
+    font-size: var(--sb-icon-size);
+    color: var(--sb-text-muted);
+    transition: color var(--sb-transition);
+}
+.menu-text {
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.menu-arrow {
+    display: inline-flex;
+    font-size: 14px;
+    color: var(--sb-text-muted);
+    transition: transform var(--sb-transition);
+}
+.menu-link:hover .menu-icon { color: var(--sb-text); }
+
+/* --- Item activo --- */
+.menu-link.active {
+    background: var(--sb-active-bg);
+    color: var(--sb-text-active);
+    font-weight: 600;
+}
+.menu-link.active .menu-icon,
+.menu-link.active .menu-arrow { color: var(--sb-text-active); }
+.menu-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 8px; bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--sb-active-bar);
+}
+
+/* --- Flecha rotada cuando el submenú está abierto --- */
+.menu-item.open > .menu-link .menu-arrow { transform: rotate(180deg); }
+
+/* ==========================================================================
+   Submenús contraíbles
+   ========================================================================== */
+.submenu-container {
+    max-height: 0;
+    overflow: hidden;
+    background: var(--sb-submenu-bg);
+    border-radius: var(--sb-radius);
+    margin-top: 2px;
+    transition: max-height var(--sb-transition);
+}
+/* Sin JS: mostrar submenús abiertos (degradación elegante) */
+html:not(.js) .menu-item.has-submenu .submenu-container {
+    max-height: var(--sb-submenu-max);
+}
+
+.submenu-item { margin: 1px 6px; }
+.submenu-item:first-child { margin-top: 6px; }
+.submenu-item:last-child  { margin-bottom: 6px; }
+
+.submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px 9px 16px;
+    border-radius: 8px;
+    color: var(--sb-text-muted);
+    font-size: var(--sb-font-size-sub);
+    text-decoration: none;
+    transition: background var(--sb-transition), color var(--sb-transition);
+}
+.submenu-link:hover { background: var(--sb-submenu-hover); color: var(--sb-text-active); }
+
+.submenu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    min-width: 16px;
+    font-size: 15px;
+}
+.submenu-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.submenu-link.active {
+    background: rgba(79, 70, 229, 0.25);
+    color: var(--sb-text-active);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Estado vacío
+   ========================================================================== */
+.sidebar-empty {
+    padding: 24px var(--sb-item-pad-x);
+    color: var(--sb-text-muted);
+    font-size: 13.5px;
+    font-family: var(--sb-font);
+}
+
+/* ==========================================================================
+   Backdrop (móvil)
+   ========================================================================== */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity var(--sb-transition);
+}
+.sidebar-backdrop.is-visible { opacity: 1; }
+
+/* ==========================================================================
+   Responsive  ·  off-canvas bajo 768px
+   ========================================================================== */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        transition: transform var(--sb-transition);
+        z-index: 1050;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    }
+    .sidebar.is-open       { transform: translateX(0); }
+    .sidebar-close         { display: inline-flex; }
+    .sidebar-backdrop      { display: block; }
+    body.sidebar-abierto   { overflow: hidden; }
+}
+@media (min-width: 769px) {
+    .sidebar-backdrop { display: none !important; }
+}
+
+/* ==========================================================================
+   Accesibilidad
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar, .menu-link, .menu-arrow, .submenu-container,
+    .submenu-link, .sidebar-backdrop {
+        transition: none !important;
+    }
+}
