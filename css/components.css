@@ -198,13 +198,26 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 #u-menus{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 #u-menus .perm-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;min-width:0;}
 #u-menus .perm-item-name{margin-bottom:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.perfil-permisos-preview{min-height:238px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);overflow:hidden;}
+.perfil-permisos-empty{min-height:238px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;text-align:center;color:var(--muted);}
+.perfil-permisos-empty>i{font-size:28px;color:var(--blue);}
+.perfil-permisos-empty p{max-width:250px;font-size:12px;}
+.perfil-permisos-heading{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid var(--border);background:var(--card);}
+.perfil-permisos-heading>i{width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:var(--blue-light);color:var(--blue);font-size:17px;}
+.perfil-permisos-heading strong,.perfil-permisos-heading small{display:block;}
+.perfil-permisos-heading strong{font-size:13px;}
+.perfil-permisos-heading small{font-size:10px;color:var(--muted);}
+.perfil-permisos-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px;}
+.perfil-permisos-list>span{display:flex;align-items:center;gap:7px;min-width:0;padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:var(--card);font-size:11px;}
+.perfil-permisos-list>span>i{flex:0 0 auto;color:var(--success);}
+.perfil-permisos-list>span>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 @media(max-width:760px){
   .modal-usuario-wide{max-width:560px;}
   .modal-usuario-grid{grid-template-columns:1fr;gap:18px;}
   .modal-usuario-permisos{border-left:0;border-top:1px solid var(--border);padding-left:0;padding-top:18px;}
 }
 @media(max-width:600px){
-  .modal-form-grid,#u-menus{grid-template-columns:1fr;}
+  .modal-form-grid,#u-menus,.perfil-permisos-list{grid-template-columns:1fr;}
 }
 
 /* ── User avatar mini ────────────────────────────────────────────── */

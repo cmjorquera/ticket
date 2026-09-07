@@ -6,7 +6,7 @@ declare(strict_types=1);
 function normalizar_nombre_permiso(string $valor): string
 {
     $valor = function_exists('mb_strtolower') ? mb_strtolower(trim($valor), 'UTF-8') : strtolower(trim($valor));
-    $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $valor);
+    $ascii = function_exists('iconv') ? iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $valor) : false;
     $valor = $ascii !== false ? $ascii : $valor;
     return trim((string) preg_replace('/[^a-z0-9]+/', ' ', $valor));
 }
@@ -79,6 +79,9 @@ function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $d
               WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'permisos_menu_1' AND COLUMN_NAME = 'id_submenu'"
         );
         $soportaSubmenus = (int) ($columna['total'] ?? 0) > 0;
+        if (!$soportaSubmenus) {
+            throw new RuntimeException('Falta ejecutar sql/permisos_submenus.sql.');
+        }
         $menusSeleccionados = [];
         $submenusSeleccionados = [];
 
