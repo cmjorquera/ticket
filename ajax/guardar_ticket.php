@@ -192,7 +192,14 @@ try {
         if (!es_administrador_global($usuarioId, $db)) {
             responder_json(['ok' => false, 'error' => 'Solo un administrador general puede eliminar tickets.'], 403);
         }
+        $adjuntos = $db->fetchAll('SELECT nombre_archivo FROM ticket_adjuntos WHERE id_ticket = ?', [$ticketId]);
         $db->execute('DELETE FROM tickets WHERE id_ticket = ?', [$ticketId]);
+        $directorio = dirname(__DIR__) . '/uploads/tickets/' . $ticketId;
+        foreach ($adjuntos as $adjunto) {
+            $nombre = basename((string) ($adjunto['nombre_archivo'] ?? ''));
+            if ($nombre !== '') @unlink($directorio . '/' . $nombre);
+        }
+        if (is_dir($directorio)) @rmdir($directorio);
         responder_json(['ok' => true, 'mensaje' => 'Ticket eliminado.']);
     }
 
