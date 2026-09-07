@@ -18,3 +18,16 @@ CREATE TABLE IF NOT EXISTS tickets (
     KEY idx_ticket_categoria (id_categoria),
     KEY idx_ticket_usuario (id_usuario)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS ticket_adjuntos (
+    id_adjunto INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    id_ticket INT UNSIGNED NOT NULL,
+    nombre_original VARCHAR(255) NOT NULL,
+    nombre_archivo VARCHAR(80) NOT NULL,
+    tipo_mime VARCHAR(120) NOT NULL,
+    tamano INT UNSIGNED NOT NULL,
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_adjunto),
+    KEY idx_adjunto_ticket (id_ticket),
+    CONSTRAINT fk_adjunto_ticket FOREIGN KEY (id_ticket) REFERENCES tickets (id_ticket) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

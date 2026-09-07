@@ -110,6 +110,11 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
         <label class="form-label" for="ticket-descripcion">Descripción *</label>
         <textarea class="form-input" id="ticket-descripcion" name="descripcion" maxlength="10000" placeholder="Indica qué ocurrió, desde cuándo y qué intentaste hacer." required></textarea>
       </div>
+      <div class="form-group">
+        <label class="form-label" for="ticket-archivos">Adjuntos</label>
+        <input class="form-input" type="file" id="ticket-archivos" name="archivos[]" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx">
+        <span class="ticket-note">Hasta 5 archivos de 5 MB cada uno: imágenes, PDF, Word o Excel.</span>
+      </div>
 
       <div class="ticket-form-actions">
         <span class="ticket-note"><i class="bi bi-shield-check"></i> Solo se muestran colegios asociados a tu cuenta.</span>
