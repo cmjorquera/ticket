@@ -169,6 +169,7 @@
 
   function abrirModalUsuario(datos = null) {
     const editing = Boolean(datos);
+    document.querySelector('#modal-usuario .modal').classList.toggle('is-editing', editing);
     document.getElementById('modal-usuario-titulo').textContent = editing ? 'Editar usuario' : 'Nuevo usuario';
     document.getElementById('modal-usuario-id').value = datos?.id ?? '';
     document.getElementById('u-nombre').value = datos?.nombre ?? '';

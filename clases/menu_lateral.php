@@ -28,6 +28,8 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
         10 => 'ADMINISTRACIÓN',
         15 => 'ADMINISTRACIÓN',
         16 => 'ADMINISTRACIÓN',
+        17 => 'OPERACIÓN',   // Ticket (menú padre nuevo)
+        18 => 'OPERACIÓN',   // Ticket (menú padre nuevo)
     ];
     $orden_secciones = ['PRINCIPAL', 'ADMINISTRACIÓN', 'OPERACIÓN'];
     $depth = (string) ($GLOBALS['depth'] ?? '');

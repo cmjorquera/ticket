@@ -54,7 +54,7 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .form-input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--fg);width:100%;font-family:inherit;transition:border-color var(--transition),box-shadow var(--transition);}
 .form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light);}
 .form-input:disabled{opacity:.5;cursor:not-allowed;}
-@media(max-width:600px){.modal-form-grid{grid-template-columns:1fr!important;}}
+.modal-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
 
 /* ── Toggle switch ───────────────────────────────────────────────── */
 .switch{position:relative;display:inline-flex;align-items:center;width:36px;height:20px;cursor:pointer;}
@@ -189,6 +189,23 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .modal-header p{font-size:12px;color:var(--muted);margin-top:4px;}
 .modal-body{padding:20px 24px;}
 .modal-footer{padding:0 24px 20px;display:flex;justify-content:flex-end;gap:8px;}
+.modal-usuario-wide{max-width:920px;max-height:calc(100vh - 32px);overflow-y:auto;transition:max-width .2s ease;}
+.modal-usuario-wide.is-editing{max-width:560px;}
+.modal-usuario-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start;}
+.modal-usuario-wide.is-editing .modal-usuario-grid{grid-template-columns:1fr;}
+.modal-section-title{margin-bottom:12px;}
+.modal-usuario-permisos{border-left:1px solid var(--border);padding-left:24px;}
+#u-menus{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+#u-menus .perm-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;min-width:0;}
+#u-menus .perm-item-name{margin-bottom:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+@media(max-width:760px){
+  .modal-usuario-wide{max-width:560px;}
+  .modal-usuario-grid{grid-template-columns:1fr;gap:18px;}
+  .modal-usuario-permisos{border-left:0;border-top:1px solid var(--border);padding-left:0;padding-top:18px;}
+}
+@media(max-width:600px){
+  .modal-form-grid,#u-menus{grid-template-columns:1fr;}
+}
 
 /* ── User avatar mini ────────────────────────────────────────────── */
 .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
