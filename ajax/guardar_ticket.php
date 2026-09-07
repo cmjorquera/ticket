@@ -115,6 +115,26 @@ try {
         responder_json(['ok' => true, 'mensaje' => $tecnicoId ? 'Ticket asignado.' : 'Asignación retirada.']);
     }
 
+    if ($accion === 'actualizar') {
+        if (!puede_administrar_ticket($usuarioId, (int) $ticket['id_colegio'], $db)) {
+            responder_json(['ok' => false, 'error' => 'No tienes permiso para gestionar este ticket.'], 403);
+        }
+        $estado = strtolower(trim((string) ($datos['estado'] ?? '')));
+        $tecnicoId = (int) ($datos['tecnico_id'] ?? 0);
+        if (!in_array($estado, ['nuevo', 'en_proceso', 'resuelto', 'cerrado'], true)) {
+            responder_json(['ok' => false, 'error' => 'Estado no válido.'], 422);
+        }
+        if ($tecnicoId > 0 && !$db->fetchOne("SELECT id FROM usuarios WHERE id = ? AND LOWER(estado) = 'activo' LIMIT 1", [$tecnicoId])) {
+            responder_json(['ok' => false, 'error' => 'El técnico seleccionado no está disponible.'], 422);
+        }
+        $fechaRespuesta = in_array($estado, ['resuelto', 'cerrado'], true) ? ', fecha_respuesta = COALESCE(fecha_respuesta, NOW())' : '';
+        $db->execute(
+            "UPDATE tickets SET id_tecnico_asignado = ?, estado = ?{$fechaRespuesta} WHERE id_ticket = ?",
+            [$tecnicoId ?: null, $estado, $ticketId]
+        );
+        responder_json(['ok' => true, 'mensaje' => 'Asignación y estado actualizados.']);
+    }
+
     if ($accion === 'eliminar') {
         if (!es_administrador_global($usuarioId, $db)) {
             responder_json(['ok' => false, 'error' => 'Solo un administrador general puede eliminar tickets.'], 403);
@@ -128,4 +148,3 @@ try {
     error_log('Error en guardar_ticket.php: ' . $ex->getMessage());
     responder_json(['ok' => false, 'error' => 'No fue posible procesar el ticket. Verifica que las tablas de tickets estén instaladas.'], 500);
 }
-
