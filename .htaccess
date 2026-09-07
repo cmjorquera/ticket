@@ -18,7 +18,7 @@ DirectoryIndex index.php
 </IfModule>
 
 # Bloquear lectura directa de archivos PHP en clases/ e includes/
-<FilesMatch "^(Conexion|Usuario|Session|validar_sesion|cerrar_sesion)\.php$">
+<FilesMatch "^(Conexion|Usuario|Session|validar_sesion)\.php$">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>

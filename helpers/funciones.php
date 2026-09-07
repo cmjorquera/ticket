@@ -51,6 +51,10 @@ function formatPeso($numero): string
 function soloAdmin(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
+        $sp = '/var/cpanel/php/sessions/ea-php83';
+        if (!is_dir($sp)) {
+            session_save_path(sys_get_temp_dir());
+        }
         session_start();
     }
 
@@ -71,4 +75,3 @@ function log_error(string $mensaje, string $archivo = 'app.log'): void
     $linea = '[' . date('Y-m-d H:i:s') . '] ' . $mensaje . PHP_EOL;
     error_log($linea, 3, $dir . '/' . basename($archivo));
 }
-

@@ -1,7 +1,7 @@
-<?php $depth = (strpos($_SERVER['PHP_SELF'], '/pages/') !== false) ? '../' : ''; ?>
-        </main><!-- /.content -->
-    </div><!-- /.main-wrap -->
-</div><!-- /.layout -->
+<?php $depth = $depth ?? ''; ?>
+        </main><!-- /#content -->
+    </div><!-- /#main -->
+</div><!-- /#app -->
 
 <!-- Toast container -->
 <div id="toast-container" class="toast-container"></div>
