@@ -30,9 +30,10 @@ final class Usuarios
         }
 
         $sql = "SELECT u.id, u.nombre, u.apellido_paterno, u.apellido_materno,
-                       u.email, u.estado, u.telefono, u.sexo, u.id_area_trabajo,
-                       at.nombre_area,
-                       uc.id_colegio, c.nom_colegio, c.logo,
+       u.email, u.estado, u.telefono, u.sexo,
+       at.nombre_area,
+       c.nom_colegio,
+       uc.es_admin_colegio,
                        COALESCE(uc.es_admin_colegio, 0) AS es_admin_colegio
                   FROM usuarios u
              LEFT JOIN area_trabajo at ON at.id_area = u.id_area_trabajo
