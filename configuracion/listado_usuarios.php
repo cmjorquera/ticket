@@ -80,21 +80,29 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 
 <!-- Modal para crear o editar usuarios -->
 <div class="modal-overlay" id="modal-usuario" onclick="closeModalOutside(event, 'modal-usuario')">
-  <div class="modal" style="max-width:560px" role="dialog" aria-modal="true" aria-labelledby="modal-usuario-titulo">
+  <div class="modal modal-usuario-wide" role="dialog" aria-modal="true" aria-labelledby="modal-usuario-titulo">
     <div class="modal-header"><h3 id="modal-usuario-titulo">Nuevo usuario</h3><p>Completa los datos del usuario.</p></div>
     <div class="modal-body">
       <input type="hidden" id="modal-usuario-id">
-      <div class="modal-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label class="form-label" for="u-nombre">Nombre *</label><input type="text" class="form-input" id="u-nombre" placeholder="Nombre"></div>
-        <div class="form-group"><label class="form-label" for="u-apellido-pat">Apellido paterno *</label><input type="text" class="form-input" id="u-apellido-pat" placeholder="Apellido paterno"></div>
-        <div class="form-group"><label class="form-label" for="u-apellido-mat">Apellido materno</label><input type="text" class="form-input" id="u-apellido-mat" placeholder="Apellido materno"></div>
-        <div class="form-group"><label class="form-label" for="u-email">Email *</label><input type="email" class="form-input" id="u-email" placeholder="correo@seduc.cl"></div>
-        <div class="form-group"><label class="form-label" for="u-telefono">Teléfono</label><input type="text" class="form-input" id="u-telefono" placeholder="Teléfono"></div>
-        <div class="form-group"><label class="form-label" for="u-area">Área *</label><select class="form-input" id="u-area"><option value="">Seleccionar</option></select></div>
-        <div class="form-group"><label class="form-label" for="u-colegio">Colegio</label><select class="form-input" id="u-colegio"><option value="">Sin colegio</option></select></div>
-        <div class="form-group"><label class="form-label" for="u-sexo">Sexo *</label><select class="form-input" id="u-sexo"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></div>
+      <div class="modal-usuario-grid">
+        <section class="modal-usuario-section" aria-labelledby="modal-usuario-datos">
+          <p class="form-label modal-section-title" id="modal-usuario-datos">Datos del usuario</p>
+          <div class="modal-form-grid">
+            <div class="form-group"><label class="form-label" for="u-nombre">Nombre *</label><input type="text" class="form-input" id="u-nombre" placeholder="Nombre"></div>
+            <div class="form-group"><label class="form-label" for="u-apellido-pat">Apellido paterno *</label><input type="text" class="form-input" id="u-apellido-pat" placeholder="Apellido paterno"></div>
+            <div class="form-group"><label class="form-label" for="u-apellido-mat">Apellido materno</label><input type="text" class="form-input" id="u-apellido-mat" placeholder="Apellido materno"></div>
+            <div class="form-group"><label class="form-label" for="u-email">Email *</label><input type="email" class="form-input" id="u-email" placeholder="correo@seduc.cl"></div>
+            <div class="form-group"><label class="form-label" for="u-telefono">Teléfono</label><input type="text" class="form-input" id="u-telefono" placeholder="Teléfono"></div>
+            <div class="form-group"><label class="form-label" for="u-area">Área *</label><select class="form-input" id="u-area"><option value="">Seleccionar</option></select></div>
+            <div class="form-group"><label class="form-label" for="u-colegio">Colegio</label><select class="form-input" id="u-colegio"><option value="">Sin colegio</option></select></div>
+            <div class="form-group"><label class="form-label" for="u-sexo">Sexo *</label><select class="form-input" id="u-sexo"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></div>
+          </div>
+        </section>
+        <section class="modal-usuario-section modal-usuario-permisos" id="u-menus-wrap" aria-labelledby="modal-usuario-menus">
+          <p class="form-label modal-section-title" id="modal-usuario-menus">Menús permitidos</p>
+          <div id="u-menus" class="permisos-grid"></div>
+        </section>
       </div>
-      <div id="u-menus-wrap" style="margin-top:16px"><p class="form-label">Menús permitidos</p><div id="u-menus" class="permisos-grid"></div></div>
       <p id="modal-usuario-error" class="text-sm" hidden style="color:var(--danger);margin-top:12px"></p>
     </div>
     <div class="modal-footer">
