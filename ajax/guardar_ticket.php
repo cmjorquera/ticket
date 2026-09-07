@@ -68,15 +68,68 @@ try {
         );
         $tecnicoId = $tecnico ? (int) $tecnico['id_tecnico'] : null;
 
-        $db->execute(
-            "INSERT INTO tickets
-                (id_usuario, id_categoria, id_colegio, asunto, descripcion, prioridad, estado, fecha_creacion, id_tecnico_asignado)
-             VALUES (?, ?, ?, ?, ?, ?, 'nuevo', NOW(), ?)",
-            [$usuarioId, $categoriaId, $colegioId, $asunto, $descripcion, $prioridad, $tecnicoId]
-        );
+        $archivos = [];
+        if (isset($_FILES['archivos']['name']) && is_array($_FILES['archivos']['name'])) {
+            $permitidos = [
+                'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp',
+                'application/pdf' => 'pdf',
+                'application/msword' => 'doc',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+                'application/vnd.ms-excel' => 'xls',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+            ];
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            foreach ($_FILES['archivos']['name'] as $i => $nombreOriginal) {
+                $error = (int) ($_FILES['archivos']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+                if ($error === UPLOAD_ERR_NO_FILE) continue;
+                if ($error !== UPLOAD_ERR_OK) responder_json(['ok' => false, 'error' => 'Uno de los archivos no pudo subirse.'], 422);
+                if (count($archivos) >= 5) responder_json(['ok' => false, 'error' => 'Puedes adjuntar un máximo de 5 archivos.'], 422);
+                $temporal = (string) ($_FILES['archivos']['tmp_name'][$i] ?? '');
+                $tamano = (int) ($_FILES['archivos']['size'][$i] ?? 0);
+                $mime = $temporal !== '' ? (string) $finfo->file($temporal) : '';
+                if ($tamano <= 0 || $tamano > 5 * 1024 * 1024 || !isset($permitidos[$mime])) {
+                    responder_json(['ok' => false, 'error' => 'Revisa el tipo y tamaño de los archivos adjuntos.'], 422);
+                }
+                $archivos[] = ['original' => basename((string) $nombreOriginal), 'tmp' => $temporal, 'mime' => $mime, 'extension' => $permitidos[$mime], 'tamano' => $tamano];
+            }
+        }
+
+        $pdo = $db->getPDO();
+        $guardados = [];
+        $pdo->beginTransaction();
+        try {
+            $db->execute(
+                "INSERT INTO tickets
+                    (id_usuario, id_categoria, id_colegio, asunto, descripcion, prioridad, estado, fecha_creacion, id_tecnico_asignado)
+                 VALUES (?, ?, ?, ?, ?, ?, 'nuevo', NOW(), ?)",
+                [$usuarioId, $categoriaId, $colegioId, $asunto, $descripcion, $prioridad, $tecnicoId]
+            );
+            $ticketId = (int) $db->lastInsertId();
+            if ($archivos) {
+                $directorio = dirname(__DIR__) . '/uploads/tickets/' . $ticketId;
+                if (!is_dir($directorio) && !mkdir($directorio, 0750, true) && !is_dir($directorio)) {
+                    throw new RuntimeException('No fue posible preparar la carpeta de adjuntos.');
+                }
+                foreach ($archivos as $archivo) {
+                    $nombreSeguro = bin2hex(random_bytes(16)) . '.' . $archivo['extension'];
+                    $destino = $directorio . '/' . $nombreSeguro;
+                    if (!move_uploaded_file($archivo['tmp'], $destino)) throw new RuntimeException('No fue posible guardar un archivo adjunto.');
+                    $guardados[] = $destino;
+                    $db->execute(
+                        'INSERT INTO ticket_adjuntos (id_ticket, nombre_original, nombre_archivo, tipo_mime, tamano, fecha_creacion) VALUES (?, ?, ?, ?, ?, NOW())',
+                        [$ticketId, $archivo['original'], $nombreSeguro, $archivo['mime'], $archivo['tamano']]
+                    );
+                }
+            }
+            $pdo->commit();
+        } catch (Throwable $ex) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            foreach ($guardados as $archivoGuardado) @unlink($archivoGuardado);
+            throw $ex;
+        }
         responder_json([
             'ok' => true,
-            'ticket_id' => (int) $db->lastInsertId(),
+            'ticket_id' => $ticketId,
             'mensaje' => $tecnicoId ? 'Ticket creado y asignado automáticamente.' : 'Ticket creado; queda pendiente de asignación.',
         ], 201);
     }
