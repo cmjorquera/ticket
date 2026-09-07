@@ -74,7 +74,7 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
         <?php foreach ($tickets as $ticket):
           $estado = strtolower((string) $ticket['estado']);
           $prioridad = str_replace(['í', 'Í'], 'i', strtolower((string) $ticket['prioridad']));
-          $datosTicket = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+          $datosTicket = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         ?>
           <tr data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['usuario_nombre'], $ticket['colegio_nombre'], $ticket['categoria_nombre']]))) ?>" data-estado="<?= e($estado) ?>">
             <td><span class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></span><div class="text-xs text-muted"><?= e(date('d/m/Y H:i', strtotime((string) $ticket['fecha_creacion']))) ?></div></td>
