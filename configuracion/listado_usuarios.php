@@ -25,13 +25,13 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     <select class="input" id="filtro-area" style="max-width:220px" aria-label="Filtrar por área">
       <option value="">Todas las áreas</option>
     </select>
-    <select class="input" id="filtro-estado" style="max-width:180px" aria-label="Filtrar por estado">
-      <option value="">Todos los estados</option>
-      <option value="activo">Activo</option>
-      <option value="Pendiente">Pendiente</option>
-      <option value="bloqueado">Bloqueado</option>
-      <option value="inactivo">Inactivo</option>
-    </select>
+    <div class="filtro-pills" id="filtro-estado" aria-label="Filtrar por estado">
+      <button type="button" class="pill active" data-val="">Todos</button>
+      <button type="button" class="pill" data-val="activo">Activo</button>
+      <button type="button" class="pill" data-val="inactivo">Inactivo</button>
+      <button type="button" class="pill" data-val="Pendiente">Pendiente</button>
+      <button type="button" class="pill" data-val="bloqueado">Bloqueado</button>
+    </div>
     <span class="toolbar-count"><strong id="total-usuarios">0</strong> usuarios</span>
   </div>
   <div class="table-wrap">
@@ -44,8 +44,66 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
       </tbody>
     </table>
   </div>
+  <div class="paginacion" id="usr-paginacion"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<p id="usuarios-feedback" class="text-sm" role="status" hidden style="margin-top:12px"></p>
+
+<!-- Modal para confirmar bloqueo o activación -->
+<div class="modal-overlay" id="modal-estado-usuario" onclick="closeModalOutside(event, 'modal-estado-usuario')">
+  <div class="modal" style="max-width:420px" role="dialog" aria-modal="true" aria-labelledby="modal-estado-titulo">
+    <div class="modal-header">
+      <h3 id="modal-estado-titulo">¿Bloquear usuario?</h3>
+      <p id="modal-estado-nombre"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-estado-usuario')">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="modal-estado-confirmar">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de permisos -->
+<div class="modal-overlay" id="modal-permisos" onclick="closeModalOutside(event, 'modal-permisos')">
+  <div class="modal" style="max-width:600px" role="dialog" aria-modal="true" aria-labelledby="modal-permisos-titulo">
+    <div class="modal-header">
+      <h3 id="modal-permisos-titulo">Permisos</h3>
+      <p id="modal-permisos-nombre"></p>
+    </div>
+    <div class="modal-body" id="modal-permisos-contenido"><p class="text-muted">Cargando…</p></div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-permisos')">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="modal-permisos-guardar">Guardar permisos</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para crear o editar usuarios -->
+<div class="modal-overlay" id="modal-usuario" onclick="closeModalOutside(event, 'modal-usuario')">
+  <div class="modal" style="max-width:560px" role="dialog" aria-modal="true" aria-labelledby="modal-usuario-titulo">
+    <div class="modal-header"><h3 id="modal-usuario-titulo">Nuevo usuario</h3><p>Completa los datos del usuario.</p></div>
+    <div class="modal-body">
+      <input type="hidden" id="modal-usuario-id">
+      <div class="modal-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group"><label class="form-label" for="u-nombre">Nombre *</label><input type="text" class="form-input" id="u-nombre" placeholder="Nombre"></div>
+        <div class="form-group"><label class="form-label" for="u-apellido-pat">Apellido paterno *</label><input type="text" class="form-input" id="u-apellido-pat" placeholder="Apellido paterno"></div>
+        <div class="form-group"><label class="form-label" for="u-apellido-mat">Apellido materno</label><input type="text" class="form-input" id="u-apellido-mat" placeholder="Apellido materno"></div>
+        <div class="form-group"><label class="form-label" for="u-email">Email *</label><input type="email" class="form-input" id="u-email" placeholder="correo@seduc.cl"></div>
+        <div class="form-group"><label class="form-label" for="u-telefono">Teléfono</label><input type="text" class="form-input" id="u-telefono" placeholder="Teléfono"></div>
+        <div class="form-group"><label class="form-label" for="u-area">Área *</label><select class="form-input" id="u-area"><option value="">Seleccionar</option></select></div>
+        <div class="form-group"><label class="form-label" for="u-colegio">Colegio</label><select class="form-input" id="u-colegio"><option value="">Sin colegio</option></select></div>
+        <div class="form-group"><label class="form-label" for="u-sexo">Sexo *</label><select class="form-input" id="u-sexo"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></div>
+      </div>
+      <div id="u-menus-wrap" style="margin-top:16px"><p class="form-label">Menús permitidos</p><div id="u-menus" class="permisos-grid"></div></div>
+      <p id="modal-usuario-error" class="text-sm" hidden style="color:var(--danger);margin-top:12px"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="modal-usuario-guardar">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="<?= $depth ?>js/paginacion.js"></script>
 <script src="<?= $depth ?>configuracion/js/listado_usuarios.js"></script>
 <?php finalizar_layout_configuracion(); ?>
