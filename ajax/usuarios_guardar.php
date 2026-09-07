@@ -37,11 +37,32 @@ function menus_validos(Conexion $db, array $ids): array
 function guardar_permisos_usuario(Conexion $db, int $idUsuario, array $menuIds): void
 {
     $db->execute('DELETE FROM permisos_menu_1 WHERE id_usuario = ?', [$idUsuario]);
+    $columna = $db->fetchOne(
+        "SELECT COUNT(*) AS total FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'permisos_menu_1'
+            AND COLUMN_NAME = 'id_submenu'"
+    );
+    $guardaSubmenus = (int) ($columna['total'] ?? 0) > 0;
+
     foreach (menus_validos($db, $menuIds) as $idMenu) {
-        $db->execute(
-            'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_tipo_permiso) VALUES (?, ?, 1)',
-            [$idUsuario, $idMenu]
-        );
+        if ($guardaSubmenus) {
+            $db->execute(
+                'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_submenu, id_tipo_permiso) VALUES (?, ?, NULL, 1)',
+                [$idUsuario, $idMenu]
+            );
+            foreach ($db->fetchAll('SELECT id_submenu FROM menu_1_sub WHERE id_menu = ?', [$idMenu]) as $submenu) {
+                $db->execute(
+                    'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_submenu, id_tipo_permiso) VALUES (?, ?, ?, 1)',
+                    [$idUsuario, $idMenu, (int) $submenu['id_submenu']]
+                );
+            }
+        } else {
+            $db->execute(
+                'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_tipo_permiso) VALUES (?, ?, 1)',
+                [$idUsuario, $idMenu]
+            );
+        }
     }
 }
 
@@ -175,4 +196,3 @@ try {
 } catch (Throwable $e) {
     responder_json(['ok' => false, 'mensaje' => 'No fue posible guardar los cambios.'], 500);
 }
-

@@ -34,11 +34,27 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
     $orden_secciones = ['PRINCIPAL', 'ADMINISTRACIÓN', 'OPERACIÓN'];
     $depth = (string) ($GLOBALS['depth'] ?? '');
 
+    // Compatibilidad progresiva: antes de ejecutar la migración los submenús
+    // conservan la herencia histórica del menú padre.
+    try {
+        $columna_submenu = $db->fetchOne(
+            "SELECT COUNT(*) AS total FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'permisos_menu_1'
+                AND COLUMN_NAME = 'id_submenu'"
+        );
+        $permisos_submenu_habilitados = (int) ($columna_submenu['total'] ?? 0) > 0;
+    } catch (Throwable $e) {
+        $permisos_submenu_habilitados = false;
+    }
+    $filtro_permiso_padre = $permisos_submenu_habilitados ? ' AND pm.id_submenu IS NULL' : '';
+
     $menus = $db->fetchAll(
         "SELECT DISTINCT m.id_menu, m.nombre, m.archivo, m.icono, m.caracteristica, m.orden
          FROM permisos_menu_1 pm
          JOIN menu_1 m ON pm.id_menu1 = m.id_menu
          WHERE pm.id_usuario = ?
+           AND pm.id_tipo_permiso = 1{$filtro_permiso_padre}
          ORDER BY CAST(m.orden AS UNSIGNED) ASC",
         [$id_usuario]
     );
@@ -75,15 +91,28 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
                     $icono = trim((string) preg_replace('/style\s*=\s*["\'][^"\']*["\']/i', '', $icono_raw));
                     $icono = $icono ?: '<i class="bi bi-circle"></i>';
 
-                    // Los submenús heredan el acceso del menú padre; no existe
-                    // una tabla de permisos adicional para menu_1_sub.
-                    $submenu = $db->fetchAll(
-                        "SELECT id_submenu, nombre, archivo, icono, orden
-                         FROM menu_1_sub
-                         WHERE id_menu = ?
-                         ORDER BY orden ASC",
-                        [(int) $menu['id_menu']]
-                    );
+                    if ($permisos_submenu_habilitados) {
+                        $submenu = $db->fetchAll(
+                            "SELECT DISTINCT sm.id_submenu, sm.nombre, sm.archivo, sm.icono, sm.orden
+                               FROM menu_1_sub sm
+                               JOIN permisos_menu_1 pm
+                                 ON pm.id_menu1 = sm.id_menu
+                                AND pm.id_submenu = sm.id_submenu
+                                AND pm.id_usuario = ?
+                                AND pm.id_tipo_permiso = 1
+                              WHERE sm.id_menu = ?
+                           ORDER BY sm.orden ASC",
+                            [$id_usuario, (int) $menu['id_menu']]
+                        );
+                    } else {
+                        $submenu = $db->fetchAll(
+                            "SELECT id_submenu, nombre, archivo, icono, orden
+                               FROM menu_1_sub
+                              WHERE id_menu = ?
+                           ORDER BY orden ASC",
+                            [(int) $menu['id_menu']]
+                        );
+                    }
 
                     $tiene_sub_activo = false;
                     foreach ($submenu as $sub) {

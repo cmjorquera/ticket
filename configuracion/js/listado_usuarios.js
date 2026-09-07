@@ -376,7 +376,7 @@
     const user = _todosUsuarios.find(item => Number(item.id) === Number(button.dataset.id));
     if (!user) return;
     if (button.dataset.action === 'editar') abrirModalUsuario(user);
-    if (button.dataset.action === 'permisos') verPermisos(user.id, fullName(user));
+    if (button.dataset.action === 'permisos') window.location.href = `usuarios_permisos.php?usuario_id=${encodeURIComponent(user.id)}`;
     if (button.dataset.action === 'estado') cambiarEstado(user.id, fullName(user), user.estado);
   });
 
