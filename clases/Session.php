@@ -5,6 +5,10 @@ class Session
     public static function iniciar(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            $savePath = '/var/cpanel/php/sessions/ea-php83';
+            if (!is_dir($savePath)) {
+                session_save_path(sys_get_temp_dir());
+            }
             session_start();
         }
     }

@@ -1,41 +1,35 @@
 <?php
 
 require_once __DIR__ . '/../clases/Session.php';
+require_once __DIR__ . '/../clases/Conexion.php';
 Session::iniciar();
 
-$usuario_nombre   = Session::get('usuario_nombre', 'Usuario');
+// Nombre/rol para el topbar. El login guarda $_SESSION['nombre'] y $_SESSION['perfil'];
+// se dejan las claves antiguas como respaldo.
+$usuario_nombre   = $_SESSION['nombre'] ?? Session::get('usuario_nombre', 'Usuario');
 $usuario_apellido = Session::get('usuario_apellido', '');
-$usuario_rol      = Session::get('usuario_rol', 'usuario');
+$usuario_rol      = $_SESSION['perfil'] ?? Session::get('usuario_rol', 'usuario');
 $pagina_actual    = basename($_SERVER['PHP_SELF'], '.php');
 
-$menu = [
-    ['ruta' => 'dashboard.php',         'icono' => 'fa-gauge',         'label' => 'Dashboard',           'id' => 'dashboard',      'grupo' => 'Principal'],
-    ['ruta' => 'pages/modulos.php',      'icono' => 'fa-cubes',         'label' => 'Módulos',             'id' => 'modulos',        'grupo' => 'Administración'],
-    ['ruta' => 'pages/usuarios.php',     'icono' => 'fa-users',         'label' => 'Usuarios',            'id' => 'usuarios',       'grupo' => 'Administración'],
-    ['ruta' => 'pages/colegios.php',     'icono' => 'fa-school',        'label' => 'Colegios',            'id' => 'colegios',       'grupo' => 'Operación'],
-    ['ruta' => 'pages/eventos.php',      'icono' => 'fa-calendar',      'label' => 'Eventos',             'id' => 'eventos',        'grupo' => 'Operación'],
-    ['ruta' => 'pages/permisos.php',     'icono' => 'fa-shield-halved', 'label' => 'Permisos',            'id' => 'permisos',       'grupo' => 'Seguridad'],
-    ['ruta' => 'pages/beneficios.php',   'icono' => 'fa-gift',          'label' => 'Beneficios',          'id' => 'beneficios',     'grupo' => 'Operación'],
-    ['ruta' => 'pages/contactos.php',    'icono' => 'fa-address-book',  'label' => 'Contactos',           'id' => 'contactos',      'grupo' => 'Operación'],
-    ['ruta' => 'pages/contenedores.php', 'icono' => 'fa-box',           'label' => 'Contenedores',        'id' => 'contenedores',   'grupo' => 'Utilidades'],
-    ['ruta' => 'pages/informa.php',      'icono' => 'fa-newspaper',     'label' => 'Informa',             'id' => 'informa',        'grupo' => 'Comunicaciones'],
-    ['ruta' => 'pages/capsulas.php',     'icono' => 'fa-capsules',      'label' => 'Cápsulas',            'id' => 'capsulas',       'grupo' => 'Comunicaciones'],
-    ['ruta' => 'pages/componentes.php',  'icono' => 'fa-code',          'label' => 'Componentes UI',      'id' => 'componentes',    'grupo' => 'Utilidades'],
-    ['ruta' => 'pages/estados.php',      'icono' => 'fa-circle-info',   'label' => 'Estados del sistema', 'id' => 'estados',        'grupo' => 'Utilidades'],
-    ['ruta' => 'pages/perfil.php',       'icono' => 'fa-user-circle',   'label' => 'Perfil',              'id' => 'perfil',         'grupo' => 'Cuenta'],
-    ['ruta' => 'pages/configuracion.php','icono' => 'fa-gear',          'label' => 'Configuración',       'id' => 'configuracion',  'grupo' => 'Cuenta'],
-];
+$script_path = trim((string) (parse_url($_SERVER['PHP_SELF'] ?? '/', PHP_URL_PATH) ?: ''), '/');
+$base_path = defined('BASE_URL')
+    ? trim((string) (parse_url((string) BASE_URL, PHP_URL_PATH) ?: ''), '/')
+    : '';
 
-$depth = (strpos($_SERVER['PHP_SELF'], '/pages/') !== false) ? '../' : '';
-$menu_actual = null;
-foreach ($menu as $item) {
-    if ($item['id'] === $pagina_actual) {
-        $menu_actual = $item;
-        break;
-    }
+if ($base_path !== ''
+    && ($script_path === $base_path || str_starts_with($script_path, $base_path . '/'))
+) {
+    $script_path = ltrim(substr($script_path, strlen($base_path)), '/');
 }
-$breadcrumb_grupo = $menu_actual['grupo'] ?? 'Sección';
-$breadcrumb_label = $pagina_titulo ?? ($menu_actual['label'] ?? 'Inicio');
+
+$script_directory = str_replace('\\', '/', dirname($script_path));
+$depth = ($script_directory === '.' || $script_directory === '')
+    ? ''
+    : str_repeat('../', count(array_filter(explode('/', trim($script_directory, '/')))));
+
+// El menú lateral es dinámico: se arma desde la BD en clases/menu_lateral.php.
+$breadcrumb_grupo = 'Sección';
+$breadcrumb_label = $pagina_titulo ?? 'Inicio';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -43,53 +37,44 @@ $breadcrumb_label = $pagina_titulo ?? ($menu_actual['label'] ?? 'Inicio');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pagina_titulo ?? 'Sistema') ?></title>
-    <link rel="stylesheet" href="<?= $depth ?>css/estilos.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="<?= $depth ?>css/tokens.css">
+    <link rel="stylesheet" href="<?= $depth ?>css/layout.css">
+    <link rel="stylesheet" href="<?= $depth ?>css/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
-<div class="layout">
-    <div class="mobile-backdrop" id="mobile-backdrop" onclick="closeMobileSidebar()"></div>
+<div id="app">
+    <?php
+    // El componente conserva la estructura visual y menu_lateral() aporta los datos de BD.
+    if (isset($_SESSION['id'])) {
+        $db = Conexion::getInstance('sistema_panel_central');
+        $sidebar_component = __DIR__ . '/../componentes/sidebar.php';
 
-    <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <span class="sidebar-logo"><i class="fa-solid fa-layer-group"></i> <span>Sistema</span></span>
-            <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-        </div>
+        if (is_file($sidebar_component)) {
+            require $sidebar_component;
+        } else {
+            require_once __DIR__ . '/../clases/menu_lateral.php';
+            echo '<aside id="sidebar">';
+            menu_lateral((int) $_SESSION['id'], $db, $pagina_actual);
+            echo '</aside>';
+        }
+    }
+    ?>
 
-        <nav class="sidebar-nav">
-            <ul>
-                <?php $grupo_actual = ''; foreach ($menu as $item): ?>
-                <?php if (($item['grupo'] ?? '') !== $grupo_actual): $grupo_actual = $item['grupo'] ?? ''; ?>
-                <li class="sidebar-section"><?= htmlspecialchars($grupo_actual) ?></li>
-                <?php endif; ?>
-                <li>
-                    <a href="<?= $depth . $item['ruta'] ?>"
-                       class="<?= $pagina_actual === $item['id'] ? 'active' : '' ?>">
-                        <i class="fa-solid <?= $item['icono'] ?>"></i>
-                        <span><?= $item['label'] ?></span>
-                    </a>
-                </li>
-                <?php endforeach; ?>
-            </ul>
-        </nav>
-
-        <div class="sidebar-footer">
-            <a href="<?= $depth ?>includes/cerrar_sesion.php" class="btn-logout">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Cerrar sesión</span>
-            </a>
-        </div>
-    </aside>
+    <div id="mobile-overlay" onclick="closeMobileSidebar()"></div>
 
     <!-- Contenido principal -->
-    <div class="main-wrap">
+    <div id="main">
 
         <!-- Topbar -->
-        <header class="topbar">
+        <header id="topbar" class="topbar">
             <div class="topbar-left">
-                <button class="topbar-toggle" onclick="toggleSidebar()">
+                <button id="mobile-menu-btn" class="topbar-toggle" onclick="toggleMobileSidebar()">
                     <i class="fa-solid fa-bars"></i>
                 </button>
                 <span class="mobile-brand"><i class="fa-solid fa-layer-group"></i> Sistema</span>
@@ -124,11 +109,11 @@ $breadcrumb_label = $pagina_titulo ?? ($menu_actual['label'] ?? 'Inicio');
                     </button>
                     <div class="dropdown-menu">
                         <a href="<?= $depth ?>pages/perfil.php"><i class="fa-solid fa-user"></i> Perfil</a>
-                        <a href="<?= $depth ?>includes/cerrar_sesion.php"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+                        <a href="<?= $depth ?>cerrar_sesion.php"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
                     </div>
                 </div>
             </div>
         </header>
 
         <!-- Zona de contenido -->
-        <main class="content">
+        <main id="content" class="content">
