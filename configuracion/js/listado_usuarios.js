@@ -2,7 +2,7 @@
   'use strict';
 
   const API = '../ajax';
-  const state = { areas: [], colegios: [], menus: [] };
+  const state = { areas: [], colegios: [], perfiles: [] };
   let _todosUsuarios = [];
   let _pag;
   let _estadoFiltro = '';
@@ -143,21 +143,44 @@
     });
   }
 
-  function renderCreateMenus() {
-    const container = document.getElementById('u-menus');
+  function profileType(profile) {
+    const name = String(profile?.nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if ((name.includes('administrador') || Number(profile?.id_perfil) === 3) && !name.includes('colegio') && !name.includes('area')) return 'administrador';
+    if ((name.includes('admin') && name.includes('colegio')) || Number(profile?.id_perfil) === 4) return 'admin_colegio';
+    if ((name.includes('admin') && name.includes('area')) || Number(profile?.id_perfil) === 5) return 'admin_area';
+    if (name.includes('tecn') || Number(profile?.id_perfil) === 2) return 'tecnico';
+    return 'usuario';
+  }
+
+  function renderProfilePermissions() {
+    const container = document.getElementById('u-perfil-permisos');
+    const id = Number(document.getElementById('u-perfil').value || 0);
+    const profile = state.perfiles.find(item => Number(item.id_perfil) === id);
     container.replaceChildren();
-    state.menus.forEach(menu => {
-      const label = document.createElement('label');
-      label.className = 'perm-item';
-      const name = document.createElement('span');
-      name.className = 'perm-item-name';
-      name.textContent = menu.nombre;
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = menu.id_menu;
-      label.append(name, checkbox);
-      container.appendChild(label);
+    if (!profile) {
+      container.innerHTML = '<div class="perfil-permisos-empty"><i class="bi bi-person-badge"></i><p>Selecciona un perfil para revisar los accesos que recibirá.</p></div>';
+      return;
+    }
+    const permissions = {
+      usuario: ['Inicio', 'Colaboradores', 'Crear ticket', 'Mis tickets'],
+      tecnico: ['Inicio', 'Colaboradores', 'Crear ticket', 'Mis tickets', 'Tickets asignados', 'Administración · Categorías'],
+      administrador: ['Todos los menús', 'Todos los submenús'],
+      admin_colegio: ['Inicio', 'Colaboradores', 'Crear ticket', 'Mis tickets', 'Administración · Usuarios', 'Administración · Categorías', 'Administración · Permisos'],
+      admin_area: ['Inicio', 'Colaboradores', 'Crear ticket', 'Mis tickets', 'Administración · Categorías'],
+    }[profileType(profile)];
+    const heading = document.createElement('div');
+    heading.className = 'perfil-permisos-heading';
+    heading.innerHTML = '<i class="bi bi-shield-check"></i><div><strong></strong><small>Se asignarán al crear la cuenta</small></div>';
+    heading.querySelector('strong').textContent = profile.nombre;
+    const list = document.createElement('div');
+    list.className = 'perfil-permisos-list';
+    permissions.forEach(permission => {
+      const item = document.createElement('span');
+      item.innerHTML = '<i class="bi bi-check-circle-fill"></i><span></span>';
+      item.querySelector('span').textContent = permission;
+      list.appendChild(item);
     });
+    container.append(heading, list);
   }
 
   function normalizeSex(value) {
@@ -181,6 +204,7 @@
     document.getElementById('u-sexo').value = normalizeSex(datos?.sexo);
 
     fillSelect(document.getElementById('u-area'), state.areas, 'id_area', 'nombre_area', 'Seleccionar', datos?.id_area_trabajo);
+    fillSelect(document.getElementById('u-perfil'), state.perfiles, 'id_perfil', 'nombre', 'Seleccionar');
     const currentSchool = datos?.id_colegio ?? datos?.colegios?.[0]?.id_colegio ?? '';
     const schoolSelect = document.getElementById('u-colegio');
     fillSelect(schoolSelect, state.colegios, 'id_colegio', 'nom_colegio', 'Sin colegio', currentSchool);
@@ -188,7 +212,7 @@
 
     document.getElementById('u-menus-wrap').hidden = editing;
     document.getElementById('modal-usuario-error').hidden = true;
-    if (!editing) renderCreateMenus();
+    if (!editing) renderProfilePermissions();
     openModal('modal-usuario');
     document.getElementById('u-nombre').focus();
   }
@@ -203,11 +227,11 @@
       email: document.getElementById('u-email').value.trim(),
       telefono: document.getElementById('u-telefono').value.trim(),
       id_area_trabajo: Number(document.getElementById('u-area').value),
+      id_perfil: Number(document.getElementById('u-perfil').value),
       sexo: document.getElementById('u-sexo').value,
     };
     if (!id) {
       data.id_colegio = Number(document.getElementById('u-colegio').value || 0);
-      data.menus = [...document.querySelectorAll('#u-menus input:checked')].map(input => Number(input.value));
     }
     return data;
   }
@@ -216,8 +240,8 @@
     const data = readUserModal();
     const error = document.getElementById('modal-usuario-error');
     error.hidden = true;
-    if (!data.nombre || !data.apellido_paterno || !data.email || !data.id_area_trabajo || !data.sexo) {
-      error.textContent = 'Completa nombre, apellido paterno, email, área y sexo.';
+    if (!data.nombre || !data.apellido_paterno || !data.email || !data.id_area_trabajo || (!data.id && !data.id_perfil) || !data.sexo) {
+      error.textContent = 'Completa nombre, apellido paterno, email, área, perfil y sexo.';
       error.hidden = false;
       return;
     }
@@ -347,8 +371,8 @@
     _pag.render();
     addButton.disabled = true;
     try {
-      [state.areas, state.colegios, state.menus] = await Promise.all([
-        request(`${API}/areas_listar.php`), request(`${API}/colegios_listar.php`), request(`${API}/menus_listar.php`),
+      [state.areas, state.colegios, state.perfiles] = await Promise.all([
+        request(`${API}/areas_listar.php`), request(`${API}/colegios_listar.php`), request(`${API}/perfiles_listar.php`),
       ]);
       fillSelect(areaFilter, state.areas, 'id_area', 'nombre_area', 'Todas las áreas');
       await loadUsers();
@@ -360,6 +384,7 @@
 
   addButton.addEventListener('click', () => abrirModalUsuario());
   document.getElementById('modal-usuario-guardar').addEventListener('click', guardarUsuario);
+  document.getElementById('u-perfil').addEventListener('change', renderProfilePermissions);
   searchInput.addEventListener('input', aplicarFiltros);
   areaFilter.addEventListener('change', aplicarFiltros);
   statusFilter.addEventListener('click', event => {
