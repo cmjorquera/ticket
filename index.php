@@ -16,7 +16,7 @@ const MAX_INTENTOS = 3;
 $error = '';
 
 if (!empty($_SESSION['id'])) {
-    header('Location: dashboard.php');
+    header('Location: contenedores.php');
     exit;
 }
 
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['perfil']   = $perfiles[0]['nombre'] ?? 'Sin perfil';
                 $_SESSION['perfiles'] = array_column($perfiles, 'nombre');
 
-                header('Location: dashboard.php');
+                header('Location: contenedores.php');
                 exit;
             }
         } catch (\Throwable $e) {
