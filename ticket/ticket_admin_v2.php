@@ -23,7 +23,13 @@ try {
             $colegios = $db->fetchAll('SELECT id_colegio, nom_colegio FROM colegio WHERE estado = 1 ORDER BY nom_colegio');
         } else {
             $colegios = $db->fetchAll(
-                'SELECT DISTINCT c.id_colegio, c.nom_colegio FROM usuario_colegio uc JOIN colegio c ON c.id_colegio = uc.id_colegio WHERE uc.id_usuario = ? AND uc.estado = 1 AND c.estado = 1 AND uc.es_admin_colegio = 1 ORDER BY c.nom_colegio',
+                "SELECT DISTINCT c.id_colegio, c.nom_colegio
+                   FROM usuario_colegio uc
+                   JOIN colegio c ON c.id_colegio = uc.id_colegio
+              LEFT JOIN perfiles p ON p.id_perfil = uc.id_perfil
+                  WHERE uc.id_usuario = ? AND uc.estado = 1 AND c.estado = 1
+                    AND (uc.es_admin_colegio = 1 OR LOWER(p.nombre) IN ('admin colegio','admin_colegio','administrador colegio'))
+               ORDER BY c.nom_colegio",
                 [$usuarioId]
             );
         }
@@ -100,7 +106,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
       <?php foreach ($tickets as $ticket):
         $estado = strtolower((string) $ticket['estado']);
         $prioridad = str_replace('í', 'i', strtolower((string) $ticket['prioridad']));
-        $json = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $json = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
       ?>
         <tr data-search="<?= e(strtolower(implode(' ', [(string)$ticket['id_ticket'],$ticket['asunto'],$ticket['usuario_nombre'],$ticket['tecnico_nombre'],$ticket['colegio_nombre']]))) ?>">
           <td><span class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></span><div class="text-xs text-muted"><?= e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) ?></div></td>
