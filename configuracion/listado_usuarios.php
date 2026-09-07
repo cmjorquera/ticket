@@ -94,13 +94,16 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
             <div class="form-group"><label class="form-label" for="u-email">Email *</label><input type="email" class="form-input" id="u-email" placeholder="correo@seduc.cl"></div>
             <div class="form-group"><label class="form-label" for="u-telefono">Teléfono</label><input type="text" class="form-input" id="u-telefono" placeholder="Teléfono"></div>
             <div class="form-group"><label class="form-label" for="u-area">Área *</label><select class="form-input" id="u-area"><option value="">Seleccionar</option></select></div>
+            <div class="form-group"><label class="form-label" for="u-perfil">Perfil *</label><select class="form-input" id="u-perfil"><option value="">Seleccionar</option></select></div>
             <div class="form-group"><label class="form-label" for="u-colegio">Colegio</label><select class="form-input" id="u-colegio"><option value="">Sin colegio</option></select></div>
             <div class="form-group"><label class="form-label" for="u-sexo">Sexo *</label><select class="form-input" id="u-sexo"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></div>
           </div>
         </section>
         <section class="modal-usuario-section modal-usuario-permisos" id="u-menus-wrap" aria-labelledby="modal-usuario-menus">
-          <p class="form-label modal-section-title" id="modal-usuario-menus">Menús permitidos</p>
-          <div id="u-menus" class="permisos-grid"></div>
+          <p class="form-label modal-section-title" id="modal-usuario-menus">Permisos automáticos</p>
+          <div id="u-perfil-permisos" class="perfil-permisos-preview">
+            <div class="perfil-permisos-empty"><i class="bi bi-person-badge"></i><p>Selecciona un perfil para revisar los accesos que recibirá.</p></div>
+          </div>
         </section>
       </div>
       <p id="modal-usuario-error" class="text-sm" hidden style="color:var(--danger);margin-top:12px"></p>

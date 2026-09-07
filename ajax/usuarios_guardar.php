@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../helpers/permisos.php';
 Sesion::requerir();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -79,10 +80,10 @@ try {
         $sexo = trim((string) ($datos['sexo'] ?? ''));
         $idArea = (int) ($datos['id_area_trabajo'] ?? 0);
         $idColegio = (int) ($datos['id_colegio'] ?? 0);
-        $menuIds = ids_recibidos($datos['menus'] ?? []);
+        $idPerfil = (int) ($datos['id_perfil'] ?? 0);
 
-        if ($nombre === '' || $apellidoPaterno === '' || $email === '' || $idArea <= 0 || $sexo === '') {
-            responder_json(['ok' => false, 'mensaje' => 'Nombre, apellido paterno, email, área y sexo son obligatorios.'], 422);
+        if ($nombre === '' || $apellidoPaterno === '' || $email === '' || $idArea <= 0 || $idPerfil <= 0 || $sexo === '') {
+            responder_json(['ok' => false, 'mensaje' => 'Nombre, apellido paterno, email, área, perfil y sexo son obligatorios.'], 422);
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             responder_json(['ok' => false, 'mensaje' => 'El email no es válido.'], 422);
@@ -92,6 +93,10 @@ try {
         }
         if (!$db->fetchOne('SELECT id_area FROM area_trabajo WHERE id_area = ? LIMIT 1', [$idArea])) {
             responder_json(['ok' => false, 'mensaje' => 'El área seleccionada no existe.'], 422);
+        }
+        $perfilSeleccionado = $db->fetchOne('SELECT id_perfil, nombre FROM perfiles WHERE id_perfil = ? LIMIT 1', [$idPerfil]);
+        if (!$perfilSeleccionado) {
+            responder_json(['ok' => false, 'mensaje' => 'El perfil seleccionado no existe.'], 422);
         }
         if ($idColegio > 0 && !$db->fetchOne('SELECT id_colegio FROM colegio WHERE id_colegio = ? AND estado = 1 LIMIT 1', [$idColegio])) {
             responder_json(['ok' => false, 'mensaje' => 'El colegio seleccionado no está disponible.'], 422);
@@ -109,19 +114,23 @@ try {
             );
             $idUsuario = (int) $db->lastInsertId();
 
-            guardar_permisos_usuario($db, $idUsuario, $menuIds);
-            $db->execute('INSERT INTO usuario_perfil (id_usuario, id_perfil) VALUES (?, 1)', [$idUsuario]);
+            $db->execute('INSERT INTO usuario_perfil (id_usuario, id_perfil) VALUES (?, ?)', [$idUsuario, $idPerfil]);
 
             if ($idColegio > 0) {
+                $esAdminColegio = str_contains(strtolower((string) $perfilSeleccionado['nombre']), 'admin')
+                    && str_contains(strtolower((string) $perfilSeleccionado['nombre']), 'colegio');
                 $db->execute(
                     'INSERT INTO usuario_colegio
                         (id_usuario, id_colegio, id_perfil, estado, es_admin_colegio, fecha_asignacion)
-                     VALUES (?, ?, 1, 1, 0, NOW())',
-                    [$idUsuario, $idColegio]
+                     VALUES (?, ?, ?, 1, ?, NOW())',
+                    [$idUsuario, $idColegio, $idPerfil, $esAdminColegio ? 1 : 0]
                 );
             }
+            if (!asignar_permisos_por_defecto($idUsuario, $idPerfil, $db)) {
+                throw new RuntimeException('No fue posible asignar los permisos iniciales.');
+            }
             $pdo->commit();
-            responder_json(['ok' => true, 'mensaje' => 'Usuario creado en estado pendiente.', 'id' => $idUsuario]);
+            responder_json(['ok' => true, 'mensaje' => 'Usuario creado con los permisos de su perfil.', 'id' => $idUsuario]);
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
