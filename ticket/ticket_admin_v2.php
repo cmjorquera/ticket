@@ -141,4 +141,5 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
   </script>
 <?php endif; ?>
 
+<?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php finalizar_layout_configuracion(); ?>

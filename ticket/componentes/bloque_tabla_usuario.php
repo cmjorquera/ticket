@@ -77,7 +77,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
             <td class="ticket-person"><strong><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></strong></td>
             <td><span class="ticket-badge ticket-badge--<?= e($estado) ?>"><?= e($textoEstado) ?></span></td>
             <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
-            <td><div class="ticket-actions"><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Ver</a></div></td>
+            <td><div class="ticket-actions"><button class="btn btn-outline btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-chat-dots"></i> Chat</button><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Ver</a></div></td>
           </tr>
         <?php endforeach; ?>
         </tbody>

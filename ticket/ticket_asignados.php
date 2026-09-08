@@ -112,4 +112,5 @@ document.getElementById('ticket-buscar')?.addEventListener('input', filtrarTicke
 document.getElementById('ticket-estado')?.addEventListener('change', filtrarTickets);
 </script>
 
+<?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php finalizar_layout_configuracion(); ?>
