@@ -47,14 +47,12 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
     } catch (Throwable $e) {
         $permisos_submenu_habilitados = false;
     }
-    $filtro_permiso_padre = $permisos_submenu_habilitados ? ' AND pm.id_submenu IS NULL' : '';
-
     $menus = $db->fetchAll(
         "SELECT DISTINCT m.id_menu, m.nombre, m.archivo, m.icono, m.caracteristica, m.orden
          FROM permisos_menu_1 pm
          JOIN menu_1 m ON pm.id_menu1 = m.id_menu
          WHERE pm.id_usuario = ?
-           AND pm.id_tipo_permiso = 1{$filtro_permiso_padre}
+           AND pm.id_tipo_permiso = 1
          ORDER BY CAST(m.orden AS UNSIGNED) ASC",
         [$id_usuario]
     );
@@ -104,6 +102,20 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
                            ORDER BY sm.orden ASC",
                             [$id_usuario, (int) $menu['id_menu']]
                         );
+
+                        // Compatibilidad con permisos anteriores: si el usuario
+                        // tiene acceso al padre pero todavía no posee filas por
+                        // submenú, hereda todos sus hijos. En cuanto existen
+                        // permisos explícitos, se respeta exactamente esa lista.
+                        if (empty($submenu)) {
+                            $submenu = $db->fetchAll(
+                                "SELECT id_submenu, nombre, archivo, icono, orden
+                                   FROM menu_1_sub
+                                  WHERE id_menu = ?
+                               ORDER BY orden ASC",
+                                [(int) $menu['id_menu']]
+                            );
+                        }
                     } else {
                         $submenu = $db->fetchAll(
                             "SELECT id_submenu, nombre, archivo, icono, orden
