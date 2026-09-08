@@ -10,18 +10,23 @@ $errorCarga = null;
 
 try {
     $tickets = $db->fetchAll(
-        "SELECT t.id_ticket, t.asunto, t.descripcion, t.estado, t.fecha_creacion,
-                t.fecha_respuesta, t.prioridad,
+        "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
+                t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_tecnico,
+                COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
+                COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
                 c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre
            FROM tickets t
            JOIN usuarios u ON u.id = t.id_usuario
-           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
-           JOIN colegio col ON col.id_colegio = t.id_colegio
-          WHERE t.id_tecnico_asignado = ?
-       ORDER BY FIELD(t.estado, 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'), t.fecha_creacion DESC",
+           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
+      LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+      LEFT JOIN estados_ticket e ON e.id = t.id_estado
+      LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+          WHERE t.id_tecnico = ? AND t.estado = 1
+       ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC",
         [$usuarioId]
     );
+    $tickets = array_map('ticket_normalizar_fila', $tickets);
 } catch (Throwable $ex) {
     error_log('Error AJAX al listar tickets del técnico: ' . $ex->getMessage());
     $errorCarga = 'No fue posible consultar los tickets asignados.';

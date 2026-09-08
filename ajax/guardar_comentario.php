@@ -26,7 +26,7 @@ if ($ticketId <= 0 || $largoComentario < 3 || $largoComentario > 5000) {
 try {
     $db = Conexion::getInstance('sistema_panel_central');
     $ticket = $db->fetchOne(
-        'SELECT id_ticket, id_usuario, id_tecnico_asignado, id_colegio FROM tickets WHERE id_ticket = ? LIMIT 1',
+        'SELECT id_ticket, id_usuario, id_tecnico AS id_tecnico_asignado, id_colegio FROM tickets WHERE id_ticket = ? AND estado = 1 LIMIT 1',
         [$ticketId]
     );
     if (!$ticket) {
@@ -68,7 +68,6 @@ try {
         'INSERT INTO comentarios_ticket (' . implode(', ', $campos) . ') VALUES (' . implode(', ', $valores) . ')',
         $params
     );
-    $db->execute('UPDATE tickets SET fecha_respuesta = COALESCE(fecha_respuesta, NOW()) WHERE id_ticket = ?', [$ticketId]);
     ticket_registrar_cambio($db, $ticketId, $usuarioId, 'comentar');
 
     responder_json(['ok' => true, 'mensaje' => 'Comentario enviado.'], 201);

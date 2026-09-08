@@ -27,13 +27,13 @@ if ($ticketId <= 0 || $puntaje < 1 || $puntaje > 5 || $largoComentario > 1000) {
 try {
     $db = Conexion::getInstance('sistema_panel_central');
     $ticket = $db->fetchOne(
-        'SELECT id_ticket, id_usuario, id_tecnico_asignado, estado FROM tickets WHERE id_ticket = ? AND id_usuario = ? LIMIT 1',
+        'SELECT id_ticket, id_usuario, id_tecnico AS id_tecnico_asignado, id_estado FROM tickets WHERE id_ticket = ? AND id_usuario = ? AND estado = 1 LIMIT 1',
         [$ticketId, $usuarioId]
     );
     if (!$ticket) {
         responder_json(['ok' => false, 'error' => 'Solo el solicitante puede calificar este ticket.'], 403);
     }
-    if (!in_array(strtolower((string) $ticket['estado']), ['resuelto', 'cerrado'], true)) {
+    if ((int) $ticket['id_estado'] !== 5) {
         responder_json(['ok' => false, 'error' => 'Puedes calificar el ticket cuando esté resuelto.'], 422);
     }
     if ((int) ($ticket['id_tecnico_asignado'] ?? 0) <= 0) {

@@ -11,12 +11,9 @@ $tickets = [];
 $colegios = [];
 $tecnicos = [];
 $errorCarga = null;
-$estadoFiltro = strtolower(trim((string) ($_GET['estado'] ?? '')));
+$estadoFiltro = ticket_estado_id($_GET['estado'] ?? 0);
 $colegioFiltro = (int) ($_GET['colegio'] ?? 0);
 $tecnicoFiltro = (int) ($_GET['tecnico'] ?? 0);
-if (!in_array($estadoFiltro, ['', 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'], true)) {
-    $estadoFiltro = '';
-}
 
 try {
     $esGlobal = es_administrador_global($usuarioId, $db);
@@ -52,17 +49,21 @@ try {
         $tecnicoFiltro = 0;
     }
 
-    $sql = "SELECT t.id_ticket, t.asunto, t.descripcion, t.estado, t.fecha_creacion, t.fecha_respuesta,
-                   t.prioridad, t.id_colegio, t.id_tecnico_asignado,
+    $sql = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
+                   t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_colegio, t.id_tecnico,
+                   COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
+                   COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                    CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
                    c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
                    CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
               FROM tickets t
               JOIN usuarios u ON u.id = t.id_usuario
-              JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
-              JOIN colegio col ON col.id_colegio = t.id_colegio
-         LEFT JOIN usuarios tec ON tec.id = t.id_tecnico_asignado
-             WHERE 1 = 1";
+              JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
+         LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+         LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
+         LEFT JOIN estados_ticket e ON e.id = t.id_estado
+         LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+             WHERE t.estado = 1";
     $params = [];
     if (!$esGlobal) {
         if (!$idsColegio) {
@@ -72,8 +73,8 @@ try {
             array_push($params, ...$idsColegio);
         }
     }
-    if ($estadoFiltro !== '') {
-        $sql .= ' AND t.estado = ?';
+    if ($estadoFiltro > 0) {
+        $sql .= ' AND t.id_estado = ?';
         $params[] = $estadoFiltro;
     }
     if ($colegioFiltro > 0) {
@@ -81,11 +82,12 @@ try {
         $params[] = $colegioFiltro;
     }
     if ($tecnicoFiltro > 0) {
-        $sql .= ' AND t.id_tecnico_asignado = ?';
+        $sql .= ' AND t.id_tecnico = ?';
         $params[] = $tecnicoFiltro;
     }
-    $sql .= " ORDER BY FIELD(t.estado, 'nuevo','en_proceso','atrasado','resuelto','cerrado'), t.fecha_creacion DESC";
+    $sql .= ' ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC';
     $tickets = $db->fetchAll($sql, $params);
+    $tickets = array_map('ticket_normalizar_fila', $tickets);
 } catch (Throwable $ex) {
     error_log('Error AJAX en administración de tickets: ' . $ex->getMessage());
     $errorCarga = 'No fue posible consultar los tickets.';
