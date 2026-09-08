@@ -105,6 +105,8 @@ function ticket_normalizar_fila(array $fila): array
     $estado = ticket_estados_legacy()[$idEstado] ?? ['codigo' => 'borrador', 'nombre' => 'Sin estado'];
     $fila['estado'] = $estado['codigo'];
     $fila['estado_nombre'] = trim((string) ($fila['estado_nombre'] ?? '')) ?: $estado['nombre'];
+    $fila['estado_color'] = (string) ($fila['estado_color'] ?? $fila['colorEstado'] ?? '');
+    $fila['cantidad_archivos'] = max(0, (int) ($fila['cantidad_archivos'] ?? $fila['cantidadArchivos'] ?? 0));
     $fila['prioridad'] = ticket_prioridad_nombre((int) ($fila['id_prioridad'] ?? 2));
     $fila['descripcion'] = (string) ($fila['descripcion'] ?? $fila['descripcion_ticket'] ?? '');
     $fila['descripcion_texto'] = ticket_descripcion_texto($fila['descripcion']);
@@ -112,6 +114,36 @@ function ticket_normalizar_fila(array $fila): array
     $fila['fecha_creacion'] = (string) ($fila['fecha_creacion'] ?? '');
     $fila['fecha_respuesta'] = (string) ($fila['fecha_respuesta'] ?? '');
     return $fila;
+}
+
+/** Convierte un hexadecimal de la BD a una terna RGB segura para una variable CSS. */
+function ticket_color_estado_rgb(string $color): string
+{
+    $color = ltrim(trim($color), '#');
+    if (preg_match('/^[0-9a-f]{3}$/i', $color)) {
+        $color = $color[0] . $color[0] . $color[1] . $color[1] . $color[2] . $color[2];
+    }
+    if (!preg_match('/^[0-9a-f]{6}$/i', $color)) {
+        return '';
+    }
+    return hexdec(substr($color, 0, 2)) . ','
+        . hexdec(substr($color, 2, 2)) . ','
+        . hexdec(substr($color, 4, 2));
+}
+
+/** Genera el botón de adjuntos solamente cuando el ticket tiene archivos. */
+function ticket_boton_archivos(int $ticketId, int $cantidad): string
+{
+    if ($ticketId <= 0 || $cantidad <= 0) {
+        return '';
+    }
+
+    $etiqueta = $cantidad === 1 ? 'Ver 1 archivo adjunto' : 'Ver ' . $cantidad . ' archivos adjuntos';
+    return '<button class="btn btn-outline btn-sm ticket-files-button js-ticket-files" type="button"'
+        . ' data-ticket-id="' . $ticketId . '" title="' . htmlspecialchars($etiqueta, ENT_QUOTES, 'UTF-8') . '"'
+        . ' aria-label="' . htmlspecialchars($etiqueta, ENT_QUOTES, 'UTF-8') . '">'
+        . '<i class="bi bi-paperclip" aria-hidden="true"></i>'
+        . '<span class="ticket-files-count">' . $cantidad . '</span></button>';
 }
 
 /** Diagnóstico temporal del módulo. Quitar cuando termine la revisión en producción. */
@@ -176,7 +208,7 @@ function ticket_sanitizar_descripcion(string $descripcion): string
         return '';
     }
     if (!class_exists('DOMDocument')) {
-        return htmlspecialchars(ticket_descripcion_texto($descripcion), ENT_QUOTES, 'UTF-8');
+        return ticket_descripcion_texto($descripcion);
     }
 
     $permitidas = ['p', 'h3', 'br', 'strong', 'b', 'em', 'i', 'u', 'ol', 'ul', 'li', 'a'];
@@ -190,7 +222,7 @@ function ticket_sanitizar_descripcion(string $descripcion): string
     libxml_use_internal_errors($estadoErrores);
     $root = $dom->getElementById('ticket-description-root');
     if (!$root) {
-        return htmlspecialchars(ticket_descripcion_texto($descripcion), ENT_QUOTES, 'UTF-8');
+        return ticket_descripcion_texto($descripcion);
     }
 
     $limpiar = static function (DOMNode $nodo) use (&$limpiar, $permitidas): void {
@@ -202,7 +234,9 @@ function ticket_sanitizar_descripcion(string $descripcion): string
                         $nodo->insertBefore($hijo->firstChild, $hijo);
                     }
                     $nodo->removeChild($hijo);
-                    continue;
+                    // Reiniciar este nivel para sanear también los nodos promovidos.
+                    $limpiar($nodo);
+                    return;
                 }
                 foreach (iterator_to_array($hijo->attributes) as $atributo) {
                     $nombre = strtolower($atributo->name);

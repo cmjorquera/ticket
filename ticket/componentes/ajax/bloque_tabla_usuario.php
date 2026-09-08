@@ -24,8 +24,13 @@ $etiquetasEstado = [
 ];
 
 try {
+    $columnasAdjuntos = ticket_columnas_tabla('archivos_adjuntos_ticket', $db);
+    $sqlCantidadArchivos = isset($columnasAdjuntos['id_ticket'])
+        ? '(SELECT COUNT(*) FROM archivos_adjuntos_ticket aa WHERE aa.id_ticket = t.id_ticket)'
+        : '0';
     $sqlPollingUsuario = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
-                t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_tecnico,
+                t.id_estado, e.nombre AS estado_nombre, e.color AS estado_color,
+                t.id_prioridad, t.id_tecnico, {$sqlCantidadArchivos} AS cantidad_archivos,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 c.nombre_categoria AS categoria_nombre,
@@ -68,7 +73,7 @@ if ($errorListado) {
 }
 
 if (!$misTickets) {
-    echo '<tbody><tr class="ticket-poll-empty"><td colspan="7"><div class="ticket-empty"><i class="bi bi-inbox"></i>No hay solicitudes registradas.</div></td></tr></tbody>';
+    echo '<tbody><tr class="ticket-poll-empty"><td colspan="8"><div class="ticket-empty"><i class="bi bi-inbox"></i>No hay solicitudes registradas.</div></td></tr></tbody>';
     exit;
 }
 

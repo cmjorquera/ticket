@@ -57,17 +57,20 @@ try {
 
     $adjuntos = [];
     $columnasAdjunto = ticket_columnas_tabla('archivos_adjuntos_ticket', $db);
-    $adjuntosDisponibles = isset(
-        $columnasAdjunto['id_ticket'],
-        $columnasAdjunto['nombre_archivo'],
-        $columnasAdjunto['ruta_archivo']
-    );
+    $adjuntosDisponibles = isset($columnasAdjunto['id_ticket'])
+        && (isset($columnasAdjunto['nombre_archivo'], $columnasAdjunto['ruta_archivo'])
+            || isset($columnasAdjunto['adjunto']));
     if ($adjuntosDisponibles) {
         $campoIdAdjunto = isset($columnasAdjunto['id_archivo']) ? 'id_archivo' : 'id_ticket';
+        $campoNombre = isset($columnasAdjunto['nombre_archivo'])
+            ? 'nombre_archivo'
+            : "SUBSTRING_INDEX(REPLACE(adjunto, '\\\\', '/'), '/', -1)";
+        $campoRuta = isset($columnasAdjunto['ruta_archivo']) ? 'ruta_archivo' : 'adjunto';
         $campoTamano = isset($columnasAdjunto['tamaño_archivo']) ? '`tamaño_archivo`' : '0';
         $ordenAdjuntos = isset($columnasAdjunto['fecha_subida']) ? 'fecha_subida ASC' : $campoIdAdjunto . ' ASC';
         $adjuntos = $db->fetchAll(
-            "SELECT {$campoIdAdjunto} AS id_archivo, nombre_archivo, ruta_archivo,
+            "SELECT {$campoIdAdjunto} AS id_archivo, {$campoNombre} AS nombre_archivo,
+                    {$campoRuta} AS ruta_archivo,
                     {$campoTamano} AS tamano
                FROM archivos_adjuntos_ticket
               WHERE id_ticket = ?

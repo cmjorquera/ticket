@@ -26,6 +26,7 @@
   let lastTrigger = null;
   let messageSignature = '';
   let fileSignature = '';
+  let panelMode = 'chat';
 
   function setStatus(text = '', type = '') {
     status.textContent = text;
@@ -44,6 +45,24 @@
 
   function emptyNode(node) {
     while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function fileIcon(path = '') {
+    const extension = String(path).split('?')[0].split('.').pop().toLowerCase();
+    const icons = {
+      pdf: 'bi-file-earmark-pdf',
+      doc: 'bi-file-earmark-word',
+      docx: 'bi-file-earmark-word',
+      xls: 'bi-file-earmark-excel',
+      xlsx: 'bi-file-earmark-excel',
+      jpg: 'bi-file-earmark-image',
+      jpeg: 'bi-file-earmark-image',
+      png: 'bi-file-earmark-image',
+      webp: 'bi-file-earmark-image',
+      txt: 'bi-file-earmark-text',
+      zip: 'bi-file-earmark-zip',
+    };
+    return `bi ${icons[extension] || 'bi-file-earmark'}`;
   }
 
   function renderMessages(messages) {
@@ -105,7 +124,7 @@
       link.target = '_blank';
       link.rel = 'noopener';
       const icon = document.createElement('i');
-      icon.className = 'bi bi-file-earmark';
+      icon.className = fileIcon(item.ruta_archivo || item.nombre_archivo);
       const text = document.createElement('span');
       text.textContent = item.nombre_archivo || 'Archivo';
       const size = document.createElement('small');
@@ -122,17 +141,18 @@
     refreshController = new AbortController();
     if (!silent) {
       thread.setAttribute('aria-busy', 'true');
-      setStatus('Cargando conversación…');
+      setStatus(panelMode === 'files' ? 'Cargando archivos…' : 'Cargando conversación…');
     }
     try {
       const body = new URLSearchParams({ticket_id: String(ticketId), csrf});
       const data = await post('../ajax/obtener_conversacion_ticket.php', body, refreshController.signal);
       if (requestedTicketId !== ticketId || panel.hidden) return;
       title.textContent = data.ticket.asunto || `Ticket #${ticketId}`;
-      folio.textContent = `Ticket #${ticketId}`;
+      const chatMode = panelMode === 'chat';
+      folio.textContent = chatMode ? `Ticket #${ticketId}` : `Archivos · Ticket #${ticketId}`;
       const writable = Boolean(data.conversacion_disponible && !data.ticket.cerrado);
-      form.hidden = !writable;
-      closed.hidden = !data.ticket.cerrado;
+      form.hidden = !chatMode || !writable;
+      closed.hidden = !chatMode || !data.ticket.cerrado;
       const messages = Array.isArray(data.mensajes) ? data.mensajes : [];
       const files = Array.isArray(data.adjuntos) ? data.adjuntos : [];
       const nextMessageSignature = JSON.stringify(messages.map((item) => [item.id_comentario, item.comentario, item.fecha_comentario]));
@@ -142,10 +162,10 @@
         messageSignature = nextMessageSignature;
       }
       if (nextFileSignature !== fileSignature) {
-        renderFiles(files, Boolean(data.adjuntos_disponibles && !data.ticket.cerrado));
+        renderFiles(files, Boolean(chatMode && data.adjuntos_disponibles && !data.ticket.cerrado));
         fileSignature = nextFileSignature;
       } else {
-        picker.hidden = !data.adjuntos_disponibles || data.ticket.cerrado || files.length >= 5;
+        picker.hidden = !chatMode || !data.adjuntos_disponibles || data.ticket.cerrado || files.length >= 5;
         fileInput.disabled = picker.hidden;
       }
       if (!silent) setStatus();
@@ -169,24 +189,27 @@
     window.clearTimeout(closeTimer);
     closeTimer = window.setTimeout(() => {
       panel.hidden = true;
+      panel.classList.remove('is-files-only');
       ticketId = 0;
       lastTrigger?.focus();
     }, 180);
   }
 
-  function open(id, trigger) {
+  function open(id, trigger, mode = 'chat') {
     window.clearTimeout(closeTimer);
     refreshController?.abort();
     refreshController = null;
     loading = false;
     ticketId = Number(id) || 0;
     if (!ticketId) return;
+    panelMode = mode === 'files' ? 'files' : 'chat';
+    panel.classList.toggle('is-files-only', panelMode === 'files');
     messageSignature = '';
     fileSignature = '';
     lastTrigger = trigger || null;
     thread.dataset.initial = '0';
     title.textContent = 'Cargando ticket…';
-    folio.textContent = `Ticket #${ticketId}`;
+    folio.textContent = panelMode === 'files' ? `Archivos · Ticket #${ticketId}` : `Ticket #${ticketId}`;
     emptyNode(thread);
     emptyNode(fileList);
     form.hidden = true;
@@ -201,6 +224,12 @@
   }
 
   document.addEventListener('click', (event) => {
+    const filesTrigger = event.target.closest('.js-ticket-files');
+    if (filesTrigger) {
+      event.preventDefault();
+      open(filesTrigger.dataset.ticketId, filesTrigger, 'files');
+      return;
+    }
     const trigger = event.target.closest('.js-ticket-chat');
     if (trigger) {
       event.preventDefault();
@@ -258,5 +287,10 @@
     }
   });
 
-  window.TicketChatPanel = {open, close, refresh};
+  window.TicketChatPanel = {
+    open,
+    openFiles: (id, trigger) => open(id, trigger, 'files'),
+    close,
+    refresh,
+  };
 })();
