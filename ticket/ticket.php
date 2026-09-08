@@ -38,34 +38,47 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 
 <div class="page-header">
   <div>
-    <h1>Crear nuevo ticket</h1>
-    <p>Registra un problema o solicitud para el equipo de soporte.</p>
+    <h1>Mesa de ayuda</h1>
+    <p>Crea y consulta solicitudes de soporte desde un solo lugar.</p>
   </div>
   <div class="page-header-actions">
     <a class="btn btn-outline" href="ticket_asignados.php"><i class="bi bi-list-check"></i> Tickets asignados</a>
   </div>
 </div>
 
-<div class="ticket-shell">
-  <section class="card ticket-intake" aria-labelledby="ticket-form-title">
-    <aside class="ticket-intake__rail">
-      <i class="bi bi-ticket-perforated-fill" aria-hidden="true"></i>
-      <h2 id="ticket-form-title">Mesa de ayuda</h2>
-      <p>Cuéntanos qué ocurre. La categoría determina el equipo técnico que recibirá el caso.</p>
-      <div class="ticket-intake__steps" aria-label="Proceso del ticket">
-        <div class="ticket-intake__step"><span>01</span> Describe el caso</div>
-        <div class="ticket-intake__step"><span>02</span> Se asigna un técnico</div>
-        <div class="ticket-intake__step"><span>03</span> Sigue su resolución</div>
-      </div>
-    </aside>
+<section class="card ticket-launch">
+  <div class="ticket-launch__mark"><i class="bi bi-ticket-perforated-fill"></i><span>Soporte SEDUC</span></div>
+  <div class="ticket-launch__content">
+    <span class="ticket-launch__eyebrow">Nueva solicitud</span>
+    <h2>¿Necesitas ayuda técnica?</h2>
+    <p>Describe el problema y lo enviaremos al técnico adecuado según su categoría. El proceso toma menos de dos minutos.</p>
+    <?php if ($errorCarga): ?><div class="ticket-message error" style="display:block"><?= e($errorCarga) ?></div><?php endif; ?>
+    <button class="btn btn-primary ticket-launch__button" type="button" onclick="abrirModalTicket()" <?= ($errorCarga || !$categorias || !$colegios) ? 'disabled' : '' ?>>
+      <i class="bi bi-plus-circle"></i> Nuevo ticket
+    </button>
+  </div>
+  <div class="ticket-launch__flow" aria-label="Proceso de atención">
+    <div><span>01</span><strong>Describe</strong><small>Cuéntanos qué ocurre</small></div>
+    <div><span>02</span><strong>Asignamos</strong><small>Buscamos al especialista</small></div>
+    <div><span>03</span><strong>Resolvemos</strong><small>Sigue el avance del caso</small></div>
+  </div>
+</section>
 
-    <form class="ticket-form" id="form-ticket" novalidate>
+<div class="modal-overlay" id="modal-crear-ticket" onclick="closeModalOutside(event,'modal-crear-ticket')">
+  <div class="modal ticket-create-modal" role="dialog" aria-modal="true" aria-labelledby="ticket-modal-title">
+    <form id="form-ticket" novalidate>
+      <div class="modal-header ticket-modal-header">
+        <div>
+          <span class="ticket-modal-kicker">Mesa de ayuda</span>
+          <h3 id="ticket-modal-title">Crear nuevo ticket</h3>
+          <p>Registra un problema o una solicitud para el equipo de soporte.</p>
+        </div>
+        <button class="ticket-modal-close" type="button" onclick="closeModal('modal-crear-ticket')" aria-label="Cerrar modal"><i class="bi bi-x-lg"></i></button>
+      </div>
+
+      <div class="modal-body ticket-form">
       <input type="hidden" name="accion" value="crear">
       <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-
-      <?php if ($errorCarga): ?>
-        <div class="ticket-message error" style="display:block"><?= e($errorCarga) ?></div>
-      <?php endif; ?>
       <div class="ticket-message" id="ticket-mensaje" role="status" aria-live="polite"></div>
 
       <div class="ticket-form-grid">
@@ -104,29 +117,31 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 
       <div class="form-group">
         <label class="form-label" for="ticket-asunto">Asunto *</label>
-        <input class="form-input" id="ticket-asunto" name="asunto" maxlength="180" placeholder="Ej.: La impresora de secretaría no responde" required>
+        <input class="form-input" id="ticket-asunto" name="asunto" minlength="5" maxlength="180" placeholder="Ej.: La impresora de secretaría no responde" required>
       </div>
       <div class="form-group">
         <label class="form-label" for="ticket-descripcion">Descripción *</label>
-        <textarea class="form-input" id="ticket-descripcion" name="descripcion" maxlength="10000" placeholder="Indica qué ocurrió, desde cuándo y qué intentaste hacer." required></textarea>
+        <textarea class="form-input" id="ticket-descripcion" name="descripcion" minlength="10" maxlength="10000" rows="4" placeholder="Indica qué ocurrió, desde cuándo y qué intentaste hacer." required></textarea>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="ticket-archivos">Adjuntos</label>
-        <input class="form-input" type="file" id="ticket-archivos" name="archivos[]" multiple accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx">
-        <span class="ticket-note">Hasta 5 archivos de 5 MB cada uno: imágenes, PDF, Word o Excel.</span>
+      <div class="form-group ticket-files">
+        <label class="form-label">Adjuntos</label>
+        <input type="file" id="ticket-archivos" name="archivos[]" multiple hidden accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx">
+        <button class="ticket-file-picker" type="button" onclick="document.getElementById('ticket-archivos').click()">
+          <i class="bi bi-paperclip"></i><span><strong>Elegir archivos</strong><small id="ticket-file-count">Sin archivos seleccionados</small></span>
+        </button>
+        <div class="ticket-file-list" id="ticket-file-list"></div>
+        <span class="ticket-note">Hasta 5 archivos de 5 MB cada uno. Imágenes, PDF, Word o Excel.</span>
       </div>
 
-      <div class="ticket-form-actions">
-        <span class="ticket-note"><i class="bi bi-shield-check"></i> Solo se muestran colegios asociados a tu cuenta.</span>
-        <div class="flex gap-2">
-          <button class="btn btn-outline" type="reset">Limpiar</button>
-          <button class="btn btn-primary" id="ticket-guardar" type="submit" <?= ($errorCarga || !$categorias || !$colegios) ? 'disabled' : '' ?>>
-            <i class="bi bi-send-fill"></i> Crear ticket
-          </button>
-        </div>
+      <div class="ticket-account-note"><i class="bi bi-shield-check"></i><span>Solo se muestran colegios asociados a tu cuenta.</span></div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="ticket-limpiar" type="reset">Limpiar</button>
+        <button class="btn btn-primary" id="ticket-guardar" type="submit" <?= ($errorCarga || !$categorias || !$colegios) ? 'disabled' : '' ?>><i class="bi bi-send-fill"></i> Crear ticket</button>
       </div>
     </form>
-  </section>
+  </div>
 </div>
 
 <script>
@@ -134,11 +149,51 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
   const form = document.getElementById('form-ticket');
   const message = document.getElementById('ticket-mensaje');
   const button = document.getElementById('ticket-guardar');
+  const files = document.getElementById('ticket-archivos');
+  const fileCount = document.getElementById('ticket-file-count');
+  const fileList = document.getElementById('ticket-file-list');
   if (!form || !button) return;
+
+  window.abrirModalTicket = () => {
+    message.className = 'ticket-message';
+    message.textContent = '';
+    openModal('modal-crear-ticket');
+    setTimeout(() => document.getElementById('ticket-asunto').focus(), 80);
+  };
+
+  function renderFiles() {
+    const selected = Array.from(files.files || []);
+    fileCount.textContent = selected.length ? `${selected.length} archivo${selected.length === 1 ? '' : 's'} seleccionado${selected.length === 1 ? '' : 's'}` : 'Sin archivos seleccionados';
+    fileList.replaceChildren();
+    selected.forEach(file => {
+      const item = document.createElement('div');
+      item.className = 'ticket-file-item';
+      const icon = document.createElement('i'); icon.className = 'bi bi-file-earmark';
+      const name = document.createElement('span'); name.textContent = file.name;
+      const size = document.createElement('small'); size.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      item.append(icon, name, size); fileList.appendChild(item);
+    });
+  }
+
+  files.addEventListener('change', () => {
+    const selected = Array.from(files.files || []);
+    if (selected.length > 5 || selected.some(file => file.size > 5 * 1024 * 1024)) {
+      files.value = '';
+      renderFiles();
+      message.className = 'ticket-message error';
+      message.textContent = selected.length > 5 ? 'Puedes adjuntar un máximo de 5 archivos.' : 'Cada archivo debe pesar como máximo 5 MB.';
+      return;
+    }
+    message.className = 'ticket-message';
+    renderFiles();
+  });
+
+  form.addEventListener('reset', () => setTimeout(renderFiles, 0));
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
+    let creado = false;
     button.disabled = true;
     button.innerHTML = '<i class="bi bi-hourglass-split"></i> Creando…';
     message.className = 'ticket-message';
@@ -148,13 +203,17 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
       if (!response.ok || !data.ok) throw new Error(data.error || 'No fue posible crear el ticket.');
       message.className = 'ticket-message ok';
       message.textContent = `${data.mensaje} Folio #${data.ticket_id}.`;
+      creado = true;
       form.reset();
+      setTimeout(() => { closeModal('modal-crear-ticket'); window.location.href = 'ticket_asignados.php'; }, 1400);
     } catch (error) {
       message.className = 'ticket-message error';
       message.textContent = error.message;
     } finally {
-      button.disabled = false;
-      button.innerHTML = '<i class="bi bi-send-fill"></i> Crear ticket';
+      if (!creado) {
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-send-fill"></i> Crear ticket';
+      }
     }
   });
 })();

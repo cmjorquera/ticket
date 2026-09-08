@@ -32,6 +32,12 @@ try {
         if ($categoriaId <= 0 || $colegioId <= 0 || $asunto === '' || $descripcion === '') {
             responder_json(['ok' => false, 'error' => 'Completa todos los campos obligatorios.'], 422);
         }
+        if (strlen($asunto) < 5) {
+            responder_json(['ok' => false, 'error' => 'El asunto debe tener al menos 5 caracteres.'], 422);
+        }
+        if (strlen($descripcion) < 10) {
+            responder_json(['ok' => false, 'error' => 'La descripción debe tener al menos 10 caracteres.'], 422);
+        }
         if (strlen($asunto) > 180 || strlen($descripcion) > 10000) {
             responder_json(['ok' => false, 'error' => 'El asunto o la descripción exceden el largo permitido.'], 422);
         }
