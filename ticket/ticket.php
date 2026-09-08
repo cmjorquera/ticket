@@ -11,6 +11,8 @@ $colegios = [];
 $misTickets = [];
 $errorCarga = null;
 $errorListado = null;
+$idPagActual = 3;
+
 
 try {
     $categorias = $db->fetchAll(
