@@ -18,7 +18,7 @@ try {
            JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
            JOIN colegio col ON col.id_colegio = t.id_colegio
           WHERE t.id_tecnico_asignado = ?
-       ORDER BY FIELD(t.estado, 'nuevo', 'en_proceso', 'resuelto', 'cerrado'), t.fecha_creacion DESC",
+       ORDER BY FIELD(t.estado, 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'), t.fecha_creacion DESC",
         [$usuarioId]
     );
 } catch (Throwable $ex) {
@@ -26,11 +26,7 @@ try {
     $errorCarga = 'No fue posible consultar los tickets. Verifica que las tablas del módulo estén instaladas.';
 }
 
-$conteos = ['nuevo' => 0, 'en_proceso' => 0, 'resuelto' => 0, 'cerrado' => 0];
-foreach ($tickets as $ticket) {
-    $estado = strtolower((string) $ticket['estado']);
-    if (isset($conteos[$estado])) $conteos[$estado]++;
-}
+$funcionesTicket = new FuncionesTicket($db);
 $csrf = ticket_csrf_token();
 iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados');
 ?>
@@ -41,11 +37,11 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
   <a class="btn btn-outline" href="ticket.php"><i class="bi bi-plus-circle"></i> Crear ticket</a>
 </div>
 
-<div class="ticket-metrics">
-  <div class="ticket-metric"><span>Nuevos</span><strong><?= $conteos['nuevo'] ?></strong></div>
-  <div class="ticket-metric"><span>En proceso</span><strong><?= $conteos['en_proceso'] ?></strong></div>
-  <div class="ticket-metric"><span>Resueltos</span><strong><?= $conteos['resuelto'] ?></strong></div>
-  <div class="ticket-metric"><span>Total asignados</span><strong><?= count($tickets) ?></strong></div>
+<div class="contenedor-tickets">
+  <?php $funcionesTicket->contenedorTicketNuevos($usuarioId); ?>
+  <?php $funcionesTicket->contenedorTicketEnProceso($usuarioId); ?>
+  <?php $funcionesTicket->contenedorTicketResueltos($usuarioId); ?>
+  <?php $funcionesTicket->contenedorTicketAtrasados($usuarioId); ?>
 </div>
 
 <section class="card">
@@ -58,7 +54,7 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
     <div class="form-group">
       <label class="form-label" for="ticket-estado">Estado</label>
       <select class="form-input" id="ticket-estado">
-        <option value="">Todos</option><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option>
+        <option value="">Todos</option><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="atrasado">Atrasado</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option>
       </select>
     </div>
   </div>
@@ -100,7 +96,7 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
       <div class="ticket-message" id="detalle-mensaje" role="status"></div>
       <div class="form-group" style="margin-top:16px">
         <label class="form-label" for="detalle-estado">Actualizar estado</label>
-        <select class="form-input" id="detalle-estado"><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option></select>
+        <select class="form-input" id="detalle-estado"><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="atrasado">Atrasado</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option></select>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-ticket')">Cerrar</button><button class="btn btn-primary" id="detalle-guardar"><i class="bi bi-check2"></i> Guardar estado</button></div>
@@ -109,7 +105,7 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
 
 <script>
 const ticketCsrf = <?= json_encode($csrf) ?>;
-const ticketLabels = {nuevo:'Nuevo', en_proceso:'En proceso', resuelto:'Resuelto', cerrado:'Cerrado'};
+const ticketLabels = {nuevo:'Nuevo', en_proceso:'En proceso', atrasado:'Atrasado', resuelto:'Resuelto', cerrado:'Cerrado'};
 
 function abrirTicket(button) {
   const ticket = JSON.parse(button.dataset.ticket);
