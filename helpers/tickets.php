@@ -65,6 +65,89 @@ function puede_administrar_ticket(int $usuarioId, int $colegioId, Conexion $db):
     return es_administrador_global($usuarioId, $db) || es_admin_colegio($usuarioId, $colegioId, $db);
 }
 
+/** Comprueba si el usuario puede consultar o participar en un ticket. */
+function puede_ver_ticket(int $usuarioId, array $ticket, Conexion $db): bool
+{
+    return (int) ($ticket['id_usuario'] ?? 0) === $usuarioId
+        || (int) ($ticket['id_tecnico_asignado'] ?? 0) === $usuarioId
+        || puede_administrar_ticket($usuarioId, (int) ($ticket['id_colegio'] ?? 0), $db);
+}
+
+/**
+ * Devuelve metadatos de columnas para integrar tablas opcionales sin romper el módulo.
+ *
+ * @return array<string,array{key:string,extra:string}>
+ */
+function ticket_columnas_tabla(string $tabla, Conexion $db): array
+{
+    $permitidas = ['comentarios_ticket', 'calificacion_ticket', 'calificacion_tickett', 'log_cambios_ticket'];
+    if (!in_array($tabla, $permitidas, true)) {
+        return [];
+    }
+
+    try {
+        $filas = $db->fetchAll(
+            'SELECT COLUMN_NAME, COLUMN_KEY, EXTRA
+               FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?',
+            [$tabla]
+        );
+    } catch (Throwable $ex) {
+        error_log('No fue posible inspeccionar la tabla opcional ' . $tabla . ': ' . $ex->getMessage());
+        return [];
+    }
+
+    $columnas = [];
+    foreach ($filas as $fila) {
+        $nombre = (string) ($fila['COLUMN_NAME'] ?? '');
+        if ($nombre !== '') {
+            $columnas[$nombre] = [
+                'key' => (string) ($fila['COLUMN_KEY'] ?? ''),
+                'extra' => strtolower((string) ($fila['EXTRA'] ?? '')),
+            ];
+        }
+    }
+    return $columnas;
+}
+
+/** Registra un evento si el historial está instalado; nunca interrumpe la acción principal. */
+function ticket_registrar_cambio(
+    Conexion $db,
+    int $ticketId,
+    int $usuarioId,
+    string $accion,
+    ?string $campo = null,
+    ?string $anterior = null,
+    ?string $nuevo = null
+): void {
+    try {
+        $columnas = ticket_columnas_tabla('log_cambios_ticket', $db);
+        if (!isset($columnas['id_ticket'], $columnas['id_usuario'], $columnas['accion'])) {
+            return;
+        }
+        $campos = ['id_ticket', 'id_usuario', 'accion'];
+        $valores = ['?', '?', '?'];
+        $params = [$ticketId, $usuarioId, $accion];
+        foreach (['campo_modificado' => $campo, 'valor_anterior' => $anterior, 'valor_nuevo' => $nuevo] as $nombre => $valor) {
+            if (isset($columnas[$nombre])) {
+                $campos[] = $nombre;
+                $valores[] = '?';
+                $params[] = $valor;
+            }
+        }
+        if (isset($columnas['fecha_cambio'])) {
+            $campos[] = 'fecha_cambio';
+            $valores[] = 'NOW()';
+        }
+        $db->execute(
+            'INSERT INTO log_cambios_ticket (' . implode(', ', $campos) . ') VALUES (' . implode(', ', $valores) . ')',
+            $params
+        );
+    } catch (Throwable $ex) {
+        error_log('No fue posible registrar historial de ticket: ' . $ex->getMessage());
+    }
+}
+
 function ticket_csrf_token(): string
 {
     Session::iniciar();
@@ -80,4 +163,3 @@ function ticket_csrf_valido(string $token): bool
     return $token !== '' && isset($_SESSION['ticket_csrf'])
         && hash_equals((string) $_SESSION['ticket_csrf'], $token);
 }
-

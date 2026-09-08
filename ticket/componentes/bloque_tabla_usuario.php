@@ -62,7 +62,6 @@ $etiquetasEstado = $etiquetasEstado ?? [
         <?php foreach ($misTickets as $ticket):
           $estado = strtolower((string) $ticket['estado']);
           $prioridad = str_replace(['í', 'Í'], 'i', strtolower((string) $ticket['prioridad']));
-          $datosTicket = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
           $textoEstado = $etiquetasEstado[$estado] ?? ucfirst(str_replace('_', ' ', $estado));
         ?>
           <tr data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['categoria_nombre'], $ticket['colegio_nombre'], $ticket['tecnico_nombre']]))) ?>" data-estado="<?= e($estado) ?>" data-fecha="<?= e(date('Y-m-d', strtotime((string) $ticket['fecha_creacion']))) ?>">
@@ -72,7 +71,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
             <td class="ticket-person"><strong><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></strong></td>
             <td><span class="ticket-badge ticket-badge--<?= e($estado) ?>"><?= e($textoEstado) ?></span></td>
             <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
-            <td><div class="ticket-actions"><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($datosTicket) ?>" onclick="abrirMiTicket(this)"><i class="bi bi-eye"></i> Ver</button></div></td>
+            <td><div class="ticket-actions"><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Ver</a></div></td>
           </tr>
         <?php endforeach; ?>
         </tbody>

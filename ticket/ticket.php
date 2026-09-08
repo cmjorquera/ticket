@@ -37,7 +37,7 @@ try {
 
 try {
     $misTickets = $db->fetchAll(
-        "SELECT t.id_ticket, t.asunto, t.descripcion, t.estado, t.fecha_creacion,
+        "SELECT t.id_ticket, t.asunto, t.descripcion_ticket, t.estado, t.fecha_creacion,
                 t.fecha_respuesta, t.prioridad,
                 c.nombre_categoria AS categoria_nombre,
                 col.nom_colegio AS colegio_nombre,
@@ -79,24 +79,6 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 </div>
 
 <?php $funcionesTicket->renderizarContenedores($usuarioId, $idPagActual); ?>
-
-<section class="card ticket-launch">
-  <div class="ticket-launch__mark"><i class="bi bi-ticket-perforated-fill"></i><span>Soporte SEDUC</span></div>
-  <div class="ticket-launch__content">
-    <span class="ticket-launch__eyebrow">Nueva solicitud</span>
-    <h2>¿Necesitas ayuda técnica?</h2>
-    <p>Describe el problema y lo enviaremos al técnico adecuado según su categoría. El proceso toma menos de dos minutos.</p>
-    <?php if ($errorCarga): ?><div class="ticket-message error" style="display:block"><?= e($errorCarga) ?></div><?php endif; ?>
-    <button class="btn btn-primary ticket-launch__button" type="button" onclick="abrirModalTicket()" <?= ($errorCarga || !$categorias || !$colegios) ? 'disabled' : '' ?>>
-      <i class="bi bi-plus-circle"></i> Nuevo ticket
-    </button>
-  </div>
-  <div class="ticket-launch__flow" aria-label="Proceso de atención">
-    <div><span>01</span><strong>Describe</strong><small>Cuéntanos qué ocurre</small></div>
-    <div><span>02</span><strong>Asignamos</strong><small>Buscamos al especialista</small></div>
-    <div><span>03</span><strong>Resolvemos</strong><small>Sigue el avance del caso</small></div>
-  </div>
-</section>
 
 <?php require __DIR__ . '/componentes/bloque_tabla_usuario.php'; ?>
 
@@ -180,20 +162,6 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
   </div>
 </div>
 
-<div class="modal-overlay" id="modal-mi-ticket" onclick="closeModalOutside(event,'modal-mi-ticket')">
-  <div class="modal ticket-detail-modal" role="dialog" aria-modal="true" aria-labelledby="mi-ticket-titulo">
-    <div class="modal-header ticket-modal-header">
-      <div><span class="ticket-modal-kicker">Detalle de solicitud</span><h3 id="mi-ticket-titulo">Ticket</h3><p id="mi-ticket-folio"></p></div>
-      <button class="ticket-modal-close" type="button" onclick="closeModal('modal-mi-ticket')" aria-label="Cerrar detalle"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <div class="modal-body">
-      <div class="ticket-detail-grid" id="mi-ticket-grid"></div>
-      <div class="ticket-description" id="mi-ticket-descripcion"></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-outline" type="button" onclick="closeModal('modal-mi-ticket')">Cerrar</button></div>
-  </div>
-</div>
-
 <script>
 (() => {
   const form = document.getElementById('form-ticket');
@@ -270,28 +238,6 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
     }
   });
 })();
-
-function ticketEscape(value) {
-  const node = document.createElement('div');
-  node.textContent = value ?? '';
-  return node.innerHTML;
-}
-
-function abrirMiTicket(button) {
-  const ticket = JSON.parse(button.dataset.ticket);
-  const labels = {nuevo:'Nuevo', en_proceso:'En proceso', atrasado:'Atrasado', resuelto:'Resuelto', cerrado:'Cerrado'};
-  document.getElementById('mi-ticket-titulo').textContent = ticket.asunto;
-  document.getElementById('mi-ticket-folio').textContent = `Ticket #${ticket.id_ticket} · ${ticket.categoria_nombre}`;
-  document.getElementById('mi-ticket-grid').innerHTML = `
-    <div class="ticket-detail-block"><span>Estado</span><strong>${ticketEscape(labels[ticket.estado] || ticket.estado)}</strong></div>
-    <div class="ticket-detail-block"><span>Prioridad</span><strong>${ticketEscape(ticket.prioridad)}</strong></div>
-    <div class="ticket-detail-block"><span>Colegio</span><strong>${ticketEscape(ticket.colegio_nombre)}</strong></div>
-    <div class="ticket-detail-block"><span>Técnico</span><strong>${ticketEscape(ticket.tecnico_nombre?.trim() || 'Sin asignar')}</strong></div>
-    <div class="ticket-detail-block"><span>Creado</span><strong>${ticketEscape(ticket.fecha_creacion)}</strong></div>
-    <div class="ticket-detail-block"><span>Última respuesta</span><strong>${ticketEscape(ticket.fecha_respuesta || 'Sin respuesta')}</strong></div>`;
-  document.getElementById('mi-ticket-descripcion').textContent = ticket.descripcion;
-  openModal('modal-mi-ticket');
-}
 
 function filtrarMisTickets() {
   const input = document.getElementById('mis-tickets-buscar');

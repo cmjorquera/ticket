@@ -1,0 +1,658 @@
+════════════════════════════════════════════════════════════════════════════════
+DOCUMENTACIÓN TÉCNICA COMPLETA: SISTEMA DE TICKETS SEDUC
+════════════════════════════════════════════════════════════════════════════════
+
+ÍNDICE:
+1. Estructura de Tablas
+2. Relación entre Tablas
+3. Funciones PHP
+4. Validaciones
+5. Flujo de Lógica
+6. Roles y Permisos
+7. Estados del Ticket
+
+════════════════════════════════════════════════════════════════════════════════
+1. ESTRUCTURA DE TABLAS
+════════════════════════════════════════════════════════════════════════════════
+
+┌─ TABLA: tickets (PRINCIPAL)
+├─ id_ticket (INT, PK) - ID único del ticket
+├─ id_usuario (INT, FK) - Usuario que crea el ticket
+├─ id_categoria (INT, FK) - Categoría del problema
+├─ id_colegio (INT, FK) - Colegio donde ocurre el problema
+├─ id_tecnico_asignado (INT, FK) - Técnico asignado (NULL si sin asignar)
+├─ id_estado (INT, FK) - Estado actual del ticket
+├─ id_prioridad (INT, FK) - Prioridad: baja, media, alta, crítica
+├─ asunto (VARCHAR) - Título del ticket
+├─ descripcion (TEXT) - Descripción del problema
+├─ fecha_creacion (DATETIME) - Fecha/hora de creación
+├─ fecha_respuesta (DATETIME) - Fecha/hora del primer comentario
+├─ fecha_cierre (DATETIME) - Fecha/hora de cierre
+├─ identificador (VARCHAR UNIQUE) - ID único legible (8 caracteres hex)
+└─ estado (INT) - 1=activo, 2=eliminado (soft delete)
+
+┌─ TABLA: estados_ticket
+├─ id (INT, PK)
+├─ nombre (VARCHAR UNIQUE) - 'nuevo', 'asignado', 'en_proceso', 'resuelto', 'cerrado', 'atrasado'
+├─ color (VARCHAR) - Color hexadecimal
+├─ color_degradado (VARCHAR) - Gradient CSS
+├─ descripcion (TEXT)
+└─ orden (INT) - Orden de visualización
+
+┌─ TABLA: prioridad_ticket
+├─ id (INT, PK)
+├─ nombre (VARCHAR UNIQUE) - 'baja', 'media', 'alta', 'crítica'
+└─ orden (INT) - 1=crítica, 2=alta, 3=media, 4=baja
+
+┌─ TABLA: comentarios_ticket (CHAT/CONVERSACIONES)
+├─ id_comentario (INT, PK)
+├─ id_ticket (INT, FK) - Referencia al ticket
+├─ id_usuario (INT, FK) - Usuario que comenta
+├─ id_tecnico (INT, FK) - Si es técnico quien comenta
+├─ comentario (TEXT) - Contenido del comentario
+├─ fecha_comentario (DATETIME) - Fecha/hora
+├─ hora_comentario (TIME)
+└─ estado (INT) - 1=activo, 2=borrado
+
+┌─ TABLA: calificacion_ticket (ESTRELLAS 1-5)
+├─ id_calificacion (INT, PK)
+├─ id_ticket (INT, FK UNIQUE) - Solo una calificación por ticket
+├─ id_usuario (INT, FK) - Usuario que califica
+├─ id_tecnico (INT, FK) - Técnico calificado
+├─ id_calificacion (INT) - 1=Requiere revisión, 2=Incompleto, 3=Insatisfactorio, 4=Satisfactorio
+├─ comentario (TEXT) - Comentario de calificación
+├─ fecha_calificacion (DATETIME)
+└─ ip_usuario (VARCHAR) - IP del usuario que califica
+
+┌─ TABLA: calificacion_label
+├─ id (INT, PK)
+├─ calificacion (VARCHAR) - Etiqueta de calificación
+└─ orden (INT) - Orden
+
+┌─ TABLA: archivos_adjuntos_ticket
+├─ id_archivo (INT, PK)
+├─ id_ticket (INT, FK) - Referencia al ticket
+├─ nombre_archivo (VARCHAR) - Nombre original del archivo
+├─ ruta_archivo (VARCHAR) - Ruta donde se almacena
+├─ tipo_archivo (VARCHAR) - Extensión: jpg, pdf, docx, etc
+├─ tamaño_archivo (INT) - Tamaño en bytes
+├─ fecha_subida (DATETIME)
+└─ id_usuario (INT, FK) - Usuario que subió el archivo
+
+┌─ TABLA: log_cambios_ticket (HISTORIAL/CRONOLOGÍA)
+├─ id_log (INT, PK)
+├─ id_ticket (INT, FK) - Referencia al ticket
+├─ id_usuario (INT, FK) - Usuario que realizó el cambio
+├─ campo_modificado (VARCHAR) - Qué campo cambió: 'estado', 'tecnico', etc
+├─ valor_anterior (TEXT) - Valor anterior
+├─ valor_nuevo (TEXT) - Valor nuevo
+├─ fecha_cambio (DATETIME) - Cuándo cambió
+└─ accion (VARCHAR) - 'crear', 'actualizar', 'asignar', 'cambiar_estado', etc
+
+════════════════════════════════════════════════════════════════════════════════
+2. RELACIÓN ENTRE TABLAS
+════════════════════════════════════════════════════════════════════════════════
+
+VISTA DE RELACIONES:
+
+tickets (CENTRAL)
+├─ FK → usuarios (id_usuario) ......... Usuario que crea el ticket
+├─ FK → usuarios (id_tecnico_asignado) Técnico asignado
+├─ FK → categoria_de_ticket ........... Categoría del problema
+├─ FK → colegio ........................ Colegio donde ocurre
+├─ FK → estados_ticket ................ Estado actual
+├─ 1:N → comentarios_ticket ........... Chat/comentarios
+├─ 1:N → archivos_adjuntos_ticket ..... Archivos subidos
+├─ 1:1 → calificacion_ticket .......... Calificación (opcional)
+└─ 1:N → log_cambios_ticket ........... Histórico de cambios
+
+FLUJO DE DATOS:
+
+1. Usuario crea ticket
+   ↓
+   ticket.id_usuario = usuario logueado
+   ticket.id_estado = 'nuevo'
+   ticket.identificador = random(8 hex chars)
+   ↓
+   Log: acción = 'crear'
+
+2. Técnico se asigna / Admin lo asigna
+   ↓
+   ticket.id_tecnico_asignado = id técnico
+   ticket.id_estado = 'asignado'
+   ↓
+   Log: acción = 'asignar', campo = 'id_tecnico_asignado'
+
+3. Técnico comenta / Usuario comenta
+   ↓
+   comentarios_ticket INSERT
+   ticket.fecha_respuesta = NOW() (si es primer comentario)
+   ↓
+   Log: acción = 'comentar'
+
+4. Técnico marca como "en_proceso"
+   ↓
+   ticket.id_estado = 'en_proceso'
+   ↓
+   Log: acción = 'cambiar_estado', campo = 'id_estado'
+
+5. Técnico marca como "resuelto"
+   ↓
+   ticket.id_estado = 'resuelto'
+   ↓
+   Log: acción = 'cambiar_estado'
+
+6. Usuario califica
+   ↓
+   calificacion_ticket INSERT (solo si estado = 'resuelto')
+   ↓
+   Log: acción = 'calificar'
+
+7. Admin cierra ticket
+   ↓
+   ticket.id_estado = 'cerrado'
+   ticket.fecha_cierre = NOW()
+   ↓
+   Log: acción = 'cerrar'
+
+════════════════════════════════════════════════════════════════════════════════
+3. FUNCIONES PHP
+════════════════════════════════════════════════════════════════════════════════
+
+CLASE: FuncionesTicket
+
+┌─ MÉTODO: obtenerConteo(int $usuario_id, int $id_pag_actual, string $estado): int
+│
+├─ PARÁMETROS:
+│  ├─ $usuario_id: ID del usuario actual
+│  ├─ $id_pag_actual: 3=usuario, 4=técnico, 5=admin
+│  └─ $estado: 'nuevo', 'en_proceso', 'resuelto', 'atrasado'
+│
+├─ LÓGICA:
+│  ├─ Si id_pag_actual = 3: Cuenta tickets del usuario (WHERE id_usuario = ?)
+│  ├─ Si id_pag_actual = 4: Cuenta tickets asignados (WHERE id_tecnico_asignado = ?)
+│  └─ Si id_pag_actual = 5: Cuenta TODOS los tickets (WHERE 1=1)
+│
+└─ RETORNA: INT (cantidad de tickets)
+
+┌─ MÉTODO: contenedorTicketNuevos(int $usuario_id, int $id_pag_actual): void
+├─ Obtiene conteo de tickets con estado 'nuevo'
+├─ Renderiza un card con:
+│  ├─ Número grande del total
+│  ├─ Color azul (#007bff)
+│  ├─ Ícono de buzón
+│  └─ Título "Nuevos"
+└─ TIPO: Void (solo imprime HTML)
+
+┌─ MÉTODO: contenedorTicketEnProceso() / Resueltos() / Atrasados()
+├─ Mismo comportamiento que contenedorTicketNuevos()
+├─ Pero con colores distintos (amarillo, verde, rojo)
+└─ y estados diferentes
+
+┌─ MÉTODO: renderizarContenedores(int $usuario_id, int $id_pag_actual): void
+│
+├─ Crea un DIV con clase "contenedor-tickets"
+├─ Llama a los 4 métodos anteriores en orden:
+│  ├─ contenedorTicketNuevos()
+│  ├─ contenedorTicketEnProceso()
+│  ├─ contenedorTicketResueltos()
+│  └─ contenedorTicketAtrasados()
+└─ Resultado: 4 cards lado a lado (grid)
+
+════════════════════════════════════════════════════════════════════════════════
+4. VALIDACIONES
+════════════════════════════════════════════════════════════════════════════════
+
+CREAR TICKET (guardar_ticket.php):
+─────────────────────────────────────
+
+✓ VALIDACIONES CLIENTE (JavaScript):
+  ├─ Solicitante: auto-llenado (solo lectura)
+  ├─ Prioridad: opciones permitidas (baja, media, alta, crítica)
+  ├─ Categoría: requerido, existe en BD
+  ├─ Colegio: requerido, existe en BD
+  ├─ Asunto: requerido, 5-180 caracteres
+  └─ Descripción: requerido, 10-10000 caracteres
+
+✓ VALIDACIONES SERVIDOR (PHP):
+  ├─ CSRF Token: $_SESSION['csrf_ticket'] == $_POST['csrf']
+  ├─ Usuario autenticado: Sesion::get('id')
+  ├─ Categoría existe: SELECT FROM categoria_de_ticket
+  ├─ Colegio existe: SELECT FROM colegio
+  ├─ Prioridad válida: in_array($prioridad, ['baja', 'media', 'alta', 'crítica'])
+  ├─ Longitudes: strlen($asunto) >= 5, strlen($descripcion) >= 10
+  ├─ Archivos: máximo 5 de 5MB cada uno
+  │  └─ Extensiones permitidas: jpg, jpeg, png, pdf, doc, docx, xls, xlsx
+  └─ Identificador único: random_bytes(8) encoded to hex
+
+GUARDAR COMENTARIO (guardar_comentario.php):
+──────────────────────────────────────────
+
+✓ VALIDACIONES:
+  ├─ Usuario autenticado
+  ├─ id_ticket existe
+  ├─ Comentario: 3-5000 caracteres
+  ├─ Ticket no está eliminado
+  └─ Actualiza fecha_respuesta si no existe
+
+CALIFICAR TICKET (guardar_calificacion.php):
+────────────────────────────────────────────
+
+✓ VALIDACIONES:
+  ├─ Usuario autenticado
+  ├─ Usuario es propietario del ticket (id_usuario)
+  ├─ Ticket estado = 'resuelto'
+  ├─ Calificación: 1-4 (valores válidos)
+  ├─ No existe calificación previa (UNIQUE)
+  └─ Técnico asignado (id_tecnico_asignado)
+
+CAMBIAR ESTADO (cambiar_estado.php):
+───────────────────────────────────
+
+✓ VALIDACIONES:
+  ├─ Usuario autenticado
+  ├─ Ticket existe
+  ├─ Estado nuevo válido (existe en estados_ticket)
+  ├─ Transiciones lógicas:
+  │  ├─ nuevo → asignado
+  │  ├─ asignado → en_proceso
+  │  ├─ en_proceso → resuelto
+  │  ├─ resuelto → cerrado
+  │  └─ en_proceso → atrasado
+  └─ Si estado = 'cerrado': fecha_cierre = NOW()
+
+════════════════════════════════════════════════════════════════════════════════
+5. FLUJO DE LÓGICA
+════════════════════════════════════════════════════════════════════════════════
+
+FLUJO COMPLETO DE UN TICKET:
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 1. USUARIO CREA TICKET (ticket.php → ajax/guardar_ticket.php)      │
+├─────────────────────────────────────────────────────────────────────┤
+│
+│ Entrada:
+│  ├─ Solicitante (auto)
+│  ├─ Prioridad
+│  ├─ Categoría (requerido)
+│  ├─ Colegio (requerido)
+│  ├─ Asunto
+│  ├─ Descripción
+│  └─ Archivos (opcional)
+│
+│ Procesamiento:
+│  1. Validar CSRF token
+│  2. Validar todos los campos (cliente ya validó)
+│  3. Verificar categoría existe
+│  4. Verificar colegio existe
+│  5. Generar identificador único
+│  6. INSERT en tabla tickets:
+│     - id_estado = 'nuevo'
+│     - fecha_creacion = NOW()
+│     - estado = 1 (activo)
+│  7. INSERT en log_cambios_ticket:
+│     - acción = 'crear'
+│  8. Si hay archivos:
+│     a. Validar extensión (jpg, pdf, docx, etc)
+│     b. Validar tamaño (max 5MB)
+│     c. Mover a uploads/tickets/
+│     d. INSERT en archivos_adjuntos_ticket
+│  9. Retornar JSON con ticket_id
+│
+│ Salida:
+│  {
+│    "ok": true,
+│    "ticket_id": 123,
+│    "identificador": "abc12def456",
+│    "mensaje": "Ticket creado correctamente"
+│  }
+│
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 2. ADMIN/TÉCNICO ASIGNA TICKET (ticket_admin_v2.php)               │
+├─────────────────────────────────────────────────────────────────────┤
+│
+│ Procesamiento:
+│  1. Admin elige técnico en tabla
+│  2. Click en botón "Asignar"
+│  3. Llamada a ajax/asignar_tecnico.php
+│  4. UPDATE tickets SET id_tecnico_asignado = ?, id_estado = 'asignado'
+│  5. INSERT en log_cambios_ticket:
+│     - acción = 'asignar'
+│     - campo_modificado = 'id_tecnico_asignado'
+│     - valor_anterior = NULL
+│     - valor_nuevo = ID técnico
+│  6. Ticket ahora visible en "Mis tickets asignados" (técnico)
+│
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 3. TÉCNICO COMENTA (ticket_detalle.php → ajax/guardar_comentario.php)│
+├─────────────────────────────────────────────────────────────────────┤
+│
+│ Procesamiento:
+│  1. Técnico escribe comentario en textarea
+│  2. Click "Enviar"
+│  3. Validar: 3-5000 caracteres
+│  4. INSERT en comentarios_ticket:
+│     - id_ticket = ticket actual
+│     - id_usuario o id_tecnico (según rol)
+│     - comentario = texto
+│     - fecha_comentario = NOW()
+│  5. Si fecha_respuesta es NULL:
+│     - UPDATE tickets SET fecha_respuesta = NOW()
+│  6. Recargar página → mostrar comentario nuevo
+│
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 4. CAMBIAR ESTADO (ticket_detalle.php → ajax/cambiar_estado.php)   │
+├─────────────────────────────────────────────────────────────────────┤
+│
+│ Estados válidos:
+│  ├─ nuevo (inicial)
+│  ├─ asignado (técnico asignado)
+│  ├─ en_proceso (trabajando)
+│  ├─ resuelto (terminado pero no cerrado)
+│  ├─ cerrado (definitivamente cerrado)
+│  └─ atrasado (pasó fecha límite)
+│
+│ Transiciones lógicas:
+│  nuevo ──→ asignado ──→ en_proceso ──→ resuelto ──→ cerrado
+│                ↓
+│            atrasado
+│
+│ Procesamiento:
+│  1. Validar nuevo_estado existe en estados_ticket
+│  2. UPDATE tickets SET estado = ?, fecha_cierre = (si cerrado)
+│  3. INSERT en log_cambios_ticket:
+│     - acción = 'cambiar_estado'
+│     - campo_modificado = 'estado'
+│     - valor_anterior = estado anterior
+│     - valor_nuevo = nuevo estado
+│  4. Si hay comentario, INSERT en comentarios_ticket
+│
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ 5. USUARIO CALIFICA (ticket_detalle.php → ajax/guardar_calificacion)│
+├─────────────────────────────────────────────────────────────────────┤
+│
+│ Condiciones:
+│  ├─ Solo si id_usuario = usuario actual
+│  ├─ Solo si estado = 'resuelto'
+│  ├─ Solo una calificación por ticket (UNIQUE)
+│  └─ Opciones: 1=Requiere revisión, 2=Incompleto, 3=Insatisfactorio, 4=Satisfactorio
+│
+│ Procesamiento:
+│  1. Obtener ticket
+│  2. Verificar usuario propietario
+│  3. Verificar estado = 'resuelto'
+│  4. Verificar no existe calificación previa
+│  5. INSERT en calificacion_ticket:
+│     - id_ticket = ticket
+│     - id_usuario = usuario actual
+│     - id_tecnico = técnico que resolvió
+│     - id_calificacion = 1-4
+│     - comentario (opcional)
+│     - ip_usuario = $_SERVER['REMOTE_ADDR']
+│  6. Ticket no puede ser calificado de nuevo
+│
+└─────────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════
+6. ROLES Y PERMISOS
+════════════════════════════════════════════════════════════════════════════════
+
+ROL: USUARIO (id_pag_actual = 3)
+─────────────────────────────────
+Acceso:        ticket.php + ticket_detalle.php
+Permisos:
+  ✓ Crear tickets (propios)
+  ✓ Ver sus propios tickets
+  ✓ Comentar en sus propios tickets
+  ✓ Calificar tickets resueltos
+  ✓ Ver historial (log_cambios_ticket)
+  ✗ Asignar técnico
+  ✗ Cambiar estado
+  ✗ Ver tickets de otros usuarios
+
+Contenedores mostrados:
+  ├─ Nuevos: tickets con id_usuario = usuario AND estado = 'nuevo'
+  ├─ En proceso: tickets con id_usuario = usuario AND estado = 'en_proceso'
+  ├─ Resueltos: tickets con id_usuario = usuario AND estado = 'resuelto'
+  └─ Atrasados: tickets con id_usuario = usuario AND estado = 'atrasado'
+
+ROL: TÉCNICO (id_pag_actual = 4)
+────────────────────────────────
+Acceso:        ticket_asignados.php + ticket_detalle.php
+Permisos:
+  ✓ Ver tickets asignados
+  ✓ Comentar en tickets asignados
+  ✓ Cambiar estado (nuevo → en_proceso → resuelto)
+  ✗ Asignar técnico (solo admin)
+  ✗ Ver tickets de otros técnicos
+  ✗ Cambiar estado a "cerrado" (solo admin)
+  ✗ Calificar
+
+Contenedores mostrados:
+  ├─ Nuevos: tickets con id_tecnico_asignado = técnico AND estado = 'nuevo'
+  ├─ En proceso: tickets con id_tecnico_asignado = técnico AND estado = 'en_proceso'
+  ├─ Resueltos: tickets con id_tecnico_asignado = técnico AND estado = 'resuelto'
+  └─ Atrasados: NO VE (solo admin y usuario)
+
+ROL: ADMIN (id_pag_actual = 5)
+──────────────────────────────
+Acceso:        ticket_admin_v2.php + ticket_detalle.php
+Permisos:
+  ✓ Ver TODOS los tickets
+  ✓ Asignar/reasignar técnico
+  ✓ Cambiar estado (cualquier transición)
+  ✓ Cerrar tickets
+  ✓ Comentar en cualquier ticket
+  ✓ Ver historial completo
+  ✓ Ver calificaciones
+
+Contenedores mostrados:
+  ├─ Nuevos: COUNT(*) WHERE estado = 'nuevo'
+  ├─ En proceso: COUNT(*) WHERE estado = 'en_proceso'
+  ├─ Resueltos: COUNT(*) WHERE estado = 'resuelto'
+  └─ Atrasados: COUNT(*) WHERE estado = 'atrasado'
+
+════════════════════════════════════════════════════════════════════════════════
+7. ESTADOS DEL TICKET
+════════════════════════════════════════════════════════════════════════════════
+
+NUEVO (inicial)
+├─ Color: Azul (#007bff)
+├─ Significado: Acaba de ser creado, sin asignar aún
+├─ Transición: → ASIGNADO
+└─ Visible para: Usuario (creador), Admin
+
+ASIGNADO
+├─ Color: Amarillo (#ffc107)
+├─ Significado: Ya tiene técnico asignado, pero no ha empezado
+├─ Transición: → EN_PROCESO
+└─ Visible para: Usuario (creador), Técnico (asignado), Admin
+
+EN_PROCESO
+├─ Color: Naranja (#FFE0E0)
+├─ Significado: El técnico está trabajando activamente
+├─ Transición: → RESUELTO o → ATRASADO
+└─ Visible para: Usuario, Técnico (asignado), Admin
+
+RESUELTO
+├─ Color: Verde (#28a745)
+├─ Significado: Técnico terminó, pero usuario no cerró (puede calificar)
+├─ Transición: → CERRADO
+└─ Visible para: Usuario (puede calificar), Técnico, Admin
+
+CERRADO
+├─ Color: Gris (#E0E0E0)
+├─ Significado: Ticket completado y cerrado definitivamente
+├─ Transición: Ninguna (estado final)
+├─ Visible para: Admin
+└─ fecha_cierre: SET cuando cambia a cerrado
+
+ATRASADO
+├─ Color: Rojo (#dc3545)
+├─ Significado: Pasó la fecha estimada de resolución
+├─ Transición: → EN_PROCESO (reasignar/reintentar)
+└─ Visible para: Admin y Usuario
+
+════════════════════════════════════════════════════════════════════════════════
+FLUJO DE ESTADOS:
+
+USUARIO             TÉCNICO             ADMIN
+   │                   │                  │
+   │ Crea ticket       │                  │
+   │─────────────────→ │                  │
+   │                   │                  │
+   │ Estado=NUEVO      │ ADMIN ASIGNA     │
+   │                   │←─────────────────│
+   │                   │                  │
+   │                   │ Estado=ASIGNADO  │
+   │                   │────────────────→ │
+   │                   │                  │
+   │                   │ Cambia a         │
+   │                   │ EN_PROCESO       │
+   │                   │────────────────→ │
+   │                   │                  │
+   │←───────COMENTA────│                  │
+   │                   │                  │
+   │                   │ Cambia a RESUELTO│
+   │                   │────────────────→ │
+   │                   │                  │
+   │ CALIFICA          │                  │
+   │────────────────→  │                  │
+   │                   │                  │
+   │                   │                  │ CIERRA TICKET
+   │                   │                  │ Estado=CERRADO
+   │←──────────────────────────────────────│
+
+════════════════════════════════════════════════════════════════════════════════
+BÚSQUEDA Y FILTROS
+════════════════════════════════════════════════════════════════════════════════
+
+BÚSQUEDA: Full-Text Search
+┌─ Tabla: tickets
+├─ Campos: asunto, descripcion
+├─ Índice: FULLTEXT INDEX `ft_asunto_descripcion`
+├─ Syntax: MATCH(asunto, descripcion) AGAINST(? IN BOOLEAN MODE)
+└─ Ejemplo: "impresora OR red" busca cualquiera de los dos
+
+FILTROS USUARIO (ticket.php - componentes/bloque_tabla_usuario.php):
+├─ Por estado: WHERE estado = ?
+├─ Por búsqueda: MATCH(asunto, descripcion) AGAINST(? IN BOOLEAN MODE)
+└─ Combinados: WHERE id_usuario = ? AND estado = ? AND MATCH(...)
+
+FILTROS TÉCNICO (ticket_asignados.php - componentes/bloque_tabla_tecnico.php):
+├─ Por estado: WHERE id_tecnico_asignado = ? AND estado = ?
+└─ Por búsqueda: MATCH(asunto, descripcion) AGAINST(? IN BOOLEAN MODE)
+
+FILTROS ADMIN (ticket_admin_v2.php - componentes/bloque_tabla_admin.php):
+├─ Por estado: WHERE estado = ?
+├─ Por colegio: WHERE id_colegio = ?
+├─ Por técnico: WHERE id_tecnico_asignado = ?
+├─ Por búsqueda: MATCH(asunto, descripcion) AGAINST(? IN BOOLEAN MODE)
+└─ Combinados: Cualquier combinación de los anteriores
+
+════════════════════════════════════════════════════════════════════════════════
+ÍNDICES Y OPTIMIZACIÓN
+════════════════════════════════════════════════════════════════════════════════
+
+ÍNDICES EN TABLA tickets:
+├─ PRIMARY KEY: id_ticket
+├─ FOREIGN KEYS: id_usuario, id_tecnico_asignado, id_estado, id_colegio
+├─ ÍNDICES ADICIONALES:
+│  ├─ idx_usuario: (id_usuario) - Búsquedas por usuario
+│  ├─ idx_tecnico: (id_tecnico_asignado) - Búsquedas por técnico
+│  ├─ idx_estado: (id_estado) - Filtros por estado
+│  ├─ idx_colegio: (id_colegio) - Filtros por colegio
+│  ├─ idx_fecha: (fecha_creacion) - Ordenar por fecha
+│  ├─ idx_estado_usuario: (id_estado, id_usuario) - Búsquedas combinadas
+│  ├─ idx_estado_tecnico: (id_estado, id_tecnico_asignado) - Búsquedas combinadas
+│  └─ ft_asunto_descripcion: FULLTEXT - Búsqueda full-text
+
+ÍNDICES EN TABLA comentarios_ticket:
+├─ PRIMARY KEY: id_comentario
+├─ FOREIGN KEYS: id_ticket, id_usuario, id_tecnico
+├─ ÍNDICES ADICIONALES:
+│  ├─ idx_ticket: (id_ticket) - Obtener comentarios de ticket
+│  ├─ idx_usuario: (id_usuario) - Historial de comentarios
+│  ├─ idx_fecha: (fecha_comentario) - Ordenar por fecha
+│  └─ ft_comentario: FULLTEXT - Buscar en comentarios
+
+════════════════════════════════════════════════════════════════════════════════
+VALIDACIONES CLAVE EN CÓDIGO
+════════════════════════════════════════════════════════════════════════════════
+
+VALIDACIÓN DE CSRF:
+if ($csrf !== ($_SESSION['csrf_ticket'] ?? '')) {
+    throw new Exception('Token CSRF inválido');
+}
+
+VALIDACIÓN DE AUTENTICACIÓN:
+$usuario_id = (int)Sesion::get('id', 0);
+if (!$usuario_id) {
+    http_response_code(401);
+    echo json_encode(['ok' => false, 'error' => 'No autenticado']);
+    exit;
+}
+
+VALIDACIÓN DE LONGITUDES:
+if (strlen($asunto) < 5 || strlen($asunto) > 180) {
+    throw new Exception('Longitud inválida');
+}
+
+VALIDACIÓN DE REFERENCIAS:
+$stmt = $db->prepare("SELECT id_categoria FROM categoria_de_ticket WHERE id_categoria = ?");
+$stmt->execute([$categoria_id]);
+if (!$stmt->fetch()) {
+    throw new Exception('Categoría inválida');
+}
+
+VALIDACIÓN DE ARCHIVOS:
+if ($tamaño > 5 * 1024 * 1024 || !in_array($ext, $archivos_permitidos)) {
+    continue; // Saltar archivo inválido
+}
+
+════════════════════════════════════════════════════════════════════════════════
+ARCHIVOS GENERADOS EN SISTEMA
+════════════════════════════════════════════════════════════════════════════════
+
+DIRECTORIO: ticket/
+├─ ticket.php (usuario - crear + mis tickets)
+├─ ticket_asignados.php (técnico - tickets asignados)
+├─ ticket_admin_v2.php (admin - todos los tickets)
+├─ ticket_detalle.php (detalle con chat + calificación + historial)
+│
+├─ ajax/
+│  ├─ guardar_ticket.php (crear nuevo ticket)
+│  ├─ guardar_comentario.php (agregar comentario/chat)
+│  ├─ guardar_calificacion.php (calificar con estrellas)
+│  ├─ cambiar_estado.php (cambiar estado del ticket)
+│  └─ asignar_tecnico.php (asignar/reasignar técnico)
+│
+├─ js/
+│  ├─ ticket.js (funciones globales, crear, modal, archivos)
+│  └─ chat_ticket.js (comentarios, calificación, cambiar estado)
+│
+└─ componentes/
+   ├─ bloque_tabla_usuario.php (tabla para usuario con filtros)
+   ├─ bloque_tabla_tecnico.php (tabla para técnico con filtros)
+   └─ bloque_tabla_admin.php (tabla para admin con filtros múltiples)
+
+DIRECTORIO: helpers/
+└─ funciones_tickets.php (clase FuncionesTicket con contenedores)
+
+DIRECTORIO: uploads/
+└─ tickets/ (donde se almacenan archivos adjuntos)
+
+════════════════════════════════════════════════════════════════════════════════
+FIN DOCUMENTACIÓN
+════════════════════════════════════════════════════════════════════════════════
+
+Creado: Septiembre 2026
+Versión: 1.0
