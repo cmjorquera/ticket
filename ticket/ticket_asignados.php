@@ -30,8 +30,6 @@ $funcionesTicket = new FuncionesTicket($db);
 $csrf = ticket_csrf_token();
 iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados');
 ?>
-<link rel="stylesheet" href="<?= e($depth) ?>ticket/tickets.css">
-
 <div class="page-header">
   <div><h1>Mis tickets asignados</h1><p>Casos que esperan tu revisión y seguimiento.</p></div>
   <a class="btn btn-outline" href="ticket.php"><i class="bi bi-plus-circle"></i> Crear ticket</a>
