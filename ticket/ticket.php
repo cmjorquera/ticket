@@ -8,7 +8,9 @@ $usuarioId = (int) Sesion::get('id', 0);
 $usuarioNombre = (string) Sesion::get('nombre', 'Usuario');
 $categorias = [];
 $colegios = [];
+$misTickets = [];
 $errorCarga = null;
+$errorListado = null;
 
 try {
     $categorias = $db->fetchAll(
@@ -30,6 +32,35 @@ try {
     error_log('Error al cargar formulario de ticket: ' . $ex->getMessage());
     $errorCarga = 'No fue posible cargar categorías y colegios. Verifica la instalación de las tablas de tickets.';
 }
+
+try {
+    $misTickets = $db->fetchAll(
+        "SELECT t.id_ticket, t.asunto, t.descripcion, t.estado, t.fecha_creacion,
+                t.fecha_respuesta, t.prioridad,
+                c.nombre_categoria AS categoria_nombre,
+                col.nom_colegio AS colegio_nombre,
+                CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
+           FROM tickets t
+           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
+           JOIN colegio col ON col.id_colegio = t.id_colegio
+      LEFT JOIN usuarios tec ON tec.id = t.id_tecnico_asignado
+          WHERE t.id_usuario = ?
+       ORDER BY FIELD(t.estado, 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'),
+                t.fecha_creacion DESC",
+        [$usuarioId]
+    );
+} catch (Throwable $ex) {
+    error_log('Error al listar tickets del solicitante: ' . $ex->getMessage());
+    $errorListado = 'No fue posible consultar tus solicitudes en este momento.';
+}
+
+$etiquetasEstado = [
+    'nuevo' => 'Nuevo',
+    'en_proceso' => 'En proceso',
+    'atrasado' => 'Atrasado',
+    'resuelto' => 'Resuelto',
+    'cerrado' => 'Cerrado',
+];
 
 $csrf = ticket_csrf_token();
 iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
@@ -61,6 +92,8 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
     <div><span>03</span><strong>Resolvemos</strong><small>Sigue el avance del caso</small></div>
   </div>
 </section>
+
+<?php require __DIR__ . '/componentes/bloque_tabla_usuario.php'; ?>
 
 <div class="modal-overlay" id="modal-crear-ticket" onclick="closeModalOutside(event,'modal-crear-ticket')">
   <div class="modal ticket-create-modal" role="dialog" aria-modal="true" aria-labelledby="ticket-modal-title">
@@ -142,6 +175,20 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
   </div>
 </div>
 
+<div class="modal-overlay" id="modal-mi-ticket" onclick="closeModalOutside(event,'modal-mi-ticket')">
+  <div class="modal ticket-detail-modal" role="dialog" aria-modal="true" aria-labelledby="mi-ticket-titulo">
+    <div class="modal-header ticket-modal-header">
+      <div><span class="ticket-modal-kicker">Detalle de solicitud</span><h3 id="mi-ticket-titulo">Ticket</h3><p id="mi-ticket-folio"></p></div>
+      <button class="ticket-modal-close" type="button" onclick="closeModal('modal-mi-ticket')" aria-label="Cerrar detalle"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="ticket-detail-grid" id="mi-ticket-grid"></div>
+      <div class="ticket-description" id="mi-ticket-descripcion"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" type="button" onclick="closeModal('modal-mi-ticket')">Cerrar</button></div>
+  </div>
+</div>
+
 <script>
 (() => {
   const form = document.getElementById('form-ticket');
@@ -215,6 +262,51 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
     }
   });
 })();
+
+function ticketEscape(value) {
+  const node = document.createElement('div');
+  node.textContent = value ?? '';
+  return node.innerHTML;
+}
+
+function abrirMiTicket(button) {
+  const ticket = JSON.parse(button.dataset.ticket);
+  const labels = {nuevo:'Nuevo', en_proceso:'En proceso', atrasado:'Atrasado', resuelto:'Resuelto', cerrado:'Cerrado'};
+  document.getElementById('mi-ticket-titulo').textContent = ticket.asunto;
+  document.getElementById('mi-ticket-folio').textContent = `Ticket #${ticket.id_ticket} · ${ticket.categoria_nombre}`;
+  document.getElementById('mi-ticket-grid').innerHTML = `
+    <div class="ticket-detail-block"><span>Estado</span><strong>${ticketEscape(labels[ticket.estado] || ticket.estado)}</strong></div>
+    <div class="ticket-detail-block"><span>Prioridad</span><strong>${ticketEscape(ticket.prioridad)}</strong></div>
+    <div class="ticket-detail-block"><span>Colegio</span><strong>${ticketEscape(ticket.colegio_nombre)}</strong></div>
+    <div class="ticket-detail-block"><span>Técnico</span><strong>${ticketEscape(ticket.tecnico_nombre?.trim() || 'Sin asignar')}</strong></div>
+    <div class="ticket-detail-block"><span>Creado</span><strong>${ticketEscape(ticket.fecha_creacion)}</strong></div>
+    <div class="ticket-detail-block"><span>Última respuesta</span><strong>${ticketEscape(ticket.fecha_respuesta || 'Sin respuesta')}</strong></div>`;
+  document.getElementById('mi-ticket-descripcion').textContent = ticket.descripcion;
+  openModal('modal-mi-ticket');
+}
+
+function filtrarMisTickets() {
+  const input = document.getElementById('mis-tickets-buscar');
+  const select = document.getElementById('mis-tickets-estado');
+  const date = document.getElementById('mis-tickets-fecha');
+  const rows = Array.from(document.querySelectorAll('#mis-tickets-tabla tbody tr'));
+  if (!input || !select || !date || !rows.length) return;
+  const query = input.value.trim().toLowerCase();
+  let visibles = 0;
+  rows.forEach(row => {
+    const visible = row.dataset.search.includes(query)
+      && (!select.value || row.dataset.estado === select.value)
+      && (!date.value || row.dataset.fecha === date.value);
+    row.hidden = !visible;
+    if (visible) visibles++;
+  });
+  const empty = document.getElementById('mis-tickets-sin-resultados');
+  if (empty) empty.hidden = visibles > 0;
+}
+
+document.getElementById('mis-tickets-buscar')?.addEventListener('input', filtrarMisTickets);
+document.getElementById('mis-tickets-estado')?.addEventListener('change', filtrarMisTickets);
+document.getElementById('mis-tickets-fecha')?.addEventListener('change', filtrarMisTickets);
 </script>
 
 <?php finalizar_layout_configuracion(); ?>
