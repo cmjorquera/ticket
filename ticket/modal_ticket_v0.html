@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V0 — Modal dinámico de ticket</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--fg)}
+    .v0-shell{width:min(820px,100%)}.v0-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:var(--muted);font-size:11px}.v0-tools strong{color:var(--fg)}
+    .v0-switch{display:flex;padding:3px;border:1px solid var(--border);border-radius:8px;background:var(--card)}.v0-switch button{padding:6px 10px;border:0;border-radius:5px;background:transparent;color:var(--muted);font:500 10px 'DM Mono',monospace;cursor:pointer}.v0-switch button.active{background:var(--blue-light);color:var(--blue)}
+    .v0-modal{overflow:hidden;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow-edialog,0 24px 70px rgba(18,27,38,.18))}.v0-head{display:flex;justify-content:space-between;gap:18px;padding:20px 24px 16px;border-bottom:1px solid var(--border)}.v0-kicker{font:500 10px 'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}.v0-head h1{margin:5px 0 0;font-size:20px}.v0-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.v0-close{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:7px;background:var(--bg);color:var(--muted)}
+    .v0-body{padding:20px 24px}.v0-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.v0-field{display:grid;gap:6px}.v0-field.full{grid-column:1/-1}.v0-field label{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}.v0-input{width:100%;min-height:38px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--fg);font:400 12px 'DM Sans',sans-serif}.v0-input:focus{outline:2px solid var(--blue-mid);border-color:var(--blue)}textarea.v0-input{min-height:116px;resize:vertical}
+    .v0-note{display:flex;align-items:center;gap:8px;margin-top:14px;padding:9px 11px;border-radius:7px;background:var(--blue-light);color:var(--blue);font-size:11px}.v0-drop{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px dashed #c7cbd1;border-radius:8px;background:var(--bg)}.v0-drop strong,.v0-drop small{display:block}.v0-drop strong{font-size:11px}.v0-drop small{margin-top:2px;color:var(--muted);font-size:9px}
+    .v0-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 24px;border-top:1px solid var(--border);background:#fafbfc}.v0-footer>span{font-size:10px;color:var(--muted)}.v0-actions{display:flex;gap:8px}.v0-button{min-height:36px;padding:8px 13px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--fg);font:600 11px 'DM Sans',sans-serif}.v0-button.primary{border-color:var(--blue);background:var(--blue);color:#fff}.v0-button.draft{border-color:var(--warning);background:var(--warning-light);color:var(--warning)}
+    [hidden]{display:none!important}@media(max-width:620px){body{padding:0;place-items:stretch}.v0-shell{width:100%}.v0-tools{padding:12px;margin:0}.v0-modal{min-height:calc(100vh - 58px);border-radius:0}.v0-grid{grid-template-columns:1fr}.v0-field.full{grid-column:auto}.v0-footer{align-items:stretch;flex-direction:column}.v0-actions{display:grid;grid-template-columns:1fr 1fr}.v0-head,.v0-body,.v0-footer{padding-left:16px;padding-right:16px}}
+  </style>
+</head>
+<body>
+  <main class="v0-shell">
+    <div class="v0-tools"><span><strong>V0</strong> · Vista estructural, sin conexión a datos</span><div class="v0-switch" aria-label="Vista de rol"><button class="active" data-role="user">Usuario</button><button data-role="admin">Administrador</button></div></div>
+    <section class="v0-modal" role="dialog" aria-modal="true" aria-labelledby="v0-title">
+      <header class="v0-head"><div><span class="v0-kicker">Mesa de ayuda</span><h1 id="v0-title">Crear nuevo ticket</h1><p>Registra el caso y lo enviaremos al equipo adecuado.</p></div><button class="v0-close" aria-label="Cerrar">×</button></header>
+      <div class="v0-body">
+        <div class="v0-grid">
+          <div class="v0-field" id="fixed-user"><label>Solicitante</label><input class="v0-input" value="Usuario de la sesión" readonly></div>
+          <div class="v0-field" id="admin-user" hidden><label for="v0-user">Solicitante</label><select class="v0-input" id="v0-user"><option>Seleccionar usuario…</option><option selected>Usuario de la sesión</option></select></div>
+          <div class="v0-field"><label for="v0-category">Categoría *</label><select class="v0-input" id="v0-category"><option>Seleccionar categoría</option></select></div>
+          <div class="v0-field"><label for="v0-school">Colegio *</label><select class="v0-input" id="v0-school"><option>Colegio asociado</option></select></div>
+          <div class="v0-field full"><label for="v0-subject">Asunto *</label><input class="v0-input" id="v0-subject" placeholder="Ej.: La impresora de secretaría no responde"></div>
+          <div class="v0-field full"><label for="v0-description">Descripción *</label><textarea class="v0-input" id="v0-description" placeholder="Indica qué ocurrió, desde cuándo y qué intentaste hacer."></textarea></div>
+          <div class="v0-field full"><label>Adjuntos</label><div class="v0-drop"><div><strong>Elegir archivos</strong><small>Hasta 5 archivos de 5 MB cada uno</small></div><button class="v0-button" type="button">Examinar</button></div></div>
+        </div>
+        <div class="v0-note" id="role-note">El ticket se creará a nombre de tu cuenta y mostrará solamente tus colegios asociados.</div>
+      </div>
+      <footer class="v0-footer"><span>Los campos marcados con * son obligatorios.</span><div class="v0-actions"><button class="v0-button draft" type="button">Guardar borrador</button><button class="v0-button primary" type="button">Crear ticket</button></div></footer>
+    </section>
+  </main>
+  <script>
+    const buttons = document.querySelectorAll('[data-role]');
+    const fixedUser = document.getElementById('fixed-user');
+    const adminUser = document.getElementById('admin-user');
+    const roleNote = document.getElementById('role-note');
+    buttons.forEach((button) => button.addEventListener('click', () => {
+      const admin = button.dataset.role === 'admin';
+      buttons.forEach((item) => item.classList.toggle('active', item === button));
+      fixedUser.hidden = admin;
+      adminUser.hidden = !admin;
+      roleNote.textContent = admin
+        ? 'Al cambiar el solicitante se cargarán únicamente los colegios asociados a esa persona.'
+        : 'El ticket se creará a nombre de tu cuenta y mostrará solamente tus colegios asociados.';
+    }));
+  </script>
+</body>
+</html>

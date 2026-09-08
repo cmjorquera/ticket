@@ -7,7 +7,8 @@ require_once __DIR__ . '/../configuracion/_inicio.php';
 $usuarioId = (int) Sesion::get('id', 0);
 $usuarioNombre = (string) Sesion::get('nombre', 'Usuario');
 $categorias = [];
-$colegios = [];
+$colegioSesion = false;
+$puedeElegirSolicitante = false;
 $misTickets = [];
 $errorCarga = null;
 $errorListado = null;
@@ -18,21 +19,22 @@ try {
     $categorias = $db->fetchAll(
         'SELECT id_categoria, nombre_categoria FROM categoria_de_ticket WHERE estado = 1 ORDER BY orden ASC, nombre_categoria ASC'
     );
-    if (es_administrador_global($usuarioId, $db)) {
-        $colegios = $db->fetchAll('SELECT id_colegio, nom_colegio FROM colegio WHERE estado = 1 ORDER BY nom_colegio ASC');
-    } else {
-        $colegios = $db->fetchAll(
-            'SELECT DISTINCT c.id_colegio, c.nom_colegio
-               FROM usuario_colegio uc
-               JOIN colegio c ON c.id_colegio = uc.id_colegio AND c.estado = 1
-              WHERE uc.id_usuario = ? AND uc.estado = 1
-           ORDER BY c.nom_colegio ASC',
-            [$usuarioId]
-        );
+    $colegioSesion = $db->fetchOne(
+        'SELECT c.id_colegio, c.nom_colegio
+           FROM usuario_colegio uc
+           JOIN colegio c ON c.id_colegio = uc.id_colegio AND c.estado = 1
+          WHERE uc.id_usuario = ? AND uc.estado = 1
+       ORDER BY uc.id_colegio ASC LIMIT 1',
+        [$usuarioId]
+    );
+    if ($colegioSesion) {
+        $_SESSION['ticket_colegio_id'] = (int) $colegioSesion['id_colegio'];
     }
+    $puedeElegirSolicitante = es_administrador_global($usuarioId, $db)
+        || es_admin_colegio($usuarioId, null, $db);
 } catch (Throwable $ex) {
     error_log('Error al cargar formulario de ticket: ' . $ex->getMessage());
-    $errorCarga = 'No fue posible cargar categorías y colegios. Verifica la instalación de las tablas de tickets.';
+    $errorCarga = 'No fue posible cargar los datos del formulario.';
 }
 
 try {
@@ -112,17 +114,15 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 
       <div class="ticket-form-grid">
         <div class="form-group">
-          <label class="form-label" for="ticket-usuario">Solicitante</label>
-          <input class="form-input" id="ticket-usuario" value="<?= e($usuarioNombre) ?>" disabled>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="ticket-prioridad">Prioridad</label>
-          <select class="form-input" id="ticket-prioridad" name="prioridad">
-            <option value="baja">Baja</option>
-            <option value="media" selected>Media</option>
-            <option value="alta">Alta</option>
-            <option value="crítica">Crítica</option>
-          </select>
+          <label class="form-label" for="ticket-solicitante">Solicitante</label>
+          <?php if ($puedeElegirSolicitante): ?>
+            <select class="form-input" id="ticket-solicitante" name="solicitante_id" data-dynamic-user>
+              <option value="<?= $usuarioId ?>"><?= e($usuarioNombre) ?></option>
+            </select>
+          <?php else: ?>
+            <input class="form-input" id="ticket-solicitante" value="<?= e($usuarioNombre) ?>" readonly>
+            <input type="hidden" name="solicitante_id" value="<?= $usuarioId ?>">
+          <?php endif; ?>
         </div>
         <div class="form-group">
           <label class="form-label" for="ticket-categoria">Categoría *</label>
@@ -130,15 +130,6 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
             <option value="">Seleccionar categoría</option>
             <?php foreach ($categorias as $categoria): ?>
               <option value="<?= (int) $categoria['id_categoria'] ?>"><?= e($categoria['nombre_categoria']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="ticket-colegio">Colegio *</label>
-          <select class="form-input" id="ticket-colegio" name="colegio_id" required <?= !$colegios ? 'disabled' : '' ?>>
-            <option value="">Seleccionar colegio</option>
-            <?php foreach ($colegios as $colegio): ?>
-              <option value="<?= (int) $colegio['id_colegio'] ?>"><?= e($colegio['nom_colegio']) ?></option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -150,7 +141,25 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
       </div>
       <div class="form-group">
         <label class="form-label" for="ticket-descripcion">Descripción *</label>
-        <textarea class="form-input" id="ticket-descripcion" name="descripcion" minlength="10" maxlength="10000" rows="4" placeholder="Indica qué ocurrió, desde cuándo y qué intentaste hacer." required></textarea>
+        <div class="ticket-editor" data-ticket-editor>
+          <div class="ticket-editor__toolbar" role="toolbar" aria-label="Formato de descripción">
+            <select class="ticket-editor__format" aria-label="Formato del texto" data-editor-format>
+              <option value="p">Normal</option>
+              <option value="h3">Título</option>
+            </select>
+            <span class="ticket-editor__separator"></span>
+            <button type="button" data-editor-command="bold" aria-label="Negrita"><strong>B</strong></button>
+            <button type="button" data-editor-command="italic" aria-label="Cursiva"><em>I</em></button>
+            <button type="button" data-editor-command="underline" aria-label="Subrayado"><u>U</u></button>
+            <span class="ticket-editor__separator"></span>
+            <button type="button" data-editor-command="insertOrderedList" aria-label="Lista numerada"><i class="bi bi-list-ol"></i></button>
+            <button type="button" data-editor-command="insertUnorderedList" aria-label="Lista con viñetas"><i class="bi bi-list-ul"></i></button>
+            <button type="button" data-editor-link aria-label="Agregar enlace"><i class="bi bi-link-45deg"></i></button>
+          </div>
+          <div class="ticket-editor__surface" id="ticket-descripcion" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Indica qué ocurrió, desde cuándo y qué intentaste hacer."></div>
+        </div>
+        <input type="hidden" id="ticket-descripcion-value" name="descripcion">
+        <div class="ticket-editor__meta"><span>Formato básico permitido</span><span id="ticket-description-count">0/10000</span></div>
       </div>
       <div class="form-group ticket-files">
         <label class="form-label">Adjuntos</label>
@@ -162,19 +171,24 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
         <span class="ticket-note">Hasta 5 archivos de 5 MB cada uno. Imágenes, PDF, Word o Excel.</span>
       </div>
 
-      <div class="ticket-account-note"><i class="bi bi-shield-check"></i><span>Solo se muestran colegios asociados a tu cuenta.</span></div>
+      <div class="ticket-account-note"><i class="bi bi-building-check"></i><span>El colegio se asignará automáticamente: <strong id="ticket-colegio-contexto"><?= e((string) ($colegioSesion['nom_colegio'] ?? 'sin colegio asociado')) ?></strong>.</span></div>
       </div>
 
       <div class="modal-footer">
         <button class="btn btn-outline" id="ticket-limpiar" type="reset">Limpiar</button>
-        <button class="btn btn-primary" id="ticket-guardar" type="submit" <?= ($errorCarga || !$categorias || !$colegios) ? 'disabled' : '' ?>><i class="bi bi-send-fill"></i> Crear ticket</button>
+        <div class="ticket-create-actions">
+          <button class="btn btn-outline ticket-draft-button" id="ticket-borrador" type="button" <?= ($errorCarga || !$categorias || (!$colegioSesion && !$puedeElegirSolicitante)) ? 'disabled' : '' ?>><i class="bi bi-file-earmark"></i> Guardar borrador</button>
+          <button class="btn btn-primary" id="ticket-guardar" type="submit" <?= ($errorCarga || !$categorias || (!$colegioSesion && !$puedeElegirSolicitante)) ? 'disabled' : '' ?>><i class="bi bi-send-fill"></i> Crear ticket</button>
+        </div>
       </div>
     </form>
   </div>
 </div>
 
+<script src="js/crear_ticket_dinamico.js"></script>
 <script>
 (() => {
+  if (window.ticketDynamicCreateEnabled) return;
   const form = document.getElementById('form-ticket');
   const message = document.getElementById('ticket-mensaje');
   const button = document.getElementById('ticket-guardar');

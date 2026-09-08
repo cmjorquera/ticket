@@ -23,43 +23,51 @@ try {
 
     if ($accion === 'crear') {
         $categoriaId = (int) ($datos['categoria_id'] ?? 0);
-        $colegioId = (int) ($datos['colegio_id'] ?? 0);
+        $solicitanteId = (int) ($datos['solicitante_id'] ?? $usuarioId);
         $asunto = trim((string) ($datos['asunto'] ?? ''));
-        $descripcion = trim((string) ($datos['descripcion'] ?? ''));
-        $prioridad = strtolower(trim((string) ($datos['prioridad'] ?? 'media')));
-        $prioridad = $prioridad === 'critica' ? 'crítica' : $prioridad;
+        $descripcion = ticket_sanitizar_descripcion((string) ($datos['descripcion'] ?? ''));
+        $descripcionTexto = ticket_descripcion_texto($descripcion);
+        $esBorrador = (string) ($datos['modo'] ?? '') === 'borrador'
+            || (int) ($datos['es_borrador'] ?? 0) === 1;
 
-        if ($categoriaId <= 0 || $colegioId <= 0 || $asunto === '' || $descripcion === '') {
+        if ($categoriaId <= 0 || $solicitanteId <= 0 || $asunto === '' || $descripcionTexto === '') {
             responder_json(['ok' => false, 'error' => 'Completa todos los campos obligatorios.'], 422);
         }
         if (strlen($asunto) < 5) {
             responder_json(['ok' => false, 'error' => 'El asunto debe tener al menos 5 caracteres.'], 422);
         }
-        if (strlen($descripcion) < 10) {
+        if (strlen($descripcionTexto) < 10) {
             responder_json(['ok' => false, 'error' => 'La descripción debe tener al menos 10 caracteres.'], 422);
         }
-        if (strlen($asunto) > 180 || strlen($descripcion) > 10000) {
+        if (strlen($asunto) > 180 || strlen($descripcionTexto) > 10000) {
             responder_json(['ok' => false, 'error' => 'El asunto o la descripción exceden el largo permitido.'], 422);
-        }
-        if (!in_array($prioridad, ['baja', 'media', 'alta', 'crítica'], true)) {
-            responder_json(['ok' => false, 'error' => 'La prioridad seleccionada no es válida.'], 422);
         }
         if (!$db->fetchOne('SELECT id_categoria FROM categoria_de_ticket WHERE id_categoria = ? AND estado = 1 LIMIT 1', [$categoriaId])) {
             responder_json(['ok' => false, 'error' => 'La categoría seleccionada no está disponible.'], 422);
         }
-        if (!$db->fetchOne('SELECT id_colegio FROM colegio WHERE id_colegio = ? AND estado = 1 LIMIT 1', [$colegioId])) {
-            responder_json(['ok' => false, 'error' => 'El colegio seleccionado no está disponible.'], 422);
+        if (!$db->fetchOne("SELECT id FROM usuarios WHERE id = ? AND LOWER(estado) = 'activo' LIMIT 1", [$solicitanteId])) {
+            responder_json(['ok' => false, 'error' => 'El solicitante seleccionado no está disponible.'], 422);
         }
-
-        $pertenece = $db->fetchOne(
-            'SELECT 1 FROM usuario_colegio WHERE id_usuario = ? AND id_colegio = ? AND estado = 1 LIMIT 1',
-            [$usuarioId, $colegioId]
+        if (!puede_crear_ticket_para($usuarioId, $solicitanteId, $db)) {
+            responder_json(['ok' => false, 'error' => 'No puedes crear tickets para ese usuario.'], 403);
+        }
+        $colegio = $db->fetchOne(
+            "SELECT uc.id_colegio, c.nom_colegio
+               FROM usuario_colegio uc
+               JOIN colegio c ON c.id_colegio = uc.id_colegio AND c.estado = 1
+              WHERE uc.id_usuario = ? AND uc.estado = 1
+           ORDER BY uc.id_colegio ASC
+              LIMIT 1",
+            [$solicitanteId]
         );
-        if (!$pertenece && !es_administrador_global($usuarioId, $db)) {
-            responder_json(['ok' => false, 'error' => 'No puedes crear tickets para ese colegio.'], 403);
+        if (!$colegio) {
+            responder_json(['ok' => false, 'error' => 'El solicitante no tiene un colegio activo asociado.'], 422);
+        }
+        if ($solicitanteId === $usuarioId) {
+            $_SESSION['ticket_colegio_id'] = (int) $colegio['id_colegio'];
         }
 
-        $tecnico = $db->fetchOne(
+        $tecnico = !$esBorrador ? $db->fetchOne(
             "SELECT ct.id_tecnico
                FROM categoria_tecnico ct
                JOIN usuarios u ON u.id = ct.id_tecnico AND LOWER(u.estado) = 'activo'
@@ -72,7 +80,7 @@ try {
            ORDER BY COUNT(abiertos.id_ticket) ASC, ct.id_tecnico ASC
               LIMIT 1",
             [$categoriaId]
-        );
+        ) : false;
         $tecnicoId = $tecnico ? (int) $tecnico['id_tecnico'] : null;
 
         $archivos = [];
@@ -103,9 +111,9 @@ try {
 
         $pdo = $db->getPDO();
         $guardados = [];
-        $prioridadId = ['baja' => 1, 'media' => 2, 'alta' => 3, 'crítica' => 4][$prioridad] ?? 2;
+        $prioridadId = 2;
         $estadoNuevo = $db->fetchOne("SELECT id FROM estados_ticket WHERE LOWER(nombre) IN ('nuevo','recibido') ORDER BY id LIMIT 1");
-        $estadoInicial = $tecnicoId ? 2 : (int) ($estadoNuevo['id'] ?? 1);
+        $estadoInicial = $esBorrador ? 4 : ($tecnicoId ? 2 : (int) ($estadoNuevo['id'] ?? 1));
         $identificador = bin2hex(random_bytes(8));
         $pdo->beginTransaction();
         try {
@@ -114,7 +122,7 @@ try {
                     (id_usuario, id_categoria_ticket, asunto, descripcion_ticket,
                      id_prioridad, id_estado, identificador, id_tecnico, estado)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)",
-                [$usuarioId, $categoriaId, $asunto, $descripcion, $prioridadId, $estadoInicial, $identificador, $tecnicoId]
+                [$solicitanteId, $categoriaId, $asunto, $descripcion, $prioridadId, $estadoInicial, $identificador, $tecnicoId]
             );
             $ticketId = (int) $db->lastInsertId();
             if ($tecnicoId) {
@@ -154,7 +162,9 @@ try {
         responder_json([
             'ok' => true,
             'ticket_id' => $ticketId,
-            'mensaje' => $tecnicoId ? 'Ticket creado y asignado automáticamente.' : 'Ticket creado; queda pendiente de asignación.',
+            'mensaje' => $esBorrador
+                ? 'Borrador guardado correctamente.'
+                : ($tecnicoId ? 'Ticket creado y asignado automáticamente.' : 'Ticket creado; queda pendiente de asignación.'),
         ], 201);
     }
 

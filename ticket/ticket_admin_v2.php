@@ -128,7 +128,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     document.getElementById('admin-modal-titulo').textContent=t.asunto;
     document.getElementById('admin-modal-folio').textContent=`Ticket #${t.id_ticket} · ${t.categoria_nombre}`;
     document.getElementById('admin-modal-grid').innerHTML=`<div class="ticket-detail-block"><span>Solicitante</span><strong>${escTicket(t.usuario_nombre)}</strong></div><div class="ticket-detail-block"><span>Colegio</span><strong>${escTicket(t.colegio_nombre)}</strong></div><div class="ticket-detail-block"><span>Prioridad</span><strong>${escTicket(t.prioridad)}</strong></div><div class="ticket-detail-block"><span>Creado</span><strong>${escTicket(t.fecha_creacion)}</strong></div>`;
-    document.getElementById('admin-modal-descripcion').textContent=t.descripcion;
+    document.getElementById('admin-modal-descripcion').textContent=t.descripcion_texto||t.descripcion;
     document.getElementById('admin-modal-tecnico').value=t.id_tecnico_asignado||'0'; document.getElementById('admin-modal-estado').value=t.id_estado;
     document.getElementById('admin-modal-mensaje').className='ticket-message'; openModal('modal-admin-ticket');
   }
