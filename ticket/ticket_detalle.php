@@ -16,19 +16,26 @@ $errorCarga = null;
 
 try {
     $ticket = $ticketId > 0 ? $db->fetchOne(
-        "SELECT t.id_ticket, t.id_usuario, t.id_tecnico_asignado, t.id_colegio,
-                t.asunto, t.descripcion, t.estado, t.prioridad, t.fecha_creacion, t.fecha_respuesta,
+        "SELECT t.id_ticket, t.id_usuario, t.id_tecnico, t.id_colegio,
+                t.asunto, t.descripcion_ticket AS descripcion, t.id_estado, e.nombre AS estado_nombre, t.id_prioridad,
+                COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
+                COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
                 CONCAT_WS(' ', sol.nombre, sol.apellido_paterno) AS usuario_nombre,
                 CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
            FROM tickets t
            JOIN usuarios sol ON sol.id = t.id_usuario
-           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
-           JOIN colegio col ON col.id_colegio = t.id_colegio
-      LEFT JOIN usuarios tec ON tec.id = t.id_tecnico_asignado
-          WHERE t.id_ticket = ? LIMIT 1",
+           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
+      LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+      LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
+      LEFT JOIN estados_ticket e ON e.id = t.id_estado
+      LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+          WHERE t.id_ticket = ? AND t.estado = 1 LIMIT 1",
         [$ticketId]
     ) : false;
+    if ($ticket) {
+        $ticket = ticket_normalizar_fila($ticket);
+    }
 } catch (Throwable $ex) {
     error_log('Error al abrir detalle de ticket: ' . $ex->getMessage());
     $errorCarga = 'No fue posible consultar el ticket.';
@@ -66,7 +73,11 @@ if ($autorizado) {
 
     try {
         $adjuntos = $db->fetchAll(
-            'SELECT nombre_original, nombre_archivo, tipo_mime, tamano FROM ticket_adjuntos WHERE id_ticket = ? ORDER BY fecha_creacion ASC',
+            "SELECT nombre_archivo AS nombre_original,
+                    SUBSTRING_INDEX(ruta_archivo, '/', -1) AS nombre_archivo,
+                    tipo_archivo AS tipo_mime, tamaño_archivo AS tamano
+               FROM archivos_adjuntos_ticket
+              WHERE id_ticket = ? ORDER BY fecha_subida ASC",
             [$ticketId]
         );
     } catch (Throwable $ex) {
@@ -101,7 +112,7 @@ if ($autorizado) {
 $volver = $esPropietario ? 'ticket.php' : ($esTecnico ? 'ticket_asignados.php' : 'ticket_admin_v2.php');
 $csrf = ticket_csrf_token();
 $estado = $ticket ? strtolower((string) $ticket['estado']) : '';
-$estadoTexto = ['nuevo'=>'Nuevo','en_proceso'=>'En proceso','atrasado'=>'Atrasado','resuelto'=>'Resuelto','cerrado'=>'Cerrado'][$estado] ?? ucfirst(str_replace('_', ' ', $estado));
+$estadoTexto = $ticket ? (string) $ticket['estado_nombre'] : '';
 
 iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 ?>
@@ -156,12 +167,12 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <aside class="ticket-detail-side">
         <section class="card ticket-detail-facts">
           <h2>Datos del ticket</h2>
-          <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre']) ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(str_replace('í','i',strtolower((string)$ticket['prioridad']))) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= e(date('d/m/Y H:i', strtotime((string) $ticket['fecha_creacion']))) ?></dd></div></dl>
+          <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(str_replace('í','i',strtolower((string)$ticket['prioridad']))) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
         </section>
 
         <?php if ($adjuntos): ?><section class="card ticket-detail-files"><h2>Archivos adjuntos</h2><?php foreach ($adjuntos as $archivo): ?><a href="../uploads/tickets/<?= (int)$ticketId ?>/<?= rawurlencode(basename((string)$archivo['nombre_archivo'])) ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre_original']) ?><small><?= e(number_format(((int)$archivo['tamano']) / 1024, 0, ',', '.')) ?> KB</small></span><i class="bi bi-box-arrow-up-right"></i></a><?php endforeach; ?></section><?php endif; ?>
 
-        <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (['nuevo'=>'Nuevo','en_proceso'=>'En proceso','atrasado'=>'Atrasado','resuelto'=>'Resuelto','cerrado'=>'Cerrado'] as $valor=>$texto): ?><option value="<?= $valor ?>" <?= $estado === $valor ? 'selected' : '' ?>><?= $texto ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
+        <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
         <?php if ($calificacionDisponible && $esPropietario && in_array($estado, ['resuelto','cerrado'], true)): ?>
           <section class="card ticket-rating">

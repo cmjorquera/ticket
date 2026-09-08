@@ -9,21 +9,27 @@ $idPagActual = FuncionesTicket::ROL_TECNICO;
 $tickets = [];
 $errorCarga = null;
 try {
-    $tickets = $db->fetchAll(
-        "SELECT t.id_ticket, t.asunto, t.descripcion, t.estado, t.fecha_creacion,
-                t.fecha_respuesta, t.prioridad,
+    $sqlTecnico = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
+                t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_tecnico,
+                COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
+                COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
                 c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre
            FROM tickets t
            JOIN usuarios u ON u.id = t.id_usuario
-           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
-           JOIN colegio col ON col.id_colegio = t.id_colegio
-          WHERE t.id_tecnico_asignado = ?
-       ORDER BY FIELD(t.estado, 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'), t.fecha_creacion DESC",
-        [$usuarioId]
-    );
+           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
+      LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+      LEFT JOIN estados_ticket e ON e.id = t.id_estado
+      LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+          WHERE t.id_tecnico = ? AND t.estado = 1
+       ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC";
+    $paramsTecnico = [$usuarioId];
+    ticket_debug_sql('TECNICO usuario=' . $usuarioId . ' pagina=' . $idPagActual, $sqlTecnico, $paramsTecnico);
+    $tickets = $db->fetchAll($sqlTecnico, $paramsTecnico);
+    $tickets = array_map('ticket_normalizar_fila', $tickets);
 } catch (Throwable $ex) {
     error_log('Error al listar tickets asignados: ' . $ex->getMessage());
+    ticket_debug_sql('TECNICO ERROR', $sqlTecnico ?? 'SQL no construida', $paramsTecnico ?? [$usuarioId], $ex);
     $errorCarga = 'No fue posible consultar los tickets. Verifica que las tablas del módulo estén instaladas.';
 }
 
@@ -49,7 +55,7 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
       <div class="ticket-message" id="detalle-mensaje" role="status"></div>
       <div class="form-group" style="margin-top:16px">
         <label class="form-label" for="detalle-estado">Actualizar estado</label>
-        <select class="form-input" id="detalle-estado"><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="atrasado">Atrasado</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option></select>
+        <select class="form-input" id="detalle-estado"><?php foreach (ticket_estados_legacy() as $idEstado => $infoEstado): ?><option value="<?= $idEstado ?>"><?= e($infoEstado['nombre']) ?></option><?php endforeach; ?></select>
       </div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-ticket')">Cerrar</button><button class="btn btn-primary" id="detalle-guardar"><i class="bi bi-check2"></i> Guardar estado</button></div>
@@ -58,7 +64,6 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
 
 <script>
 const ticketCsrf = <?= json_encode($csrf) ?>;
-const ticketLabels = {nuevo:'Nuevo', en_proceso:'En proceso', atrasado:'Atrasado', resuelto:'Resuelto', cerrado:'Cerrado'};
 
 function abrirTicket(button) {
   const ticket = JSON.parse(button.dataset.ticket);
@@ -70,7 +75,7 @@ function abrirTicket(button) {
     <div class="ticket-detail-block"><span>Prioridad</span><strong>${esc(ticket.prioridad)}</strong></div>
     <div class="ticket-detail-block"><span>Creado</span><strong>${esc(ticket.fecha_creacion)}</strong></div>`;
   document.getElementById('detalle-descripcion').textContent = ticket.descripcion;
-  document.getElementById('detalle-estado').value = ticket.estado;
+  document.getElementById('detalle-estado').value = ticket.id_estado;
   document.getElementById('detalle-mensaje').className = 'ticket-message';
   document.getElementById('detalle-guardar').onclick = () => guardarEstado(ticket.id_ticket);
   openModal('modal-ticket');

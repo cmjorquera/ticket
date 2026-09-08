@@ -64,8 +64,9 @@ try {
                FROM categoria_tecnico ct
                JOIN usuarios u ON u.id = ct.id_tecnico AND LOWER(u.estado) = 'activo'
           LEFT JOIN tickets abiertos
-                 ON abiertos.id_tecnico_asignado = ct.id_tecnico
-                AND abiertos.estado IN ('nuevo', 'en_proceso')
+                 ON abiertos.id_tecnico = ct.id_tecnico
+                AND abiertos.id_estado IN (1, 2, 3)
+                AND abiertos.estado = 1
               WHERE ct.id_categoria = ?
            GROUP BY ct.id_tecnico
            ORDER BY COUNT(abiertos.id_ticket) ASC, ct.id_tecnico ASC
@@ -102,15 +103,31 @@ try {
 
         $pdo = $db->getPDO();
         $guardados = [];
+        $prioridadId = ['baja' => 1, 'media' => 2, 'alta' => 3, 'crítica' => 4][$prioridad] ?? 2;
+        $estadoNuevo = $db->fetchOne("SELECT id FROM estados_ticket WHERE LOWER(nombre) IN ('nuevo','recibido') ORDER BY id LIMIT 1");
+        $estadoInicial = $tecnicoId ? 2 : (int) ($estadoNuevo['id'] ?? 1);
+        $identificador = bin2hex(random_bytes(8));
         $pdo->beginTransaction();
         try {
             $db->execute(
                 "INSERT INTO tickets
-                    (id_usuario, id_categoria, id_colegio, asunto, descripcion, prioridad, estado, fecha_creacion, id_tecnico_asignado)
-                 VALUES (?, ?, ?, ?, ?, ?, 'nuevo', NOW(), ?)",
-                [$usuarioId, $categoriaId, $colegioId, $asunto, $descripcion, $prioridad, $tecnicoId]
+                    (id_usuario, id_categoria_ticket, id_colegio, asunto, descripcion_ticket,
+                     id_prioridad, id_estado, identificador, id_tecnico, estado)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
+                [$usuarioId, $categoriaId, $colegioId, $asunto, $descripcion, $prioridadId, $estadoInicial, $identificador, $tecnicoId]
             );
             $ticketId = (int) $db->lastInsertId();
+            if ($tecnicoId) {
+                $db->execute(
+                    'INSERT INTO proceso_tickets (id_ticket, fecha_creacion_inicio, hora_creacion_inicio, fecha_asignacion_tecnico, hora_asignacion_tecnico) VALUES (?, CURDATE(), CURTIME(), CURDATE(), CURTIME())',
+                    [$ticketId]
+                );
+            } else {
+                $db->execute(
+                    'INSERT INTO proceso_tickets (id_ticket, fecha_creacion_inicio, hora_creacion_inicio) VALUES (?, CURDATE(), CURTIME())',
+                    [$ticketId]
+                );
+            }
             if ($archivos) {
                 $directorio = dirname(__DIR__) . '/uploads/tickets/' . $ticketId;
                 if (!is_dir($directorio) && !mkdir($directorio, 0750, true) && !is_dir($directorio)) {
@@ -122,8 +139,8 @@ try {
                     if (!move_uploaded_file($archivo['tmp'], $destino)) throw new RuntimeException('No fue posible guardar un archivo adjunto.');
                     $guardados[] = $destino;
                     $db->execute(
-                        'INSERT INTO ticket_adjuntos (id_ticket, nombre_original, nombre_archivo, tipo_mime, tamano, fecha_creacion) VALUES (?, ?, ?, ?, ?, NOW())',
-                        [$ticketId, $archivo['original'], $nombreSeguro, $archivo['mime'], $archivo['tamano']]
+                        'INSERT INTO archivos_adjuntos_ticket (id_ticket, nombre_archivo, ruta_archivo, tipo_archivo, tamaño_archivo, id_usuario, fecha_subida) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+                        [$ticketId, $archivo['original'], 'uploads/tickets/' . $ticketId . '/' . $nombreSeguro, $archivo['extension'], $archivo['tamano'], $usuarioId]
                     );
                 }
             }
@@ -143,24 +160,28 @@ try {
 
     $ticketId = (int) ($datos['ticket_id'] ?? 0);
     $ticket = $ticketId > 0
-        ? $db->fetchOne('SELECT id_ticket, id_colegio, id_tecnico_asignado, estado FROM tickets WHERE id_ticket = ? LIMIT 1', [$ticketId])
+        ? $db->fetchOne('SELECT id_ticket, id_colegio, id_tecnico, id_estado, estado FROM tickets WHERE id_ticket = ? AND estado = 1 LIMIT 1', [$ticketId])
         : false;
     if (!$ticket) {
         responder_json(['ok' => false, 'error' => 'Ticket no encontrado.'], 404);
     }
 
     if ($accion === 'actualizar_estado') {
-        $estado = strtolower(trim((string) ($datos['estado'] ?? '')));
-        if (!in_array($estado, ['nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'], true)) {
+        $estadoId = ticket_estado_id($datos['estado'] ?? '');
+        if ($estadoId <= 0) {
             responder_json(['ok' => false, 'error' => 'Estado no válido.'], 422);
         }
-        $esTecnicoAsignado = (int) ($ticket['id_tecnico_asignado'] ?? 0) === $usuarioId;
+        $esTecnicoAsignado = (int) ($ticket['id_tecnico'] ?? 0) === $usuarioId;
         if (!$esTecnicoAsignado && !puede_administrar_ticket($usuarioId, (int) $ticket['id_colegio'], $db)) {
             responder_json(['ok' => false, 'error' => 'No tienes permiso para actualizar este ticket.'], 403);
         }
-        $fechaRespuesta = in_array($estado, ['resuelto', 'cerrado'], true) ? ', fecha_respuesta = COALESCE(fecha_respuesta, NOW())' : '';
-        $db->execute("UPDATE tickets SET estado = ?{$fechaRespuesta} WHERE id_ticket = ?", [$estado, $ticketId]);
-        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'cambiar_estado', 'estado', (string) $ticket['estado'], $estado);
+        $db->execute('UPDATE tickets SET id_estado = ? WHERE id_ticket = ?', [$estadoId, $ticketId]);
+        if ($estadoId === 3) {
+            $db->execute('UPDATE proceso_tickets SET fecha_comienzo_ticket = COALESCE(fecha_comienzo_ticket, CURDATE()), hora_comienzo_ticket = COALESCE(hora_comienzo_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        } elseif ($estadoId === 5) {
+            $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        }
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'cambiar_estado', 'id_estado', (string) $ticket['id_estado'], (string) $estadoId);
         responder_json(['ok' => true, 'mensaje' => 'Estado actualizado.']);
     }
 
@@ -172,8 +193,12 @@ try {
         if ($tecnicoId > 0 && !$db->fetchOne("SELECT id FROM usuarios WHERE id = ? AND LOWER(estado) = 'activo' LIMIT 1", [$tecnicoId])) {
             responder_json(['ok' => false, 'error' => 'El técnico seleccionado no está disponible.'], 422);
         }
-        $db->execute('UPDATE tickets SET id_tecnico_asignado = ? WHERE id_ticket = ?', [$tecnicoId ?: null, $ticketId]);
-        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'asignar', 'id_tecnico_asignado', (string) ($ticket['id_tecnico_asignado'] ?? ''), $tecnicoId > 0 ? (string) $tecnicoId : null);
+        $estadoAsignacion = $tecnicoId > 0 && (int) $ticket['id_estado'] === 1 ? 2 : (int) $ticket['id_estado'];
+        $db->execute('UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?', [$tecnicoId ?: null, $estadoAsignacion, $ticketId]);
+        if ($tecnicoId > 0) {
+            $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = COALESCE(fecha_asignacion_tecnico, CURDATE()), hora_asignacion_tecnico = COALESCE(hora_asignacion_tecnico, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        }
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'asignar', 'id_tecnico', (string) ($ticket['id_tecnico'] ?? ''), $tecnicoId > 0 ? (string) $tecnicoId : null);
         responder_json(['ok' => true, 'mensaje' => $tecnicoId ? 'Ticket asignado.' : 'Asignación retirada.']);
     }
 
@@ -181,20 +206,27 @@ try {
         if (!puede_administrar_ticket($usuarioId, (int) $ticket['id_colegio'], $db)) {
             responder_json(['ok' => false, 'error' => 'No tienes permiso para gestionar este ticket.'], 403);
         }
-        $estado = strtolower(trim((string) ($datos['estado'] ?? '')));
+        $estadoId = ticket_estado_id($datos['estado'] ?? '');
         $tecnicoId = (int) ($datos['tecnico_id'] ?? 0);
-        if (!in_array($estado, ['nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'], true)) {
+        if ($estadoId <= 0) {
             responder_json(['ok' => false, 'error' => 'Estado no válido.'], 422);
         }
         if ($tecnicoId > 0 && !$db->fetchOne("SELECT id FROM usuarios WHERE id = ? AND LOWER(estado) = 'activo' LIMIT 1", [$tecnicoId])) {
             responder_json(['ok' => false, 'error' => 'El técnico seleccionado no está disponible.'], 422);
         }
-        $fechaRespuesta = in_array($estado, ['resuelto', 'cerrado'], true) ? ', fecha_respuesta = COALESCE(fecha_respuesta, NOW())' : '';
         $db->execute(
-            "UPDATE tickets SET id_tecnico_asignado = ?, estado = ?{$fechaRespuesta} WHERE id_ticket = ?",
-            [$tecnicoId ?: null, $estado, $ticketId]
+            'UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?',
+            [$tecnicoId ?: null, $estadoId, $ticketId]
         );
-        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'actualizar', 'estado', (string) $ticket['estado'], $estado);
+        if ($tecnicoId > 0) {
+            $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = COALESCE(fecha_asignacion_tecnico, CURDATE()), hora_asignacion_tecnico = COALESCE(hora_asignacion_tecnico, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        }
+        if ($estadoId === 3) {
+            $db->execute('UPDATE proceso_tickets SET fecha_comienzo_ticket = COALESCE(fecha_comienzo_ticket, CURDATE()), hora_comienzo_ticket = COALESCE(hora_comienzo_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        } elseif ($estadoId === 5) {
+            $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        }
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'actualizar', 'id_estado', (string) $ticket['id_estado'], (string) $estadoId);
         responder_json(['ok' => true, 'mensaje' => 'Asignación y estado actualizados.']);
     }
 
@@ -202,14 +234,7 @@ try {
         if (!es_administrador_global($usuarioId, $db)) {
             responder_json(['ok' => false, 'error' => 'Solo un administrador general puede eliminar tickets.'], 403);
         }
-        $adjuntos = $db->fetchAll('SELECT nombre_archivo FROM ticket_adjuntos WHERE id_ticket = ?', [$ticketId]);
-        $db->execute('DELETE FROM tickets WHERE id_ticket = ?', [$ticketId]);
-        $directorio = dirname(__DIR__) . '/uploads/tickets/' . $ticketId;
-        foreach ($adjuntos as $adjunto) {
-            $nombre = basename((string) ($adjunto['nombre_archivo'] ?? ''));
-            if ($nombre !== '') @unlink($directorio . '/' . $nombre);
-        }
-        if (is_dir($directorio)) @rmdir($directorio);
+        $db->execute('UPDATE tickets SET estado = 2 WHERE id_ticket = ?', [$ticketId]);
         responder_json(['ok' => true, 'mensaje' => 'Ticket eliminado.']);
     }
 

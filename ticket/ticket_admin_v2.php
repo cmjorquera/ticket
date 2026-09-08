@@ -13,10 +13,9 @@ $colegios = [];
 $tecnicos = [];
 $idsColegio = [];
 $errorCarga = null;
-$estadoFiltro = strtolower(trim((string) ($_GET['estado'] ?? '')));
+$estadoFiltro = ticket_estado_id($_GET['estado'] ?? 0);
 $colegioFiltro = (int) ($_GET['colegio'] ?? 0);
 $tecnicoFiltro = (int) ($_GET['tecnico'] ?? 0);
-if (!in_array($estadoFiltro, ['', 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'], true)) $estadoFiltro = '';
 
 try {
     $esGlobal = es_administrador_global($usuarioId, $db);
@@ -42,17 +41,21 @@ try {
         $idsTecnico = array_map('intval', array_column($tecnicos, 'id'));
         if ($tecnicoFiltro > 0 && !in_array($tecnicoFiltro, $idsTecnico, true)) $tecnicoFiltro = 0;
 
-        $sql = "SELECT t.id_ticket, t.asunto, t.descripcion, t.estado, t.fecha_creacion, t.fecha_respuesta,
-                       t.prioridad, t.id_colegio, t.id_tecnico_asignado,
+        $sql = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
+                       t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_colegio, t.id_tecnico,
+                       COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
+                       COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                        CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
                        c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
                        CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
                   FROM tickets t
                   JOIN usuarios u ON u.id = t.id_usuario
-                  JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
-                  JOIN colegio col ON col.id_colegio = t.id_colegio
-             LEFT JOIN usuarios tec ON tec.id = t.id_tecnico_asignado
-                 WHERE 1 = 1";
+                  JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
+             LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+             LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
+             LEFT JOIN estados_ticket e ON e.id = t.id_estado
+             LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+                 WHERE t.estado = 1";
         $params = [];
         if (!$esGlobal) {
             if (!$idsColegio) {
@@ -62,14 +65,17 @@ try {
                 array_push($params, ...$idsColegio);
             }
         }
-        if ($estadoFiltro !== '') { $sql .= ' AND t.estado = ?'; $params[] = $estadoFiltro; }
+        if ($estadoFiltro > 0) { $sql .= ' AND t.id_estado = ?'; $params[] = $estadoFiltro; }
         if ($colegioFiltro > 0) { $sql .= ' AND t.id_colegio = ?'; $params[] = $colegioFiltro; }
-        if ($tecnicoFiltro > 0) { $sql .= ' AND t.id_tecnico_asignado = ?'; $params[] = $tecnicoFiltro; }
-        $sql .= " ORDER BY FIELD(t.estado, 'nuevo','en_proceso','atrasado','resuelto','cerrado'), t.fecha_creacion DESC";
+        if ($tecnicoFiltro > 0) { $sql .= ' AND t.id_tecnico = ?'; $params[] = $tecnicoFiltro; }
+        $sql .= ' ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC';
+        ticket_debug_sql('ADMIN usuario=' . $usuarioId . ' pagina=' . $idPagActual, $sql, $params);
         $tickets = $db->fetchAll($sql, $params);
+        $tickets = array_map('ticket_normalizar_fila', $tickets);
     }
 } catch (Throwable $ex) {
     error_log('Error en administración de tickets: ' . $ex->getMessage());
+    ticket_debug_sql('ADMIN ERROR', $sql ?? 'SQL no construida', $params ?? [], $ex);
     $errorCarga = 'No fue posible consultar los tickets. Verifica la estructura de base de datos del módulo.';
 }
 
@@ -96,7 +102,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
         <div class="ticket-detail-grid" id="admin-modal-grid"></div><div class="ticket-description" id="admin-modal-descripcion"></div>
         <div class="ticket-admin-actions">
           <div class="form-group"><label class="form-label" for="admin-modal-tecnico">Técnico asignado</label><select class="form-input" id="admin-modal-tecnico"><option value="0">Sin asignar</option><?php foreach ($tecnicos as $tecnico): ?><option value="<?= (int)$tecnico['id'] ?>"><?= e($tecnico['nombre']) ?></option><?php endforeach; ?></select></div>
-          <div class="form-group"><label class="form-label" for="admin-modal-estado">Estado</label><select class="form-input" id="admin-modal-estado"><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="atrasado">Atrasado</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option></select></div>
+          <div class="form-group"><label class="form-label" for="admin-modal-estado">Estado</label><select class="form-input" id="admin-modal-estado"><?php foreach (ticket_estados_legacy() as $idEstado => $infoEstado): ?><option value="<?= $idEstado ?>"><?= e($infoEstado['nombre']) ?></option><?php endforeach; ?></select></div>
         </div>
         <div class="ticket-message" id="admin-modal-mensaje" role="status"></div>
       </div>
@@ -117,7 +123,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     document.getElementById('admin-modal-folio').textContent=`Ticket #${t.id_ticket} · ${t.categoria_nombre}`;
     document.getElementById('admin-modal-grid').innerHTML=`<div class="ticket-detail-block"><span>Solicitante</span><strong>${escTicket(t.usuario_nombre)}</strong></div><div class="ticket-detail-block"><span>Colegio</span><strong>${escTicket(t.colegio_nombre)}</strong></div><div class="ticket-detail-block"><span>Prioridad</span><strong>${escTicket(t.prioridad)}</strong></div><div class="ticket-detail-block"><span>Creado</span><strong>${escTicket(t.fecha_creacion)}</strong></div>`;
     document.getElementById('admin-modal-descripcion').textContent=t.descripcion;
-    document.getElementById('admin-modal-tecnico').value=t.id_tecnico_asignado||'0'; document.getElementById('admin-modal-estado').value=t.estado;
+    document.getElementById('admin-modal-tecnico').value=t.id_tecnico_asignado||'0'; document.getElementById('admin-modal-estado').value=t.id_estado;
     document.getElementById('admin-modal-mensaje').className='ticket-message'; openModal('modal-admin-ticket');
   }
   async function accionTicket(accion, extra={}){

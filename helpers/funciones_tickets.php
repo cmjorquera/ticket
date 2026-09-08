@@ -35,14 +35,23 @@ final class FuncionesTicket
         }
 
         $totales = ['nuevo' => 0, 'en_proceso' => 0, 'resuelto' => 0, 'atrasado' => 0];
-        $sql = 'SELECT estado, COUNT(*) AS total FROM tickets WHERE 1 = 1';
+        $sql = "SELECT CASE
+                    WHEN id_estado IN (1, 2) THEN 'nuevo'
+                    WHEN id_estado = 3 THEN 'en_proceso'
+                    WHEN id_estado = 5 THEN 'resuelto'
+                    WHEN id_estado = 6 THEN 'atrasado'
+                    ELSE 'borrador'
+                END AS estado_resumen,
+                COUNT(*) AS total
+                  FROM tickets
+                 WHERE estado = 1";
         $params = [];
 
         if ($idPagActual === self::ROL_USUARIO) {
             $sql .= ' AND id_usuario = ?';
             $params[] = $usuarioId;
         } elseif ($idPagActual === self::ROL_TECNICO) {
-            $sql .= ' AND id_tecnico_asignado = ?';
+            $sql .= ' AND id_tecnico = ?';
             $params[] = $usuarioId;
         } elseif ($colegioIds !== null) {
             if ($colegioIds === []) {
@@ -54,9 +63,9 @@ final class FuncionesTicket
         }
 
         try {
-            $filas = $this->db->fetchAll($sql . ' GROUP BY estado', $params);
+            $filas = $this->db->fetchAll($sql . ' GROUP BY estado_resumen', $params);
             foreach ($filas as $fila) {
-                $estado = strtolower((string) ($fila['estado'] ?? ''));
+                $estado = strtolower((string) ($fila['estado_resumen'] ?? ''));
                 if ($idPagActual === self::ROL_TECNICO && $estado === 'atrasado') {
                     continue;
                 }
@@ -66,6 +75,9 @@ final class FuncionesTicket
             }
         } catch (Throwable $ex) {
             error_log('Error al calcular contenedores de tickets: ' . $ex->getMessage());
+            if (function_exists('ticket_debug_sql')) {
+                ticket_debug_sql('CONTENEDORES', $sql . ' GROUP BY estado_resumen', $params, $ex);
+            }
         }
 
         return $this->cache[$cacheKey] = $totales;

@@ -3,36 +3,76 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../../configuracion/_inicio.php';
 header('Content-Type: text/html; charset=UTF-8');
+header('Cache-Control: no-store');
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+    http_response_code(405);
+    echo '<tbody></tbody>';
+    exit;
+}
 
 $usuarioId = (int) Sesion::get('id', 0);
 $misTickets = [];
 $errorListado = null;
 $etiquetasEstado = [
     'nuevo' => 'Nuevo',
+    'asignado' => 'Asignado',
     'en_proceso' => 'En proceso',
-    'atrasado' => 'Atrasado',
-    'resuelto' => 'Resuelto',
-    'cerrado' => 'Cerrado',
+    'borrador' => 'Borrador',
+    'atrasado' => 'Demorado',
+    'resuelto' => 'Terminado',
 ];
 
 try {
-    $misTickets = $db->fetchAll(
-        "SELECT t.id_ticket, t.asunto, t.descripcion, t.estado, t.fecha_creacion,
-                t.fecha_respuesta, t.prioridad,
+    $sqlPollingUsuario = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
+                t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_tecnico,
+                COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
+                COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 c.nombre_categoria AS categoria_nombre,
                 col.nom_colegio AS colegio_nombre,
                 CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
            FROM tickets t
-           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria
-           JOIN colegio col ON col.id_colegio = t.id_colegio
-      LEFT JOIN usuarios tec ON tec.id = t.id_tecnico_asignado
-          WHERE t.id_usuario = ?
-       ORDER BY FIELD(t.estado, 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'), t.fecha_creacion DESC",
-        [$usuarioId]
-    );
+           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
+      LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+      LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
+      LEFT JOIN estados_ticket e ON e.id = t.id_estado
+      LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+          WHERE t.id_usuario = ? AND t.estado = 1
+       ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC";
+    $paramsPollingUsuario = [$usuarioId];
+    $misTickets = $db->fetchAll($sqlPollingUsuario, $paramsPollingUsuario);
+    $misTickets = array_map('ticket_normalizar_fila', $misTickets);
 } catch (Throwable $ex) {
     error_log('Error AJAX al listar tickets del usuario: ' . $ex->getMessage());
+    $ultimoDebug = (int) ($_SESSION['ticket_debug_polling'] ?? 0);
+    if ($ultimoDebug < time() - 60) {
+        $_SESSION['ticket_debug_polling'] = time();
+        ticket_debug_sql('POLLING USUARIO ERROR', $sqlPollingUsuario ?? 'SQL no construida', $paramsPollingUsuario ?? [$usuarioId], $ex);
+    }
     $errorListado = 'No fue posible consultar tus solicitudes en este momento.';
 }
 
+header('X-Ticket-Count: ' . count($misTickets));
+
+if ($errorListado) {
+    http_response_code(500);
+    echo '<tbody></tbody>';
+    exit;
+}
+
+if (!$misTickets) {
+    echo '<tbody><tr class="ticket-poll-empty"><td colspan="7"><div class="ticket-empty"><i class="bi bi-inbox"></i>No hay solicitudes registradas.</div></td></tr></tbody>';
+    exit;
+}
+
+ob_start();
 require __DIR__ . '/../bloque_tabla_usuario.php';
+$html = (string) ob_get_clean();
+
+if (preg_match('/<tbody>(.*?)<\/tbody>/si', $html, $coincidencia) === 1) {
+    echo '<tbody>' . $coincidencia[1] . '</tbody>';
+    exit;
+}
+
+http_response_code(500);
+echo '<tbody></tbody>';
