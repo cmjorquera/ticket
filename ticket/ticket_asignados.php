@@ -80,7 +80,7 @@ function abrirTicket(button) {
     <div class="ticket-detail-block"><span>Colegio</span><strong>${esc(ticket.colegio_nombre)}</strong></div>
     <div class="ticket-detail-block"><span>Prioridad</span><strong>${esc(ticket.prioridad)}</strong></div>
     <div class="ticket-detail-block"><span>Creado</span><strong>${esc(ticket.fecha_creacion)}</strong></div>`;
-  document.getElementById('detalle-descripcion').textContent = ticket.descripcion;
+  document.getElementById('detalle-descripcion').textContent = ticket.descripcion_texto || ticket.descripcion;
   document.getElementById('detalle-estado').value = ticket.id_estado;
   document.getElementById('detalle-mensaje').className = 'ticket-message';
   document.getElementById('detalle-guardar').onclick = () => guardarEstado(ticket.id_ticket);

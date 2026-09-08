@@ -107,6 +107,7 @@ function ticket_normalizar_fila(array $fila): array
     $fila['estado_nombre'] = trim((string) ($fila['estado_nombre'] ?? '')) ?: $estado['nombre'];
     $fila['prioridad'] = ticket_prioridad_nombre((int) ($fila['id_prioridad'] ?? 2));
     $fila['descripcion'] = (string) ($fila['descripcion'] ?? $fila['descripcion_ticket'] ?? '');
+    $fila['descripcion_texto'] = ticket_descripcion_texto($fila['descripcion']);
     $fila['id_tecnico_asignado'] = $fila['id_tecnico'] ?? null;
     $fila['fecha_creacion'] = (string) ($fila['fecha_creacion'] ?? '');
     $fila['fecha_respuesta'] = (string) ($fila['fecha_respuesta'] ?? '');
@@ -131,6 +132,113 @@ function puede_ver_ticket(int $usuarioId, array $ticket, Conexion $db): bool
     return (int) ($ticket['id_usuario'] ?? 0) === $usuarioId
         || (int) ($ticket['id_tecnico_asignado'] ?? 0) === $usuarioId
         || puede_administrar_ticket($usuarioId, (int) ($ticket['id_colegio'] ?? 0), $db);
+}
+
+/** Comprueba si el actor puede crear un ticket a nombre del solicitante indicado. */
+function puede_crear_ticket_para(int $actorId, int $solicitanteId, Conexion $db): bool
+{
+    if ($actorId <= 0 || $solicitanteId <= 0) {
+        return false;
+    }
+    if ($actorId === $solicitanteId || es_administrador_global($actorId, $db)) {
+        return true;
+    }
+
+    return (bool) $db->fetchOne(
+        "SELECT 1
+           FROM usuario_colegio administrador
+      LEFT JOIN perfiles p ON p.id_perfil = administrador.id_perfil
+           JOIN usuario_colegio solicitante
+             ON solicitante.id_colegio = administrador.id_colegio
+            AND solicitante.id_usuario = ?
+            AND solicitante.estado = 1
+          WHERE administrador.id_usuario = ?
+            AND administrador.estado = 1
+            AND (administrador.es_admin_colegio = 1 OR LOWER(p.nombre) IN ('admin colegio','admin_colegio','administrador colegio'))
+          LIMIT 1",
+        [$solicitanteId, $actorId]
+    );
+}
+
+/** Devuelve texto legible desde una descripción antigua o con formato controlado. */
+function ticket_descripcion_texto(string $descripcion): string
+{
+    $texto = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $descripcion);
+    $texto = preg_replace('/<\s*\/\s*(p|li)\s*>/i', "\n", (string) $texto);
+    return trim(html_entity_decode(strip_tags((string) $texto), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+}
+
+/** Conserva solo el formato permitido por el editor del módulo. */
+function ticket_sanitizar_descripcion(string $descripcion): string
+{
+    $descripcion = trim($descripcion);
+    if ($descripcion === '') {
+        return '';
+    }
+    if (!class_exists('DOMDocument')) {
+        return htmlspecialchars(ticket_descripcion_texto($descripcion), ENT_QUOTES, 'UTF-8');
+    }
+
+    $permitidas = ['p', 'h3', 'br', 'strong', 'b', 'em', 'i', 'u', 'ol', 'ul', 'li', 'a'];
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $estadoErrores = libxml_use_internal_errors(true);
+    $dom->loadHTML(
+        '<?xml encoding="utf-8" ?><div id="ticket-description-root">' . $descripcion . '</div>',
+        LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
+    );
+    libxml_clear_errors();
+    libxml_use_internal_errors($estadoErrores);
+    $root = $dom->getElementById('ticket-description-root');
+    if (!$root) {
+        return htmlspecialchars(ticket_descripcion_texto($descripcion), ENT_QUOTES, 'UTF-8');
+    }
+
+    $limpiar = static function (DOMNode $nodo) use (&$limpiar, $permitidas): void {
+        foreach (iterator_to_array($nodo->childNodes) as $hijo) {
+            if ($hijo instanceof DOMElement) {
+                $etiqueta = strtolower($hijo->tagName);
+                if (!in_array($etiqueta, $permitidas, true)) {
+                    while ($hijo->firstChild) {
+                        $nodo->insertBefore($hijo->firstChild, $hijo);
+                    }
+                    $nodo->removeChild($hijo);
+                    continue;
+                }
+                foreach (iterator_to_array($hijo->attributes) as $atributo) {
+                    $nombre = strtolower($atributo->name);
+                    if ($etiqueta !== 'a' || !in_array($nombre, ['href', 'title'], true)) {
+                        $hijo->removeAttribute($atributo->name);
+                    }
+                }
+                if ($etiqueta === 'a') {
+                    $href = trim($hijo->getAttribute('href'));
+                    if (!preg_match('#^(https?://|mailto:)#i', $href)) {
+                        $hijo->removeAttribute('href');
+                    } else {
+                        $hijo->setAttribute('target', '_blank');
+                        $hijo->setAttribute('rel', 'noopener noreferrer');
+                    }
+                }
+            }
+            $limpiar($hijo);
+        }
+    };
+    $limpiar($root);
+
+    $salida = '';
+    foreach ($root->childNodes as $hijo) {
+        $salida .= $dom->saveHTML($hijo);
+    }
+    return trim($salida);
+}
+
+/** Renderiza texto histórico y contenido enriquecido ya saneado. */
+function ticket_renderizar_descripcion(string $descripcion): string
+{
+    if (preg_match('/<\/?(?:p|h3|br|strong|b|em|i|u|ol|ul|li|a)\b/i', $descripcion)) {
+        return ticket_sanitizar_descripcion($descripcion);
+    }
+    return nl2br(htmlspecialchars($descripcion, ENT_QUOTES, 'UTF-8'));
 }
 
 /** Obtiene los datos mínimos y la asociación de colegio necesarios para autorizar un ticket. */

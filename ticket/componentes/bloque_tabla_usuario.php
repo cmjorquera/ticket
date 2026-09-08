@@ -61,7 +61,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
   <?php else: ?>
     <div class="table-wrap">
       <table id="mis-tickets-tabla">
-        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Colegio</th><th>Técnico</th><th>Estado</th><th>Prioridad</th><th></th></tr></thead>
+        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Colegio</th><th>Técnico</th><th>Estado</th><th>Fecha Respuesta </th><th>Calificacion</th></tr></thead>
         <tbody>
         <?php foreach ($misTickets as $ticket):
           $estado = strtolower((string) $ticket['estado']);

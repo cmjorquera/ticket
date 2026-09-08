@@ -143,7 +143,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <div class="ticket-detail-main">
         <section class="card ticket-detail-section">
           <div class="card-header"><div><h2 class="card-title">Descripción del caso</h2><p class="card-desc"><?= e($ticket['categoria_nombre']) ?></p></div></div>
-          <div class="ticket-detail-copy"><?= e($ticket['descripcion']) ?></div>
+          <div class="ticket-detail-copy ticket-rich-content"><?= ticket_renderizar_descripcion((string) $ticket['descripcion']) ?></div>
         </section>
 
         <section class="card ticket-conversation">
