@@ -19,7 +19,13 @@ try {
            FROM tickets t
            JOIN usuarios u ON u.id = t.id_usuario
            JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
-      LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+      LEFT JOIN (
+                    SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                      FROM usuario_colegio
+                     WHERE estado = 1
+                  GROUP BY id_usuario
+                ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
+      LEFT JOIN colegio col ON col.id_colegio = uc_ticket.id_colegio
       LEFT JOIN estados_ticket e ON e.id = t.id_estado
       LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
           WHERE t.id_tecnico = ? AND t.estado = 1

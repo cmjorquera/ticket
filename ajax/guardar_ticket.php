@@ -111,10 +111,10 @@ try {
         try {
             $db->execute(
                 "INSERT INTO tickets
-                    (id_usuario, id_categoria_ticket, id_colegio, asunto, descripcion_ticket,
+                    (id_usuario, id_categoria_ticket, asunto, descripcion_ticket,
                      id_prioridad, id_estado, identificador, id_tecnico, estado)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
-                [$usuarioId, $categoriaId, $colegioId, $asunto, $descripcion, $prioridadId, $estadoInicial, $identificador, $tecnicoId]
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)",
+                [$usuarioId, $categoriaId, $asunto, $descripcion, $prioridadId, $estadoInicial, $identificador, $tecnicoId]
             );
             $ticketId = (int) $db->lastInsertId();
             if ($tecnicoId) {
@@ -160,7 +160,19 @@ try {
 
     $ticketId = (int) ($datos['ticket_id'] ?? 0);
     $ticket = $ticketId > 0
-        ? $db->fetchOne('SELECT id_ticket, id_colegio, id_tecnico, id_estado, estado FROM tickets WHERE id_ticket = ? AND estado = 1 LIMIT 1', [$ticketId])
+        ? $db->fetchOne(
+            "SELECT t.id_ticket, uc_ticket.id_colegio, t.id_tecnico, t.id_estado, t.estado
+               FROM tickets t
+          LEFT JOIN (
+                        SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                          FROM usuario_colegio
+                         WHERE estado = 1
+                      GROUP BY id_usuario
+                    ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
+              WHERE t.id_ticket = ? AND t.estado = 1
+              LIMIT 1",
+            [$ticketId]
+        )
         : false;
     if (!$ticket) {
         responder_json(['ok' => false, 'error' => 'Ticket no encontrado.'], 404);

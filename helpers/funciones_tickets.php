@@ -36,28 +36,34 @@ final class FuncionesTicket
 
         $totales = ['nuevo' => 0, 'en_proceso' => 0, 'resuelto' => 0, 'atrasado' => 0];
         $sql = "SELECT CASE
-                    WHEN id_estado IN (1, 2) THEN 'nuevo'
-                    WHEN id_estado = 3 THEN 'en_proceso'
-                    WHEN id_estado = 5 THEN 'resuelto'
-                    WHEN id_estado = 6 THEN 'atrasado'
+                    WHEN t.id_estado IN (1, 2) THEN 'nuevo'
+                    WHEN t.id_estado = 3 THEN 'en_proceso'
+                    WHEN t.id_estado = 5 THEN 'resuelto'
+                    WHEN t.id_estado = 6 THEN 'atrasado'
                     ELSE 'borrador'
                 END AS estado_resumen,
                 COUNT(*) AS total
-                  FROM tickets
-                 WHERE estado = 1";
+                  FROM tickets t
+             LEFT JOIN (
+                           SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                             FROM usuario_colegio
+                            WHERE estado = 1
+                         GROUP BY id_usuario
+                       ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
+                 WHERE t.estado = 1";
         $params = [];
 
         if ($idPagActual === self::ROL_USUARIO) {
-            $sql .= ' AND id_usuario = ?';
+            $sql .= ' AND t.id_usuario = ?';
             $params[] = $usuarioId;
         } elseif ($idPagActual === self::ROL_TECNICO) {
-            $sql .= ' AND id_tecnico = ?';
+            $sql .= ' AND t.id_tecnico = ?';
             $params[] = $usuarioId;
         } elseif ($colegioIds !== null) {
             if ($colegioIds === []) {
                 $sql .= ' AND 1 = 0';
             } else {
-                $sql .= ' AND id_colegio IN (' . implode(',', array_fill(0, count($colegioIds), '?')) . ')';
+                $sql .= ' AND uc_ticket.id_colegio IN (' . implode(',', array_fill(0, count($colegioIds), '?')) . ')';
                 array_push($params, ...$colegioIds);
             }
         }

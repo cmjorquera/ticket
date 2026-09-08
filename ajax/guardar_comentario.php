@@ -26,7 +26,16 @@ if ($ticketId <= 0 || $largoComentario < 3 || $largoComentario > 5000) {
 try {
     $db = Conexion::getInstance('sistema_panel_central');
     $ticket = $db->fetchOne(
-        'SELECT id_ticket, id_usuario, id_tecnico AS id_tecnico_asignado, id_colegio FROM tickets WHERE id_ticket = ? AND estado = 1 LIMIT 1',
+        "SELECT t.id_ticket, t.id_usuario, t.id_tecnico AS id_tecnico_asignado, uc_ticket.id_colegio
+           FROM tickets t
+      LEFT JOIN (
+                    SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                      FROM usuario_colegio
+                     WHERE estado = 1
+                  GROUP BY id_usuario
+                ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
+          WHERE t.id_ticket = ? AND t.estado = 1
+          LIMIT 1",
         [$ticketId]
     );
     if (!$ticket) {
