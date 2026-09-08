@@ -10,6 +10,11 @@ $tickets = isset($tickets) && is_array($tickets) ? $tickets : [];
 $colegios = isset($colegios) && is_array($colegios) ? $colegios : [];
 $tecnicos = isset($tecnicos) && is_array($tecnicos) ? $tecnicos : [];
 $conteos = isset($conteos) && is_array($conteos) ? $conteos : [];
+$estadoFiltro = isset($estadoFiltro) ? (string) $estadoFiltro : '';
+$colegioFiltro = isset($colegioFiltro) ? (int) $colegioFiltro : 0;
+$tecnicoFiltro = isset($tecnicoFiltro) ? (int) $tecnicoFiltro : 0;
+$errorCarga = $errorCarga ?? null;
+$esGlobal = !empty($esGlobal);
 ?>
 <div id="ticket-tabla-admin">
   <div class="ticket-metrics">
