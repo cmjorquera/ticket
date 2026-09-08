@@ -160,12 +160,16 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
                 </article>
               <?php endforeach; ?>
             </div>
-            <form class="ticket-reply" id="ticket-comment-form">
-              <label class="form-label" for="ticket-comment">Agregar comentario</label>
-              <textarea class="form-input" id="ticket-comment" name="comentario" minlength="3" maxlength="5000" required placeholder="Escribe una actualización o responde al equipo…"></textarea>
-              <div class="ticket-form-actions"><span class="ticket-note">Máximo 5000 caracteres.</span><button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> Enviar comentario</button></div>
-              <div class="ticket-message" id="ticket-comment-message" role="status"></div>
-            </form>
+            <?php if ((int) $ticket['id_estado'] === 5): ?>
+              <div class="ticket-chat__closed"><i class="bi bi-lock"></i><span>Este ticket está cerrado y no admite nuevos mensajes.</span></div>
+            <?php else: ?>
+              <form class="ticket-reply" id="ticket-comment-form">
+                <label class="form-label" for="ticket-comment">Agregar comentario</label>
+                <textarea class="form-input" id="ticket-comment" name="comentario" minlength="3" maxlength="5000" required placeholder="Escribe una actualización o responde al equipo…"></textarea>
+                <div class="ticket-form-actions"><span class="ticket-note">Máximo 5000 caracteres.</span><button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> Enviar comentario</button></div>
+                <div class="ticket-message" id="ticket-comment-message" role="status"></div>
+              </form>
+            <?php endif; ?>
           <?php endif; ?>
         </section>
       </div>

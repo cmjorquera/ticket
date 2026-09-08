@@ -40,8 +40,8 @@ try {
                   GROUP BY id_usuario
                 ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
       LEFT JOIN colegio col ON col.id_colegio = uc_ticket.id_colegio
-      LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
-      LEFT JOIN estados_ticket e ON e.id = t.id_estado
+      LEFT JOIN usuarios tec ON tec.id = t.id_usuario
+      LEFT JOIN estados_ticket e ON e.id = t.id_usuario
       LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
           WHERE t.id_usuario = ? AND t.estado = 1
        ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC";

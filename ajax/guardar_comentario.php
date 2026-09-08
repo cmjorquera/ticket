@@ -25,24 +25,15 @@ if ($ticketId <= 0 || $largoComentario < 3 || $largoComentario > 5000) {
 
 try {
     $db = Conexion::getInstance('sistema_panel_central');
-    $ticket = $db->fetchOne(
-        "SELECT t.id_ticket, t.id_usuario, t.id_tecnico AS id_tecnico_asignado, uc_ticket.id_colegio
-           FROM tickets t
-      LEFT JOIN (
-                    SELECT id_usuario, MIN(id_colegio) AS id_colegio
-                      FROM usuario_colegio
-                     WHERE estado = 1
-                  GROUP BY id_usuario
-                ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
-          WHERE t.id_ticket = ? AND t.estado = 1
-          LIMIT 1",
-        [$ticketId]
-    );
+    $ticket = ticket_buscar_para_acceso($ticketId, $db);
     if (!$ticket) {
         responder_json(['ok' => false, 'error' => 'Ticket no encontrado.'], 404);
     }
     if (!puede_ver_ticket($usuarioId, $ticket, $db)) {
         responder_json(['ok' => false, 'error' => 'No tienes permiso para comentar este ticket.'], 403);
+    }
+    if ((int) ($ticket['id_estado'] ?? 0) === 5) {
+        responder_json(['ok' => false, 'error' => 'El ticket está cerrado.'], 409);
     }
 
     $columnas = ticket_columnas_tabla('comentarios_ticket', $db);

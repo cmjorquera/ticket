@@ -133,6 +133,29 @@ function puede_ver_ticket(int $usuarioId, array $ticket, Conexion $db): bool
         || puede_administrar_ticket($usuarioId, (int) ($ticket['id_colegio'] ?? 0), $db);
 }
 
+/** Obtiene los datos mínimos y la asociación de colegio necesarios para autorizar un ticket. */
+function ticket_buscar_para_acceso(int $ticketId, Conexion $db): array|false
+{
+    if ($ticketId <= 0) {
+        return false;
+    }
+
+    return $db->fetchOne(
+        "SELECT t.id_ticket, t.id_usuario, t.id_tecnico AS id_tecnico_asignado,
+                t.id_estado, uc_ticket.id_colegio, t.asunto
+           FROM tickets t
+      LEFT JOIN (
+                    SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                      FROM usuario_colegio
+                     WHERE estado = 1
+                  GROUP BY id_usuario
+                ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
+          WHERE t.id_ticket = ? AND t.estado = 1
+          LIMIT 1",
+        [$ticketId]
+    );
+}
+
 /**
  * Devuelve metadatos de columnas para integrar tablas opcionales sin romper el módulo.
  *

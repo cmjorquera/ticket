@@ -336,4 +336,5 @@ enlazarFiltrosMisTickets();
 })();
 </script>
 
+<?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php finalizar_layout_configuracion(); ?>

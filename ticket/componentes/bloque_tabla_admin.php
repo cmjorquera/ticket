@@ -44,7 +44,7 @@ $esGlobal = !empty($esGlobal);
           <td class="ticket-person"><strong><?= e($ticket['tecnico_nombre'] ?: 'Sin asignar') ?></strong></td>
           <td><span class="ticket-badge ticket-badge--<?= e($estado) ?>"><?= e($ticket['estado_nombre'] ?? str_replace('_',' ',$estado)) ?></span></td>
           <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
-          <td><div class="ticket-actions"><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Abrir</a><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($json) ?>" onclick="administrarTicket(this)"><i class="bi bi-sliders"></i> Gestionar</button></div></td>
+          <td><div class="ticket-actions"><button class="btn btn-outline btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-chat-dots"></i> Chat</button><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Abrir</a><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($json) ?>" onclick="administrarTicket(this)"><i class="bi bi-sliders"></i> Gestionar</button></div></td>
         </tr>
       <?php endforeach; ?></tbody></table></div>
     <?php endif; ?>
