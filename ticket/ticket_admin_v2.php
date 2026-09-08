@@ -42,7 +42,7 @@ try {
         if ($tecnicoFiltro > 0 && !in_array($tecnicoFiltro, $idsTecnico, true)) $tecnicoFiltro = 0;
 
         $sql = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
-                       t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_colegio, t.id_tecnico,
+                       t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, uc_ticket.id_colegio, t.id_tecnico,
                        COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                        COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                        CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
@@ -51,7 +51,13 @@ try {
                   FROM tickets t
                   JOIN usuarios u ON u.id = t.id_usuario
                   JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
-             LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+             LEFT JOIN (
+                           SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                             FROM usuario_colegio
+                            WHERE estado = 1
+                         GROUP BY id_usuario
+                       ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
+             LEFT JOIN colegio col ON col.id_colegio = uc_ticket.id_colegio
              LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
              LEFT JOIN estados_ticket e ON e.id = t.id_estado
              LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
@@ -61,12 +67,12 @@ try {
             if (!$idsColegio) {
                 $sql .= ' AND 1 = 0';
             } else {
-                $sql .= ' AND t.id_colegio IN (' . implode(',', array_fill(0, count($idsColegio), '?')) . ')';
+                $sql .= ' AND uc_ticket.id_colegio IN (' . implode(',', array_fill(0, count($idsColegio), '?')) . ')';
                 array_push($params, ...$idsColegio);
             }
         }
         if ($estadoFiltro > 0) { $sql .= ' AND t.id_estado = ?'; $params[] = $estadoFiltro; }
-        if ($colegioFiltro > 0) { $sql .= ' AND t.id_colegio = ?'; $params[] = $colegioFiltro; }
+        if ($colegioFiltro > 0) { $sql .= ' AND uc_ticket.id_colegio = ?'; $params[] = $colegioFiltro; }
         if ($tecnicoFiltro > 0) { $sql .= ' AND t.id_tecnico = ?'; $params[] = $tecnicoFiltro; }
         $sql .= ' ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC';
         ticket_debug_sql('ADMIN usuario=' . $usuarioId . ' pagina=' . $idPagActual, $sql, $params);

@@ -16,7 +16,7 @@ $errorCarga = null;
 
 try {
     $ticket = $ticketId > 0 ? $db->fetchOne(
-        "SELECT t.id_ticket, t.id_usuario, t.id_tecnico, t.id_colegio,
+        "SELECT t.id_ticket, t.id_usuario, t.id_tecnico, uc_ticket.id_colegio,
                 t.asunto, t.descripcion_ticket AS descripcion, t.id_estado, e.nombre AS estado_nombre, t.id_prioridad,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
@@ -26,7 +26,13 @@ try {
            FROM tickets t
            JOIN usuarios sol ON sol.id = t.id_usuario
            JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
-      LEFT JOIN colegio col ON col.id_colegio = t.id_colegio
+      LEFT JOIN (
+                    SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                      FROM usuario_colegio
+                     WHERE estado = 1
+                  GROUP BY id_usuario
+                ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
+      LEFT JOIN colegio col ON col.id_colegio = uc_ticket.id_colegio
       LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
       LEFT JOIN estados_ticket e ON e.id = t.id_estado
       LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
