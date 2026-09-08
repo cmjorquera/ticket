@@ -133,6 +133,7 @@ try {
             foreach ($guardados as $archivoGuardado) @unlink($archivoGuardado);
             throw $ex;
         }
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'crear');
         responder_json([
             'ok' => true,
             'ticket_id' => $ticketId,
@@ -159,6 +160,7 @@ try {
         }
         $fechaRespuesta = in_array($estado, ['resuelto', 'cerrado'], true) ? ', fecha_respuesta = COALESCE(fecha_respuesta, NOW())' : '';
         $db->execute("UPDATE tickets SET estado = ?{$fechaRespuesta} WHERE id_ticket = ?", [$estado, $ticketId]);
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'cambiar_estado', 'estado', (string) $ticket['estado'], $estado);
         responder_json(['ok' => true, 'mensaje' => 'Estado actualizado.']);
     }
 
@@ -171,6 +173,7 @@ try {
             responder_json(['ok' => false, 'error' => 'El técnico seleccionado no está disponible.'], 422);
         }
         $db->execute('UPDATE tickets SET id_tecnico_asignado = ? WHERE id_ticket = ?', [$tecnicoId ?: null, $ticketId]);
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'asignar', 'id_tecnico_asignado', (string) ($ticket['id_tecnico_asignado'] ?? ''), $tecnicoId > 0 ? (string) $tecnicoId : null);
         responder_json(['ok' => true, 'mensaje' => $tecnicoId ? 'Ticket asignado.' : 'Asignación retirada.']);
     }
 
@@ -191,6 +194,7 @@ try {
             "UPDATE tickets SET id_tecnico_asignado = ?, estado = ?{$fechaRespuesta} WHERE id_ticket = ?",
             [$tecnicoId ?: null, $estado, $ticketId]
         );
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'actualizar', 'estado', (string) $ticket['estado'], $estado);
         responder_json(['ok' => true, 'mensaje' => 'Asignación y estado actualizados.']);
     }
 
