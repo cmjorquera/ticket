@@ -250,7 +250,10 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
       message.textContent = `${data.mensaje} Folio #${data.ticket_id}.`;
       creado = true;
       form.reset();
-      setTimeout(() => { closeModal('modal-crear-ticket'); window.location.href = 'ticket_asignados.php'; }, 1400);
+      setTimeout(async () => {
+        closeModal('modal-crear-ticket');
+        await recargarTablaUsuario();
+      }, 900);
     } catch (error) {
       message.className = 'ticket-message error';
       message.textContent = error.message;
@@ -304,9 +307,26 @@ function filtrarMisTickets() {
   if (empty) empty.hidden = visibles > 0;
 }
 
-document.getElementById('mis-tickets-buscar')?.addEventListener('input', filtrarMisTickets);
-document.getElementById('mis-tickets-estado')?.addEventListener('change', filtrarMisTickets);
-document.getElementById('mis-tickets-fecha')?.addEventListener('change', filtrarMisTickets);
+function enlazarFiltrosMisTickets() {
+  document.getElementById('mis-tickets-buscar')?.addEventListener('input', filtrarMisTickets);
+  document.getElementById('mis-tickets-estado')?.addEventListener('change', filtrarMisTickets);
+  document.getElementById('mis-tickets-fecha')?.addEventListener('change', filtrarMisTickets);
+}
+
+async function recargarTablaUsuario() {
+  const current = document.getElementById('ticket-tabla-usuario');
+  if (!current) return;
+  try {
+    const response = await fetch('componentes/ajax/bloque_tabla_usuario.php', {credentials:'same-origin'});
+    if (!response.ok) throw new Error('No fue posible actualizar el listado.');
+    current.outerHTML = await response.text();
+    enlazarFiltrosMisTickets();
+  } catch (error) {
+    window.location.reload();
+  }
+}
+
+enlazarFiltrosMisTickets();
 </script>
 
 <?php finalizar_layout_configuracion(); ?>
