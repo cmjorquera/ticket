@@ -5,11 +5,13 @@ $depth = '../';
 require_once __DIR__ . '/../configuracion/_inicio.php';
 
 $usuarioId = (int) Sesion::get('id', 0);
+$idPagActual = FuncionesTicket::ROL_ADMIN;
 $esGlobal = false;
 $autorizado = false;
 $tickets = [];
 $colegios = [];
 $tecnicos = [];
+$idsColegio = [];
 $errorCarga = null;
 $estadoFiltro = strtolower(trim((string) ($_GET['estado'] ?? '')));
 $colegioFiltro = (int) ($_GET['colegio'] ?? 0);
@@ -71,8 +73,7 @@ try {
     $errorCarga = 'No fue posible consultar los tickets. Verifica la estructura de base de datos del módulo.';
 }
 
-$conteos = ['nuevo' => 0, 'en_proceso' => 0, 'resuelto' => 0];
-foreach ($tickets as $ticket) { $key = strtolower((string) $ticket['estado']); if (isset($conteos[$key])) $conteos[$key]++; }
+$funcionesTicket = new FuncionesTicket($db);
 $csrf = ticket_csrf_token();
 iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_admin_v2');
 ?>
@@ -83,6 +84,8 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     <div><h1>Administración de tickets</h1><p>Distribuye casos, revisa prioridades y controla el avance de soporte.</p></div>
     <a class="btn btn-primary" href="ticket.php"><i class="bi bi-plus-circle"></i> Nuevo ticket</a>
   </div>
+
+  <?php $funcionesTicket->renderizarContenedores($usuarioId, $idPagActual, $esGlobal ? null : $idsColegio); ?>
 
   <?php require __DIR__ . '/componentes/bloque_tabla_admin.php'; ?>
 

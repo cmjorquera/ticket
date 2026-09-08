@@ -91,12 +91,4 @@ try {
     $errorCarga = 'No fue posible consultar los tickets.';
 }
 
-$conteos = ['nuevo' => 0, 'en_proceso' => 0, 'resuelto' => 0];
-foreach ($tickets as $ticket) {
-    $key = strtolower((string) $ticket['estado']);
-    if (isset($conteos[$key])) {
-        $conteos[$key]++;
-    }
-}
-
 require __DIR__ . '/../bloque_tabla_admin.php';
