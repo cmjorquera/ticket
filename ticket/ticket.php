@@ -38,8 +38,13 @@ try {
 }
 
 try {
+    $columnasAdjuntos = ticket_columnas_tabla('archivos_adjuntos_ticket', $db);
+    $sqlCantidadArchivos = isset($columnasAdjuntos['id_ticket'])
+        ? '(SELECT COUNT(*) FROM archivos_adjuntos_ticket aa WHERE aa.id_ticket = t.id_ticket)'
+        : '0';
     $sqlUsuario = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
-                t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, t.id_tecnico,
+                t.id_estado, e.nombre AS estado_nombre, e.color AS estado_color,
+                t.id_prioridad, t.id_tecnico, {$sqlCantidadArchivos} AS cantidad_archivos,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 c.nombre_categoria AS categoria_nombre,
@@ -95,175 +100,10 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 
 <?php require __DIR__ . '/componentes/bloque_tabla_usuario.php'; ?>
 
-<div class="modal-overlay" id="modal-crear-ticket" onclick="closeModalOutside(event,'modal-crear-ticket')">
-  <div class="modal ticket-create-modal" role="dialog" aria-modal="true" aria-labelledby="ticket-modal-title">
-    <form id="form-ticket" novalidate>
-      <div class="modal-header ticket-modal-header">
-        <div>
-          <span class="ticket-modal-kicker">Mesa de ayuda</span>
-          <h3 id="ticket-modal-title">Crear nuevo ticket</h3>
-          <p>Registra un problema o una solicitud para el equipo de soporte.</p>
-        </div>
-        <button class="ticket-modal-close" type="button" onclick="closeModal('modal-crear-ticket')" aria-label="Cerrar modal"><i class="bi bi-x-lg"></i></button>
-      </div>
-
-      <div class="modal-body ticket-form">
-      <input type="hidden" name="accion" value="crear">
-      <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-      <div class="ticket-message" id="ticket-mensaje" role="status" aria-live="polite"></div>
-
-      <div class="ticket-form-grid">
-        <div class="form-group">
-          <label class="form-label" for="ticket-solicitante">Solicitante</label>
-          <?php if ($puedeElegirSolicitante): ?>
-            <select class="form-input" id="ticket-solicitante" name="solicitante_id" data-dynamic-user>
-              <option value="<?= $usuarioId ?>"><?= e($usuarioNombre) ?></option>
-            </select>
-          <?php else: ?>
-            <input class="form-input" id="ticket-solicitante" value="<?= e($usuarioNombre) ?>" readonly>
-            <input type="hidden" name="solicitante_id" value="<?= $usuarioId ?>">
-          <?php endif; ?>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="ticket-categoria">Categoría *</label>
-          <select class="form-input" id="ticket-categoria" name="categoria_id" required <?= !$categorias ? 'disabled' : '' ?>>
-            <option value="">Seleccionar categoría</option>
-            <?php foreach ($categorias as $categoria): ?>
-              <option value="<?= (int) $categoria['id_categoria'] ?>"><?= e($categoria['nombre_categoria']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="ticket-asunto">Asunto *</label>
-        <input class="form-input" id="ticket-asunto" name="asunto" minlength="5" maxlength="180" placeholder="Ej.: La impresora de secretaría no responde" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="ticket-descripcion">Descripción *</label>
-        <div class="ticket-editor" data-ticket-editor>
-          <div class="ticket-editor__toolbar" role="toolbar" aria-label="Formato de descripción">
-            <select class="ticket-editor__format" aria-label="Formato del texto" data-editor-format>
-              <option value="p">Normal</option>
-              <option value="h3">Título</option>
-            </select>
-            <span class="ticket-editor__separator"></span>
-            <button type="button" data-editor-command="bold" aria-label="Negrita"><strong>B</strong></button>
-            <button type="button" data-editor-command="italic" aria-label="Cursiva"><em>I</em></button>
-            <button type="button" data-editor-command="underline" aria-label="Subrayado"><u>U</u></button>
-            <span class="ticket-editor__separator"></span>
-            <button type="button" data-editor-command="insertOrderedList" aria-label="Lista numerada"><i class="bi bi-list-ol"></i></button>
-            <button type="button" data-editor-command="insertUnorderedList" aria-label="Lista con viñetas"><i class="bi bi-list-ul"></i></button>
-            <button type="button" data-editor-link aria-label="Agregar enlace"><i class="bi bi-link-45deg"></i></button>
-          </div>
-          <div class="ticket-editor__surface" id="ticket-descripcion" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Indica qué ocurrió, desde cuándo y qué intentaste hacer."></div>
-        </div>
-        <input type="hidden" id="ticket-descripcion-value" name="descripcion">
-        <div class="ticket-editor__meta"><span>Formato básico permitido</span><span id="ticket-description-count">0/10000</span></div>
-      </div>
-      <div class="form-group ticket-files">
-        <label class="form-label">Adjuntos</label>
-        <input type="file" id="ticket-archivos" name="archivos[]" multiple hidden accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx">
-        <button class="ticket-file-picker" type="button" onclick="document.getElementById('ticket-archivos').click()">
-          <i class="bi bi-paperclip"></i><span><strong>Elegir archivos</strong><small id="ticket-file-count">Sin archivos seleccionados</small></span>
-        </button>
-        <div class="ticket-file-list" id="ticket-file-list"></div>
-        <span class="ticket-note">Hasta 5 archivos de 5 MB cada uno. Imágenes, PDF, Word o Excel.</span>
-      </div>
-
-      <div class="ticket-account-note"><i class="bi bi-building-check"></i><span>El colegio se asignará automáticamente: <strong id="ticket-colegio-contexto"><?= e((string) ($colegioSesion['nom_colegio'] ?? 'sin colegio asociado')) ?></strong>.</span></div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-outline" id="ticket-limpiar" type="reset">Limpiar</button>
-        <div class="ticket-create-actions">
-          <button class="btn btn-outline ticket-draft-button" id="ticket-borrador" type="button" <?= ($errorCarga || !$categorias || (!$colegioSesion && !$puedeElegirSolicitante)) ? 'disabled' : '' ?>><i class="bi bi-file-earmark"></i> Guardar borrador</button>
-          <button class="btn btn-primary" id="ticket-guardar" type="submit" <?= ($errorCarga || !$categorias || (!$colegioSesion && !$puedeElegirSolicitante)) ? 'disabled' : '' ?>><i class="bi bi-send-fill"></i> Crear ticket</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
+<?php require __DIR__ . '/componentes/modal_crear_ticket.php'; ?>
 
 <script src="js/crear_ticket_dinamico.js"></script>
 <script>
-(() => {
-  if (window.ticketDynamicCreateEnabled) return;
-  const form = document.getElementById('form-ticket');
-  const message = document.getElementById('ticket-mensaje');
-  const button = document.getElementById('ticket-guardar');
-  const files = document.getElementById('ticket-archivos');
-  const fileCount = document.getElementById('ticket-file-count');
-  const fileList = document.getElementById('ticket-file-list');
-  if (!form || !button) return;
-
-  window.abrirModalTicket = () => {
-    message.className = 'ticket-message';
-    message.textContent = '';
-    openModal('modal-crear-ticket');
-    setTimeout(() => document.getElementById('ticket-asunto').focus(), 80);
-  };
-
-  function renderFiles() {
-    const selected = Array.from(files.files || []);
-    fileCount.textContent = selected.length ? `${selected.length} archivo${selected.length === 1 ? '' : 's'} seleccionado${selected.length === 1 ? '' : 's'}` : 'Sin archivos seleccionados';
-    fileList.replaceChildren();
-    selected.forEach(file => {
-      const item = document.createElement('div');
-      item.className = 'ticket-file-item';
-      const icon = document.createElement('i'); icon.className = 'bi bi-file-earmark';
-      const name = document.createElement('span'); name.textContent = file.name;
-      const size = document.createElement('small'); size.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
-      item.append(icon, name, size); fileList.appendChild(item);
-    });
-  }
-
-  files.addEventListener('change', () => {
-    const selected = Array.from(files.files || []);
-    if (selected.length > 5 || selected.some(file => file.size > 5 * 1024 * 1024)) {
-      files.value = '';
-      renderFiles();
-      message.className = 'ticket-message error';
-      message.textContent = selected.length > 5 ? 'Puedes adjuntar un máximo de 5 archivos.' : 'Cada archivo debe pesar como máximo 5 MB.';
-      return;
-    }
-    message.className = 'ticket-message';
-    renderFiles();
-  });
-
-  form.addEventListener('reset', () => setTimeout(renderFiles, 0));
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form.reportValidity()) return;
-    let creado = false;
-    button.disabled = true;
-    button.innerHTML = '<i class="bi bi-hourglass-split"></i> Creando…';
-    message.className = 'ticket-message';
-    try {
-      const response = await fetch('../ajax/guardar_ticket.php', {method: 'POST', body: new FormData(form), credentials: 'same-origin'});
-      const data = await response.json();
-      if (!response.ok || !data.ok) throw new Error(data.error || 'No fue posible crear el ticket.');
-      message.className = 'ticket-message ok';
-      message.textContent = `${data.mensaje} Folio #${data.ticket_id}.`;
-      creado = true;
-      form.reset();
-      setTimeout(() => {
-        closeModal('modal-crear-ticket');
-        window.location.reload();
-      }, 900);
-    } catch (error) {
-      message.className = 'ticket-message error';
-      message.textContent = error.message;
-    } finally {
-      if (!creado) {
-        button.disabled = false;
-        button.innerHTML = '<i class="bi bi-send-fill"></i> Crear ticket';
-      }
-    }
-  });
-})();
-
 function filtrarMisTickets() {
   const input = document.getElementById('mis-tickets-buscar');
   const select = document.getElementById('mis-tickets-estado');

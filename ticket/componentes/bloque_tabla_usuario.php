@@ -61,7 +61,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
   <?php else: ?>
     <div class="table-wrap">
       <table id="mis-tickets-tabla">
-        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Colegio</th><th>Técnico</th><th>Estado</th><th>Fecha Respuesta </th><th>Calificacion</th></tr></thead>
+        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Colegio</th><th>Técnico</th><th>Estado</th><th>Fecha de respuesta</th><th>Prioridad</th><th>Acciones</th></tr></thead>
         <tbody>
         <?php foreach ($misTickets as $ticket):
           $estado = strtolower((string) $ticket['estado']);
@@ -69,15 +69,18 @@ $etiquetasEstado = $etiquetasEstado ?? [
           $textoEstado = (string) ($ticket['estado_nombre'] ?? $etiquetasEstado[$estado] ?? ucfirst(str_replace('_', ' ', $estado)));
           $fechaTicket = strtotime((string) $ticket['fecha_creacion']);
           $fechaRespuesta = strtotime((string) $ticket['fecha_respuesta']);
+          $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
+          $cantidadArchivos = max(0, (int) ($ticket['cantidad_archivos'] ?? 0));
         ?>
-          <tr data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['categoria_nombre'], $ticket['colegio_nombre'], $ticket['tecnico_nombre']]))) ?>" data-estado="<?= e($estado) ?>" data-fecha="<?= $fechaTicket ? e(date('Y-m-d', $fechaTicket)) : '' ?>" data-fecha-respuesta="<?= $fechaRespuesta ? e(date('Y-m-d', $fechaRespuesta)) : '' ?>">
+          <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['categoria_nombre'], $ticket['colegio_nombre'], $ticket['tecnico_nombre']]))) ?>" data-estado="<?= e($estado) ?>" data-fecha="<?= $fechaTicket ? e(date('Y-m-d', $fechaTicket)) : '' ?>" data-fecha-respuesta="<?= $fechaRespuesta ? e(date('Y-m-d', $fechaRespuesta)) : '' ?>">
             <td><span class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></span><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
             <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong><small><?= e($ticket['categoria_nombre']) ?></small></td>
             <td class="ticket-person"><strong><?= e($ticket['colegio_nombre']) ?></strong></td>
             <td class="ticket-person"><strong><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></strong></td>
             <td><span class="ticket-badge ticket-badge--<?= e($estado) ?>"><?= e($textoEstado) ?></span></td>
+            <td><span class="text-xs text-muted"><?= $fechaRespuesta ? e(date('d/m/Y H:i', $fechaRespuesta)) : 'Sin respuesta' ?></span></td>
             <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
-            <td><div class="ticket-actions"><button class="btn btn-outline btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-chat-dots"></i> Chat</button><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Ver</a></div></td>
+            <td><div class="ticket-actions"><button class="btn btn-outline btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-chat-dots"></i> Chat</button><?= ticket_boton_archivos((int) $ticket['id_ticket'], $cantidadArchivos) ?><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Ver</a></div></td>
           </tr>
         <?php endforeach; ?>
         </tbody>
