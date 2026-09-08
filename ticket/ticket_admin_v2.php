@@ -72,8 +72,6 @@ foreach ($tickets as $ticket) { $key = strtolower((string) $ticket['estado']); i
 $csrf = ticket_csrf_token();
 iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_admin_v2');
 ?>
-<link rel="stylesheet" href="<?= e($depth) ?>ticket/tickets.css">
-
 <?php if (!$autorizado): http_response_code(403); ?>
   <div class="card ticket-denied"><i class="bi bi-shield-lock"></i><h1>Acceso restringido</h1><p class="text-muted mt-3">Esta vista está disponible para administradores generales y administradores de colegio.</p></div>
 <?php else: ?>

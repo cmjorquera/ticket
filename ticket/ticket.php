@@ -34,8 +34,6 @@ try {
 $csrf = ticket_csrf_token();
 iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 ?>
-<link rel="stylesheet" href="<?= e($depth) ?>ticket/tickets.css">
-
 <div class="page-header">
   <div>
     <h1>Mesa de ayuda</h1>
