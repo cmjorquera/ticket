@@ -150,7 +150,7 @@ try {
 
     if ($accion === 'actualizar_estado') {
         $estado = strtolower(trim((string) ($datos['estado'] ?? '')));
-        if (!in_array($estado, ['nuevo', 'en_proceso', 'resuelto', 'cerrado'], true)) {
+        if (!in_array($estado, ['nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'], true)) {
             responder_json(['ok' => false, 'error' => 'Estado no válido.'], 422);
         }
         $esTecnicoAsignado = (int) ($ticket['id_tecnico_asignado'] ?? 0) === $usuarioId;
@@ -180,7 +180,7 @@ try {
         }
         $estado = strtolower(trim((string) ($datos['estado'] ?? '')));
         $tecnicoId = (int) ($datos['tecnico_id'] ?? 0);
-        if (!in_array($estado, ['nuevo', 'en_proceso', 'resuelto', 'cerrado'], true)) {
+        if (!in_array($estado, ['nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'], true)) {
             responder_json(['ok' => false, 'error' => 'Estado no válido.'], 422);
         }
         if ($tecnicoId > 0 && !$db->fetchOne("SELECT id FROM usuarios WHERE id = ? AND LOWER(estado) = 'activo' LIMIT 1", [$tecnicoId])) {

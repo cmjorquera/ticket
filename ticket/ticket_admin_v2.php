@@ -13,7 +13,7 @@ $tecnicos = [];
 $errorCarga = null;
 $estadoFiltro = strtolower(trim((string) ($_GET['estado'] ?? '')));
 $colegioFiltro = (int) ($_GET['colegio'] ?? 0);
-if (!in_array($estadoFiltro, ['', 'nuevo', 'en_proceso', 'resuelto', 'cerrado'], true)) $estadoFiltro = '';
+if (!in_array($estadoFiltro, ['', 'nuevo', 'en_proceso', 'atrasado', 'resuelto', 'cerrado'], true)) $estadoFiltro = '';
 
 try {
     $esGlobal = es_administrador_global($usuarioId, $db);
@@ -58,7 +58,7 @@ try {
         }
         if ($estadoFiltro !== '') { $sql .= ' AND t.estado = ?'; $params[] = $estadoFiltro; }
         if ($colegioFiltro > 0) { $sql .= ' AND t.id_colegio = ?'; $params[] = $colegioFiltro; }
-        $sql .= " ORDER BY FIELD(t.estado, 'nuevo','en_proceso','resuelto','cerrado'), t.fecha_creacion DESC";
+        $sql .= " ORDER BY FIELD(t.estado, 'nuevo','en_proceso','atrasado','resuelto','cerrado'), t.fecha_creacion DESC";
         $tickets = $db->fetchAll($sql, $params);
         $tecnicos = $db->fetchAll("SELECT id, CONCAT_WS(' ', nombre, apellido_paterno) AS nombre FROM usuarios WHERE id_area_trabajo = 1 AND LOWER(estado) = 'activo' ORDER BY nombre, apellido_paterno");
     }
@@ -93,7 +93,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     <div class="card-header"><div><h2 class="card-title">Control de casos</h2><p class="card-desc"><?= $esGlobal ? 'Vista general de todos los colegios.' : 'Vista limitada a tus colegios administrados.' ?></p></div></div>
     <form class="ticket-toolbar" method="get">
       <div class="form-group ticket-search"><label class="form-label" for="admin-buscar">Buscar en resultados</label><input class="form-input" id="admin-buscar" placeholder="Folio, asunto, solicitante o técnico"></div>
-      <div class="form-group"><label class="form-label" for="admin-estado">Estado</label><select class="form-input" id="admin-estado" name="estado"><option value="">Todos</option><?php foreach (['nuevo'=>'Nuevo','en_proceso'=>'En proceso','resuelto'=>'Resuelto','cerrado'=>'Cerrado'] as $valor=>$texto): ?><option value="<?= $valor ?>" <?= $estadoFiltro === $valor ? 'selected' : '' ?>><?= $texto ?></option><?php endforeach; ?></select></div>
+      <div class="form-group"><label class="form-label" for="admin-estado">Estado</label><select class="form-input" id="admin-estado" name="estado"><option value="">Todos</option><?php foreach (['nuevo'=>'Nuevo','en_proceso'=>'En proceso','atrasado'=>'Atrasado','resuelto'=>'Resuelto','cerrado'=>'Cerrado'] as $valor=>$texto): ?><option value="<?= $valor ?>" <?= $estadoFiltro === $valor ? 'selected' : '' ?>><?= $texto ?></option><?php endforeach; ?></select></div>
       <div class="form-group"><label class="form-label" for="admin-colegio">Colegio</label><select class="form-input" id="admin-colegio" name="colegio"><option value="0">Todos</option><?php foreach ($colegios as $colegio): ?><option value="<?= (int) $colegio['id_colegio'] ?>" <?= $colegioFiltro === (int) $colegio['id_colegio'] ? 'selected' : '' ?>><?= e($colegio['nom_colegio']) ?></option><?php endforeach; ?></select></div>
       <button class="btn btn-outline" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
     </form>
@@ -128,7 +128,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
         <div class="ticket-detail-grid" id="admin-modal-grid"></div><div class="ticket-description" id="admin-modal-descripcion"></div>
         <div class="ticket-admin-actions">
           <div class="form-group"><label class="form-label" for="admin-modal-tecnico">Técnico asignado</label><select class="form-input" id="admin-modal-tecnico"><option value="0">Sin asignar</option><?php foreach ($tecnicos as $tecnico): ?><option value="<?= (int)$tecnico['id'] ?>"><?= e($tecnico['nombre']) ?></option><?php endforeach; ?></select></div>
-          <div class="form-group"><label class="form-label" for="admin-modal-estado">Estado</label><select class="form-input" id="admin-modal-estado"><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option></select></div>
+          <div class="form-group"><label class="form-label" for="admin-modal-estado">Estado</label><select class="form-input" id="admin-modal-estado"><option value="nuevo">Nuevo</option><option value="en_proceso">En proceso</option><option value="atrasado">Atrasado</option><option value="resuelto">Resuelto</option><option value="cerrado">Cerrado</option></select></div>
         </div>
         <div class="ticket-message" id="admin-modal-mensaje" role="status"></div>
       </div>

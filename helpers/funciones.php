@@ -75,3 +75,74 @@ function log_error(string $mensaje, string $archivo = 'app.log'): void
     $linea = '[' . date('Y-m-d H:i:s') . '] ' . $mensaje . PHP_EOL;
     error_log($linea, 3, $dir . '/' . basename($archivo));
 }
+
+/** Renderiza los indicadores resumidos de una bandeja técnica. */
+final class FuncionesTicket
+{
+    private Conexion $db;
+    private array $cache = [];
+
+    public function __construct(Conexion $db)
+    {
+        $this->db = $db;
+    }
+
+    private function totales(int $usuarioId): array
+    {
+        if (isset($this->cache[$usuarioId])) {
+            return $this->cache[$usuarioId];
+        }
+
+        $totales = ['nuevo' => 0, 'en_proceso' => 0, 'resuelto' => 0, 'atrasado' => 0];
+        try {
+            $filas = $this->db->fetchAll(
+                'SELECT estado, COUNT(*) AS total FROM tickets WHERE id_tecnico_asignado = ? GROUP BY estado',
+                [$usuarioId]
+            );
+            foreach ($filas as $fila) {
+                $estado = strtolower((string) ($fila['estado'] ?? ''));
+                if (array_key_exists($estado, $totales)) {
+                    $totales[$estado] = (int) ($fila['total'] ?? 0);
+                }
+            }
+        } catch (Throwable $ex) {
+            error_log('Error al calcular contenedores de tickets: ' . $ex->getMessage());
+        }
+
+        return $this->cache[$usuarioId] = $totales;
+    }
+
+    private function renderizar(int $usuarioId, string $estado, string $titulo, string $icono, string $clase): void
+    {
+        $totales = $this->totales($usuarioId);
+        $cantidad = (int) ($totales[$estado] ?? 0);
+        $total = array_sum($totales);
+        $porcentaje = $total > 0 ? (int) round(($cantidad / $total) * 100) : 0;
+
+        echo '<article class="contenedor-ticket ' . $clase . '">';
+        echo '<div class="contenedor-ticket-body"><h2 class="contenedor-ticket-titulo">' . htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') . '</h2>';
+        echo '<div class="contenedor-ticket-numero">' . $cantidad . '</div><small class="contenedor-ticket-porcentaje">' . $porcentaje . '% de la bandeja</small></div>';
+        echo '<div class="contenedor-ticket-icono" aria-hidden="true"><i class="bi ' . htmlspecialchars($icono, ENT_QUOTES, 'UTF-8') . '"></i></div>';
+        echo '</article>';
+    }
+
+    public function contenedorTicketNuevos(int $usuarioId): void
+    {
+        $this->renderizar($usuarioId, 'nuevo', 'Nuevos', 'bi-inbox', 'nuevos');
+    }
+
+    public function contenedorTicketEnProceso(int $usuarioId): void
+    {
+        $this->renderizar($usuarioId, 'en_proceso', 'En proceso', 'bi-hourglass-split', 'en-proceso');
+    }
+
+    public function contenedorTicketResueltos(int $usuarioId): void
+    {
+        $this->renderizar($usuarioId, 'resuelto', 'Resueltos', 'bi-check-circle', 'resueltos');
+    }
+
+    public function contenedorTicketAtrasados(int $usuarioId): void
+    {
+        $this->renderizar($usuarioId, 'atrasado', 'Atrasados', 'bi-exclamation-triangle', 'atrasados');
+    }
+}

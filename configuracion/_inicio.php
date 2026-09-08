@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../clases/Session.php';
 require_once __DIR__ . '/../clases/Conexion.php';
 require_once __DIR__ . '/../helpers/tickets.php';
+require_once __DIR__ . '/../helpers/funciones.php';
 
 if (!class_exists('Sesion', false)) {
     final class Sesion extends Session

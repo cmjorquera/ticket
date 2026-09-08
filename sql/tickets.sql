@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     asunto VARCHAR(180) NOT NULL,
     descripcion TEXT NOT NULL,
     prioridad ENUM('baja','media','alta','crítica') NOT NULL DEFAULT 'media',
-    estado ENUM('nuevo','en_proceso','resuelto','cerrado') NOT NULL DEFAULT 'nuevo',
+    estado ENUM('nuevo','en_proceso','atrasado','resuelto','cerrado') NOT NULL DEFAULT 'nuevo',
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     fecha_respuesta DATETIME NULL,
     PRIMARY KEY (id_ticket),
@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS tickets (
     KEY idx_ticket_categoria (id_categoria),
     KEY idx_ticket_usuario (id_usuario)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Amplía instalaciones creadas con una versión anterior del módulo.
+ALTER TABLE tickets
+    MODIFY estado ENUM('nuevo','en_proceso','atrasado','resuelto','cerrado') NOT NULL DEFAULT 'nuevo';
 
 CREATE TABLE IF NOT EXISTS ticket_adjuntos (
     id_adjunto INT UNSIGNED NOT NULL AUTO_INCREMENT,
