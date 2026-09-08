@@ -294,7 +294,7 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .ticket-message{display:none;padding:10px 12px;border-radius:var(--radius);font-size:12px;margin-bottom:12px}
 .ticket-message.ok{display:block;background:var(--success-light);color:var(--success)}
 .ticket-message.error{display:block;background:var(--danger-light);color:var(--danger)}
-.contenedor-tickets{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.contenedor-tickets{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
 .contenedor-ticket{position:relative;display:flex;align-items:center;justify-content:space-between;min-width:0;padding:17px 18px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--muted);border-radius:var(--radius);box-shadow:var(--shadow-card);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition)}
 .contenedor-ticket:hover{transform:translateY(-2px);box-shadow:var(--shadow-elevated)}
 .contenedor-ticket-body{min-width:0}

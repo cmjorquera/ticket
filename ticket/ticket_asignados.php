@@ -5,6 +5,7 @@ $depth = '../';
 require_once __DIR__ . '/../configuracion/_inicio.php';
 
 $usuarioId = (int) Sesion::get('id', 0);
+$idPagActual = FuncionesTicket::ROL_TECNICO;
 $tickets = [];
 $errorCarga = null;
 try {
@@ -35,12 +36,7 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
   <a class="btn btn-outline" href="ticket.php"><i class="bi bi-plus-circle"></i> Crear ticket</a>
 </div>
 
-<div class="contenedor-tickets">
-  <?php $funcionesTicket->contenedorTicketNuevos($usuarioId); ?>
-  <?php $funcionesTicket->contenedorTicketEnProceso($usuarioId); ?>
-  <?php $funcionesTicket->contenedorTicketResueltos($usuarioId); ?>
-  <?php $funcionesTicket->contenedorTicketAtrasados($usuarioId); ?>
-</div>
+<?php $funcionesTicket->renderizarContenedores($usuarioId, $idPagActual); ?>
 
 <?php require __DIR__ . '/componentes/bloque_tabla_tecnico.php'; ?>
 

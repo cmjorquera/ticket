@@ -11,7 +11,7 @@ $colegios = [];
 $misTickets = [];
 $errorCarga = null;
 $errorListado = null;
-$idPagActual = 3;
+$idPagActual = FuncionesTicket::ROL_USUARIO;
 
 
 try {
@@ -64,6 +64,7 @@ $etiquetasEstado = [
     'cerrado' => 'Cerrado',
 ];
 
+$funcionesTicket = new FuncionesTicket($db);
 $csrf = ticket_csrf_token();
 iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 ?>
@@ -76,6 +77,8 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
     <a class="btn btn-outline" href="ticket_asignados.php"><i class="bi bi-list-check"></i> Tickets asignados</a>
   </div>
 </div>
+
+<?php $funcionesTicket->renderizarContenedores($usuarioId, $idPagActual); ?>
 
 <section class="card ticket-launch">
   <div class="ticket-launch__mark"><i class="bi bi-ticket-perforated-fill"></i><span>Soporte SEDUC</span></div>
@@ -252,9 +255,9 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
       message.textContent = `${data.mensaje} Folio #${data.ticket_id}.`;
       creado = true;
       form.reset();
-      setTimeout(async () => {
+      setTimeout(() => {
         closeModal('modal-crear-ticket');
-        await recargarTablaUsuario();
+        window.location.reload();
       }, 900);
     } catch (error) {
       message.className = 'ticket-message error';
@@ -313,19 +316,6 @@ function enlazarFiltrosMisTickets() {
   document.getElementById('mis-tickets-buscar')?.addEventListener('input', filtrarMisTickets);
   document.getElementById('mis-tickets-estado')?.addEventListener('change', filtrarMisTickets);
   document.getElementById('mis-tickets-fecha')?.addEventListener('change', filtrarMisTickets);
-}
-
-async function recargarTablaUsuario() {
-  const current = document.getElementById('ticket-tabla-usuario');
-  if (!current) return;
-  try {
-    const response = await fetch('componentes/ajax/bloque_tabla_usuario.php', {credentials:'same-origin'});
-    if (!response.ok) throw new Error('No fue posible actualizar el listado.');
-    current.outerHTML = await response.text();
-    enlazarFiltrosMisTickets();
-  } catch (error) {
-    window.location.reload();
-  }
 }
 
 enlazarFiltrosMisTickets();

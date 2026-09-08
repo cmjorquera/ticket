@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 /**
  * Control general de tickets.
- * Requiere: $tickets, $colegios, $tecnicos, $conteos, $estadoFiltro, $colegioFiltro,
+ * Requiere: $tickets, $colegios, $tecnicos, $estadoFiltro, $colegioFiltro,
  * $errorCarga y $esGlobal.
  */
 $tickets = isset($tickets) && is_array($tickets) ? $tickets : [];
 $colegios = isset($colegios) && is_array($colegios) ? $colegios : [];
 $tecnicos = isset($tecnicos) && is_array($tecnicos) ? $tecnicos : [];
-$conteos = isset($conteos) && is_array($conteos) ? $conteos : [];
 $estadoFiltro = isset($estadoFiltro) ? (string) $estadoFiltro : '';
 $colegioFiltro = isset($colegioFiltro) ? (int) $colegioFiltro : 0;
 $tecnicoFiltro = isset($tecnicoFiltro) ? (int) $tecnicoFiltro : 0;
@@ -17,13 +16,6 @@ $errorCarga = $errorCarga ?? null;
 $esGlobal = !empty($esGlobal);
 ?>
 <div id="ticket-tabla-admin">
-  <div class="ticket-metrics">
-    <div class="ticket-metric"><span>Nuevos</span><strong><?= (int) ($conteos['nuevo'] ?? 0) ?></strong></div>
-    <div class="ticket-metric"><span>En proceso</span><strong><?= (int) ($conteos['en_proceso'] ?? 0) ?></strong></div>
-    <div class="ticket-metric"><span>Resueltos</span><strong><?= (int) ($conteos['resuelto'] ?? 0) ?></strong></div>
-    <div class="ticket-metric"><span>Resultados</span><strong><?= count($tickets) ?></strong></div>
-  </div>
-
   <section class="card">
     <div class="card-header"><div><h2 class="card-title">Control de casos</h2><p class="card-desc"><?= $esGlobal ? 'Vista general de todos los colegios.' : 'Vista limitada a tus colegios administrados.' ?></p></div></div>
     <form class="ticket-toolbar" method="get">
