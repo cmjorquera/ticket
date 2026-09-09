@@ -48,11 +48,13 @@ try {
                 t.id_prioridad, t.id_tecnico, {$sqlCantidadArchivos} AS cantidad_archivos,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
+                CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
                 c.nombre_categoria AS categoria_nombre,
                 col.nom_colegio AS colegio_nombre,
                 CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
            FROM tickets t
            JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
+           JOIN usuarios u ON u.id = t.id_usuario
       LEFT JOIN (
                     SELECT id_usuario, MIN(id_colegio) AS id_colegio
                       FROM usuario_colegio

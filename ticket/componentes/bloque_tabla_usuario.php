@@ -61,9 +61,9 @@ $etiquetasEstado = $etiquetasEstado ?? [
   <?php else: ?>
     <div class="table-wrap">
       <table id="mis-tickets-tabla">
-        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Colegio</th><th>Técnico</th><th>Estado</th><th>Fecha de respuesta</th><th>Prioridad</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Técnico</th><th>Usuario</th><th>Estado</th><th>Fecha de respuesta</th><th>Prioridad</th><th>Acciones</th></tr></thead>
         <tbody>
-        <?php foreach ($misTickets as $ticket):
+        <?php foreach ($misTickets as $indice => $ticket):
           $estado = strtolower((string) $ticket['estado']);
           $prioridad = str_replace(['í', 'Í'], 'i', strtolower((string) $ticket['prioridad']));
           $textoEstado = (string) ($ticket['estado_nombre'] ?? $etiquetasEstado[$estado] ?? ucfirst(str_replace('_', ' ', $estado)));
@@ -72,11 +72,11 @@ $etiquetasEstado = $etiquetasEstado ?? [
           $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
           $cantidadArchivos = max(0, (int) ($ticket['cantidad_archivos'] ?? 0));
         ?>
-          <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['categoria_nombre'], $ticket['colegio_nombre'], $ticket['tecnico_nombre']]))) ?>" data-estado="<?= e($estado) ?>" data-fecha="<?= $fechaTicket ? e(date('Y-m-d', $fechaTicket)) : '' ?>" data-fecha-respuesta="<?= $fechaRespuesta ? e(date('Y-m-d', $fechaRespuesta)) : '' ?>">
-            <td><span class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></span><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
+          <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['categoria_nombre'], $ticket['usuario_nombre'], $ticket['colegio_nombre'], $ticket['tecnico_nombre']]))) ?>" data-estado="<?= e($estado) ?>" data-fecha="<?= $fechaTicket ? e(date('Y-m-d', $fechaTicket)) : '' ?>" data-fecha-respuesta="<?= $fechaRespuesta ? e(date('Y-m-d', $fechaRespuesta)) : '' ?>">
+            <td><strong class="ticket-id">#<?= e($indice + 1) ?></strong><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
             <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong><small><?= e($ticket['categoria_nombre']) ?></small></td>
-            <td class="ticket-person"><strong><?= e($ticket['colegio_nombre']) ?></strong></td>
             <td class="ticket-person"><strong><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></strong></td>
+            <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>
             <td><?= ticket_badge_estado($ticket) ?></td>
             <td><span class="text-xs text-muted"><?= $fechaRespuesta ? e(date('d/m/Y H:i', $fechaRespuesta)) : 'Sin respuesta' ?></span></td>
             <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
