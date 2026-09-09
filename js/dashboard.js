@@ -9,6 +9,7 @@
     perfil: config.perfil || 'usuario',
     data: null,
     estado: '',
+    busqueda: '',
     fechaCreacion: '',
     fechaRespuesta: '',
     chartEstados: null,
@@ -88,6 +89,7 @@
       state.data = payload.data;
       state.perfil = payload.data.perfil;
       state.estado = '';
+      state.busqueda = '';
       state.fechaCreacion = '';
       state.fechaRespuesta = '';
       syncControls();
@@ -108,6 +110,7 @@
       button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
     document.querySelectorAll('[data-profile-label]').forEach(label => { label.textContent = profileName(state.perfil); });
+    document.querySelectorAll('[data-chart-profile]').forEach(select => { select.value = state.perfil; });
     const stateSelect = $('dashboard-filter-state');
     if (stateSelect && state.data) {
       stateSelect.innerHTML = '<option value="">Todos los estados</option>' + state.data.grafico_estados
@@ -116,6 +119,7 @@
     }
     if ($('dashboard-filter-created')) $('dashboard-filter-created').value = state.fechaCreacion;
     if ($('dashboard-filter-response')) $('dashboard-filter-response').value = state.fechaRespuesta;
+    if ($('dashboard-filter-search')) $('dashboard-filter-search').value = state.busqueda;
   }
 
   function renderAll() {
@@ -206,7 +210,7 @@
       return;
     }
     state.chartCategorias = new window.ApexCharts(container, {
-      chart: { type: 'area', height: 310, toolbar: { show: false }, animations: { enabled: !window.matchMedia('(prefers-reduced-motion: reduce)').matches } },
+      chart: { type: 'area', height: 345, toolbar: { show: false }, animations: { enabled: !window.matchMedia('(prefers-reduced-motion: reduce)').matches } },
       series: graph.series.map(series => ({ name: series.name, data: series.data.map(Number) })),
       colors: graph.series.map(series => safeColor(series.color)),
       stroke: { width: 2, curve: 'smooth' },
@@ -226,7 +230,10 @@
   function filteredTickets() {
     if (!state.data) return [];
     return state.data.tickets.filter(ticket => {
-      return (!state.estado || String(ticket.id_estado) === String(state.estado))
+      const searchable = [ticket.id_ticket, ticket.asunto, ticket.usuario, ticket.tecnico, ticket.categoria, ticket.colegio, ticket.estado]
+        .join(' ').toLocaleLowerCase('es');
+      return (!state.busqueda || searchable.includes(state.busqueda.toLocaleLowerCase('es')))
+        && (!state.estado || String(ticket.id_estado) === String(state.estado))
         && (!state.fechaCreacion || dateOnly(ticket.fecha_creacion) === state.fechaCreacion)
         && (!state.fechaRespuesta || dateOnly(ticket.fecha_respuesta) === state.fechaRespuesta);
     });
@@ -236,20 +243,24 @@
     if (!state.data || typeof window.crearTabla !== 'function') return;
     const tickets = filteredTickets();
     const columns = [
-      { key: 'id_ticket', label: 'Folio', render: ticket => `<a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}">#${Number(ticket.id_ticket)}</a>` },
-      { key: 'asunto', label: 'Caso', render: ticket => `<span class="dashboard-ticket-main"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.categoria)} · ${escape(ticket.colegio)}</small></span>` },
-      { key: 'usuario', label: 'Usuario' },
+      { key: 'id_ticket', label: 'Folio / fecha', render: ticket => `<span class="dashboard-ticket-folio"><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}">#${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
+      { key: 'asunto', label: 'Caso', render: ticket => `<span class="dashboard-ticket-main"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.colegio)}</small></span>` },
     ];
-    if (state.perfil !== 'tecnico') columns.push({ key: 'tecnico', label: 'Técnico' });
+    if (state.perfil !== 'usuario') columns.push({ key: 'usuario', label: 'Usuario' });
+    columns.push({ key: 'tecnico', label: 'Técnico' });
     columns.push(
       { key: 'estado', label: 'Estado', render: ticket => `<span class="dashboard-ticket-state" style="--state-color:${safeColor(ticket.estado_color)}">${escape(ticket.estado)}</span>` },
-      { key: 'fecha_creacion', label: 'Creado', render: ticket => `<span class="text-nowrap">${formatDate(ticket.fecha_creacion)}</span>` },
+      { key: 'fecha_respuesta', label: 'Fecha de respuesta', render: ticket => `<span class="text-nowrap">${formatDate(ticket.fecha_respuesta)}</span>` },
+      { key: 'categoria', label: 'Categoría', render: ticket => `<span class="badge badge-realizado">${escape(ticket.categoria)}</span>` },
       { key: 'acciones', label: 'Acciones', render: renderActions },
     );
     window.crearTabla('dashboard-ticket-table', columns, tickets, {
       titulo: 'Tickets',
       perPage: 10,
       csv: `tickets-${state.perfil}`,
+      showSearch: false,
+      prevLabel: 'Anterior',
+      nextLabel: 'Siguiente',
       emptyTitle: 'Sin tickets',
       emptyText: 'No hay casos que coincidan con los filtros seleccionados.',
     });
@@ -260,16 +271,16 @@
   function renderActions(ticket) {
     const id = Number(ticket.id_ticket);
     const links = [
-      `<a href="ticket/ticket_detalle.php?id=${id}" title="Ver ticket" aria-label="Ver ticket ${id}"><i class="bi bi-eye" aria-hidden="true"></i></a>`,
-      `<a href="ticket/ticket_detalle.php?id=${id}#conversacion" title="Abrir conversación" aria-label="Abrir conversación del ticket ${id}"><i class="bi bi-chat-dots" aria-hidden="true"></i></a>`,
+      `<a href="ticket/ticket_detalle.php?id=${id}" title="Ver ticket" aria-label="Ver ticket ${id}"><i class="bi bi-eye" aria-hidden="true"></i><span>Ver</span></a>`,
+      `<a href="ticket/ticket_detalle.php?id=${id}#conversacion" title="Abrir conversación" aria-label="Abrir conversación del ticket ${id}"><i class="bi bi-chat-dots" aria-hidden="true"></i><span>Chat</span></a>`,
     ];
     if (ticket.puede_calificar) {
-      links.push(`<a class="is-rate" href="ticket/ticket_detalle.php?id=${id}#calificacion" title="Calificar atención" aria-label="Calificar ticket ${id}"><i class="bi bi-star-fill" aria-hidden="true"></i></a>`);
+      links.push(`<a class="is-rate" href="ticket/ticket_detalle.php?id=${id}#calificacion" title="Calificar atención" aria-label="Calificar ticket ${id}"><i class="bi bi-star-fill" aria-hidden="true"></i><span>Calificar</span></a>`);
     }
     if (state.perfil === 'tecnico') {
-      links.push(`<a href="ticket/ticket_asignados.php" title="Gestionar estado" aria-label="Gestionar ticket ${id}"><i class="bi bi-pencil" aria-hidden="true"></i></a>`);
+      links.push(`<a href="ticket/ticket_asignados.php" title="Gestionar estado" aria-label="Gestionar ticket ${id}"><i class="bi bi-pencil" aria-hidden="true"></i><span>Estado</span></a>`);
     } else if (state.perfil === 'administrador') {
-      links.push(`<a href="ticket/ticket_admin_v2.php" title="Administrar ticket" aria-label="Administrar ticket ${id}"><i class="bi bi-sliders" aria-hidden="true"></i></a>`);
+      links.push(`<a href="ticket/ticket_admin_v2.php" title="Administrar ticket" aria-label="Administrar ticket ${id}"><i class="bi bi-sliders" aria-hidden="true"></i><span>Gestionar</span></a>`);
     }
     return `<span class="dashboard-ticket-actions">${links.join('')}</span>`;
   }
@@ -305,6 +316,7 @@
       await loadDashboard(profile);
     } catch (error) {
       showError(error.message || 'No fue posible cambiar el perfil.');
+      syncControls();
       setBusy(false);
     }
   }
@@ -312,6 +324,10 @@
   document.querySelectorAll('[data-dashboard-profile]').forEach(button => {
     button.addEventListener('click', () => changeProfile(button.dataset.dashboardProfile));
   });
+  document.querySelectorAll('[data-chart-profile]').forEach(select => {
+    select.addEventListener('change', () => changeProfile(select.value));
+  });
+  $('dashboard-filter-search')?.addEventListener('input', event => { state.busqueda = event.target.value.trim(); renderTickets(); });
   $('dashboard-filter-state')?.addEventListener('change', event => {
     state.estado = event.target.value;
     renderKpis(); renderTickets(); updateFilterStatus();
@@ -319,7 +335,7 @@
   $('dashboard-filter-created')?.addEventListener('change', event => { state.fechaCreacion = event.target.value; renderTickets(); });
   $('dashboard-filter-response')?.addEventListener('change', event => { state.fechaRespuesta = event.target.value; renderTickets(); });
   $('dashboard-clear-filters')?.addEventListener('click', () => {
-    state.estado = ''; state.fechaCreacion = ''; state.fechaRespuesta = '';
+    state.estado = ''; state.busqueda = ''; state.fechaCreacion = ''; state.fechaRespuesta = '';
     syncControls(); renderKpis(); renderTickets(); updateFilterStatus();
   });
   $('dashboard-retry')?.addEventListener('click', () => loadDashboard());
