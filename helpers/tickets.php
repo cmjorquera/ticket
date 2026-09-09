@@ -99,6 +99,36 @@ function ticket_estado_sin_escritura(int $estadoId): bool
     return in_array($estadoId, [5, 6], true);
 }
 
+/** Retorna el grupo usado por los contenedores de resumen. */
+function ticket_estado_grupo(int $estadoId): string
+{
+    return match ($estadoId) {
+        1, 2 => 'nuevo',
+        3 => 'en_proceso',
+        5, 6 => 'resuelto',
+        7 => 'atrasado',
+        default => 'borrador',
+    };
+}
+
+/** Valida un filtro proveniente de los contenedores de resumen. */
+function ticket_estado_grupo_filtro(mixed $estado): string
+{
+    $estado = ticket_normalizar_perfil((string) $estado);
+    return in_array($estado, ['nuevo', 'en_proceso', 'resuelto', 'atrasado'], true) ? $estado : '';
+}
+
+/** Retorna la etiqueta visible de un grupo de estados. */
+function ticket_estado_grupo_nombre(string $estado): string
+{
+    return [
+        'nuevo' => 'Nuevos',
+        'en_proceso' => 'En proceso',
+        'resuelto' => 'Resueltos',
+        'atrasado' => 'Atrasados',
+    ][$estado] ?? '';
+}
+
 function ticket_prioridad_nombre(int $id): string
 {
     return [1 => 'Baja', 2 => 'Media', 3 => 'Alta', 4 => 'Crítica'][$id] ?? 'Media';
