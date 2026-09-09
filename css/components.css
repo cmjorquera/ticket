@@ -317,6 +317,12 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .contenedor-tickets{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
 .contenedor-ticket{position:relative;display:flex;align-items:center;justify-content:space-between;min-width:0;padding:17px 18px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--muted);border-radius:var(--radius);box-shadow:var(--shadow-card);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition)}
 .contenedor-ticket:hover{transform:translateY(-2px);box-shadow:var(--shadow-elevated)}
+.ticket-filters-enabled .contenedor-ticket{cursor:pointer;outline:none}
+.ticket-filters-enabled .contenedor-ticket:focus-visible{box-shadow:0 0 0 3px var(--blue-mid),var(--shadow-elevated)}
+.ticket-filters-enabled .contenedor-ticket.is-active{transform:translateY(-2px);border-color:rgba(var(--ticket-filter-rgb),.5);background:rgba(var(--ticket-filter-rgb),.1);box-shadow:0 8px 24px rgba(var(--ticket-filter-rgb),.16)}
+.ticket-filters-enabled .contenedor-ticket.nuevos{--ticket-filter-rgb:0,102,170}.ticket-filters-enabled .contenedor-ticket.en-proceso{--ticket-filter-rgb:244,176,0}.ticket-filters-enabled .contenedor-ticket.resueltos{--ticket-filter-rgb:60,141,47}.ticket-filters-enabled .contenedor-ticket.atrasados{--ticket-filter-rgb:192,57,43}
+.ticket-status-filter{display:flex;align-items:center;gap:7px;margin:-7px 0 14px;color:var(--muted);font-size:12px}.ticket-status-filter i{color:var(--blue)}
+.ticket-status-filter[hidden]{display:none}
 .contenedor-ticket-body{min-width:0}
 .contenedor-ticket-titulo{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
 .contenedor-ticket-numero{font:700 28px/1.15 'DM Mono',monospace;color:var(--fg);margin-top:5px}
@@ -351,6 +357,7 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .ticket-priority{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .ticket-priority--baja{color:var(--muted)}.ticket-priority--media{color:var(--blue)}.ticket-priority--alta,.ticket-priority--critica{color:var(--danger)}
 .ticket-actions{display:flex;gap:4px;justify-content:flex-end}
+.ticket-rate-button{border:1px solid rgba(244,176,0,.42);background:var(--warning-light);color:#8A6200}.ticket-rate-button:hover{background:#FFE7A0}
 .ticket-row--state td{background-color:rgba(var(--ticket-state-rgb),.08);transition:background-color .2s ease}
 .ticket-row--state td:first-child{box-shadow:inset 4px 0 0 rgb(var(--ticket-state-rgb))}
 .ticket-row--state:hover td{background-color:rgba(var(--ticket-state-rgb),.14)}

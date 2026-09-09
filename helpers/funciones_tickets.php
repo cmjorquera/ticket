@@ -97,7 +97,7 @@ final class FuncionesTicket
         $total = array_sum($totales);
         $porcentaje = $total > 0 ? (int) round(($cantidad / $total) * 100) : 0;
 
-        echo '<article class="contenedor-ticket ' . $clase . '">';
+        echo '<article class="contenedor-ticket ' . $clase . '" data-estado="' . htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') . '">';
         echo '<div class="contenedor-ticket-body"><h2 class="contenedor-ticket-titulo">' . htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') . '</h2>';
         echo '<div class="contenedor-ticket-numero">' . $cantidad . '</div><small class="contenedor-ticket-porcentaje">' . $porcentaje . '% de la bandeja</small></div>';
         echo '<div class="contenedor-ticket-icono" aria-hidden="true"><i class="bi ' . htmlspecialchars($icono, ENT_QUOTES, 'UTF-8') . '"></i></div>';
