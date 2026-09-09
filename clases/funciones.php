@@ -2580,14 +2580,14 @@ Si haces clic nuevamente en la lupa, se eliminará el filtro y se volverán a mo
     us.apellido_paterno,   
     us.apellido_materno,
     ct.id_ticket AS tieneCalificacion
-FROM 
-    tickets t
-JOIN estados_ticket           AS et ON et.id = t.id_estado
-JOIN usuarios                 AS us ON us.id = t.id_usuario
-LEFT JOIN proceso_tickets     AS pt ON pt.id_ticket = t.id_ticket
-LEFT JOIN calificacion_tickett AS ct ON ct.id_ticket = t.id_ticket
-WHERE t.id_usuario = '$idUsuarioSession'
-";
+        FROM 
+            tickets t
+        JOIN estados_ticket           AS et ON et.id = t.id_estado
+        JOIN usuarios                 AS us ON us.id = t.id_usuario
+        LEFT JOIN proceso_tickets     AS pt ON pt.id_ticket = t.id_ticket
+        LEFT JOIN calificacion_tickett AS ct ON ct.id_ticket = t.id_ticket
+        WHERE t.id_usuario = '$idUsuarioSession'
+        ";
          
         if ($estado !== null) {
             $sql .= " AND t.id_estado = '$estado'";
@@ -4575,40 +4575,40 @@ WHERE t.id_usuario = '$idUsuarioSession'
 
 // ************************************************************
 // *****************************************************
-public function obtenerEventos() {
-    $bd = new MySQL("", "", ""); // Ajusta los parámetros de conexión si es necesario
-    $sql = "SELECT 
-    e.id, 
-    e.titulo, 
-    e.descripcion, 
-    e.fecha_inicio, 
-    e.hora_evento, 
-    e.con_audio, 
-    e.solo_presentacion, 
-    e.musica_ambiental, 
-    e.cantidad_personas, 
-    e.creado_en, 
-    e.responsable_id, 
-    e.eliminado,
-    u.nombre,
-    u.apellido_paterno,
-    u.apellido_materno
+    public function obtenerEventos() {
+        $bd = new MySQL("", "", ""); // Ajusta los parámetros de conexión si es necesario
+        $sql = "SELECT 
+        e.id, 
+        e.titulo, 
+        e.descripcion, 
+        e.fecha_inicio, 
+        e.hora_evento, 
+        e.con_audio, 
+        e.solo_presentacion, 
+        e.musica_ambiental, 
+        e.cantidad_personas, 
+        e.creado_en, 
+        e.responsable_id, 
+        e.eliminado,
+        u.nombre,
+        u.apellido_paterno,
+        u.apellido_materno
 
 
-FROM eventos e
-LEFT JOIN usuarios u ON e.responsable_id = u.id
-WHERE e.eliminado = 'no'
-ORDER BY e.fecha_inicio ASC, e.hora_evento ASC;
-";
+        FROM eventos e
+        LEFT JOIN usuarios u ON e.responsable_id = u.id
+        WHERE e.eliminado = 'no'
+        ORDER BY e.fecha_inicio ASC, e.hora_evento ASC;
+        ";
 
-    $resultado = $bd->consulta($sql);
+        $resultado = $bd->consulta($sql);
 
-    $eventos = [];
-    while ($fila = $bd->fetch_assoc($resultado)) {
-        $eventos[] = $fila;
+        $eventos = [];
+        while ($fila = $bd->fetch_assoc($resultado)) {
+            $eventos[] = $fila;
+        }
+        return $eventos;
     }
-    return $eventos;
-}
 
 public function renderizarResumenEventosPorDia($eventos) {
     $diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];

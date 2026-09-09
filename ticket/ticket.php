@@ -42,10 +42,20 @@ try {
     $sqlCantidadArchivos = isset($columnasAdjuntos['id_ticket'])
         ? '(SELECT COUNT(*) FROM archivos_adjuntos_ticket aa WHERE aa.id_ticket = t.id_ticket)'
         : '0';
-    $sqlUsuario = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
+    $tablaCalificacion = 'calificacion_ticket';
+    $columnasCalificacion = ticket_columnas_tabla($tablaCalificacion, $db);
+    if (!$columnasCalificacion) {
+        $tablaCalificacion = 'calificacion_tickett';
+        $columnasCalificacion = ticket_columnas_tabla($tablaCalificacion, $db);
+    }
+    $sqlTieneCalificacion = isset($columnasCalificacion['id_ticket'])
+        ? "EXISTS (SELECT 1 FROM {$tablaCalificacion} ct WHERE ct.id_ticket = t.id_ticket)"
+        : '0';
+    $sqlUsuario = "SELECT t.id_ticket, t.id_usuario, t.asunto, t.descripcion_ticket AS descripcion,
                 t.id_estado, e.nombre AS estado_nombre, e.color AS estado_color,
                 e.color_degradado AS estado_degradado,
                 t.id_prioridad, t.id_tecnico, {$sqlCantidadArchivos} AS cantidad_archivos,
+                {$sqlTieneCalificacion} AS tiene_calificacion,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
@@ -101,13 +111,46 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
 </div>
 
 <?php $funcionesTicket->renderizarContenedores($usuarioId, $idPagActual); ?>
+<p class="ticket-status-filter" id="filtro-estado-activo" role="status" aria-live="polite" hidden></p>
 
 <?php require __DIR__ . '/componentes/bloque_tabla_usuario.php'; ?>
 
 <?php require __DIR__ . '/componentes/modal_crear_ticket.php'; ?>
 
+<div class="modal-overlay" id="modal-calificar-ticket" onclick="closeModalOutside(event,'modal-calificar-ticket')">
+  <div class="modal ticket-rating" role="dialog" aria-modal="true" aria-labelledby="calificar-ticket-titulo">
+    <form id="form-calificar-ticket">
+      <div class="modal-header">
+        <h3 id="calificar-ticket-titulo">Calificar atención</h3>
+        <p>Selecciona de 1 a 5 estrellas y, si quieres, deja un comentario.</p>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="calificar-ticket-id" name="ticket_id">
+        <fieldset>
+          <legend>Calificación</legend>
+          <div class="ticket-stars">
+            <?php for ($estrella = 5; $estrella >= 1; $estrella--): ?>
+              <input type="radio" id="calificar-estrella-<?= $estrella ?>" name="calificacion" value="<?= $estrella ?>" required>
+              <label for="calificar-estrella-<?= $estrella ?>" aria-label="<?= $estrella ?> estrellas">★</label>
+            <?php endfor; ?>
+          </div>
+        </fieldset>
+        <label class="form-label" for="calificar-ticket-comentario">Comentario opcional</label>
+        <textarea class="form-input" id="calificar-ticket-comentario" name="comentario" maxlength="1000" placeholder="Cuéntanos cómo fue la atención"></textarea>
+        <div class="ticket-message" id="calificar-ticket-mensaje" role="status"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" type="button" onclick="closeModal('modal-calificar-ticket')">Cancelar</button>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-star-fill"></i> Guardar calificación</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="js/crear_ticket_dinamico.js"></script>
 <script>
+let filtroContenedorMisTickets = '';
+
 function filtrarMisTickets() {
   const input = document.getElementById('mis-tickets-buscar');
   const select = document.getElementById('mis-tickets-estado');
@@ -126,6 +169,7 @@ function filtrarMisTickets() {
     }
     const visible = row.dataset.search.includes(query)
       && (!select.value || row.dataset.estado === select.value)
+      && (!filtroContenedorMisTickets || row.dataset.estadoGrupo === filtroContenedorMisTickets)
       && (!date.value || row.dataset.fecha === date.value)
       && (!responseDate.value || row.dataset.fechaRespuesta === responseDate.value);
     row.hidden = !visible;
@@ -135,14 +179,91 @@ function filtrarMisTickets() {
   if (empty) empty.hidden = visibles > 0 || tieneFilaVacia;
 }
 
+function filtrarTicketsPorEstado(estado) {
+  filtroContenedorMisTickets = filtroContenedorMisTickets === estado ? '' : estado;
+  const contenedores = document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]');
+  contenedores.forEach(contenedor => {
+    const activo = contenedor.dataset.estado === filtroContenedorMisTickets;
+    contenedor.classList.toggle('is-active', activo);
+    contenedor.setAttribute('aria-pressed', String(activo));
+  });
+
+  const indicador = document.getElementById('filtro-estado-activo');
+  const activo = Array.from(contenedores).find(contenedor => contenedor.classList.contains('is-active'));
+  if (indicador) {
+    indicador.hidden = !activo;
+    indicador.innerHTML = activo
+      ? `<i class="bi bi-funnel-fill" aria-hidden="true"></i> Filtrando por: <strong>${activo.querySelector('.contenedor-ticket-titulo')?.textContent || ''}</strong>`
+      : '';
+  }
+  filtrarMisTickets();
+}
+
 function enlazarFiltrosMisTickets() {
   document.getElementById('mis-tickets-buscar')?.addEventListener('input', filtrarMisTickets);
   document.getElementById('mis-tickets-estado')?.addEventListener('change', filtrarMisTickets);
   document.getElementById('mis-tickets-fecha')?.addEventListener('change', filtrarMisTickets);
   document.getElementById('mis-tickets-respuesta')?.addEventListener('change', filtrarMisTickets);
+  const grupo = document.querySelector('.contenedor-tickets');
+  if (grupo) grupo.classList.add('ticket-filters-enabled');
+  grupo?.querySelectorAll('.contenedor-ticket[data-estado]').forEach(contenedor => {
+    contenedor.setAttribute('role', 'button');
+    contenedor.setAttribute('tabindex', '0');
+    contenedor.setAttribute('aria-pressed', 'false');
+    contenedor.addEventListener('click', () => filtrarTicketsPorEstado(contenedor.dataset.estado || ''));
+    contenedor.addEventListener('keydown', event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      filtrarTicketsPorEstado(contenedor.dataset.estado || '');
+    });
+  });
 }
 
 enlazarFiltrosMisTickets();
+
+function validacionTicketPorUsuario(idTicket, idUsuario, idTecnico) {
+  if (!Number(idTicket)) return;
+  const form = document.getElementById('form-calificar-ticket');
+  form?.reset();
+  document.getElementById('calificar-ticket-id').value = String(idTicket);
+  const mensaje = document.getElementById('calificar-ticket-mensaje');
+  if (mensaje) {
+    mensaje.className = 'ticket-message';
+    mensaje.textContent = '';
+  }
+  openModal('modal-calificar-ticket');
+}
+
+document.getElementById('form-calificar-ticket')?.addEventListener('submit', async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  const boton = form.querySelector('button[type="submit"]');
+  const mensaje = document.getElementById('calificar-ticket-mensaje');
+  boton.disabled = true;
+  try {
+    const response = await fetch('../ajax/guardar_calificacion.php', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+      body: JSON.stringify({
+        ticket_id: Number(document.getElementById('calificar-ticket-id').value),
+        calificacion: Number(form.calificacion.value),
+        comentario: form.comentario.value.trim(),
+        csrf: <?= json_encode($csrf, JSON_UNESCAPED_SLASHES) ?>
+      })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.error || 'No fue posible guardar la calificación.');
+    mensaje.className = 'ticket-message ok';
+    mensaje.textContent = data.mensaje || 'Calificación guardada.';
+    window.setTimeout(() => window.location.reload(), 450);
+  } catch (error) {
+    mensaje.className = 'ticket-message error';
+    mensaje.textContent = error.message;
+    boton.disabled = false;
+  }
+});
 
 (() => {
   const table = document.getElementById('mis-tickets-tabla');
