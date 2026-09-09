@@ -37,6 +37,9 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pagina_titulo ?? 'Sistema') ?></title>
+    <?php if (!empty($pagina_bootstrap)): ?>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <?php endif; ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -45,6 +48,12 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
     <link rel="stylesheet" href="<?= $depth ?>css/layout.css">
     <link rel="stylesheet" href="<?= $depth ?>css/components.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <?php foreach (($pagina_estilos ?? []) as $estilo): ?>
+    <link rel="stylesheet" href="<?= $depth . htmlspecialchars((string) $estilo, ENT_QUOTES, 'UTF-8') ?>">
+    <?php endforeach; ?>
+    <?php foreach (($pagina_scripts_head ?? []) as $scriptHead): ?>
+    <script src="<?= htmlspecialchars((string) $scriptHead, ENT_QUOTES, 'UTF-8') ?>" defer></script>
+    <?php endforeach; ?>
 </head>
 <body>
 
@@ -77,7 +86,7 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
                 <button id="mobile-menu-btn" class="topbar-toggle" onclick="toggleMobileSidebar()">
                     <i class="fa-solid fa-bars"></i>
                 </button>
-                <span class="mobile-brand"><i class="fa-solid fa-layer-group"></i> Sistema</span>
+                <span class="mobile-brand"><i class="fa-solid fa-graduation-cap"></i> SEDUC</span>
                 <span class="breadcrumb">
                     SEDUC <i class="fa-solid fa-chevron-right"></i>
                     <?= htmlspecialchars($breadcrumb_grupo) ?> <i class="fa-solid fa-chevron-right"></i>

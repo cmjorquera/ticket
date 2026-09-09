@@ -148,7 +148,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
           <div class="ticket-detail-copy ticket-rich-content"><?= ticket_renderizar_descripcion((string) $ticket['descripcion']) ?></div>
         </section>
 
-        <section class="card ticket-conversation">
+        <section class="card ticket-conversation" id="conversacion">
           <div class="card-header"><div><h2 class="card-title">Conversación</h2><p class="card-desc">Seguimiento entre solicitante y equipo de soporte.</p></div><span class="ticket-list-count"><?= count($comentarios) ?> mensaje<?= count($comentarios) === 1 ? '' : 's' ?></span></div>
           <?php if (!$conversacionDisponible): ?>
             <div class="ticket-empty"><i class="bi bi-chat-square-dots"></i>La conversación se habilitará cuando esté instalada su tabla en la base de datos.</div>
@@ -187,7 +187,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
         <?php if ($calificacionDisponible && $esPropietario && in_array($estado, ['resuelto','cerrado'], true)): ?>
-          <section class="card ticket-rating">
+          <section class="card ticket-rating" id="calificacion">
             <h2>Califica la atención</h2>
             <?php if ($calificacion): ?>
               <div class="ticket-rating-result">

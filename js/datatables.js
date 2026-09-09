@@ -10,6 +10,9 @@ function crearTabla(containerId, columnas, datos, opciones = {}) {
 
   const estado = { busqueda: '', pagina: 1, porPagina: opciones.perPage || 5, orden: null, dir: 1 };
   const titulo = opciones.titulo || 'Registros';
+  const mostrarBusqueda = opciones.showSearch !== false;
+  const etiquetaAnterior = opciones.prevLabel || '‹';
+  const etiquetaSiguiente = opciones.nextLabel || '›';
   const valor = (fila, col) => fila[col.key] ?? '';
   const celda = (fila, col) => typeof col.render === 'function' ? col.render(fila) : dtEsc(valor(fila, col));
 
@@ -39,21 +42,21 @@ function crearTabla(containerId, columnas, datos, opciones = {}) {
 
     el.innerHTML = `
         <div class="dt-toolbar">
-          <div class="dt-search"><input data-dt="q" value="${dtEsc(estado.busqueda)}" placeholder="Buscar en ${dtEsc(titulo.toLowerCase())}..."></div>
+          ${mostrarBusqueda ? `<div class="dt-search"><input data-dt="q" value="${dtEsc(estado.busqueda)}" placeholder="Buscar en ${dtEsc(titulo.toLowerCase())}..."></div>` : '<span></span>'}
           <div class="dt-actions">
             <select class="fc" data-dt="per" style="width:auto"><option ${estado.porPagina === 5 ? 'selected' : ''}>5</option><option ${estado.porPagina === 10 ? 'selected' : ''}>10</option><option ${estado.porPagina === 25 ? 'selected' : ''}>25</option></select>
             <button class="btn btn-outline btn-sm" data-dt="csv">Exportar CSV</button>
           </div>
         </div>
         <div class="table-responsive"><table class="tabla"><thead><tr>${columnas.map(col => `<th class="dt-sort" data-sort="${col.key}">${col.label}<span class="si">${estado.orden === col.key ? (estado.dir === 1 ? '▲' : '▼') : '↕'}</span></th>`).join('')}</tr></thead><tbody>${visibles.map(fila => `<tr>${columnas.map(col => `<td>${celda(fila, col)}</td>`).join('')}</tr>`).join('')}</tbody></table>${!total ? '<div id="' + containerId + '-empty"></div>' : ''}</div>
-        <div class="dt-foot"><span class="tsm tm">Mostrando ${visibles.length} de ${total} registros</span><div class="pag"><button class="pg-b" data-p="prev" ${estado.pagina === 1 ? 'disabled' : ''}>‹</button>${Array.from({ length: paginas }).map((_, i) => `<button class="pg-b ${estado.pagina === i + 1 ? 'active' : ''}" data-p="${i + 1}">${i + 1}</button>`).join('')}<button class="pg-b" data-p="next" ${estado.pagina === paginas ? 'disabled' : ''}>›</button></div></div>
+        <div class="dt-foot"><span class="tsm tm">Mostrando ${visibles.length} de ${total} registros</span><div class="pag"><button class="pg-b" data-p="prev" ${estado.pagina === 1 ? 'disabled' : ''}>${dtEsc(etiquetaAnterior)}</button>${Array.from({ length: paginas }).map((_, i) => `<button class="pg-b ${estado.pagina === i + 1 ? 'active' : ''}" data-p="${i + 1}">${i + 1}</button>`).join('')}<button class="pg-b" data-p="next" ${estado.pagina === paginas ? 'disabled' : ''}>${dtEsc(etiquetaSiguiente)}</button></div></div>
       `;
 
     if (!total && typeof showEmptyState === 'function') {
       showEmptyState(containerId + '-empty', opciones.emptyTitle || 'Sin resultados', opciones.emptyText || 'Prueba con otra búsqueda.');
     }
 
-    el.querySelector('[data-dt="q"]').addEventListener('input', e => { estado.busqueda = e.target.value; estado.pagina = 1; render(); });
+    el.querySelector('[data-dt="q"]')?.addEventListener('input', e => { estado.busqueda = e.target.value; estado.pagina = 1; render(); });
     el.querySelector('[data-dt="per"]').addEventListener('change', e => { estado.porPagina = Number(e.target.value); estado.pagina = 1; render(); });
     el.querySelector('[data-dt="csv"]').addEventListener('click', () => exportarCSV(filas));
     el.querySelectorAll('[data-sort]').forEach(th => th.addEventListener('click', () => { estado.dir = estado.orden === th.dataset.sort ? -estado.dir : 1; estado.orden = th.dataset.sort; render(); }));
