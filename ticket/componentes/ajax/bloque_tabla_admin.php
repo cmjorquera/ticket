@@ -50,7 +50,9 @@ try {
     }
 
     $sql = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
-                   t.id_estado, e.nombre AS estado_nombre, t.id_prioridad, uc_ticket.id_colegio, t.id_tecnico,
+                   t.id_estado, e.nombre AS estado_nombre, e.color AS estado_color,
+                   e.color_degradado AS estado_degradado,
+                   t.id_prioridad, uc_ticket.id_colegio, t.id_tecnico,
                    COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                    COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                    CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,

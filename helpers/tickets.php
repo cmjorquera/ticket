@@ -69,12 +69,13 @@ function puede_administrar_ticket(int $usuarioId, int $colegioId, Conexion $db):
 function ticket_estados_legacy(): array
 {
     return [
-        1 => ['codigo' => 'nuevo', 'nombre' => 'Nuevo'],
+        1 => ['codigo' => 'nuevo', 'nombre' => 'Recibido'],
         2 => ['codigo' => 'asignado', 'nombre' => 'Asignado'],
         3 => ['codigo' => 'en_proceso', 'nombre' => 'En proceso'],
         4 => ['codigo' => 'borrador', 'nombre' => 'Borrador'],
         5 => ['codigo' => 'resuelto', 'nombre' => 'Terminado'],
-        6 => ['codigo' => 'atrasado', 'nombre' => 'Demorado'],
+        6 => ['codigo' => 'cerrado', 'nombre' => 'Cerrado'],
+        7 => ['codigo' => 'atrasado', 'nombre' => 'Demorado'],
     ];
 }
 
@@ -86,11 +87,16 @@ function ticket_estado_id(mixed $estado): int
     }
     $codigo = ticket_normalizar_perfil((string) $estado);
     $alias = [
-        'nuevo' => 1, 'asignado' => 2, 'en_proceso' => 3, 'borrador' => 4,
-        'terminado' => 5, 'resuelto' => 5, 'cerrado' => 5,
-        'demorado' => 6, 'atrasado' => 6,
+        'nuevo' => 1, 'recibido' => 1, 'asignado' => 2, 'en_proceso' => 3, 'borrador' => 4,
+        'terminado' => 5, 'resuelto' => 5, 'cerrado' => 6,
+        'demorado' => 7, 'atrasado' => 7,
     ];
     return $alias[$codigo] ?? 0;
+}
+
+function ticket_estado_sin_escritura(int $estadoId): bool
+{
+    return in_array($estadoId, [5, 6], true);
 }
 
 function ticket_prioridad_nombre(int $id): string
@@ -106,6 +112,7 @@ function ticket_normalizar_fila(array $fila): array
     $fila['estado'] = $estado['codigo'];
     $fila['estado_nombre'] = trim((string) ($fila['estado_nombre'] ?? '')) ?: $estado['nombre'];
     $fila['estado_color'] = (string) ($fila['estado_color'] ?? $fila['colorEstado'] ?? '');
+    $fila['estado_degradado'] = (string) ($fila['estado_degradado'] ?? $fila['colorDegradado'] ?? '');
     $fila['cantidad_archivos'] = max(0, (int) ($fila['cantidad_archivos'] ?? $fila['cantidadArchivos'] ?? 0));
     $fila['prioridad'] = ticket_prioridad_nombre((int) ($fila['id_prioridad'] ?? 2));
     $fila['descripcion'] = (string) ($fila['descripcion'] ?? $fila['descripcion_ticket'] ?? '');
@@ -129,6 +136,29 @@ function ticket_color_estado_rgb(string $color): string
     return hexdec(substr($color, 0, 2)) . ','
         . hexdec(substr($color, 2, 2)) . ','
         . hexdec(substr($color, 4, 2));
+}
+
+/** Genera el badge con el nombre y color configurados en estados_ticket. */
+function ticket_badge_estado(array $ticket): string
+{
+    $idEstado = (int) ($ticket['id_estado'] ?? 0);
+    $estadoBase = ticket_estados_legacy()[$idEstado] ?? ['codigo' => 'borrador', 'nombre' => 'Sin estado'];
+    $nombre = trim((string) ($ticket['estado_nombre'] ?? '')) ?: $estadoBase['nombre'];
+    $rgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
+    $iconos = [
+        1 => 'bi-inbox',
+        2 => 'bi-person-check',
+        3 => 'bi-hourglass-split',
+        4 => 'bi-file-earmark',
+        5 => 'bi-check-circle',
+        6 => 'bi-lock',
+        7 => 'bi-exclamation-triangle',
+    ];
+    $estilo = $rgb !== '' ? ' style="--ticket-state-rgb:' . $rgb . '"' : '';
+
+    return '<span class="ticket-badge ticket-badge--database"' . $estilo . '>'
+        . '<i class="bi ' . ($iconos[$idEstado] ?? 'bi-circle') . '" aria-hidden="true"></i>'
+        . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . '</span>';
 }
 
 /** Genera el botón de adjuntos solamente cuando el ticket tiene archivos. */

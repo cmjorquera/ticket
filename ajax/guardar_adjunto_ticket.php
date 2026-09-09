@@ -26,7 +26,7 @@ try {
     if (!puede_ver_ticket($usuarioId, $ticket, $db)) {
         responder_json(['ok' => false, 'error' => 'No tienes permiso para adjuntar archivos.'], 403);
     }
-    if ((int) ($ticket['id_estado'] ?? 0) === 5) {
+    if (ticket_estado_sin_escritura((int) ($ticket['id_estado'] ?? 0))) {
         responder_json(['ok' => false, 'error' => 'El ticket está cerrado.'], 409);
     }
 

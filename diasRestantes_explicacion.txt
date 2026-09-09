@@ -1,0 +1,536 @@
+# Días restantes para tickets SEDUC
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 📌 1. Resumen ejecutivo
+
+El countdown indica cuántos días faltan para la fecha comprometida de un ticket.
+Se calcula al mostrar la página, comparando la fecha estimada con la fecha de hoy.
+Por eso cambia diariamente sin modificar ningún registro de la base de datos.
+Permite detectar casos próximos a vencer y ordenar el trabajo por urgencia.
+No debe confundirse con los días estimados, que representan una duración fija.
+En este proyecto la fecha está en `proceso_tickets.fecha_estimada_admin`.
+La zona horaria utilizada será `America/Santiago`.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 📊 2. Días estimados frente a días restantes
+
+| Concepto          | Días estimados                 | Días restantes              |
+|-------------------|--------------------------------|-----------------------------|
+| Cálculo           | fecha final - fecha inicial     | fecha final - hoy           |
+| Naturaleza        | Estática                        | Dinámica                    |
+| Ejemplo inicial   | 08/04/2026 (2 días)             | 2 días restantes            |
+| Día siguiente     | 08/04/2026 (2 días)             | 1 día restante              |
+| Fecha límite      | 08/04/2026 (2 días)             | Hoy (0 días)                |
+| Después del plazo | 08/04/2026 (2 días)             | Vencido (-1 día)            |
+
+Los días estimados registran cuánto tiempo se calculó para realizar el trabajo.
+Los días restantes indican cuánto tiempo queda desde el día en que se consulta.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 👥 3. Casos de uso
+
+### Técnicos
+
+- Identificar tickets que vencen hoy o mañana.
+- Resolver primero los casos con menor plazo disponible.
+- Distinguir rápidamente un caso vigente de uno vencido.
+
+### Directores y administradores
+
+- Detectar acumulación de tickets vencidos.
+- Revisar si la fecha comprometida debe ajustarse.
+- Priorizar recursos y reasignar casos urgentes.
+
+El contador se recalcula cada vez que se renderiza la página o se actualiza la
+tabla mediante polling. No necesita un proceso nocturno.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🧠 4. Lógica de la función
+
+Pseudocódigo:
+
+```text
+recibir fecha estimada
+validar que tenga formato AAAA-MM-DD
+obtener hoy en America/Santiago a las 00:00
+convertir fecha estimada a las 00:00
+calcular diferencia con signo entre fecha estimada y hoy
+devolver entero positivo, cero o negativo
+```
+
+Interpretación:
+
+- Mayor que 2: faltan tres o más días.
+- Igual a 2: faltan dos días.
+- Igual a 1: vence mañana.
+- Igual a 0: vence hoy.
+- Menor que 0: el plazo ya venció.
+- Fecha vacía o inválida: no existe una fecha estimada utilizable.
+
+Normalizar ambas fechas a medianoche evita que la hora actual cambie el resultado.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 💻 5. Código PHP completo
+
+Ubicación recomendada: `helpers/tickets.php`.
+
+```php
+<?php
+declare(strict_types=1);
+
+/**
+ * Calcula los días calendario entre hoy y la fecha estimada.
+ *
+ * @return int|null Positivo si falta tiempo, cero si vence hoy y negativo
+ *                  si está vencido. Devuelve null para una fecha inválida.
+ */
+function diasRestantes(
+    ?string $fechaEstimada,
+    ?DateTimeImmutable $hoy = null
+): ?int {
+    $fechaEstimada = trim((string) $fechaEstimada);
+    if ($fechaEstimada === '' || $fechaEstimada === '0000-00-00') {
+        return null;
+    }
+
+    $zona = new DateTimeZone('America/Santiago');
+    $fecha = DateTimeImmutable::createFromFormat(
+        '!Y-m-d',
+        $fechaEstimada,
+        $zona
+    );
+    $errores = DateTimeImmutable::getLastErrors();
+
+    if ($fecha === false) {
+        return null;
+    }
+    if (is_array($errores)) {
+        if ($errores['warning_count'] > 0 || $errores['error_count'] > 0) {
+            return null;
+        }
+    }
+    if ($fecha->format('Y-m-d') !== $fechaEstimada) {
+        return null;
+    }
+
+    $hoy = ($hoy ?? new DateTimeImmutable('today', $zona))
+        ->setTimezone($zona)
+        ->setTime(0, 0);
+
+    return (int) $hoy->diff($fecha)->format('%r%a');
+}
+
+/** Convierte el número de días en un texto comprensible. */
+function obtenerTextoDiasRestantes(?int $dias): string
+{
+    if ($dias === null) {
+        return 'Sin fecha estimada';
+    }
+    if ($dias === 0) {
+        return 'Hoy (0 días)';
+    }
+    if ($dias === 1) {
+        return 'Mañana (1 día restante)';
+    }
+    if ($dias > 1) {
+        return $dias . ' días restantes';
+    }
+    if ($dias === -1) {
+        return 'Vencido (-1 día)';
+    }
+    return 'Vencido (' . $dias . ' días)';
+}
+
+/** Devuelve la clase visual asociada al plazo. */
+function obtenerClaseDiasRestantes(?int $dias): string
+{
+    if ($dias === null) {
+        return 'ticket-deadline--unknown';
+    }
+    if ($dias >= 3) {
+        return 'ticket-deadline--safe';
+    }
+    if ($dias >= 1) {
+        return 'ticket-deadline--warning';
+    }
+    if ($dias === 0) {
+        return 'ticket-deadline--today';
+    }
+    return 'ticket-deadline--overdue';
+}
+
+/** Genera el badge completo para la tabla. */
+function generarBadgeDiasRestantes(?string $fechaEstimada): string
+{
+    $dias = diasRestantes($fechaEstimada);
+    $clase = obtenerClaseDiasRestantes($dias);
+    $texto = obtenerTextoDiasRestantes($dias);
+
+    if ($dias === null) {
+        return '<span class="ticket-deadline ' . $clase . '">'
+            . htmlspecialchars($texto, ENT_QUOTES, 'UTF-8')
+            . '</span>';
+    }
+
+    $zona = new DateTimeZone('America/Santiago');
+    $fecha = DateTimeImmutable::createFromFormat(
+        '!Y-m-d',
+        (string) $fechaEstimada,
+        $zona
+    );
+    $fechaVisible = $fecha ? $fecha->format('d/m/Y') : '';
+
+    return '<span class="ticket-deadline ' . $clase . '">'
+        . '<strong>'
+        . htmlspecialchars($fechaVisible, ENT_QUOTES, 'UTF-8')
+        . '</strong><small>'
+        . htmlspecialchars($texto, ENT_QUOTES, 'UTF-8')
+        . '</small></span>';
+}
+```
+
+Ejemplos rápidos:
+
+```php
+echo diasRestantes('2026-04-08');
+echo obtenerTextoDiasRestantes(2);
+echo generarBadgeDiasRestantes('2026-04-08');
+```
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🗓️ 6. Ejemplo con fechas controladas
+
+Para que una prueba no dependa del reloj del servidor, se inyecta la fecha de hoy.
+
+```php
+$zona = new DateTimeZone('America/Santiago');
+$limite = '2026-04-08';
+
+$casos = [
+    '2026-04-06' => 2,
+    '2026-04-07' => 1,
+    '2026-04-08' => 0,
+    '2026-04-09' => -1,
+];
+
+foreach ($casos as $fechaHoy => $esperado) {
+    $hoy = new DateTimeImmutable($fechaHoy, $zona);
+    assert(diasRestantes($limite, $hoy) === $esperado);
+}
+```
+
+Resultado:
+
+| Hoy        | Fecha límite | Resultado                  | Nivel    |
+|------------|--------------|----------------------------|----------|
+| 06/04/2026 | 08/04/2026   | 2 días restantes           | Atención |
+| 07/04/2026 | 08/04/2026   | Mañana, 1 día restante     | Atención |
+| 08/04/2026 | 08/04/2026   | Hoy, 0 días                | Urgente  |
+| 09/04/2026 | 08/04/2026   | Vencido, -1 día            | Vencido  |
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🧩 7. Implementación en la tabla
+
+La fecha estimada pertenece a `proceso_tickets`. Debe añadirse a las consultas:
+
+```sql
+SELECT t.id_ticket,
+       t.asunto,
+       pt.fecha_estimada_admin
+  FROM tickets t
+  LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+```
+
+Antes, la celda podía mostrar una duración estática:
+
+```php
+<td><?= (int) $ticket['dias_estimada_admin'] ?> días</td>
+```
+
+Después, mostrará el contador diario:
+
+```php
+<td><?php echo generarBadgeDiasRestantes(
+    $ticket['fecha_estimada_admin'] ?? null
+) ?></td>
+```
+
+En este repositorio el cambio debe aplicarse tanto en la consulta inicial como en
+los bloques AJAX. De esa manera el polling no elimina el contador al reemplazar
+el contenido de la tabla.
+
+Resultado esperado:
+
+```text
+┌────────┬──────────────────────┬──────────────┬─────────────────────────────┐
+│ Folio  │ Caso                 │ Estado       │ Fecha de respuesta          │
+├────────┼──────────────────────┼──────────────┼─────────────────────────────┤
+│ #528   │ Impresora sin red    │ En proceso   │ 08/04/2026 · 2 días         │
+│ #529   │ Monitor sin imagen   │ Recibido     │ Hoy · 0 días                │
+│ #530   │ PC no enciende       │ Demorado     │ 05/04/2026 · Vencido        │
+└────────┴──────────────────────┴──────────────┴─────────────────────────────┘
+```
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🎨 8. Colores y estados dinámicos
+
+Los colores del plazo expresan urgencia y son independientes del estado del caso.
+
+| Condición        | Clase CSS                    | Color semántico |
+|------------------|------------------------------|-----------------|
+| 3 o más días     | `ticket-deadline--safe`      | Verde           |
+| 1 o 2 días       | `ticket-deadline--warning`   | Amarillo        |
+| 0 días           | `ticket-deadline--today`     | Naranja         |
+| Menos de 0 días  | `ticket-deadline--overdue`   | Rojo            |
+| Sin fecha        | `ticket-deadline--unknown`   | Neutro          |
+
+CSS recomendado usando los tokens actuales del proyecto:
+
+```css
+.ticket-deadline {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+}
+
+.ticket-deadline strong {
+    font-size: 11px;
+}
+
+.ticket-deadline small {
+    font-size: 9px;
+}
+
+.ticket-deadline--safe {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.ticket-deadline--warning {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.ticket-deadline--today {
+    background: var(--warning-light);
+    color: var(--warning);
+    box-shadow: inset 3px 0 0 var(--warning);
+}
+
+.ticket-deadline--overdue {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.ticket-deadline--unknown {
+    background: var(--bg);
+    color: var(--muted);
+}
+```
+
+El color de la fila debe continuar viniendo de `estados_ticket.color`. Los colores
+del countdown solo se aplican al badge de la fecha y no reemplazan el estado.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## ✅ 9. Pasos de implementación
+
+1. Añadir las funciones a `helpers/tickets.php`.
+2. Incorporar `pt.fecha_estimada_admin` en cada consulta necesaria.
+3. Mostrar `generarBadgeDiasRestantes()` en la columna correspondiente.
+4. Añadir las clases CSS en `css/components.css`.
+5. Actualizar también las consultas y filas generadas mediante AJAX.
+6. Probar fechas futuras, actuales, vencidas, vacías e inválidas.
+7. Confirmar que PHP utiliza la zona `America/Santiago`.
+8. Revisar escritorio, tablet y móvil.
+
+Checklist:
+
+- [ ] Una fecha a tres días aparece en nivel seguro.
+- [ ] Una fecha a uno o dos días aparece como advertencia.
+- [ ] La fecha de hoy muestra cero días.
+- [ ] Una fecha pasada muestra “Vencido”.
+- [ ] Una fecha vacía muestra “Sin fecha estimada”.
+- [ ] El resultado cambia al modificar la fecha usada como hoy.
+- [ ] El polling mantiene el mismo resultado.
+- [ ] Las barras de estado conservan los colores de la base de datos.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🚀 10. Ventajas de esta solución
+
+- Ayuda a priorizar visualmente los casos urgentes.
+- No necesita triggers ni eventos programados.
+- No escribe valores que quedarían obsoletos al día siguiente.
+- Se recalcula únicamente cuando se necesita mostrar el ticket.
+- Centraliza la lógica en un helper fácil de probar.
+- Funciona en tablas, detalles, correos y reportes.
+- Acepta una fecha de referencia para realizar pruebas deterministas.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## ⚙️ 11. Comportamiento esperado
+
+- Al recargar, PHP calcula nuevamente los días restantes.
+- Con polling, el HTML actualizado incluye el cálculo más reciente.
+- No se modifica `fecha_estimada_admin` ni otra columna.
+- El inicio y el final del día se interpretan en `America/Santiago`.
+- Todos los usuarios reciben el mismo resultado para el día local de Chile.
+- Los reportes pueden llamar la misma función para mantener consistencia.
+
+Una página abierta durante el cambio de día necesita recargarse o ejecutar polling.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## ❓ 12. Preguntas frecuentes
+
+### ¿Se actualiza automáticamente cada día?
+
+Sí. Se recalcula al renderizar la página. No actualiza registros en segundo plano.
+
+### ¿Qué ocurre si cambia la fecha estimada?
+
+La siguiente carga utilizará inmediatamente la nueva fecha.
+
+### ¿Funciona con diferentes zonas horarias?
+
+Sí, pero el proyecto fija `America/Santiago` para evitar resultados distintos.
+
+### ¿Cómo se manejan los tickets vencidos?
+
+La diferencia tendrá signo negativo y el badge utilizará la clase de vencimiento.
+
+### ¿Puedo cambiar los colores?
+
+Sí. Se modifican solamente los tokens o las reglas CSS del badge de plazo.
+
+### ¿Qué sucede si necesito días y horas?
+
+Debe calcularse la diferencia entre instantes completos, sin normalizar a medianoche.
+
+### ¿Cómo se utiliza en reportes?
+
+Incluya el helper y llame `diasRestantes()` para cada fecha estimada.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🧪 13. Casos especiales
+
+| Entrada                                      | Salida esperada          |
+|----------------------------------------------|--------------------------|
+| Fecha estimada igual a hoy                   | Hoy (0 días)             |
+| Fecha estimada hace tres días                | Vencido (-3 días)        |
+| Fecha estimada dentro de treinta días        | 30 días restantes        |
+| Fecha vacía                                  | Sin fecha estimada       |
+| `0000-00-00`                                 | Sin fecha estimada       |
+| Fecha imposible, como `2026-02-30`           | Sin fecha estimada       |
+
+El cálculo usa días calendario. No excluye sábados, domingos ni festivos.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🔗 14. Integración con estado y prioridad
+
+Cada señal responde una pregunta distinta:
+
+- Barra de estado: ¿en qué etapa está el ticket?
+- Prioridad: ¿qué importancia funcional tiene?
+- Countdown: ¿cuánto falta para el compromiso?
+
+Ejemplo combinado:
+
+```text
+┌───────┬────────────────────┬────────────┬───────────┬──────────────────────┐
+│ Folio │ Caso               │ Estado     │ Prioridad │ Plazo                │
+├───────┼────────────────────┼────────────┼───────────┼──────────────────────┤
+│ #528  │ Impresora sin red  │ En proceso │ Alta      │ 2 días restantes     │
+│ #529  │ Monitor sin imagen │ Recibido   │ Media     │ Hoy                  │
+│ #530  │ PC no enciende     │ Demorado   │ Alta      │ Vencido hace 2 días  │
+└───────┴────────────────────┴────────────┴───────────┴──────────────────────┘
+```
+
+No debe reemplazarse el color configurado en `estados_ticket` con el color del
+countdown. Ambos indicadores tienen significados diferentes.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🏁 15. Conclusión
+
+El countdown convierte una fecha comprometida en información operativa diaria.
+Su cálculo en PHP evita guardar valores derivados que quedarían desactualizados.
+La solución valida fechas, respeta la zona horaria y cubre vencimientos.
+Puede integrarse en las tres bandejas y en sus actualizaciones AJAX.
+La lógica queda centralizada, reutilizable y preparada para pruebas automáticas.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🗄️ 16. Alternativa SQL, solo como referencia
+
+MySQL puede calcular el valor durante una consulta:
+
+```sql
+SELECT pt.fecha_estimada_admin,
+       DATEDIFF(pt.fecha_estimada_admin, CURDATE()) AS dias_restantes
+  FROM proceso_tickets pt
+ WHERE pt.id_ticket = ?;
+```
+
+Un trigger no es adecuado para un countdown. Solo se ejecuta al insertar, actualizar
+o eliminar datos; no se activa automáticamente cuando cambia el día.
+
+Persistir el contador requeriría un evento programado diario:
+
+```sql
+CREATE EVENT actualizar_dias_restantes
+    ON SCHEDULE EVERY 1 DAY
+    DO
+      UPDATE proceso_tickets
+         SET dias_estimada_admin = DATEDIFF(fecha_estimada_admin, CURDATE())
+       WHERE fecha_estimada_admin IS NOT NULL;
+```
+
+No se recomienda porque sobrescribe un campo que originalmente representa una
+estimación, añade escrituras diarias y puede fallar si el programador está apagado.
+Calcularlo al consultar o renderizar mantiene una única fuente de verdad.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+## 🏫 17. Contexto del proyecto
+
+Esta función forma parte del módulo Inventario-Ticket del panel SEDUC.
+El módulo atiende solicitudes relacionadas con computadores, monitores y equipos.
+Es utilizado por técnicos, directores y administradores de colegios y sede central.
+Debe convivir con filtros, búsquedas, polling, adjuntos y barras de estado.
+Los colores de las barras continúan obteniéndose desde `estados_ticket`.
+La fecha de plazo continúa almacenándose en `proceso_tickets`.
+
+
+══════════════════════════════════════════════════════════════════════════════
+
+Fin del documento.
