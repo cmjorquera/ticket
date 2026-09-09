@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../../configuracion/_inicio.php';
+require_once __DIR__ . '/../../../clases/Tickets/TicketAdministrador.php';
 header('Content-Type: text/html; charset=UTF-8');
 
 $usuarioId = (int) Sesion::get('id', 0);
@@ -12,6 +13,7 @@ $colegios = [];
 $tecnicos = [];
 $errorCarga = null;
 $estadoFiltro = ticket_estado_id($_GET['estado'] ?? 0);
+$resumenFiltro = ticket_estado_grupo_filtro($_GET['resumen'] ?? '');
 $colegioFiltro = (int) ($_GET['colegio'] ?? 0);
 $tecnicoFiltro = (int) ($_GET['tecnico'] ?? 0);
 
@@ -49,56 +51,32 @@ try {
         $tecnicoFiltro = 0;
     }
 
-    $sql = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
-                   t.id_estado, e.nombre AS estado_nombre, e.color AS estado_color,
-                   e.color_degradado AS estado_degradado,
-                   t.id_prioridad, uc_ticket.id_colegio, t.id_tecnico,
-                   COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
-                   COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
-                   CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
-                   c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
-                   CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
-              FROM tickets t
-              JOIN usuarios u ON u.id = t.id_usuario
-              JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
-         LEFT JOIN (
-                       SELECT id_usuario, MIN(id_colegio) AS id_colegio
-                         FROM usuario_colegio
-                        WHERE estado = 1
-                     GROUP BY id_usuario
-                   ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
-         LEFT JOIN colegio col ON col.id_colegio = uc_ticket.id_colegio
-         LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
-         LEFT JOIN estados_ticket e ON e.id = t.id_estado
-         LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
-             WHERE t.estado = 1";
-    $params = [];
-    if (!$esGlobal) {
-        if (!$idsColegio) {
-            $sql .= ' AND 1 = 0';
-        } else {
-            $sql .= ' AND uc_ticket.id_colegio IN (' . implode(',', array_fill(0, count($idsColegio), '?')) . ')';
-            array_push($params, ...$idsColegio);
-        }
-    }
-    if ($estadoFiltro > 0) {
-        $sql .= ' AND t.id_estado = ?';
-        $params[] = $estadoFiltro;
-    }
-    if ($colegioFiltro > 0) {
-        $sql .= ' AND uc_ticket.id_colegio = ?';
-        $params[] = $colegioFiltro;
-    }
-    if ($tecnicoFiltro > 0) {
-        $sql .= ' AND t.id_tecnico = ?';
-        $params[] = $tecnicoFiltro;
-    }
-    $sql .= ' ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC';
-    $tickets = $db->fetchAll($sql, $params);
+    $ticketData = new TicketAdministrador($db, $usuarioId);
+    $tickets = $ticketData->traer(
+        $estadoFiltro > 0 ? $estadoFiltro : null,
+        null,
+        $esGlobal ? null : $idsColegio,
+        $colegioFiltro > 0 ? $colegioFiltro : null,
+        $tecnicoFiltro > 0 ? $tecnicoFiltro : null
+    );
     $tickets = array_map('ticket_normalizar_fila', $tickets);
+    if ($resumenFiltro !== '') {
+        $tickets = array_values(array_filter(
+            $tickets,
+            static fn (array $ticket): bool => ticket_estado_grupo((int) $ticket['id_estado']) === $resumenFiltro
+        ));
+    }
 } catch (Throwable $ex) {
     error_log('Error AJAX en administración de tickets: ' . $ex->getMessage());
     $errorCarga = 'No fue posible consultar los tickets.';
 }
+
+$ticketsPorPagina = 6;
+$totalTickets = count($tickets);
+$totalPaginas = (int) ceil($totalTickets / $ticketsPorPagina);
+$paginaActual = max(1, (int) ($_GET['pagina'] ?? 1));
+$paginaActual = min($paginaActual, max(1, $totalPaginas));
+$offsetTickets = ($paginaActual - 1) * $ticketsPorPagina;
+$ticketsPagina = array_slice($tickets, $offsetTickets, $ticketsPorPagina);
 
 require __DIR__ . '/../bloque_tabla_admin.php';

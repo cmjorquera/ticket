@@ -381,6 +381,12 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .ticket-empty--action .btn{margin-top:8px}
 .ticket-filter-empty{padding:24px 20px;text-align:center;color:var(--muted);font-size:12px}
 .ticket-filter-empty i{margin-right:7px;color:var(--blue)}
+.ticket-pagination{display:flex;justify-content:center;padding:18px 16px;border-top:1px solid var(--border)}
+.pagination{display:flex;align-items:center;gap:5px;list-style:none}
+.page-link{display:grid;min-width:34px;height:34px;padding:0 10px;place-items:center;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);color:var(--fg);font-size:12px;text-decoration:none;transition:background var(--transition),border-color var(--transition),color var(--transition)}
+a.page-link:hover{border-color:var(--blue-mid);background:var(--blue-light);color:var(--blue)}
+.page-item.active .page-link{border-color:var(--blue);background:var(--blue);color:#fff}
+.page-item.disabled .page-link{cursor:not-allowed;opacity:.45}
 #mis-tickets-tabla tr[hidden]{display:none}
 .ticket-detail-heading{margin-bottom:18px}
 .ticket-detail-back{display:inline-flex;align-items:center;gap:7px;margin-bottom:14px;color:var(--muted);font-size:12px;text-decoration:none}.ticket-detail-back:hover{color:var(--blue)}

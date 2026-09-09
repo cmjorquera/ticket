@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $depth = '../';
 require_once __DIR__ . '/../configuracion/_inicio.php';
+require_once __DIR__ . '/../clases/Tickets/TicketUsuario.php';
 
 $usuarioId = (int) Sesion::get('id', 0);
 $usuarioNombre = (string) Sesion::get('nombre', 'Usuario');
@@ -38,54 +39,22 @@ try {
 }
 
 try {
-    $columnasAdjuntos = ticket_columnas_tabla('archivos_adjuntos_ticket', $db);
-    $sqlCantidadArchivos = isset($columnasAdjuntos['id_ticket'])
-        ? '(SELECT COUNT(*) FROM archivos_adjuntos_ticket aa WHERE aa.id_ticket = t.id_ticket)'
-        : '0';
-    $tablaCalificacion = 'calificacion_ticket';
-    $columnasCalificacion = ticket_columnas_tabla($tablaCalificacion, $db);
-    if (!$columnasCalificacion) {
-        $tablaCalificacion = 'calificacion_tickett';
-        $columnasCalificacion = ticket_columnas_tabla($tablaCalificacion, $db);
-    }
-    $sqlTieneCalificacion = isset($columnasCalificacion['id_ticket'])
-        ? "EXISTS (SELECT 1 FROM {$tablaCalificacion} ct WHERE ct.id_ticket = t.id_ticket)"
-        : '0';
-    $sqlUsuario = "SELECT t.id_ticket, t.id_usuario, t.asunto, t.descripcion_ticket AS descripcion,
-                t.id_estado, e.nombre AS estado_nombre, e.color AS estado_color,
-                e.color_degradado AS estado_degradado,
-                t.id_prioridad, t.id_tecnico, {$sqlCantidadArchivos} AS cantidad_archivos,
-                {$sqlTieneCalificacion} AS tiene_calificacion,
-                COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
-                COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
-                CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS usuario_nombre,
-                c.nombre_categoria AS categoria_nombre,
-                col.nom_colegio AS colegio_nombre,
-                CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
-           FROM tickets t
-           JOIN categoria_de_ticket c ON c.id_categoria = t.id_categoria_ticket
-           JOIN usuarios u ON u.id = t.id_usuario
-      LEFT JOIN (
-                    SELECT id_usuario, MIN(id_colegio) AS id_colegio
-                      FROM usuario_colegio
-                     WHERE estado = 1
-                  GROUP BY id_usuario
-                ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
-      LEFT JOIN colegio col ON col.id_colegio = uc_ticket.id_colegio
-      LEFT JOIN usuarios tec ON tec.id = t.id_tecnico
-      LEFT JOIN estados_ticket e ON e.id = t.id_estado
-      LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
-          WHERE t.id_usuario = ? AND t.estado = 1
-       ORDER BY t.id_estado ASC, pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC";
-    $paramsUsuario = [$usuarioId];
-    ticket_debug_sql('USUARIO', $sqlUsuario, $paramsUsuario);
-    $misTickets = $db->fetchAll($sqlUsuario, $paramsUsuario);
+    $ticketData = new TicketUsuario($db, $usuarioId);
+    $misTickets = $ticketData->traer();
     $misTickets = array_map('ticket_normalizar_fila', $misTickets);
 } catch (Throwable $ex) {
     error_log('Error al listar tickets del solicitante: ' . $ex->getMessage());
-    ticket_debug_sql('USUARIO ERROR', $sqlUsuario ?? 'SQL no construida', $paramsUsuario ?? [$usuarioId], $ex);
     $errorListado = 'No fue posible consultar tus solicitudes en este momento.';
 }
+
+$ticketsPorPagina = 6;
+$totalTickets = count($misTickets);
+$totalPaginas = (int) ceil($totalTickets / $ticketsPorPagina);
+$paginaActual = max(1, (int) ($_GET['pagina'] ?? 1));
+$paginaActual = min($paginaActual, max(1, $totalPaginas));
+$offsetTickets = ($paginaActual - 1) * $ticketsPorPagina;
+$ticketsPagina = array_slice($misTickets, $offsetTickets, $ticketsPorPagina);
+
 $etiquetasEstado = [
     'nuevo' => 'Recibido',
     'asignado' => 'Asignado',
@@ -147,9 +116,17 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
   </div>
 </div>
 
+<?php
+$textoCarga = 'Filtrando tickets...';
+$loaderVisibleInicialmente = false;
+$loaderFallbackMs = 3000;
+require __DIR__ . '/../componentes/pantallaCargando.php';
+?>
+
 <script src="js/crear_ticket_dinamico.js"></script>
 <script>
 let filtroContenedorMisTickets = '';
+let temporizadorFiltroMisTickets = null;
 
 function filtrarMisTickets() {
   const input = document.getElementById('mis-tickets-buscar');
@@ -180,23 +157,29 @@ function filtrarMisTickets() {
 }
 
 function filtrarTicketsPorEstado(estado) {
-  filtroContenedorMisTickets = filtroContenedorMisTickets === estado ? '' : estado;
-  const contenedores = document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]');
-  contenedores.forEach(contenedor => {
-    const activo = contenedor.dataset.estado === filtroContenedorMisTickets;
-    contenedor.classList.toggle('is-active', activo);
-    contenedor.setAttribute('aria-pressed', String(activo));
-  });
+  if (temporizadorFiltroMisTickets !== null) return;
+  mostrarPantallaCarga('Filtrando tickets...', 3000);
+  temporizadorFiltroMisTickets = window.setTimeout(() => {
+    filtroContenedorMisTickets = filtroContenedorMisTickets === estado ? '' : estado;
+    const contenedores = document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]');
+    contenedores.forEach(contenedor => {
+      const activo = contenedor.dataset.estado === filtroContenedorMisTickets;
+      contenedor.classList.toggle('is-active', activo);
+      contenedor.setAttribute('aria-pressed', String(activo));
+    });
 
-  const indicador = document.getElementById('filtro-estado-activo');
-  const activo = Array.from(contenedores).find(contenedor => contenedor.classList.contains('is-active'));
-  if (indicador) {
-    indicador.hidden = !activo;
-    indicador.innerHTML = activo
-      ? `<i class="bi bi-funnel-fill" aria-hidden="true"></i> Filtrando por: <strong>${activo.querySelector('.contenedor-ticket-titulo')?.textContent || ''}</strong>`
-      : '';
-  }
-  filtrarMisTickets();
+    const indicador = document.getElementById('filtro-estado-activo');
+    const activo = Array.from(contenedores).find(contenedor => contenedor.classList.contains('is-active'));
+    if (indicador) {
+      indicador.hidden = !activo;
+      indicador.innerHTML = activo
+        ? `<i class="bi bi-funnel-fill" aria-hidden="true"></i> Filtrando por: <strong>${activo.querySelector('.contenedor-ticket-titulo')?.textContent || ''}</strong>`
+        : '';
+    }
+    filtrarMisTickets();
+    ocultarPantallaCarga();
+    temporizadorFiltroMisTickets = null;
+  }, 1000);
 }
 
 function enlazarFiltrosMisTickets() {
@@ -220,6 +203,7 @@ function enlazarFiltrosMisTickets() {
 }
 
 enlazarFiltrosMisTickets();
+window.addEventListener('pageshow', () => ocultarPantallaCarga());
 
 function validacionTicketPorUsuario(idTicket, idUsuario, idTecnico) {
   if (!Number(idTicket)) return;
@@ -268,6 +252,7 @@ document.getElementById('form-calificar-ticket')?.addEventListener('submit', asy
 (() => {
   const table = document.getElementById('mis-tickets-tabla');
   const count = document.querySelector('#ticket-tabla-usuario .ticket-list-count');
+  const paginaActual = <?= $paginaActual ?>;
   if (!table?.tBodies.length) return;
 
   const normalizar = html => html.replace(/\s+/g, ' ').trim();
@@ -278,7 +263,7 @@ document.getElementById('form-calificar-ticket')?.addEventListener('submit', asy
     if (consultando || document.hidden) return;
     consultando = true;
     try {
-      const response = await fetch('componentes/ajax/bloque_tabla_usuario.php', {
+      const response = await fetch(`componentes/ajax/bloque_tabla_usuario.php?pagina=${paginaActual}`, {
         method: 'POST',
         credentials: 'same-origin',
         headers: {'X-Requested-With': 'XMLHttpRequest'},
