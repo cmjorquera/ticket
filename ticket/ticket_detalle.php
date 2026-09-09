@@ -17,7 +17,9 @@ $errorCarga = null;
 try {
     $ticket = $ticketId > 0 ? $db->fetchOne(
         "SELECT t.id_ticket, t.id_usuario, t.id_tecnico, uc_ticket.id_colegio,
-                t.asunto, t.descripcion_ticket AS descripcion, t.id_estado, e.nombre AS estado_nombre, t.id_prioridad,
+                t.asunto, t.descripcion_ticket AS descripcion, t.id_estado,
+                e.nombre AS estado_nombre, e.color AS estado_color,
+                e.color_degradado AS estado_degradado, t.id_prioridad,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
                 c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
@@ -135,7 +137,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <a class="ticket-detail-back" href="<?= e($volver) ?>"><i class="bi bi-arrow-left"></i> Volver a la bandeja</a>
       <div class="ticket-detail-titleline">
         <div><span class="ticket-detail-kicker">Solicitud #<?= (int) $ticket['id_ticket'] ?></span><h1><?= e($ticket['asunto']) ?></h1></div>
-        <span class="ticket-badge ticket-badge--<?= e($estado) ?>"><?= e($estadoTexto) ?></span>
+        <?= ticket_badge_estado($ticket) ?>
       </div>
     </div>
 

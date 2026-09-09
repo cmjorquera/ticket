@@ -18,7 +18,7 @@ $errorCarga = $errorCarga ?? null;
     <div class="form-group">
       <label class="form-label" for="ticket-estado">Estado</label>
       <select class="form-input" id="ticket-estado">
-        <option value="">Todos</option><option value="nuevo">Nuevo</option><option value="asignado">Asignado</option><option value="en_proceso">En proceso</option><option value="borrador">Borrador</option><option value="resuelto">Terminado</option><option value="atrasado">Demorado</option>
+        <option value="">Todos</option><?php foreach (ticket_estados_legacy() as $infoEstado): ?><option value="<?= e($infoEstado['codigo']) ?>"><?= e($infoEstado['nombre']) ?></option><?php endforeach; ?>
       </select>
     </div>
   </div>
@@ -36,12 +36,13 @@ $errorCarga = $errorCarga ?? null;
           $prioridad = str_replace(['í', 'Í'], 'i', strtolower((string) $ticket['prioridad']));
           $datosTicket = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
           $fechaTicket = strtotime((string) $ticket['fecha_creacion']);
+          $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
         ?>
-          <tr data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['usuario_nombre'], $ticket['colegio_nombre'], $ticket['categoria_nombre']]))) ?>" data-estado="<?= e($estado) ?>">
+          <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['usuario_nombre'], $ticket['colegio_nombre'], $ticket['categoria_nombre']]))) ?>" data-estado="<?= e($estado) ?>">
             <td><span class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></span><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
             <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong><small><?= e($ticket['categoria_nombre']) ?> · <?= e($ticket['colegio_nombre']) ?></small></td>
             <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>
-            <td><span class="ticket-badge ticket-badge--<?= e($estado) ?>"><?= e($ticket['estado_nombre'] ?? str_replace('_', ' ', $estado)) ?></span></td>
+            <td><?= ticket_badge_estado($ticket) ?></td>
             <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
             <td><div class="ticket-actions"><button class="btn btn-outline btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-chat-dots"></i> Chat</button><a class="btn btn-outline btn-sm" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-eye"></i> Abrir</a><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($datosTicket) ?>" onclick="abrirTicket(this)"><i class="bi bi-pencil"></i> Estado</button></div></td>
           </tr>

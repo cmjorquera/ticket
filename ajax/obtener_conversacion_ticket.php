@@ -85,7 +85,7 @@ try {
             'id' => (int) $ticket['id_ticket'],
             'asunto' => (string) ($ticket['asunto'] ?? ''),
             'estado_id' => (int) ($ticket['id_estado'] ?? 0),
-            'cerrado' => (int) ($ticket['id_estado'] ?? 0) === 5,
+            'cerrado' => ticket_estado_sin_escritura((int) ($ticket['id_estado'] ?? 0)),
         ],
         'conversacion_disponible' => $conversacionDisponible,
         'adjuntos_disponibles' => $adjuntosDisponibles,

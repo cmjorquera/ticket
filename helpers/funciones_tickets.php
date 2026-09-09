@@ -38,8 +38,8 @@ final class FuncionesTicket
         $sql = "SELECT CASE
                     WHEN t.id_estado IN (1, 2) THEN 'nuevo'
                     WHEN t.id_estado = 3 THEN 'en_proceso'
-                    WHEN t.id_estado = 5 THEN 'resuelto'
-                    WHEN t.id_estado = 6 THEN 'atrasado'
+                    WHEN t.id_estado IN (5, 6) THEN 'resuelto'
+                    WHEN t.id_estado = 7 THEN 'atrasado'
                     ELSE 'borrador'
                 END AS estado_resumen,
                 COUNT(*) AS total

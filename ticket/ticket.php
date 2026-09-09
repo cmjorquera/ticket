@@ -44,6 +44,7 @@ try {
         : '0';
     $sqlUsuario = "SELECT t.id_ticket, t.asunto, t.descripcion_ticket AS descripcion,
                 t.id_estado, e.nombre AS estado_nombre, e.color AS estado_color,
+                e.color_degradado AS estado_degradado,
                 t.id_prioridad, t.id_tecnico, {$sqlCantidadArchivos} AS cantidad_archivos,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
@@ -74,12 +75,13 @@ try {
     $errorListado = 'No fue posible consultar tus solicitudes en este momento.';
 }
 $etiquetasEstado = [
-    'nuevo' => 'Nuevo',
+    'nuevo' => 'Recibido',
     'asignado' => 'Asignado',
     'en_proceso' => 'En proceso',
     'borrador' => 'Borrador',
     'atrasado' => 'Demorado',
     'resuelto' => 'Terminado',
+    'cerrado' => 'Cerrado',
 ];
 
 $funcionesTicket = new FuncionesTicket($db);
