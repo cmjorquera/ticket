@@ -107,26 +107,17 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     </div>
   </div>
 
-  <?php
-  $textoCarga = 'Filtrando tickets...';
-  $loaderVisibleInicialmente = false;
-  $loaderFallbackMs = 3000;
-  require __DIR__ . '/../componentes/pantallaCargando.php';
-  ?>
-
   <script>
   const adminTicketCsrf = <?= json_encode($csrf) ?>;
   let adminTicketActual = 0;
-  let navegandoFiltroAdmin = false;
   const adminResumenFiltro = <?= json_encode($resumenFiltro) ?>;
   document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]').forEach(contenedor=>{
     const activo=contenedor.dataset.estado===adminResumenFiltro;
     contenedor.closest('.contenedor-tickets')?.classList.add('ticket-filters-enabled');
     contenedor.classList.toggle('is-active',activo);contenedor.setAttribute('role','button');contenedor.setAttribute('tabindex','0');contenedor.setAttribute('aria-pressed',String(activo));
-    const filtrar=()=>{if(navegandoFiltroAdmin)return;navegandoFiltroAdmin=true;mostrarPantallaCarga('Filtrando tickets...',3000);const url=new URL(window.location.href);if(url.searchParams.get('resumen')===contenedor.dataset.estado)url.searchParams.delete('resumen');else url.searchParams.set('resumen',contenedor.dataset.estado);url.searchParams.delete('pagina');window.setTimeout(()=>{window.location.href=url.toString()},1000)};
+    const filtrar=()=>{const url=new URL(window.location.href);if(url.searchParams.get('resumen')===contenedor.dataset.estado)url.searchParams.delete('resumen');else url.searchParams.set('resumen',contenedor.dataset.estado);url.searchParams.delete('pagina');window.location.href=url.toString()};
     contenedor.addEventListener('click',filtrar);contenedor.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();filtrar()}});
   });
-  window.addEventListener('pageshow',()=>{navegandoFiltroAdmin=false;ocultarPantallaCarga()});
   function escTicket(value){const d=document.createElement('div');d.textContent=value??'';return d.innerHTML}
   function administrarTicket(button){
     const t=JSON.parse(button.dataset.ticket); adminTicketActual=Number(t.id_ticket);

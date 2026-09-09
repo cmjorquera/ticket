@@ -116,17 +116,9 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
   </div>
 </div>
 
-<?php
-$textoCarga = 'Filtrando tickets...';
-$loaderVisibleInicialmente = false;
-$loaderFallbackMs = 3000;
-require __DIR__ . '/../componentes/pantallaCargando.php';
-?>
-
 <script src="js/crear_ticket_dinamico.js"></script>
 <script>
 let filtroContenedorMisTickets = '';
-let temporizadorFiltroMisTickets = null;
 
 function filtrarMisTickets() {
   const input = document.getElementById('mis-tickets-buscar');
@@ -157,29 +149,23 @@ function filtrarMisTickets() {
 }
 
 function filtrarTicketsPorEstado(estado) {
-  if (temporizadorFiltroMisTickets !== null) return;
-  mostrarPantallaCarga('Filtrando tickets...', 3000);
-  temporizadorFiltroMisTickets = window.setTimeout(() => {
-    filtroContenedorMisTickets = filtroContenedorMisTickets === estado ? '' : estado;
-    const contenedores = document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]');
-    contenedores.forEach(contenedor => {
-      const activo = contenedor.dataset.estado === filtroContenedorMisTickets;
-      contenedor.classList.toggle('is-active', activo);
-      contenedor.setAttribute('aria-pressed', String(activo));
-    });
+  filtroContenedorMisTickets = filtroContenedorMisTickets === estado ? '' : estado;
+  const contenedores = document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]');
+  contenedores.forEach(contenedor => {
+    const activo = contenedor.dataset.estado === filtroContenedorMisTickets;
+    contenedor.classList.toggle('is-active', activo);
+    contenedor.setAttribute('aria-pressed', String(activo));
+  });
 
-    const indicador = document.getElementById('filtro-estado-activo');
-    const activo = Array.from(contenedores).find(contenedor => contenedor.classList.contains('is-active'));
-    if (indicador) {
-      indicador.hidden = !activo;
-      indicador.innerHTML = activo
-        ? `<i class="bi bi-funnel-fill" aria-hidden="true"></i> Filtrando por: <strong>${activo.querySelector('.contenedor-ticket-titulo')?.textContent || ''}</strong>`
-        : '';
-    }
-    filtrarMisTickets();
-    ocultarPantallaCarga();
-    temporizadorFiltroMisTickets = null;
-  }, 1000);
+  const indicador = document.getElementById('filtro-estado-activo');
+  const activo = Array.from(contenedores).find(contenedor => contenedor.classList.contains('is-active'));
+  if (indicador) {
+    indicador.hidden = !activo;
+    indicador.innerHTML = activo
+      ? `<i class="bi bi-funnel-fill" aria-hidden="true"></i> Filtrando por: <strong>${activo.querySelector('.contenedor-ticket-titulo')?.textContent || ''}</strong>`
+      : '';
+  }
+  filtrarMisTickets();
 }
 
 function enlazarFiltrosMisTickets() {
@@ -203,7 +189,6 @@ function enlazarFiltrosMisTickets() {
 }
 
 enlazarFiltrosMisTickets();
-window.addEventListener('pageshow', () => ocultarPantallaCarga());
 
 function validacionTicketPorUsuario(idTicket, idUsuario, idTecnico) {
   if (!Number(idTicket)) return;

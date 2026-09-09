@@ -63,17 +63,9 @@ iniciar_layout_configuracion('Tickets asignados', 'Tickets', 'ticket_asignados')
   </div>
 </div>
 
-<?php
-$textoCarga = 'Filtrando tickets...';
-$loaderVisibleInicialmente = false;
-$loaderFallbackMs = 3000;
-require __DIR__ . '/../componentes/pantallaCargando.php';
-?>
-
 <script>
 const ticketCsrf = <?= json_encode($csrf) ?>;
 const tecnicoResumenFiltro = <?= json_encode($resumenFiltro) ?>;
-let navegandoFiltroTecnico = false;
 document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]').forEach(contenedor => {
   const activo = contenedor.dataset.estado === tecnicoResumenFiltro;
   contenedor.closest('.contenedor-tickets')?.classList.add('ticket-filters-enabled');
@@ -82,23 +74,16 @@ document.querySelectorAll('.contenedor-tickets .contenedor-ticket[data-estado]')
   contenedor.setAttribute('tabindex', '0');
   contenedor.setAttribute('aria-pressed', String(activo));
   const filtrar = () => {
-    if (navegandoFiltroTecnico) return;
-    navegandoFiltroTecnico = true;
-    mostrarPantallaCarga('Filtrando tickets...', 3000);
     const url = new URL(window.location.href);
     if (url.searchParams.get('resumen') === contenedor.dataset.estado) url.searchParams.delete('resumen');
     else url.searchParams.set('resumen', contenedor.dataset.estado);
     url.searchParams.delete('pagina');
-    window.setTimeout(() => { window.location.href = url.toString(); }, 1000);
+    window.location.href = url.toString();
   };
   contenedor.addEventListener('click', filtrar);
   contenedor.addEventListener('keydown', event => {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); filtrar(); }
   });
-});
-window.addEventListener('pageshow', () => {
-  navegandoFiltroTecnico = false;
-  ocultarPantallaCarga();
 });
 
 function abrirTicket(button) {
