@@ -55,6 +55,88 @@ class Usuario
         );
     }
 
+    public static function listar(Conexion $db, array $filtros = []): array
+    {
+        try {
+            $where = [];
+            $parametros = [];
+
+            $estado = trim((string) ($filtros['estado'] ?? ''));
+            if ($estado !== '') {
+                $where[] = 'u.estado = ?';
+                $parametros[] = $estado;
+            }
+
+            $idArea = (int) ($filtros['id_area'] ?? 0);
+            if ($idArea > 0) {
+                $where[] = 'u.id_area_trabajo = ?';
+                $parametros[] = $idArea;
+            }
+
+            $buscar = trim((string) ($filtros['buscar'] ?? ''));
+            if ($buscar !== '') {
+                $where[] = '(u.nombre LIKE ?
+                    OR u.apellido_paterno LIKE ?
+                    OR u.apellido_materno LIKE ?
+                    OR u.email LIKE ?
+                    OR at.nombre_area LIKE ?)';
+                $termino = '%' . $buscar . '%';
+                array_push($parametros, $termino, $termino, $termino, $termino, $termino);
+            }
+
+            $sql = "SELECT
+                        u.id,
+                        u.nombre,
+                        u.apellido_paterno,
+                        u.apellido_materno,
+                        u.email,
+                        u.telefono,
+                        u.cargo,
+                        u.estado,
+                        u.id_area_trabajo,
+                        at.nombre_area,
+                        at.sigla_area,
+                        u.fecha_creacion,
+                        u.sexo
+                    FROM usuarios u
+                    LEFT JOIN area_trabajo at ON at.id_area = u.id_area_trabajo";
+
+            if ($where !== []) {
+                $sql .= ' WHERE ' . implode(' AND ', $where);
+            }
+
+            $sql .= ' ORDER BY u.nombre ASC, u.apellido_paterno ASC';
+
+            $resultado = [];
+            foreach ($db->fetchAll($sql, $parametros) as $fila) {
+                $nombreArea = trim((string) ($fila['nombre_area'] ?? ''));
+                $estadoUsuario = trim((string) ($fila['estado'] ?? ''));
+
+                $resultado[] = [
+                    'id'               => (int) ($fila['id'] ?? 0),
+                    'nombre'           => (string) ($fila['nombre'] ?? ''),
+                    'apellido_paterno' => (string) ($fila['apellido_paterno'] ?? ''),
+                    'apellido_materno' => (string) ($fila['apellido_materno'] ?? ''),
+                    'email'            => (string) ($fila['email'] ?? ''),
+                    'telefono'         => (string) ($fila['telefono'] ?? ''),
+                    'cargo'            => (string) ($fila['cargo'] ?? ''),
+                    'estado'           => $estadoUsuario !== '' ? $estadoUsuario : 'Activo',
+                    'id_area_trabajo'  => (int) ($fila['id_area_trabajo'] ?? 0),
+                    'nombre_area'      => $nombreArea !== '' ? $nombreArea : 'Sin área',
+                    'sigla_area'       => (string) ($fila['sigla_area'] ?? ''),
+                    'fecha_creacion'   => (string) ($fila['fecha_creacion'] ?? ''),
+                    'sexo'             => (int) ($fila['sexo'] ?? 0),
+                    'nom_colegio'      => 'Sin colegio',
+                ];
+            }
+
+            return $resultado;
+        } catch (Throwable $e) {
+            error_log('No fue posible listar los usuarios: ' . $e->getMessage());
+            return [];
+        }
+    }
+
     public function crear(array $datos): int|false
     {
         if (empty($datos['correo']) || empty($datos['password'])) {

@@ -89,6 +89,37 @@ final class FuncionesTicket
         return $this->cache[$cacheKey] = $totales;
     }
 
+    /** @return array{nuevo:string,en_proceso:string,resuelto:string,atrasado:string} */
+    private function descripciones(): array
+    {
+        $cacheKey = 'descripciones-estados';
+        if (isset($this->cache[$cacheKey])) {
+            return $this->cache[$cacheKey];
+        }
+
+        $descripciones = [
+            'nuevo' => 'El ticket fue recibido y está pendiente de asignación.',
+            'en_proceso' => 'El técnico está trabajando activamente en este ticket.',
+            'resuelto' => 'El ticket fue terminado y su solución está disponible.',
+            'atrasado' => 'El ticket superó la fecha estimada de resolución.',
+        ];
+        $grupos = [1 => 'nuevo', 3 => 'en_proceso', 5 => 'resuelto', 7 => 'atrasado'];
+
+        try {
+            foreach ($this->db->fetchAll('SELECT id, descripcion_estado FROM estados_ticket WHERE id IN (1, 3, 5, 7)') as $fila) {
+                $grupo = $grupos[(int) ($fila['id'] ?? 0)] ?? '';
+                $descripcion = trim((string) ($fila['descripcion_estado'] ?? ''));
+                if ($grupo !== '' && $descripcion !== '') {
+                    $descripciones[$grupo] = $descripcion;
+                }
+            }
+        } catch (Throwable $ex) {
+            error_log('Error al cargar descripciones de estados de tickets: ' . $ex->getMessage());
+        }
+
+        return $this->cache[$cacheKey] = $descripciones;
+    }
+
     /** @param int[]|null $colegioIds */
     private function renderizar(int $usuarioId, int $idPagActual, string $estado, string $titulo, string $icono, string $clase, ?array $colegioIds = null): void
     {
@@ -96,11 +127,14 @@ final class FuncionesTicket
         $cantidad = (int) ($totales[$estado] ?? 0);
         $total = array_sum($totales);
         $porcentaje = $total > 0 ? (int) round(($cantidad / $total) * 100) : 0;
+        $descripcion = $this->descripciones()[$estado];
+        $tooltipId = 'tooltip-ticket-' . str_replace('_', '-', $estado);
 
-        echo '<article class="contenedor-ticket ' . $clase . '" data-estado="' . htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') . '">';
+        echo '<article class="contenedor-ticket ' . $clase . '" data-estado="' . htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') . '" aria-describedby="' . $tooltipId . '">';
         echo '<div class="contenedor-ticket-body"><h2 class="contenedor-ticket-titulo">' . htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') . '</h2>';
         echo '<div class="contenedor-ticket-numero">' . $cantidad . '</div><small class="contenedor-ticket-porcentaje">' . $porcentaje . '% de la bandeja</small></div>';
-        echo '<div class="contenedor-ticket-icono" aria-hidden="true"><i class="bi ' . htmlspecialchars($icono, ENT_QUOTES, 'UTF-8') . '"></i></div>';
+        echo '<div class="contenedor-ticket-icono"><i class="bi ' . htmlspecialchars($icono, ENT_QUOTES, 'UTF-8') . '" aria-hidden="true"></i>';
+        echo '<span class="contenedor-ticket-tooltip" id="' . $tooltipId . '" role="tooltip">' . htmlspecialchars($descripcion, ENT_QUOTES, 'UTF-8') . '</span></div>';
         echo '</article>';
     }
 
