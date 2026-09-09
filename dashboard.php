@@ -1,102 +1,149 @@
 <?php
+declare(strict_types=1);
 
 require_once __DIR__ . '/validar_sesion.php';
+require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $pagina_titulo = 'Dashboard';
-
-$stats = [
-    'usuarios' => 0,
-    'colegios' => 0,
-    'eventos' => 0,
-    'modulos' => 0,
+$pagina_bootstrap = true;
+$pagina_estilos = ['css/dashboard.css'];
+$pagina_scripts_head = [
+    'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
+$pagina_scripts = ['js/dashboard.js'];
+
+$usuarioId = (int) ($_SESSION['id'] ?? 0);
+$perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
+$perfilActual = 'usuario';
+$errorInicial = '';
 
 try {
-    $db = Conexion::getInstance('sistema_panel_central');
-    $row = $db->fetchOne(
-        "SELECT
-            (SELECT COUNT(*) FROM usuarios WHERE estado = 'activo') AS usuarios,
-            (SELECT COUNT(*) FROM colegio) AS colegios,
-            (SELECT COUNT(*) FROM eventos WHERE MONTH(fecha) = MONTH(CURDATE())) AS eventos,
-            (SELECT COUNT(*) FROM menu_1) AS modulos",
-        []
-    );
-    if ($row) {
-        $stats = $row;
-    }
-} catch (\Throwable $e) {
-    // Se conservan los valores de respaldo si la consulta no está disponible.
+    $dashboard = new DashboardTickets($db, $usuarioId);
+    $perfiles = $dashboard->perfilesDisponibles();
+    $perfilSolicitado = (string) ($_GET['vista_perfil'] ?? ($_SESSION['dashboard_perfil'] ?? ''));
+    $perfilActual = $dashboard->resolverPerfil($perfilSolicitado);
+    $_SESSION['dashboard_perfil'] = $perfilActual;
+} catch (Throwable $ex) {
+    error_log('No fue posible iniciar el dashboard: ' . $ex->getMessage());
+    $errorInicial = 'No fue posible preparar el dashboard. Intenta recargar la página.';
 }
 
+// $csrfDashboard = ticket_csrf_token();
 require_once __DIR__ . '/includes/header.php';
-
 ?>
 
-<div class="page-header">
-    <h2><i class="fa-solid fa-gauge"></i> Dashboard</h2>
+<div class="dashboard-page" id="dashboard-app" aria-busy="true">
+    <header class="dashboard-heading">
+        <div>
+            <p class="dashboard-eyebrow">Mesa de ayuda</p>
+            <h1>Dashboard</h1>
+            <p>Estado operativo de tus solicitudes y carga de atención.</p>
+        </div>
+        <?php if (count($perfiles) > 1): ?>
+            <nav class="dashboard-profiles" aria-label="Vista del dashboard" style="--profile-count:<?= count($perfiles) ?>">
+                <span>Ver como</span>
+                <div class="btn-group" role="group">
+                    <?php foreach ($perfiles as $perfil): ?>
+                        <button type="button"
+                                class="btn dashboard-profile-btn<?= $perfil['clave'] === $perfilActual ? ' active' : '' ?>"
+                                data-dashboard-profile="<?= htmlspecialchars($perfil['clave'], ENT_QUOTES, 'UTF-8') ?>"
+                                aria-pressed="<?= $perfil['clave'] === $perfilActual ? 'true' : 'false' ?>">
+                            <?= htmlspecialchars($perfil['nombre'], ENT_QUOTES, 'UTF-8') ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+            </nav>
+        <?php endif; ?>
+    </header>
+
+    <div class="dashboard-alert" id="dashboard-alert" role="alert"<?= $errorInicial === '' ? ' hidden' : '' ?>>
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+        <span><?= htmlspecialchars($errorInicial, ENT_QUOTES, 'UTF-8') ?></span>
+        <button type="button" id="dashboard-retry">Reintentar</button>
+    </div>
+
+    <section aria-labelledby="dashboard-kpi-title">
+        <div class="dashboard-section-heading">
+            <div>
+                <h2 id="dashboard-kpi-title">Resumen de atención</h2>
+                <p>Selecciona una tarjeta para filtrar el listado.</p>
+            </div>
+            <p class="dashboard-filter-status" id="dashboard-filter-status" role="status" aria-live="polite" hidden></p>
+        </div>
+        <div class="row g-3" id="dashboard-kpis">
+            <?php for ($i = 0; $i < 4; $i++): ?>
+                <div class="col-12 col-md-6 col-xl-3"><div class="dashboard-skeleton dashboard-skeleton-kpi"></div></div>
+            <?php endfor; ?>
+        </div>
+    </section>
+
+    <section class="row g-3 dashboard-charts" aria-label="Gráficos de tickets">
+        <div class="col-12 col-lg-6">
+            <article class="card dashboard-panel h-100">
+                <div class="card-header dashboard-panel-header">
+                    <div><h2>Gráfico de tickets</h2><p>Distribución actual de la bandeja.</p></div>
+                    <?php if (count($perfiles) > 1): ?>
+                        <label class="dashboard-chart-profile-label">Perfil
+                            <select class="dashboard-chart-profile" data-chart-profile aria-label="Perfil del gráfico de tickets">
+                                <?php foreach ($perfiles as $perfil): ?><option value="<?= htmlspecialchars($perfil['clave'], ENT_QUOTES, 'UTF-8') ?>"<?= $perfil['clave'] === $perfilActual ? ' selected' : '' ?>><?= htmlspecialchars($perfil['nombre'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?>
+                            </select>
+                        </label>
+                    <?php else: ?><span class="dashboard-profile-label" data-profile-label></span><?php endif; ?>
+                </div>
+                <div class="card-body dashboard-chart-body">
+                    <div class="dashboard-chart-loader" id="loadingGraficoTicket" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Cargando gráfico</span></div>
+                    <canvas id="graficoTicket" role="img" aria-label="Cantidad de tickets por estado"></canvas>
+                </div>
+            </article>
+        </div>
+        <div class="col-12 col-lg-6">
+            <article class="card dashboard-panel h-100">
+                <div class="card-header dashboard-panel-header">
+                    <div><h2>Estados por categoría</h2><p>Comparación de carga entre tipos de solicitud.</p></div>
+                    <?php if (count($perfiles) > 1): ?>
+                        <label class="dashboard-chart-profile-label">Perfil
+                            <select class="dashboard-chart-profile" data-chart-profile aria-label="Perfil del gráfico por categoría">
+                                <?php foreach ($perfiles as $perfil): ?><option value="<?= htmlspecialchars($perfil['clave'], ENT_QUOTES, 'UTF-8') ?>"<?= $perfil['clave'] === $perfilActual ? ' selected' : '' ?>><?= htmlspecialchars($perfil['nombre'], ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?>
+                            </select>
+                        </label>
+                    <?php else: ?><span class="dashboard-profile-label" data-profile-label></span><?php endif; ?>
+                </div>
+                <div class="card-body dashboard-chart-body">
+                    <div class="dashboard-chart-loader" id="loadingGraficoCategorias" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Cargando gráfico</span></div>
+                    <div id="graficoCategorias" aria-label="Estados de tickets por categoría"></div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="card dashboard-panel dashboard-table-panel" aria-labelledby="dashboard-table-title">
+        <div class="card-header dashboard-panel-header">
+            <div><h2 id="dashboard-table-title">Últimos tickets</h2><p id="dashboard-table-description">Los casos más recientes disponibles para el perfil activo.</p></div>
+            <span class="dashboard-list-count" id="dashboard-list-count">—</span>
+        </div>
+        <div class="dashboard-table-filters" aria-label="Filtros del listado">
+            <label class="dashboard-filter-search">Buscar<input class="form-control form-control-sm" id="dashboard-filter-search" type="search" placeholder="Folio, asunto, usuario, técnico o categoría"></label>
+            <label>Estado<select class="form-select form-select-sm" id="dashboard-filter-state"><option value="">Todos los estados</option></select></label>
+            <label>Fecha de creación<input class="form-control form-control-sm" id="dashboard-filter-created" type="date"></label>
+            <label>Fecha de respuesta<input class="form-control form-control-sm" id="dashboard-filter-response" type="date"></label>
+            <button class="btn btn-sm btn-outline-secondary" type="button" id="dashboard-clear-filters"><i class="bi bi-x-circle"></i> Limpiar</button>
+        </div>
+        <div id="dashboard-ticket-table"><div class="dashboard-table-loading"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Cargando tickets</div></div>
+    </section>
+
+    <noscript><div class="dashboard-alert"><i class="bi bi-exclamation-circle"></i><span>Activa JavaScript para consultar los indicadores y gráficos.</span></div></noscript>
 </div>
 
-<div class="cards-grid">
-    <div class="card-stat">
-        <div class="card-stat-main">
-            <div class="card-stat-icon bg-blue">
-                <i class="fa-solid fa-users"></i>
-            </div>
-            <div class="card-stat-info">
-                <span class="card-stat-value" id="stat-usuarios"><?= (int) $stats['usuarios'] ?></span>
-                <span class="card-stat-label">Usuarios</span>
-            </div>
-        </div>
-        <canvas class="sparkline" data-values="18,22,20,28,31,35,39"></canvas>
-    </div>
-
-    <div class="card-stat">
-        <div class="card-stat-main">
-            <div class="card-stat-icon bg-green">
-                <i class="fa-solid fa-cubes"></i>
-            </div>
-            <div class="card-stat-info">
-                <span class="card-stat-value" id="stat-modulos"><?= (int) $stats['modulos'] ?></span>
-                <span class="card-stat-label">Módulos activos</span>
-            </div>
-        </div>
-        <canvas class="sparkline" data-values="4,4,5,5,5,6,6"></canvas>
-    </div>
-
-    <div class="card-stat">
-        <div class="card-stat-main">
-            <div class="card-stat-icon bg-orange">
-                <i class="fa-solid fa-school"></i>
-            </div>
-            <div class="card-stat-info">
-                <span class="card-stat-value" id="stat-colegios"><?= (int) $stats['colegios'] ?></span>
-                <span class="card-stat-label">Colegios</span>
-            </div>
-        </div>
-        <canvas class="sparkline" data-values="2,2,3,4,4,5,6"></canvas>
-    </div>
-
-    <div class="card-stat">
-        <div class="card-stat-main">
-            <div class="card-stat-icon bg-purple">
-                <i class="fa-solid fa-calendar"></i>
-            </div>
-            <div class="card-stat-info">
-                <span class="card-stat-value" id="stat-eventos"><?= (int) $stats['eventos'] ?></span>
-                <span class="card-stat-label">Eventos</span>
-            </div>
-        </div>
-        <canvas class="sparkline" data-values="21,28,25,34,39,41,47"></canvas>
-    </div>
-</div>
-
-<div class="card mt-4">
-    <div class="card-header">
-        <h3>Bienvenido, <?= htmlspecialchars(Session::get('usuario_nombre')) ?></h3>
-    </div>
-    <div class="card-body">
-        <p>Selecciona un módulo del menú lateral para comenzar a trabajar.</p>
-    </div>
-</div>
+<script>
+window.SEDUC_DASHBOARD = <?= json_encode([
+    'perfil' => $perfilActual,
+    'csrf' => $csrfDashboard,
+    'endpoints' => [
+        'datos' => 'ajax/dashboard_datos.php',
+        'cambiarPerfil' => 'ajax/cambiarPerfilDashboard.php',
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
