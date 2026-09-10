@@ -23,5 +23,11 @@ $GLOBALS['depth'] = $depth;
 <?php if (!empty($con_charts)): ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <?php endif; ?>
+<?php foreach (($pagina_estilos ?? []) as $estilo): ?>
+<link rel="stylesheet" href="<?= ($depth ?? '') . htmlspecialchars((string) $estilo, ENT_QUOTES, 'UTF-8') ?>"/>
+<?php endforeach; ?>
+<?php foreach (($pagina_scripts_head ?? []) as $scriptHead): ?>
+<script src="<?= htmlspecialchars((string) $scriptHead, ENT_QUOTES, 'UTF-8') ?>"></script>
+<?php endforeach; ?>
 </head>
 <body>

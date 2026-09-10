@@ -137,13 +137,17 @@
     container.innerHTML = state.data.kpis.map(kpi => {
       const id = Number(kpi.id_estado);
       const color = safeColor(kpi.color, fallback[id]);
+      const classByState = { 2: 'nuevos', 3: 'en-proceso', 5: 'resueltos', 7: 'atrasados' };
       const active = String(id) === String(state.estado);
       const description = kpi.descripcion || `${kpi.estado}: ${kpi.cantidad} tickets.`;
-      return `<div class="col-12 col-md-6 col-xl-3">
-        <button class="dashboard-kpi${active ? ' is-active' : ''}" type="button" data-kpi-state="${id}" style="--kpi-color:${color}" title="${escape(description)}" aria-pressed="${active ? 'true' : 'false'}">
-          <span class="dashboard-kpi-top"><span><span class="dashboard-kpi-label">${escape(kpi.estado)}</span><strong class="dashboard-kpi-value">${Number(kpi.cantidad)}</strong></span><span class="dashboard-kpi-icon"><i class="bi ${escape(kpi.icono)}" aria-hidden="true"></i></span></span>
-          <span class="dashboard-kpi-meta"><span><strong>${Number(kpi.porcentaje)}%</strong> de la bandeja</span><span>${Number(kpi.total)} total</span></span>
-          <span class="progress" role="progressbar" aria-label="${escape(kpi.estado)}" aria-valuenow="${Number(kpi.porcentaje)}" aria-valuemin="0" aria-valuemax="100"><span class="progress-bar" style="width:${Number(kpi.porcentaje)}%"></span></span>
+      return `<div class="dashboard-kpi-cell">
+        <button class="contenedor-ticket dashboard-kpi ${classByState[id] || ''}${active ? ' is-active' : ''}" type="button" data-kpi-state="${id}" style="--kpi-color:${color}" title="${escape(description)}" aria-pressed="${active ? 'true' : 'false'}">
+          <span class="contenedor-ticket-body">
+            <span class="contenedor-ticket-titulo">${escape(kpi.estado)}</span>
+            <strong class="contenedor-ticket-numero">${Number(kpi.cantidad)}</strong>
+            <small class="contenedor-ticket-porcentaje">${Number(kpi.porcentaje)}% de la bandeja</small>
+          </span>
+          <span class="contenedor-ticket-icono"><i class="bi ${escape(kpi.icono)}" aria-hidden="true"></i></span>
         </button>
       </div>`;
     }).join('');
