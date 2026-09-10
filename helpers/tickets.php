@@ -18,12 +18,8 @@ function tiene_perfil(int $usuarioId, string $perfil, Conexion $db): bool
            FROM perfiles p
            JOIN usuario_perfil up ON up.id_perfil = p.id_perfil
           WHERE up.id_usuario = ?
-          UNION
-         SELECT DISTINCT p.nombre
-           FROM perfiles p
-           JOIN usuario_colegio uc ON uc.id_perfil = p.id_perfil AND uc.estado = 1
-          WHERE uc.id_usuario = ?",
-        [$usuarioId, $usuarioId]
+            AND p.estado = 1",
+        [$usuarioId]
     );
 
     foreach ($filas as $fila) {
@@ -36,7 +32,12 @@ function tiene_perfil(int $usuarioId, string $perfil, Conexion $db): bool
 
 function es_administrador_global(int $usuarioId, Conexion $db): bool
 {
-    foreach (['administrador', 'admin'] as $perfil) {
+    $usuario = $db->fetchOne('SELECT es_admin_global FROM usuarios WHERE id = ? LIMIT 1', [$usuarioId]);
+    if ((int) ($usuario['es_admin_global'] ?? 0) === 1) {
+        return true;
+    }
+
+    foreach (['super_admin', 'administrador', 'admin'] as $perfil) {
         if (tiene_perfil($usuarioId, $perfil, $db)) {
             return true;
         }
@@ -47,14 +48,15 @@ function es_administrador_global(int $usuarioId, Conexion $db): bool
 function es_admin_colegio(int $usuarioId, ?int $colegioId, Conexion $db): bool
 {
     $sql = "SELECT 1
-              FROM usuario_colegio uc
-         LEFT JOIN perfiles p ON p.id_perfil = uc.id_perfil
-             WHERE uc.id_usuario = ?
-               AND uc.estado = 1
-               AND (uc.es_admin_colegio = 1 OR LOWER(p.nombre) IN ('admin colegio', 'admin_colegio', 'administrador colegio'))";
+              FROM jefatura_departamento j
+              JOIN usuario_perfil up ON up.id_usuario = j.id_usuario
+              JOIN perfiles p ON p.id_perfil = up.id_perfil AND p.estado = 1
+             WHERE j.id_usuario = ?
+               AND j.estado = 1
+               AND LOWER(REPLACE(p.nombre, ' ', '_')) IN ('admin_colegio', 'admin_area', 'administrador_colegio')";
     $params = [$usuarioId];
     if ($colegioId !== null && $colegioId > 0) {
-        $sql .= ' AND uc.id_colegio = ?';
+        $sql .= ' AND j.id_colegio = ?';
         $params[] = $colegioId;
     }
     return (bool) $db->fetchOne($sql . ' LIMIT 1', $params);
@@ -238,15 +240,16 @@ function puede_crear_ticket_para(int $actorId, int $solicitanteId, Conexion $db)
 
     return (bool) $db->fetchOne(
         "SELECT 1
-           FROM usuario_colegio administrador
-      LEFT JOIN perfiles p ON p.id_perfil = administrador.id_perfil
-           JOIN usuario_colegio solicitante
+           FROM jefatura_departamento administrador
+           JOIN jefatura_departamento solicitante
              ON solicitante.id_colegio = administrador.id_colegio
             AND solicitante.id_usuario = ?
             AND solicitante.estado = 1
+           JOIN usuario_perfil up ON up.id_usuario = administrador.id_usuario
+           JOIN perfiles p ON p.id_perfil = up.id_perfil AND p.estado = 1
           WHERE administrador.id_usuario = ?
             AND administrador.estado = 1
-            AND (administrador.es_admin_colegio = 1 OR LOWER(p.nombre) IN ('admin colegio','admin_colegio','administrador colegio'))
+            AND LOWER(REPLACE(p.nombre, ' ', '_')) IN ('admin_colegio','admin_area','administrador_colegio')
           LIMIT 1",
         [$solicitanteId, $actorId]
     );
@@ -348,7 +351,7 @@ function ticket_buscar_para_acceso(int $ticketId, Conexion $db): array|false
            FROM tickets t
       LEFT JOIN (
                     SELECT id_usuario, MIN(id_colegio) AS id_colegio
-                      FROM usuario_colegio
+                      FROM jefatura_departamento
                      WHERE estado = 1
                   GROUP BY id_usuario
                 ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario

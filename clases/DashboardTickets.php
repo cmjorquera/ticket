@@ -40,13 +40,9 @@ final class DashboardTickets
                FROM perfiles p
                JOIN usuario_perfil up ON up.id_perfil = p.id_perfil
               WHERE up.id_usuario = ?
-              UNION
-             SELECT DISTINCT p.id_perfil, p.nombre
-               FROM perfiles p
-               JOIN usuario_colegio uc ON uc.id_perfil = p.id_perfil AND uc.estado = 1
-              WHERE uc.id_usuario = ?
+                AND p.estado = 1
            ORDER BY id_perfil ASC",
-            [$this->usuarioId, $this->usuarioId]
+            [$this->usuarioId]
         );
 
         $perfiles = [];
@@ -169,10 +165,10 @@ final class DashboardTickets
         }
         $marcadores = implode(',', array_fill(0, count($colegios), '?'));
         return [
-            "EXISTS (SELECT 1 FROM usuario_colegio uc_dashboard
-                      WHERE uc_dashboard.id_usuario = t.id_usuario
-                        AND uc_dashboard.estado = 1
-                        AND uc_dashboard.id_colegio IN ({$marcadores}))",
+            "EXISTS (SELECT 1 FROM jefatura_departamento jd_dashboard
+                      WHERE jd_dashboard.id_usuario = t.id_usuario
+                        AND jd_dashboard.estado = 1
+                        AND jd_dashboard.id_colegio IN ({$marcadores}))",
             $colegios,
         ];
     }
@@ -189,13 +185,11 @@ final class DashboardTickets
         }
 
         $filas = $this->db->fetchAll(
-            "SELECT DISTINCT uc.id_colegio
-               FROM usuario_colegio uc
-          LEFT JOIN perfiles p ON p.id_perfil = uc.id_perfil
-              WHERE uc.id_usuario = ?
-                AND uc.estado = 1
-                AND (uc.es_admin_colegio = 1
-                     OR LOWER(p.nombre) IN ('admin colegio', 'admin_colegio', 'administrador colegio'))",
+            "SELECT DISTINCT j.id_colegio
+               FROM jefatura_departamento j
+              WHERE j.id_usuario = ?
+                AND j.estado = 1
+                AND j.id_colegio > 0",
             [$this->usuarioId]
         );
         return $this->colegiosAdministrados = array_values(array_filter(array_map(

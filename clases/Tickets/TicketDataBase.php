@@ -91,7 +91,7 @@ abstract class TicketDataBase
              LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
              LEFT JOIN (
                            SELECT id_usuario, MIN(id_colegio) AS id_colegio
-                             FROM usuario_colegio
+                             FROM jefatura_departamento
                             WHERE estado = 1
                          GROUP BY id_usuario
                        ) uc_ticket ON uc_ticket.id_usuario = t.id_usuario
