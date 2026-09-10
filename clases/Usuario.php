@@ -166,7 +166,7 @@ class Usuario
             return $resultado;
         } catch (Throwable $e) {
             error_log('No fue posible listar los usuarios: ' . $e->getMessage());
-            return [];
+            throw $e;
         }
     }
 
