@@ -1,0 +1,140 @@
+.view-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.btn-view {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.btn-view:hover {
+  background: var(--card);
+  color: var(--fg);
+}
+
+.btn-view.active {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 91, 150, .2);
+}
+
+.btn-view:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.org-view {
+  padding: 18px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.org-department {
+  position: relative;
+  padding: 16px 16px 16px 20px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+}
+
+.org-department::before {
+  content: '';
+  position: absolute;
+  inset: 12px auto 12px 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--blue);
+}
+
+.org-department__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.org-department__header h2 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.org-department__header span {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.org-users {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 9px;
+}
+
+.org-user {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #FAFAFA;
+}
+
+.org-user .user-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 10px;
+}
+
+.org-user strong,
+.org-user small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-user strong {
+  font-size: 12px;
+  color: var(--fg);
+}
+
+.org-user small {
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.org-empty {
+  padding: 42px 16px;
+  text-align: center;
+  color: var(--muted);
+}
+
+@media (max-width: 700px) {
+  .view-switch { order: 3; }
+  .org-view { padding: 12px; }
+  .org-users { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-view { transition: none; }
+}

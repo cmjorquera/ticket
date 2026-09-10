@@ -6,12 +6,16 @@
   let _todosUsuarios = [];
   let _pag;
   let _estadoFiltro = '';
+  let _vistaActual = 'tabla';
   const tableBody = document.querySelector('#tabla-usuarios tbody');
   const searchInput = document.getElementById('buscar-usuario');
   const areaFilter = document.getElementById('filtro-area');
   const statusFilter = document.getElementById('filtro-estado');
   const total = document.getElementById('total-usuarios');
   const addButton = document.getElementById('btn-agregar-usuario');
+  const tableView = document.getElementById('vista-tabla');
+  const orgView = document.getElementById('vista-organigrama');
+  const viewButtons = [...document.querySelectorAll('.btn-view')];
 
   const escapeHtml = value => String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -81,12 +85,37 @@
     return 'badge-inactivo';
   }
 
+  function profileBadgeClass(profile) {
+    const normalized = String(profile || '').normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[\s-]+/g, '_');
+    if (normalized === 'super_admin' || normalized === 'superadmin') return 'badge-bloqueado';
+    if (normalized === 'tecnico') return 'badge-pendiente';
+    if (normalized === 'admin_area') return 'badge-active';
+    if (normalized === 'admin_colegio') return 'badge-realizado';
+    return 'badge-realizado';
+  }
+
+  function profileBadges(profiles) {
+    const values = Array.isArray(profiles)
+      ? profiles
+      : String(profiles || '').split(',').map(value => value.trim()).filter(Boolean);
+    if (!values.length) {
+      return '<span class="badge badge-inactivo">Sin perfil</span>';
+    }
+    return values.map(profile =>
+      `<span class="badge ${profileBadgeClass(profile)}">${escapeHtml(String(profile).replace(/_/g, ' '))}</span>`
+    ).join(' ');
+  }
+
   function filteredUsers() {
     const query = searchInput.value.trim().toLocaleLowerCase('es');
     const area = areaFilter.value;
     const status = _estadoFiltro.toLocaleLowerCase('es');
     return _todosUsuarios.filter(user => {
-      const searchable = `${fullName(user)} ${user.email || ''} ${user.nombre_area || ''} ${user.nom_colegio || ''}`.toLocaleLowerCase('es');
+      const profiles = Array.isArray(user.perfiles) ? user.perfiles.join(' ') : (user.perfiles || '');
+      const searchable = `${fullName(user)} ${user.email || ''} ${profiles} ${user.nombre_departamento || ''} ${user.nombre_area || ''} ${user.nom_colegio || ''}`.toLocaleLowerCase('es');
       return (!query || searchable.includes(query))
         && (!area || String(user.id_area_trabajo || '') === area)
         && (!status || String(user.estado || '').toLocaleLowerCase('es') === status);
@@ -99,7 +128,7 @@
     const users = filtered.slice(start, start + porPagina);
     total.textContent = String(filtered.length);
     if (!users.length) {
-      tableBody.innerHTML = '<tr><td colspan="7" class="text-muted">No hay usuarios para los filtros seleccionados.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="9" class="text-muted">No hay usuarios para los filtros seleccionados.</td></tr>';
       return;
     }
 
@@ -109,6 +138,8 @@
         <td class="mono">${start + index + 1}</td>
         <td><div class="flex items-center gap-3"><span class="user-avatar">${escapeHtml(initials(user))}</span><strong>${escapeHtml(fullName(user))}</strong></div></td>
         <td>${escapeHtml(user.email)}</td>
+        <td>${profileBadges(user.perfiles)}</td>
+        <td>${escapeHtml(user.nombre_departamento || '—')}</td>
         <td>${escapeHtml(user.nombre_area || 'Sin área')}</td>
         <td>${escapeHtml(user.nom_colegio || 'Sin colegio')}</td>
         <td><span class="badge ${badgeClass(user.estado)}">${escapeHtml(user.estado || 'Sin estado')}</span></td>
@@ -121,11 +152,57 @@
     }).join('');
   }
 
+  function renderOrganigrama() {
+    const users = filteredUsers();
+    if (!users.length) {
+      orgView.innerHTML = '<div class="org-empty"><i class="bi bi-diagram-3"></i><p>No hay usuarios para los filtros seleccionados.</p></div>';
+      return;
+    }
+
+    const departments = users.reduce((groups, user) => {
+      const department = String(user.nombre_departamento || '').trim();
+      const key = department && department !== '—' ? department : 'Sin departamento';
+      (groups[key] ||= []).push(user);
+      return groups;
+    }, {});
+
+    orgView.innerHTML = Object.entries(departments)
+      .sort(([left], [right]) => left.localeCompare(right, 'es'))
+      .map(([department, members]) => {
+        const orderedMembers = [...members].sort((left, right) => fullName(left).localeCompare(fullName(right), 'es'));
+        return `<section class="org-department">
+          <div class="org-department__header">
+            <h2>${escapeHtml(department)}</h2>
+            <span>${orderedMembers.length} usuario${orderedMembers.length === 1 ? '' : 's'}</span>
+          </div>
+          <div class="org-users">
+            ${orderedMembers.map(user => `<article class="org-user" title="${escapeHtml(fullName(user))}">
+              <span class="user-avatar" aria-hidden="true">${escapeHtml(initials(user))}</span>
+              <div><strong>${escapeHtml(fullName(user))}</strong><small>${escapeHtml(user.email || 'Sin email')}</small></div>
+            </article>`).join('')}
+          </div>
+        </section>`;
+      }).join('');
+  }
+
+  function cambiarVista(view) {
+    _vistaActual = view === 'organigrama' ? 'organigrama' : 'tabla';
+    tableView.hidden = _vistaActual !== 'tabla';
+    orgView.hidden = _vistaActual !== 'organigrama';
+    viewButtons.forEach(button => {
+      const active = button.dataset.view === _vistaActual;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+    if (_vistaActual === 'organigrama') renderOrganigrama();
+  }
+
   function aplicarFiltros() {
     const count = filteredUsers().length;
     total.textContent = String(count);
     _pag.actualizar(count);
     renderPagina(1, _pag.porPagina);
+    renderOrganigrama();
   }
 
   function fillSelect(select, items, valueKey, labelKey, firstLabel, selected = '') {
@@ -349,7 +426,7 @@
   }
 
   async function loadUsers() {
-    tableBody.innerHTML = '<tr><td colspan="7" class="text-muted">Cargando usuarios…</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="9" class="text-muted">Cargando usuarios…</td></tr>';
     try {
       _todosUsuarios = await request(`${API}/usuarios_listar.php`);
       aplicarFiltros();
@@ -357,7 +434,7 @@
       _todosUsuarios = [];
       total.textContent = '0';
       _pag.actualizar(0);
-      tableBody.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="9">${escapeHtml(error.message)}</td></tr>`;
     }
   }
 
@@ -378,7 +455,7 @@
       await loadUsers();
       addButton.disabled = false;
     } catch (error) {
-      tableBody.innerHTML = `<tr><td colspan="7">${escapeHtml(error.message)}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="9">${escapeHtml(error.message)}</td></tr>`;
     }
   }
 
@@ -394,6 +471,9 @@
     pill.classList.add('active');
     _estadoFiltro = pill.dataset.val || '';
     aplicarFiltros();
+  });
+  viewButtons.forEach(button => {
+    button.addEventListener('click', () => cambiarVista(button.dataset.view));
   });
   tableBody.addEventListener('click', event => {
     const button = event.target.closest('[data-action]');
