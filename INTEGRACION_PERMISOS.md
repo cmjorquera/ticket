@@ -1,39 +1,64 @@
 # Integración de `PermisosManager`
 
-Incluye la clase después de iniciar o validar la sesión:
+## Uso básico
+
+Después de iniciar o validar la sesión:
 
 ```php
 require_once __DIR__ . '/PermisosManager.php';
 $permisos = new PermisosManager((int) ($_SESSION['id'] ?? 0));
 ```
 
-En archivos dentro de subcarpetas, ajusta únicamente la ruta, por ejemplo:
+Desde una subcarpeta usa `__DIR__ . '/../PermisosManager.php'`. Consulta
+`archivo_ejemplo_uso.php` para ejemplos de dashboard, listados y endpoints.
+
+## Perfiles múltiples
+
+`getPerfiles()` retorna todos los perfiles normalizados, por ejemplo
+`['usuario', 'tecnico', 'admin_area']`. Los permisos son acumulativos: una
+persona con perfiles `tecnico` y `admin_area` conserva las capacidades de
+ambos. `getRolPrincipal()` sólo escoge la vista principal de la interfaz:
+
+1. `SUPERADMIN`
+2. `JEFE_DEPARTAMENTO`
+3. `ADMIN_COLEGIO`
+4. `TECNICO`
+5. `USUARIO`
+
+Ser jefe requiere simultáneamente el perfil `admin_area` y una jefatura activa.
+
+## Flujo de autorización
+
+1. Usa `tienePermiso()` para decidir si muestras una acción general.
+2. En el endpoint, repite la autorización con `puedeVer()` o
+   `puedeAsignar()` para validar el recurso concreto.
+3. Usa consultas preparadas al construir el listado del rol.
+
+Los alcances son: superadmin global; jefe por departamento y colegio; admin de
+colegio por colegio; técnico por tickets asignados; usuario por tickets propios.
+
+## Conexiones
+
+Sin configuración adicional, la clase utiliza `clases/Conexion.php` y abre
+`crist668_sistema_panel_central` y `crist668_logica_permisos`, que es el prefijo
+real del proyecto. El requerimiento menciona `crisf668_`; si corresponde a otro
+ambiente, pásalo mediante los DSN opcionales:
 
 ```php
-require_once __DIR__ . '/../PermisosManager.php';
+$permisos = new PermisosManager($idUsuario, [
+    'principal' => [
+        'dsn' => 'mysql:host=localhost;dbname=crisf668_sistema_panel_central;charset=utf8mb4',
+        'usuario' => 'usuario_principal',
+        'password' => 'clave_principal',
+    ],
+    'permisos' => [
+        'dsn' => 'mysql:host=localhost;dbname=crisf668_logica_permisos;charset=utf8mb4',
+        'usuario' => 'usuario_permisos',
+        'password' => 'clave_permisos',
+    ],
+]);
 ```
 
-## Sustitución de lógica existente
-
-- Reemplaza comparaciones manuales de perfil por `esSuperAdmin()`,
-  `esJefeDepartamento()` o `getRol()`.
-- Antes de mostrar un ticket, usa `puedeVer($idTicket)`.
-- Antes de asignar un técnico, usa `puedeAsignar($idTecnico)`.
-- Para botones generales usa `tienePermiso($accion)`, pero conserva la
-  validación específica del recurso en el endpoint que procesa la acción.
-- Usa `getDepartamento()` y consultas preparadas para filtrar las bandejas del
-  jefe. `uso_permisos.php` contiene un ejemplo completo.
-
-## Bases de datos
-
-La clase abre dos conexiones mediante `clases/Conexion.php`:
-
-- `sistema_panel_central` para usuarios, colegios y tickets.
-- `logica_permisos` para jefaturas y departamentos habilitados.
-
-`Conexion` añade el prefijo definido por el proyecto (`crist668_` en este
-entorno). Si el prefijo de producción es distinto, debe cambiarse de forma
-centralizada en la clase de conexión, no dentro del gestor.
-
-El acceso falla de forma cerrada: un usuario inexistente o inactivo, una
-jefatura inconsistente, o una consulta fallida no concede permisos.
+No guardes claves reales en páginas públicas ni en el repositorio. Ante una
+conexión fallida, usuario inválido o consulta inconsistente, el gestor retorna
+`false`, `null` o un arreglo vacío y registra el detalle solamente en el log.
