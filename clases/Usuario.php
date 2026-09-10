@@ -55,7 +55,7 @@ class Usuario
         );
     }
 
-    public static function listar(Conexion $db, array $filtros = []): array
+    public static function listar(Conexion $db, array $filtros = [], ?Conexion $dbPermisos = null): array
     {
         try {
             $where = [];
@@ -73,15 +73,22 @@ class Usuario
                 $parametros[] = $idArea;
             }
 
+            $idColegio = (int) ($filtros['id_colegio'] ?? 0);
+            if ($idColegio > 0) {
+                $where[] = 'uc.id_colegio = ?';
+                $parametros[] = $idColegio;
+            }
+
             $buscar = trim((string) ($filtros['buscar'] ?? ''));
             if ($buscar !== '') {
                 $where[] = '(u.nombre LIKE ?
                     OR u.apellido_paterno LIKE ?
                     OR u.apellido_materno LIKE ?
                     OR u.email LIKE ?
-                    OR at.nombre_area LIKE ?)';
+                    OR at.nombre_area LIKE ?
+                    OR col.nom_colegio LIKE ?)';
                 $termino = '%' . $buscar . '%';
-                array_push($parametros, $termino, $termino, $termino, $termino, $termino);
+                array_push($parametros, $termino, $termino, $termino, $termino, $termino, $termino);
             }
 
             $sql = "SELECT
@@ -96,10 +103,19 @@ class Usuario
                         u.id_area_trabajo,
                         at.nombre_area,
                         at.sigla_area,
+                        uc.id_colegio,
+                        col.nom_colegio,
                         u.fecha_creacion,
                         u.sexo
                     FROM usuarios u
-                    LEFT JOIN area_trabajo at ON at.id_area = u.id_area_trabajo";
+                    LEFT JOIN area_trabajo at ON at.id_area = u.id_area_trabajo
+                    LEFT JOIN (
+                        SELECT id_usuario, MIN(id_colegio) AS id_colegio
+                          FROM usuario_colegio
+                         WHERE estado = 1
+                      GROUP BY id_usuario
+                    ) uc ON uc.id_usuario = u.id
+                    LEFT JOIN colegio col ON col.id_colegio = uc.id_colegio";
 
             if ($where !== []) {
                 $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -107,10 +123,51 @@ class Usuario
 
             $sql .= ' ORDER BY u.nombre ASC, u.apellido_paterno ASC';
 
+            $permisosPorUsuario = [];
+            if ($dbPermisos !== null) {
+                try {
+                    $filasPermisos = $dbPermisos->fetchAll(
+                        "SELECT u.id AS id_usuario,
+                                GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ',') AS perfiles,
+                                MAX(j.id_departamento) AS id_departamento,
+                                MAX(j.id_colegio) AS id_colegio_jefatura,
+                                MAX(d.nombre_departamento) AS nombre_departamento,
+                                MAX(c.nom_colegio) AS nom_colegio_jefatura
+                           FROM usuarios u
+                      LEFT JOIN usuario_perfil up
+                             ON up.id_usuario = u.id AND up.estado = 1
+                      LEFT JOIN perfiles p
+                             ON p.id_perfil = up.id_perfil AND p.estado = 1
+                      LEFT JOIN jefatura_departamento j
+                             ON j.id_usuario = u.id AND j.estado = 1
+                      LEFT JOIN departamentos d
+                             ON d.id_departamento = j.id_departamento
+                      LEFT JOIN colegio c
+                             ON c.id_colegio = j.id_colegio
+                       GROUP BY u.id"
+                    );
+                    foreach ($filasPermisos as $filaPermisos) {
+                        $id = (int) ($filaPermisos['id_usuario'] ?? 0);
+                        if ($id > 0) {
+                            $permisosPorUsuario[$id] = $filaPermisos;
+                        }
+                    }
+                } catch (Throwable $e) {
+                    error_log('No fue posible anexar perfiles al listado: ' . $e->getMessage());
+                }
+            }
+
             $resultado = [];
             foreach ($db->fetchAll($sql, $parametros) as $fila) {
+                $datosPermisos = $permisosPorUsuario[(int) ($fila['id'] ?? 0)] ?? [];
                 $nombreArea = trim((string) ($fila['nombre_area'] ?? ''));
                 $estadoUsuario = trim((string) ($fila['estado'] ?? ''));
+                $perfiles = array_values(array_filter(array_map(
+                    'trim',
+                    explode(',', (string) ($datosPermisos['perfiles'] ?? ''))
+                )));
+                $colegioJefatura = trim((string) ($datosPermisos['nom_colegio_jefatura'] ?? ''));
+                $colegioUsuario = trim((string) ($fila['nom_colegio'] ?? ''));
 
                 $resultado[] = [
                     'id'               => (int) ($fila['id'] ?? 0),
@@ -126,7 +183,11 @@ class Usuario
                     'sigla_area'       => (string) ($fila['sigla_area'] ?? ''),
                     'fecha_creacion'   => (string) ($fila['fecha_creacion'] ?? ''),
                     'sexo'             => (int) ($fila['sexo'] ?? 0),
-                    'nom_colegio'      => 'Sin colegio',
+                    'perfiles'         => $perfiles,
+                    'id_departamento'  => (int) ($datosPermisos['id_departamento'] ?? 0),
+                    'nombre_departamento' => trim((string) ($datosPermisos['nombre_departamento'] ?? '')) ?: '—',
+                    'id_colegio'       => (int) ($datosPermisos['id_colegio_jefatura'] ?? $fila['id_colegio'] ?? 0),
+                    'nom_colegio'      => $colegioJefatura ?: ($colegioUsuario ?: 'Sin colegio'),
                 ];
             }
 

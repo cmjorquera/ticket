@@ -8,13 +8,19 @@ Sesion::requerir();
 
 try {
     $db = Conexion::getInstance('sistema_panel_central');
+    $dbPermisos = null;
+    try {
+        $dbPermisos = Conexion::getInstance('logica_permisos');
+    } catch (Throwable $e) {
+        error_log('Listado de usuarios sin datos de permisos: ' . $e->getMessage());
+    }
     $filtros = [
         'estado'     => trim((string) ($_GET['estado'] ?? '')),
         'id_area'    => (int) ($_GET['id_area'] ?? 0),
         'id_colegio' => (int) ($_GET['id_colegio'] ?? 0),
         'buscar'     => trim((string) ($_GET['buscar'] ?? '')),
     ];
-    responder_json(['ok' => true, 'data' => Usuario::listar($db, $filtros)]);
+    responder_json(['ok' => true, 'data' => Usuario::listar($db, $filtros, $dbPermisos)]);
 } catch (Throwable $e) {
     responder_json([
         'ok'      => false,
