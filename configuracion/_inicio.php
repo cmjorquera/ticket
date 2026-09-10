@@ -13,7 +13,8 @@ if (!class_exists('Sesion', false)) {
         {
             self::iniciar();
             if (!isset($_SESSION['id']) || (int) $_SESSION['id'] <= 0) {
-                header('Location: ../index.php');
+                $rutaBase = (string) ($GLOBALS['depth'] ?? '../');
+                header('Location: ' . $rutaBase . 'index.php');
                 exit;
             }
         }
@@ -43,7 +44,8 @@ $db = Conexion::getInstance('sistema_panel_central');
 
 function iniciar_layout_configuracion(string $titulo, string $breadcrumb, string $pagina): void
 {
-    global $db, $titulo_pagina, $breadcrumb_actual, $pagina_actual, $depth;
+    global $db, $titulo_pagina, $breadcrumb_actual, $pagina_actual, $depth,
+        $con_charts, $pagina_estilos, $pagina_scripts_head;
     $titulo_pagina = $titulo;
     $breadcrumb_actual = $breadcrumb;
     $pagina_actual = $pagina;
@@ -57,7 +59,7 @@ function iniciar_layout_configuracion(string $titulo, string $breadcrumb, string
 
 function finalizar_layout_configuracion(): void
 {
-    global $depth;
+    global $depth, $pagina_scripts;
     echo '</main></div>';
     require __DIR__ . '/../componentes/scripts.php';
     echo '</body></html>';
