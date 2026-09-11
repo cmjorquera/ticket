@@ -2,7 +2,7 @@
 require_once __DIR__ . '/_inicio.php';
 
 $depth = '../';
-$pagina_estilos = ['css/listado_usuarios.css'];
+$pagina_estilos = ['css/listado_usuarios.css?v=' . (string) filemtime(__DIR__ . '/../css/listado_usuarios.css')];
 iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuarios');
 ?>
 <div class="page-header">
@@ -128,5 +128,5 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 </div>
 
 <script src="<?= $depth ?>js/paginacion.js"></script>
-<script src="<?= $depth ?>configuracion/js/listado_usuarios.js"></script>
+<script src="<?= $depth ?>configuracion/js/listado_usuarios.js?v=<?= (int) filemtime(__DIR__ . '/js/listado_usuarios.js') ?>"></script>
 <?php finalizar_layout_configuracion(); ?>

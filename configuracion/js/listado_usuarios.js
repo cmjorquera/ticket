@@ -178,7 +178,11 @@
           <div class="org-users">
             ${orderedMembers.map(user => `<article class="org-user" title="${escapeHtml(fullName(user))}">
               <span class="user-avatar" aria-hidden="true">${escapeHtml(initials(user))}</span>
-              <div><strong>${escapeHtml(fullName(user))}</strong><small>${escapeHtml(user.email || 'Sin email')}</small></div>
+              <div class="org-user__info">
+                <strong>${escapeHtml(fullName(user))}</strong>
+                <small>${escapeHtml(user.email || 'Sin email')}</small>
+                <div class="org-user__profiles">${profileBadges(user.perfiles)}</div>
+              </div>
             </article>`).join('')}
           </div>
         </section>`;
@@ -187,8 +191,13 @@
 
   function cambiarVista(view) {
     _vistaActual = view === 'organigrama' ? 'organigrama' : 'tabla';
-    tableView.hidden = _vistaActual !== 'tabla';
-    orgView.hidden = _vistaActual !== 'organigrama';
+    const mostrarTabla = _vistaActual === 'tabla';
+    tableView.hidden = !mostrarTabla;
+    orgView.hidden = mostrarTabla;
+    tableView.style.display = mostrarTabla ? 'block' : 'none';
+    orgView.style.display = mostrarTabla ? 'none' : 'block';
+    tableView.setAttribute('aria-hidden', String(!mostrarTabla));
+    orgView.setAttribute('aria-hidden', String(mostrarTabla));
     viewButtons.forEach(button => {
       const active = button.dataset.view === _vistaActual;
       button.classList.toggle('active', active);
