@@ -112,6 +112,10 @@
   white-space: nowrap;
 }
 
+.org-user__info {
+  min-width: 0;
+}
+
 .org-user strong {
   font-size: 12px;
   color: var(--fg);
@@ -121,6 +125,18 @@
   margin-top: 2px;
   font-size: 10px;
   color: var(--muted);
+}
+
+.org-user__profiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 7px;
+}
+
+.org-user__profiles .badge {
+  padding: 2px 6px;
+  font-size: 9px;
 }
 
 .org-empty {
