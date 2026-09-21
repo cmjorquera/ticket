@@ -11,6 +11,9 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     <p>Administra cuentas, permisos y estado de acceso.</p>
   </div>
   <div class="page-header-actions">
+    <button type="button" class="btn btn-outline" id="btn-descargar-usuarios" title="Descargar los usuarios que coinciden con los filtros actuales">
+      <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+    </button>
     <button type="button" class="btn btn-primary" id="btn-agregar-usuario">
       <i class="bi bi-person-plus"></i> Agregar usuario
     </button>
@@ -108,6 +111,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
             <div class="form-group"><label class="form-label" for="u-area">Área *</label><select class="form-input" id="u-area"><option value="">Seleccionar</option></select></div>
             <div class="form-group"><label class="form-label" for="u-perfil">Perfil *</label><select class="form-input" id="u-perfil"><option value="">Seleccionar</option></select></div>
             <div class="form-group"><label class="form-label" for="u-colegio">Colegio</label><select class="form-input" id="u-colegio"><option value="">Sin colegio</option></select></div>
+            <div class="form-group"><label class="form-label" for="u-departamento">Departamento</label><select class="form-input" id="u-departamento" disabled><option value="">Selecciona primero un colegio</option></select></div>
             <div class="form-group"><label class="form-label" for="u-sexo">Sexo *</label><select class="form-input" id="u-sexo"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></div>
           </div>
         </section>

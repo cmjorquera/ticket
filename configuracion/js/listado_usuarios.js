@@ -2,7 +2,7 @@
   'use strict';
 
   const API = '../ajax';
-  const state = { areas: [], colegios: [], perfiles: [] };
+  const state = { areas: [], colegios: [], perfiles: [], departamentos: [] };
   let _todosUsuarios = [];
   let _pag;
   let _estadoFiltro = '';
@@ -13,6 +13,7 @@
   const statusFilter = document.getElementById('filtro-estado');
   const total = document.getElementById('total-usuarios');
   const addButton = document.getElementById('btn-agregar-usuario');
+  const downloadButton = document.getElementById('btn-descargar-usuarios');
   const tableView = document.getElementById('vista-tabla');
   const orgView = document.getElementById('vista-organigrama');
   const viewButtons = [...document.querySelectorAll('.btn-view')];
@@ -229,6 +230,53 @@
     });
   }
 
+  function fillDepartmentSelect(selected = '') {
+    const schoolId = Number(document.getElementById('u-colegio').value || 0);
+    const departmentSelect = document.getElementById('u-departamento');
+    const departments = state.departamentos.filter(item => Number(item.id_colegio) === schoolId);
+    fillSelect(
+      departmentSelect,
+      departments,
+      'id_departamento_colegio',
+      'nombre_departamento',
+      schoolId ? 'Seleccionar departamento' : 'Selecciona primero un colegio',
+      selected
+    );
+    departmentSelect.disabled = !schoolId || departments.length === 0;
+  }
+
+  function updateAssignmentFields(selectedDepartment = '') {
+    const profileId = Number(document.getElementById('u-perfil').value || 0);
+    const profile = state.perfiles.find(item => Number(item.id_perfil) === profileId);
+    const type = profile ? profileType(profile) : '';
+    const schoolSelect = document.getElementById('u-colegio');
+    const departmentSelect = document.getElementById('u-departamento');
+    const editing = Number(document.getElementById('modal-usuario-id').value || 0) > 0;
+    const managesSchool = type === 'admin_colegio';
+    const managesDepartment = type === 'admin_area';
+
+    if (editing) {
+      fillDepartmentSelect(selectedDepartment);
+      schoolSelect.disabled = true;
+      departmentSelect.disabled = true;
+      return;
+    }
+
+    schoolSelect.disabled = !managesSchool && !managesDepartment;
+    if (schoolSelect.disabled) {
+      schoolSelect.value = '';
+      fillDepartmentSelect();
+      departmentSelect.disabled = true;
+      return;
+    }
+    if (managesSchool) {
+      departmentSelect.innerHTML = '<option value="">No aplica para administrador de colegio</option>';
+      departmentSelect.disabled = true;
+      return;
+    }
+    fillDepartmentSelect(selectedDepartment);
+  }
+
   function profileType(profile) {
     const name = String(profile?.nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     if ((name.includes('administrador') || Number(profile?.id_perfil) === 3) && !name.includes('colegio') && !name.includes('area')) return 'administrador';
@@ -294,7 +342,7 @@
     const currentSchool = datos?.id_colegio ?? datos?.colegios?.[0]?.id_colegio ?? '';
     const schoolSelect = document.getElementById('u-colegio');
     fillSelect(schoolSelect, state.colegios, 'id_colegio', 'nom_colegio', 'Sin colegio', currentSchool);
-    schoolSelect.disabled = editing;
+    updateAssignmentFields(datos?.id_departamento_colegio ?? '');
 
     document.getElementById('u-menus-wrap').hidden = editing;
     document.getElementById('modal-usuario-error').hidden = true;
@@ -314,6 +362,7 @@
       telefono: document.getElementById('u-telefono').value.trim(),
       id_area_trabajo: Number(document.getElementById('u-area').value),
       id_perfil: Number(document.getElementById('u-perfil').value),
+      id_departamento_colegio: Number(document.getElementById('u-departamento').value || 0),
       sexo: document.getElementById('u-sexo').value,
     };
     if (!id) {
@@ -328,6 +377,12 @@
     error.hidden = true;
     if (!data.nombre || !data.apellido_paterno || !data.email || !data.id_area_trabajo || (!data.id && !data.id_perfil) || !data.sexo) {
       error.textContent = 'Completa nombre, apellido paterno, email, área, perfil y sexo.';
+      error.hidden = false;
+      return;
+    }
+    const selectedProfile = state.perfiles.find(item => Number(item.id_perfil) === data.id_perfil);
+    if (!data.id && data.id_colegio && profileType(selectedProfile) === 'admin_area' && !data.id_departamento_colegio) {
+      error.textContent = 'Selecciona el departamento correspondiente al colegio.';
       error.hidden = false;
       return;
     }
@@ -457,8 +512,9 @@
     _pag.render();
     addButton.disabled = true;
     try {
-      [state.areas, state.colegios, state.perfiles] = await Promise.all([
+      [state.areas, state.colegios, state.perfiles, state.departamentos] = await Promise.all([
         request(`${API}/areas_listar.php`), request(`${API}/colegios_listar.php`), request(`${API}/perfiles_listar.php`),
+        request(`${API}/departamentos_colegio_listar.php`),
       ]);
       fillSelect(areaFilter, state.areas, 'id_area', 'nombre_area', 'Todas las áreas');
       await loadUsers();
@@ -469,8 +525,21 @@
   }
 
   addButton.addEventListener('click', () => abrirModalUsuario());
+  downloadButton.addEventListener('click', () => {
+    const params = new URLSearchParams();
+    const search = searchInput.value.trim();
+    if (search) params.set('buscar', search);
+    if (areaFilter.value) params.set('id_area', areaFilter.value);
+    if (_estadoFiltro) params.set('estado', _estadoFiltro);
+    const query = params.toString();
+    window.location.href = `descargar_usuarios_pdf.php${query ? `?${query}` : ''}`;
+  });
   document.getElementById('modal-usuario-guardar').addEventListener('click', guardarUsuario);
-  document.getElementById('u-perfil').addEventListener('change', renderProfilePermissions);
+  document.getElementById('u-perfil').addEventListener('change', () => {
+    renderProfilePermissions();
+    updateAssignmentFields();
+  });
+  document.getElementById('u-colegio').addEventListener('change', () => updateAssignmentFields());
   searchInput.addEventListener('input', aplicarFiltros);
   areaFilter.addEventListener('change', aplicarFiltros);
   statusFilter.addEventListener('click', event => {

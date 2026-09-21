@@ -27,18 +27,12 @@ function usuario_puede_administrar_permisos(Conexion $db, int $idUsuario): bool
     }
     return (bool) $db->fetchOne(
         "SELECT 1
-          WHERE EXISTS (
-                    SELECT 1 FROM usuario_perfil up
-                    JOIN perfiles p ON p.id_perfil = up.id_perfil
-                    WHERE up.id_usuario = ? AND LOWER(p.nombre) IN ('administrador', 'admin')
-                )
-             OR EXISTS (
-                    SELECT 1 FROM usuario_colegio uc
-                    JOIN perfiles p ON p.id_perfil = uc.id_perfil
-                    WHERE uc.id_usuario = ? AND uc.estado = 1
-                      AND LOWER(p.nombre) IN ('administrador', 'admin')
-                )",
-        [$idUsuario, $idUsuario]
+           FROM usuario_perfil up
+           JOIN perfiles p ON p.id_perfil = up.id_perfil
+          WHERE up.id_usuario = ?
+            AND LOWER(p.nombre) IN ('administrador', 'admin')
+          LIMIT 1",
+        [$idUsuario]
     );
 }
 

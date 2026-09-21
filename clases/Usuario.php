@@ -75,7 +75,7 @@ class Usuario
 
             $idColegio = (int) ($filtros['id_colegio'] ?? 0);
             if ($idColegio > 0) {
-                $where[] = 'j.id_colegio = ?';
+                $where[] = 'jd.id_colegio = ?';
                 $parametros[] = $idColegio;
             }
 
@@ -87,7 +87,7 @@ class Usuario
                     OR u.email LIKE ?
                     OR at.nombre_area LIKE ?
                     OR p.nombre LIKE ?
-                    OR d.nombre_departamento LIKE ?
+                    OR dc.nombre_departamento LIKE ?
                     OR col.nom_colegio LIKE ?)';
                 $termino = '%' . $buscar . '%';
                 array_push($parametros, $termino, $termino, $termino, $termino, $termino, $termino, $termino, $termino);
@@ -106,9 +106,9 @@ class Usuario
                         at.nombre_area,
                         at.sigla_area,
                         GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ',') AS perfiles,
-                        MAX(j.id_departamento) AS id_departamento,
-                        MAX(d.nombre_departamento) AS nombre_departamento,
-                        MAX(j.id_colegio) AS id_colegio,
+                        MAX(jd.id_departamento_colegio) AS id_departamento_colegio,
+                        MAX(dc.nombre_departamento) AS nombre_departamento,
+                        MAX(jd.id_colegio) AS id_colegio,
                         MAX(col.nom_colegio) AS nom_colegio,
                         u.fecha_creacion,
                         u.sexo
@@ -116,9 +116,12 @@ class Usuario
                     LEFT JOIN area_trabajo at ON at.id_area = u.id_area_trabajo
                     LEFT JOIN usuario_perfil up ON up.id_usuario = u.id
                     LEFT JOIN perfiles p ON p.id_perfil = up.id_perfil AND p.estado = 1
-                    LEFT JOIN jefatura_departamento j ON j.id_usuario = u.id AND j.estado = 1
-                    LEFT JOIN departamentos d ON d.id_departamento = j.id_departamento
-                    LEFT JOIN colegio col ON col.id_colegio = j.id_colegio";
+                    LEFT JOIN jefatura_departamento jd
+                           ON jd.id_usuario = u.id
+                          AND jd.estado = 1
+                    LEFT JOIN departamentos_colegio dc
+                           ON dc.id = jd.id_departamento_colegio
+                    LEFT JOIN colegio col ON col.id_colegio = jd.id_colegio";
 
             if ($where !== []) {
                 $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -156,7 +159,7 @@ class Usuario
                     'fecha_creacion'   => (string) ($fila['fecha_creacion'] ?? ''),
                     'sexo'             => (int) ($fila['sexo'] ?? 0),
                     'perfiles'         => $perfiles,
-                    'id_departamento'  => (int) ($fila['id_departamento'] ?? 0),
+                    'id_departamento_colegio' => (int) ($fila['id_departamento_colegio'] ?? 0),
                     'nombre_departamento' => trim((string) ($fila['nombre_departamento'] ?? '')) ?: '—',
                     'id_colegio'       => (int) ($fila['id_colegio'] ?? 0),
                     'nom_colegio'      => $colegioUsuario ?: 'Sin colegio',

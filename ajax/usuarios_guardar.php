@@ -80,6 +80,7 @@ try {
         $sexo = trim((string) ($datos['sexo'] ?? ''));
         $idArea = (int) ($datos['id_area_trabajo'] ?? 0);
         $idColegio = (int) ($datos['id_colegio'] ?? 0);
+        $idDepartamentoColegio = (int) ($datos['id_departamento_colegio'] ?? 0);
         $idPerfil = (int) ($datos['id_perfil'] ?? 0);
 
         if ($nombre === '' || $apellidoPaterno === '' || $email === '' || $idArea <= 0 || $idPerfil <= 0 || $sexo === '') {
@@ -101,6 +102,25 @@ try {
         if ($idColegio > 0 && !$db->fetchOne('SELECT id_colegio FROM colegio WHERE id_colegio = ? AND estado = 1 LIMIT 1', [$idColegio])) {
             responder_json(['ok' => false, 'mensaje' => 'El colegio seleccionado no está disponible.'], 422);
         }
+        $nombrePerfil = strtolower(trim((string) $perfilSeleccionado['nombre']));
+        $esAdminColegio = str_contains($nombrePerfil, 'admin') && str_contains($nombrePerfil, 'colegio');
+        $esAdminDepartamento = str_contains($nombrePerfil, 'admin')
+            && (str_contains($nombrePerfil, 'departamento') || str_contains($nombrePerfil, 'area'));
+        if ($idColegio > 0 && !$esAdminColegio && !$esAdminDepartamento) {
+            responder_json(['ok' => false, 'mensaje' => 'El colegio solo se asigna a administradores de colegio o departamento.'], 422);
+        }
+        if ($idColegio > 0 && $esAdminDepartamento && $idDepartamentoColegio <= 0) {
+            responder_json(['ok' => false, 'mensaje' => 'Selecciona el departamento que administrará el usuario.'], 422);
+        }
+        if ($idDepartamentoColegio > 0 && !$db->fetchOne(
+            'SELECT id
+               FROM departamentos_colegio
+              WHERE id = ? AND id_colegio = ? AND estado = 1
+              LIMIT 1',
+            [$idDepartamentoColegio, $idColegio]
+        )) {
+            responder_json(['ok' => false, 'mensaje' => 'El departamento no pertenece al colegio seleccionado.'], 422);
+        }
 
         $pdo->beginTransaction();
         try {
@@ -117,13 +137,13 @@ try {
             $db->execute('INSERT INTO usuario_perfil (id_usuario, id_perfil) VALUES (?, ?)', [$idUsuario, $idPerfil]);
 
             if ($idColegio > 0) {
-                $esAdminColegio = str_contains(strtolower((string) $perfilSeleccionado['nombre']), 'admin')
-                    && str_contains(strtolower((string) $perfilSeleccionado['nombre']), 'colegio');
+                $tipoJefatura = $esAdminColegio ? 'Admin_Colegio' : 'Admin_Departamento';
+                $departamentoAsignado = $esAdminColegio ? null : $idDepartamentoColegio;
                 $db->execute(
-                    'INSERT INTO usuario_colegio
-                        (id_usuario, id_colegio, id_perfil, estado, es_admin_colegio, fecha_asignacion)
-                     VALUES (?, ?, ?, 1, ?, NOW())',
-                    [$idUsuario, $idColegio, $idPerfil, $esAdminColegio ? 1 : 0]
+                    'INSERT INTO jefatura_departamento
+                        (id_usuario, id_colegio, id_departamento_colegio, tipo_jefatura, estado)
+                     VALUES (?, ?, ?, ?, 1)',
+                    [$idUsuario, $idColegio, $departamentoAsignado, $tipoJefatura]
                 );
             }
             if (!asignar_permisos_por_defecto($idUsuario, $idPerfil, $db)) {

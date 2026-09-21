@@ -1,0 +1,292 @@
+LOGICA DEL MODULO DE USUARIOS Y CONFIGURACION
+============================================
+
+1. OBJETIVO
+-----------
+El modulo permite listar, buscar, filtrar, crear, editar, activar o bloquear
+usuarios; consultar sus perfiles, colegio y departamento; administrar permisos;
+y descargar el mismo listado en PDF.
+
+El listado web y el PDF comparten una sola fuente de datos:
+clases/Usuario.php, metodo Usuario::listar(). Esto evita que ambas vistas usen
+joins o nombres de columnas diferentes.
+
+
+2. TABLAS Y RELACIONES VALIDAS
+------------------------------
+
+usuarios
+  - Clave primaria: id
+  - Datos principales: nombre, apellido_paterno, apellido_materno, email,
+    telefono, cargo, estado, id_area_trabajo, fecha_creacion y sexo.
+
+area_trabajo
+  - Clave primaria: id_area
+  - Relacion: usuarios.id_area_trabajo -> area_trabajo.id_area
+
+perfiles
+  - Clave primaria: id_perfil
+  - Describe cada perfil o rol funcional.
+
+usuario_perfil
+  - Tabla puente entre usuarios y perfiles.
+  - Relaciones:
+      usuario_perfil.id_usuario -> usuarios.id
+      usuario_perfil.id_perfil  -> perfiles.id_perfil
+
+jefatura_departamento
+  - Relaciona al usuario con un departamento de un colegio.
+  - Relaciones correctas:
+      jefatura_departamento.id_usuario
+        -> usuarios.id
+      jefatura_departamento.id_departamento_colegio
+        -> departamentos_colegio.id_departamento_colegio
+      jefatura_departamento.id_colegio
+        -> colegio.id_colegio
+  - Solo se consideran relaciones con estado = 1.
+
+departamentos_colegio
+  - Clave primaria: id_departamento_colegio
+  - Colegio propietario: id_colegio
+  - Nombre mostrado: nombre_departamento
+
+colegio
+  - Clave primaria: id_colegio
+  - Nombre mostrado: nom_colegio
+
+IMPORTANTE:
+  - La tabla valida es departamentos_colegio, no departamentos.
+  - La columna valida es id_departamento_colegio, no id_departamento.
+  - No existe la tabla usuario_colegio en esta base de datos.
+  - Los alias estandar del modulo son:
+      u   = usuarios
+      at  = area_trabajo
+      up  = usuario_perfil
+      p   = perfiles
+      jd  = jefatura_departamento
+      dc  = departamentos_colegio
+      col = colegio
+
+
+3. CONSULTA CORRECTA DEL LISTADO
+-------------------------------
+
+La consulta canonica se encuentra en Usuario::listar(). Su estructura es:
+
+SELECT
+    u.id,
+    u.nombre,
+    u.apellido_paterno,
+    u.apellido_materno,
+    u.email,
+    u.telefono,
+    u.cargo,
+    u.estado,
+    u.id_area_trabajo,
+    at.nombre_area,
+    at.sigla_area,
+    GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ',') AS perfiles,
+    MAX(jd.id_departamento_colegio) AS id_departamento_colegio,
+    MAX(dc.nombre_departamento) AS nombre_departamento,
+    MAX(jd.id_colegio) AS id_colegio,
+    MAX(col.nom_colegio) AS nom_colegio,
+    u.fecha_creacion,
+    u.sexo
+FROM usuarios u
+LEFT JOIN area_trabajo at
+       ON at.id_area = u.id_area_trabajo
+LEFT JOIN usuario_perfil up
+       ON up.id_usuario = u.id
+LEFT JOIN perfiles p
+       ON p.id_perfil = up.id_perfil
+      AND p.estado = 1
+LEFT JOIN jefatura_departamento jd
+       ON jd.id_usuario = u.id
+      AND jd.estado = 1
+LEFT JOIN departamentos_colegio dc
+       ON dc.id_departamento_colegio = jd.id_departamento_colegio
+LEFT JOIN colegio col
+       ON col.id_colegio = jd.id_colegio
+GROUP BY
+    u.id, u.nombre, u.apellido_paterno, u.apellido_materno,
+    u.email, u.telefono, u.cargo, u.estado, u.id_area_trabajo,
+    at.nombre_area, at.sigla_area, u.fecha_creacion, u.sexo
+ORDER BY u.nombre ASC, u.apellido_paterno ASC;
+
+Los filtros se agregan con placeholders y parametros separados:
+  - Estado:  u.estado = ?
+  - Area:    u.id_area_trabajo = ?
+  - Colegio: jd.id_colegio = ?
+  - Busqueda: columnas permitidas con LIKE ?
+
+No se concatena entrada del usuario dentro del SQL.
+
+
+4. CONSULTAS CORRECTAS POR OPERACION
+------------------------------------
+
+Perfiles de un usuario:
+
+SELECT p.id_perfil, p.nombre
+FROM usuario_perfil up
+JOIN perfiles p ON p.id_perfil = up.id_perfil
+WHERE up.id_usuario = ?;
+
+Departamento y colegio activos de un usuario:
+
+SELECT
+    jd.id_departamento_colegio,
+    dc.nombre_departamento,
+    jd.id_colegio,
+    col.nom_colegio
+FROM jefatura_departamento jd
+JOIN departamentos_colegio dc
+  ON dc.id_departamento_colegio = jd.id_departamento_colegio
+JOIN colegio col
+  ON col.id_colegio = jd.id_colegio
+WHERE jd.id_usuario = ?
+  AND jd.estado = 1;
+
+Departamentos disponibles para el formulario:
+
+SELECT dc.id_departamento_colegio, dc.id_colegio, dc.nombre_departamento
+FROM departamentos_colegio dc
+ORDER BY dc.id_colegio ASC, dc.nombre_departamento ASC;
+
+Validar que un departamento pertenece al colegio seleccionado:
+
+SELECT id_departamento_colegio
+FROM departamentos_colegio
+WHERE id_departamento_colegio = ?
+  AND id_colegio = ?
+LIMIT 1;
+
+Crear la relacion de colegio y departamento:
+
+INSERT INTO jefatura_departamento
+    (id_usuario, id_departamento_colegio, id_colegio, estado)
+VALUES (?, ?, ?, 1);
+
+Contar usuarios activos por colegio:
+
+SELECT c.id_colegio, c.nom_colegio,
+       COUNT(DISTINCT CASE WHEN jd.estado = 1 THEN jd.id_usuario END)
+         AS total_usuarios
+FROM colegio c
+LEFT JOIN jefatura_departamento jd
+       ON jd.id_colegio = c.id_colegio
+WHERE c.estado = 1
+GROUP BY c.id_colegio, c.nom_colegio;
+
+Validar un administrador por perfil:
+
+SELECT 1
+FROM usuario_perfil up
+JOIN perfiles p ON p.id_perfil = up.id_perfil
+WHERE up.id_usuario = ?
+  AND LOWER(p.nombre) IN ('administrador', 'admin')
+LIMIT 1;
+
+Cambiar el estado de un usuario:
+
+UPDATE usuarios SET estado = 'bloqueado' WHERE id = ?;
+UPDATE usuarios SET estado = 'activo', intentos_fallidos = 0 WHERE id = ?;
+
+Todas estas operaciones se ejecutan mediante Conexion::fetchOne(), fetchAll()
+o execute(). Esos metodos crean PDO prepared statements y reciben los valores
+en un arreglo separado del texto SQL.
+
+
+5. RESPONSABILIDAD DE CADA ARCHIVO DE CONFIGURACION
+---------------------------------------------------
+
+configuracion/_inicio.php
+  Inicia la sesion, exige un usuario autenticado, abre la conexion compartida
+  y proporciona las funciones para construir y cerrar el layout.
+
+configuracion/index.php
+  Portada del modulo de configuracion y accesos a usuarios, colegios,
+  categorias y mantenimiento de tickets.
+
+configuracion/listado_usuarios.php
+  Estructura visual del listado, filtros, selector tabla/organigrama y modales.
+  No ejecuta SQL directamente. Incluye el boton de descarga PDF.
+
+configuracion/js/listado_usuarios.js
+  Consume los endpoints AJAX, aplica filtros y paginacion, renderiza tabla y
+  organigrama, y envia altas, ediciones, estados y permisos. Al crear una
+  relacion con colegio exige seleccionar un departamento del mismo colegio.
+
+configuracion/descargar_usuarios_pdf.php
+  Valida la sesion, reutiliza Usuario::listar() con los filtros recibidos y
+  genera el reporte PDF. No mantiene una consulta duplicada del listado.
+
+configuracion/usuarios_permisos.php
+  Muestra y carga los permisos de menu y submenu del usuario seleccionado.
+  Autoriza administradores mediante usuario_perfil y perfiles.
+
+configuracion/permisos.php
+  Compatibilidad de rutas: redirige al listado de usuarios.
+
+configuracion/mantenedor_colegios.php
+  Lista colegios activos y cuenta sus usuarios mediante
+  jefatura_departamento, sin usar la tabla inexistente usuario_colegio.
+
+configuracion/admin_categorias.php
+  Lista categorias de tickets, tecnicos y sus asignaciones. Usa
+  categoria_tecnico como tabla puente.
+
+configuracion/ajax/guardar_categorias_tecnicos.php
+  Valida CSRF y guarda o elimina asignaciones entre tecnicos y categorias
+  dentro de una transaccion y mediante placeholders.
+
+configuracion/admin_ticket.php
+  Ruta de compatibilidad que redirige a mantenimiento_tickets.php.
+
+configuracion/mantenimiento_tickets.php
+  Portada de las herramientas administrativas de tickets.
+
+configuracion/mantenimiento_ticket_eliminar.php
+  Interfaz de busqueda previa a una futura eliminacion; no ejecuta SQL.
+
+configuracion/mantenimiento_ticket_recuperar.php
+  Informa que la recuperacion heredada no esta disponible; no ejecuta SQL.
+
+configuracion/mantenimiento_ticket_fusion.php
+  Interfaz deshabilitada para preparar una futura fusion; no ejecuta SQL.
+
+
+6. ARCHIVOS DE SOPORTE FUERA DE CONFIGURACION
+---------------------------------------------
+
+clases/Usuario.php
+  Fuente canonica del listado web y PDF. Contiene los joins correctos entre
+  usuarios, perfiles, jefatura_departamento, departamentos_colegio y colegio.
+
+ajax/usuarios_listar.php
+  Recibe filtros, llama Usuario::listar() y responde JSON.
+
+ajax/departamentos_colegio_listar.php
+  Entrega al formulario los departamentos agrupables por id_colegio.
+
+ajax/usuarios_guardar.php
+  Valida y crea/edita usuarios. Guarda perfiles en usuario_perfil y la
+  relacion colegio/departamento en jefatura_departamento.
+
+ajax/guardar_permisos_usuario.php
+  Valida al administrador por usuario_perfil y actualiza permisos de menus y
+  submenus mediante una transaccion.
+
+
+7. REGLAS PARA CAMBIOS FUTUROS
+------------------------------
+
+1. No usar departamentos ni id_departamento en este modulo.
+2. No usar usuario_colegio porque no existe en esta base.
+3. Usar siempre jd para jefatura_departamento y dc para
+   departamentos_colegio.
+4. Un id_departamento_colegio debe validarse junto con su id_colegio.
+5. Toda entrada externa debe viajar como parametro de un prepared statement.
+6. El listado web y cualquier exportacion deben reutilizar Usuario::listar().
+7. Si cambia el esquema, actualizar primero esta documentacion y despues la
+   consulta canonica y sus endpoints dependientes.

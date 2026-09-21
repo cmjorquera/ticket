@@ -4,9 +4,9 @@ $error = null;
 try {
     $colegios = $db->fetchAll(
         "SELECT c.id_colegio, c.nom_colegio, c.rza_colegio, c.dir_colegio, c.tel_colegio,
-                COUNT(DISTINCT CASE WHEN uc.estado = 1 THEN uc.id_usuario END) AS total_usuarios
+                COUNT(DISTINCT CASE WHEN jd.estado = 1 THEN jd.id_usuario END) AS total_usuarios
            FROM colegio c
-      LEFT JOIN usuario_colegio uc ON uc.id_colegio = c.id_colegio
+      LEFT JOIN jefatura_departamento jd ON jd.id_colegio = c.id_colegio
           WHERE c.estado = 1
        GROUP BY c.id_colegio, c.nom_colegio, c.rza_colegio, c.dir_colegio, c.tel_colegio
        ORDER BY c.nom_colegio ASC"
