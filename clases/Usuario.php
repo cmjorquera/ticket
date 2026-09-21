@@ -119,6 +119,7 @@ class Usuario
                         at.nombre_area,
                         at.sigla_area,
                         GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ',') AS perfiles,
+                        GROUP_CONCAT(DISTINCT p.id_perfil ORDER BY p.id_perfil SEPARATOR ',') AS perfil_ids,
                         MAX(jd.id_departamento_colegio) AS id_departamento_colegio,
                         MAX(dc.nombre_departamento) AS nombre_departamento,
                         MAX(jd.tipo_jefatura) AS tipo_jefatura,
@@ -157,6 +158,10 @@ class Usuario
                     'trim',
                     explode(',', (string) ($fila['perfiles'] ?? ''))
                 )));
+                $perfilIds = array_values(array_unique(array_filter(
+                    array_map('intval', explode(',', (string) ($fila['perfil_ids'] ?? ''))),
+                    static fn (int $id): bool => $id > 0
+                )));
                 $colegioUsuario = trim((string) ($fila['nom_colegio'] ?? ''));
 
                 $resultado[] = [
@@ -172,8 +177,9 @@ class Usuario
                     'nombre_area'      => $nombreArea !== '' ? $nombreArea : 'Sin área',
                     'sigla_area'       => (string) ($fila['sigla_area'] ?? ''),
                     'fecha_creacion'   => (string) ($fila['fecha_creacion'] ?? ''),
-                    'sexo'             => (int) ($fila['sexo'] ?? 0),
+                    'sexo'             => (string) ($fila['sexo'] ?? ''),
                     'perfiles'         => $perfiles,
+                    'perfil_ids'       => $perfilIds,
                     'id_departamento_colegio' => (int) ($fila['id_departamento_colegio'] ?? 0),
                     'nombre_departamento' => trim((string) ($fila['nombre_departamento'] ?? '')) ?: '—',
                     'tipo_jefatura'  => trim((string) ($fila['tipo_jefatura'] ?? '')),

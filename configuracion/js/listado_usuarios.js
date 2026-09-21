@@ -17,6 +17,8 @@
   const downloadButton = document.getElementById('btn-descargar-usuarios');
   const tableView = document.getElementById('vista-tabla');
   const orgView = document.getElementById('vista-organigrama');
+  const userModal = document.getElementById('modal-usuario');
+  const isSuperAdmin = userModal?.dataset.superAdmin === '1';
   const viewButtons = [...document.querySelectorAll('.btn-view')];
 
   const escapeHtml = value => String(value ?? '')
@@ -39,7 +41,7 @@
       throw new Error('La sesión expiró.');
     }
     if (!response.ok || !payload.ok) {
-      throw new Error(payload.mensaje || 'No fue posible completar la operación.');
+      throw new Error(payload.mensaje || payload.error || 'No fue posible completar la operación.');
     }
     return payload.data ?? payload;
   }
@@ -348,6 +350,29 @@
     departmentSelect.disabled = !schoolId || departments.length === 0;
   }
 
+  async function fillAdvancedDepartmentSelect(selected = '') {
+    const schoolId = Number(document.getElementById('u-colegio').value || 0);
+    const departmentSelect = document.getElementById('u-departamento');
+    if (!schoolId) {
+      fillSelect(departmentSelect, [], 'id', 'nombre', 'Selecciona primero un colegio');
+      departmentSelect.disabled = true;
+      return;
+    }
+
+    departmentSelect.disabled = true;
+    fillSelect(departmentSelect, [], 'id', 'nombre', 'Cargando departamentos…');
+    const response = await fetch(`../pages/modelos/rescatar/departamentos.php?id_colegio=${encodeURIComponent(schoolId)}`, {
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    });
+    const departments = await response.json();
+    if (!response.ok || !Array.isArray(departments)) {
+      throw new Error(departments.error || 'No fue posible cargar los departamentos.');
+    }
+    fillSelect(departmentSelect, departments, 'id', 'nombre', 'Seleccionar departamento', selected);
+    departmentSelect.disabled = departments.length === 0;
+  }
+
   function updateAssignmentFields(selectedDepartment = '') {
     const profileId = Number(document.getElementById('u-perfil').value || 0);
     const profile = state.perfiles.find(item => Number(item.id_perfil) === profileId);
@@ -360,8 +385,8 @@
 
     if (editing) {
       fillDepartmentSelect(selectedDepartment);
-      schoolSelect.disabled = true;
-      departmentSelect.disabled = true;
+      schoolSelect.disabled = !isSuperAdmin;
+      departmentSelect.disabled = !isSuperAdmin || departmentSelect.options.length <= 1;
       return;
     }
 
@@ -427,6 +452,28 @@
     return '';
   }
 
+  function renderMultipleProfiles(selectedIds = []) {
+    const container = document.getElementById('u-perfiles-multiples');
+    if (!container) return;
+    const selected = new Set(selectedIds.map(Number));
+    container.replaceChildren();
+    state.perfiles.forEach(profile => {
+      const profileId = Number(profile.id_perfil);
+      const item = document.createElement('span');
+      const checkbox = document.createElement('input');
+      const label = document.createElement('label');
+      checkbox.type = 'checkbox';
+      checkbox.id = `u-perfil-multiple-${profileId}`;
+      checkbox.value = String(profileId);
+      checkbox.checked = selected.has(profileId);
+      checkbox.dataset.profileId = String(profileId);
+      label.htmlFor = checkbox.id;
+      label.textContent = String(profile.nombre || 'Perfil');
+      item.append(checkbox, label);
+      container.appendChild(item);
+    });
+  }
+
   function abrirModalUsuario(datos = null, options = {}) {
     const editing = Boolean(datos);
     document.querySelector('#modal-usuario .modal').classList.toggle('is-editing', editing);
@@ -447,6 +494,30 @@
     const schoolSelect = document.getElementById('u-colegio');
     fillSelect(schoolSelect, state.colegios, 'id_colegio', 'nom_colegio', 'Sin colegio', currentSchool);
     updateAssignmentFields(datos?.id_departamento_colegio ?? '');
+
+    const profileGroup = document.getElementById('u-perfil-group');
+    const multipleProfilesGroup = document.getElementById('u-perfiles-multiples-group');
+    const schoolGroup = document.getElementById('u-colegio-group');
+    const departmentGroup = document.getElementById('u-departamento-group');
+    profileGroup.hidden = editing;
+    if (multipleProfilesGroup) multipleProfilesGroup.hidden = !editing || !isSuperAdmin;
+    schoolGroup.hidden = editing && !isSuperAdmin;
+    departmentGroup.hidden = editing && !isSuperAdmin;
+
+    if (editing && isSuperAdmin) {
+      const selectedProfileIds = Array.isArray(datos?.perfil_ids)
+        ? datos.perfil_ids.map(Number)
+        : state.perfiles
+          .filter(profile => (datos?.perfiles || []).includes(profile.nombre))
+          .map(profile => Number(profile.id_perfil));
+      renderMultipleProfiles(selectedProfileIds);
+      schoolSelect.disabled = false;
+      fillAdvancedDepartmentSelect(datos?.id_departamento_colegio ?? '').catch(loadError => {
+        const error = document.getElementById('modal-usuario-error');
+        error.textContent = loadError.message;
+        error.hidden = false;
+      });
+    }
     if (requestedSchool > 0) {
       schoolSelect.value = String(requestedSchool);
       schoolSelect.disabled = false;
@@ -474,6 +545,13 @@
       id_departamento_colegio: Number(document.getElementById('u-departamento').value || 0),
       sexo: document.getElementById('u-sexo').value,
     };
+    if (id && isSuperAdmin) {
+      data.id_usuario = id;
+      data.id_colegio = Number(document.getElementById('u-colegio').value || 0);
+      data.perfiles = [...document.querySelectorAll('#u-perfiles-multiples [data-profile-id]:checked')]
+        .map(checkbox => Number(checkbox.value));
+      data.csrf = userModal.dataset.csrf || '';
+    }
     if (!id) {
       data.id_colegio = Number(document.getElementById('u-colegio').value || 0);
     }
@@ -486,6 +564,11 @@
     error.hidden = true;
     if (!data.nombre || !data.apellido_paterno || !data.email || !data.id_area_trabajo || (!data.id && !data.id_perfil) || !data.sexo) {
       error.textContent = 'Completa nombre, apellido paterno, email, área, perfil y sexo.';
+      error.hidden = false;
+      return;
+    }
+    if (data.id && isSuperAdmin && (!data.id_colegio || !data.id_departamento_colegio || !data.perfiles.length)) {
+      error.textContent = 'Selecciona colegio, departamento y al menos un perfil.';
       error.hidden = false;
       return;
     }
@@ -504,7 +587,13 @@
     const button = document.getElementById('modal-usuario-guardar');
     setBusy(button, true);
     try {
-      const result = await send(data);
+      const result = data.id && isSuperAdmin
+        ? await request('../pages/modelos/guardar/editar_usuario.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify(data),
+        })
+        : await send(data);
       closeModal('modal-usuario');
       showFeedback(result.mensaje);
       await loadUsers();
@@ -648,7 +737,18 @@
     renderProfilePermissions();
     updateAssignmentFields();
   });
-  document.getElementById('u-colegio').addEventListener('change', () => updateAssignmentFields());
+  document.getElementById('u-colegio').addEventListener('change', () => {
+    const editing = Number(document.getElementById('modal-usuario-id').value || 0) > 0;
+    if (editing && isSuperAdmin) {
+      fillAdvancedDepartmentSelect().catch(loadError => {
+        const error = document.getElementById('modal-usuario-error');
+        error.textContent = loadError.message;
+        error.hidden = false;
+      });
+      return;
+    }
+    updateAssignmentFields();
+  });
   searchInput.addEventListener('input', aplicarFiltros);
   areaFilter.addEventListener('change', aplicarFiltros);
   statusFilter.addEventListener('click', event => {

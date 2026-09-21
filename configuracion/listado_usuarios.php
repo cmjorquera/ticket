@@ -2,6 +2,17 @@
 require_once __DIR__ . '/_inicio.php';
 
 $depth = '../';
+$usuarioActual = (int) Sesion::get('id', 0);
+$perfilActual = strtolower(trim((string) Sesion::get('perfil', '')));
+$perfilActual = preg_replace('/[\s_-]+/', ' ', $perfilActual) ?: '';
+$esSuperAdmin = in_array($perfilActual, ['super admin', 'superadmin'], true)
+    || (bool) $db->fetchOne(
+        'SELECT 1 FROM usuario_perfil WHERE id_usuario = ? AND id_perfil = 3 LIMIT 1',
+        [$usuarioActual]
+    );
+if (empty($_SESSION['csrf_editar_usuario_avanzado'])) {
+    $_SESSION['csrf_editar_usuario_avanzado'] = bin2hex(random_bytes(32));
+}
 $pagina_estilos = ['css/listado_usuarios.css?v=' . (string) filemtime(__DIR__ . '/../css/listado_usuarios.css')];
 iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuarios');
 ?>
@@ -112,7 +123,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 </div>
 
 <!-- Modal para crear o editar usuarios -->
-<div class="modal-overlay" id="modal-usuario" onclick="closeModalOutside(event, 'modal-usuario')">
+<div class="modal-overlay" id="modal-usuario" data-super-admin="<?= $esSuperAdmin ? '1' : '0' ?>" data-csrf="<?= e((string) $_SESSION['csrf_editar_usuario_avanzado']) ?>" onclick="closeModalOutside(event, 'modal-usuario')">
   <div class="modal modal-usuario-wide" role="dialog" aria-modal="true" aria-labelledby="modal-usuario-titulo">
     <div class="modal-header"><h3 id="modal-usuario-titulo">Nuevo usuario</h3><p>Completa los datos del usuario.</p></div>
     <div class="modal-body">
@@ -127,9 +138,12 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
             <div class="form-group"><label class="form-label" for="u-email">Email *</label><input type="email" class="form-input" id="u-email" placeholder="correo@seduc.cl"></div>
             <div class="form-group"><label class="form-label" for="u-telefono">Teléfono</label><input type="text" class="form-input" id="u-telefono" placeholder="Teléfono"></div>
             <div class="form-group"><label class="form-label" for="u-area">Área *</label><select class="form-input" id="u-area"><option value="">Seleccionar</option></select></div>
-            <div class="form-group"><label class="form-label" for="u-perfil">Perfil *</label><select class="form-input" id="u-perfil"><option value="">Seleccionar</option></select></div>
-            <div class="form-group"><label class="form-label" for="u-colegio">Colegio</label><select class="form-input" id="u-colegio"><option value="">Sin colegio</option></select></div>
-            <div class="form-group"><label class="form-label" for="u-departamento">Departamento</label><select class="form-input" id="u-departamento" disabled><option value="">Selecciona primero un colegio</option></select></div>
+            <div class="form-group" id="u-perfil-group"><label class="form-label" for="u-perfil">Perfil *</label><select class="form-input" id="u-perfil"><option value="">Seleccionar</option></select></div>
+            <?php if ($esSuperAdmin): ?>
+              <div class="form-group" id="u-perfiles-multiples-group" hidden><span class="form-label">Perfiles *</span><div id="u-perfiles-multiples" class="perfil-permisos-list"></div></div>
+            <?php endif; ?>
+            <div class="form-group" id="u-colegio-group"><label class="form-label" for="u-colegio">Colegio</label><select class="form-input" id="u-colegio"><option value="">Sin colegio</option></select></div>
+            <div class="form-group" id="u-departamento-group"><label class="form-label" for="u-departamento">Departamento</label><select class="form-input" id="u-departamento" disabled><option value="">Selecciona primero un colegio</option></select></div>
             <div class="form-group"><label class="form-label" for="u-sexo">Sexo *</label><select class="form-input" id="u-sexo"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></div>
           </div>
         </section>
