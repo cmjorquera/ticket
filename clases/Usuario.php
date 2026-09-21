@@ -79,6 +79,19 @@ class Usuario
                 $parametros[] = $idColegio;
             }
 
+            if (array_key_exists('id_colegios_permitidos', $filtros)) {
+                $colegiosPermitidos = array_values(array_unique(array_filter(
+                    array_map('intval', (array) $filtros['id_colegios_permitidos']),
+                    static fn (int $id): bool => $id > 0
+                )));
+                if ($colegiosPermitidos === []) {
+                    $where[] = '1 = 0';
+                } else {
+                    $where[] = 'jd.id_colegio IN (' . implode(',', array_fill(0, count($colegiosPermitidos), '?')) . ')';
+                    array_push($parametros, ...$colegiosPermitidos);
+                }
+            }
+
             $buscar = trim((string) ($filtros['buscar'] ?? ''));
             if ($buscar !== '') {
                 $where[] = '(u.nombre LIKE ?
@@ -108,8 +121,9 @@ class Usuario
                         GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ',') AS perfiles,
                         MAX(jd.id_departamento_colegio) AS id_departamento_colegio,
                         MAX(dc.nombre_departamento) AS nombre_departamento,
-                        MAX(jd.id_colegio) AS id_colegio,
-                        MAX(col.nom_colegio) AS nom_colegio,
+                        MAX(jd.tipo_jefatura) AS tipo_jefatura,
+                        jd.id_colegio,
+                        col.nom_colegio,
                         u.fecha_creacion,
                         u.sexo
                     FROM usuarios u
@@ -129,8 +143,9 @@ class Usuario
 
             $sql .= ' GROUP BY u.id, u.nombre, u.apellido_paterno, u.apellido_materno,
                                u.email, u.telefono, u.cargo, u.estado, u.id_area_trabajo,
-                               at.nombre_area, at.sigla_area, u.fecha_creacion, u.sexo
-                      ORDER BY u.nombre ASC, u.apellido_paterno ASC';
+                               at.nombre_area, at.sigla_area, jd.id_colegio, col.nom_colegio,
+                               u.fecha_creacion, u.sexo
+                      ORDER BY col.nom_colegio ASC, u.nombre ASC, u.apellido_paterno ASC';
 
             $filasUsuarios = $db->fetchAll($sql, $parametros);
 
@@ -161,6 +176,7 @@ class Usuario
                     'perfiles'         => $perfiles,
                     'id_departamento_colegio' => (int) ($fila['id_departamento_colegio'] ?? 0),
                     'nombre_departamento' => trim((string) ($fila['nombre_departamento'] ?? '')) ?: '—',
+                    'tipo_jefatura'  => trim((string) ($fila['tipo_jefatura'] ?? '')),
                     'id_colegio'       => (int) ($fila['id_colegio'] ?? 0),
                     'nom_colegio'      => $colegioUsuario ?: 'Sin colegio',
                 ];
@@ -171,6 +187,53 @@ class Usuario
             error_log('No fue posible listar los usuarios: ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Devuelve null cuando el usuario tiene alcance global. Para un
+     * admin_colegio devuelve exclusivamente los colegios que administra.
+     *
+     * @return int[]|null
+     */
+    public static function colegiosPermitidosPara(Conexion $db, int $idUsuario): ?array
+    {
+        $perfiles = $db->fetchAll(
+            'SELECT p.id_perfil, p.nombre
+               FROM usuario_perfil up
+               JOIN perfiles p ON p.id_perfil = up.id_perfil
+              WHERE up.id_usuario = ? AND p.estado = 1',
+            [$idUsuario]
+        );
+
+        $esSuperAdmin = false;
+        $esAdminColegio = false;
+        foreach ($perfiles as $perfil) {
+            $idPerfil = (int) ($perfil['id_perfil'] ?? 0);
+            $nombre = strtolower(trim((string) ($perfil['nombre'] ?? '')));
+            $esSuperAdmin = $esSuperAdmin || $idPerfil === 3 || in_array($nombre, ['super_admin', 'super admin', 'superadmin'], true);
+            $esAdminColegio = $esAdminColegio || $idPerfil === 4
+                || (str_contains($nombre, 'admin') && str_contains($nombre, 'colegio'));
+        }
+
+        if ($esSuperAdmin || !$esAdminColegio) {
+            return null;
+        }
+
+        $filas = $db->fetchAll(
+            "SELECT DISTINCT jd.id_colegio
+               FROM jefatura_departamento jd
+              WHERE jd.id_usuario = ?
+                AND jd.tipo_jefatura = 'Admin_Colegio'
+                AND jd.id_departamento_colegio IS NULL
+                AND jd.estado = 1
+                AND jd.id_colegio > 0",
+            [$idUsuario]
+        );
+
+        return array_values(array_unique(array_filter(
+            array_map('intval', array_column($filas, 'id_colegio')),
+            static fn (int $id): bool => $id > 0
+        )));
     }
 
     public function crear(array $datos): int|false

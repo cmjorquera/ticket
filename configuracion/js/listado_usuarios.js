@@ -7,6 +7,7 @@
   let _pag;
   let _estadoFiltro = '';
   let _vistaActual = 'tabla';
+  const schoolMailData = new Map();
   const tableBody = document.querySelector('#tabla-usuarios tbody');
   const searchInput = document.getElementById('buscar-usuario');
   const areaFilter = document.getElementById('filtro-area');
@@ -88,7 +89,7 @@
 
   function profileBadgeClass(profile) {
     const normalized = String(profile || '').normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[̀-ͯ]/g, '')
       .toLowerCase()
       .replace(/[\s-]+/g, '_');
     if (normalized === 'super_admin' || normalized === 'superadmin') return 'badge-bloqueado';
@@ -155,39 +156,141 @@
 
   function renderOrganigrama() {
     const users = filteredUsers();
+    schoolMailData.clear();
     if (!users.length) {
       orgView.innerHTML = '<div class="org-empty"><i class="bi bi-diagram-3"></i><p>No hay usuarios para los filtros seleccionados.</p></div>';
       return;
     }
 
-    const departments = users.reduce((groups, user) => {
-      const department = String(user.nombre_departamento || '').trim();
-      const key = department && department !== '—' ? department : 'Sin departamento';
-      (groups[key] ||= []).push(user);
+    const schools = users.reduce((groups, user) => {
+      const school = String(user.nom_colegio || '').trim();
+      const name = school && school !== 'Sin colegio' ? school : 'Sin colegio asignado';
+      const schoolId = Number(user.id_colegio || 0);
+      const key = schoolId > 0 ? `colegio-${schoolId}` : 'sin-colegio';
+      (groups[key] ||= { name, members: [] }).members.push(user);
       return groups;
     }, {});
 
-    orgView.innerHTML = Object.entries(departments)
-      .sort(([left], [right]) => left.localeCompare(right, 'es'))
-      .map(([department, members]) => {
-        const orderedMembers = [...members].sort((left, right) => fullName(left).localeCompare(fullName(right), 'es'));
-        return `<section class="org-department">
-          <div class="org-department__header">
-            <h2>${escapeHtml(department)}</h2>
-            <span>${orderedMembers.length} usuario${orderedMembers.length === 1 ? '' : 's'}</span>
-          </div>
-          <div class="org-users">
-            ${orderedMembers.map(user => `<article class="org-user" title="${escapeHtml(fullName(user))}">
-              <span class="user-avatar" aria-hidden="true">${escapeHtml(initials(user))}</span>
-              <div class="org-user__info">
-                <strong>${escapeHtml(fullName(user))}</strong>
-                <small>${escapeHtml(user.email || 'Sin email')}</small>
-                <div class="org-user__profiles">${profileBadges(user.perfiles)}</div>
+    orgView.innerHTML = Object.entries(schools)
+      .sort(([, left], [, right]) => left.name.localeCompare(right.name, 'es'))
+      .map(([colegioKey, { name: school, members }]) => {
+        const schoolId = Number(members[0]?.id_colegio || 0);
+        const recipientIds = [...new Set(members.map(user => Number(user.id)).filter(id => id > 0))];
+        if (schoolId > 0) {
+          schoolMailData.set(String(schoolId), { id: schoolId, name: school, recipients: recipientIds });
+        }
+
+        const departments = members.reduce((groups, user) => {
+          const departmentId = Number(user.id_departamento_colegio || 0);
+          const isSchoolAdmin = String(user.tipo_jefatura || '').toLowerCase() === 'admin_colegio';
+          const departmentName = String(user.nombre_departamento || '').trim();
+          const name = isSchoolAdmin
+            ? 'Administración del colegio'
+            : (departmentName && departmentName !== '—' ? departmentName : 'Sin departamento');
+          const key = isSchoolAdmin ? 'administracion-colegio' : (departmentId > 0 ? `departamento-${departmentId}` : 'sin-departamento');
+          (groups[key] ||= { name, members: [], priority: isSchoolAdmin ? 0 : (departmentId > 0 ? 1 : 2) }).members.push(user);
+          return groups;
+        }, {});
+
+        return `<section class="org-school">
+          <div class="org-school__header" data-colegio="${escapeHtml(colegioKey)}">
+            <div class="org-school__identity">
+              <span class="org-school__icon" aria-hidden="true"><i class="bi bi-building"></i></span>
+              <div><h2>${escapeHtml(school)}</h2><span>${recipientIds.length} usuario${recipientIds.length === 1 ? '' : 's'}</span></div>
+            </div>
+            ${schoolId > 0 ? `<div class="org-school__menu-wrap">
+              <button type="button" class="btn-icon org-school__menu-toggle" data-school-menu-toggle="${schoolId}" aria-label="Opciones de ${escapeHtml(school)}" aria-haspopup="menu" aria-expanded="false">
+                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+              </button>
+              <div class="org-school__menu" data-school-menu="${schoolId}" role="menu" hidden>
+                <button type="button" class="btn btn-ghost org-school__menu-item" data-school-action="email" data-school-id="${schoolId}" role="menuitem"><i class="bi bi-envelope" aria-hidden="true"></i> Enviar correo</button>
+                <button type="button" class="btn btn-ghost org-school__menu-item" data-school-action="add-user" data-school-id="${schoolId}" role="menuitem"><i class="bi bi-person-plus" aria-hidden="true"></i> Agregar usuario</button>
               </div>
-            </article>`).join('')}
+            </div>` : ''}
+          </div>
+          <div class="org-departments">
+            ${Object.values(departments)
+              .sort((left, right) => left.priority - right.priority || left.name.localeCompare(right.name, 'es'))
+              .map(department => {
+                const orderedMembers = [...department.members].sort((left, right) => {
+                  const leftAdmin = String(left.tipo_jefatura || '').toLowerCase() === 'admin_departamento' ? 0 : 1;
+                  const rightAdmin = String(right.tipo_jefatura || '').toLowerCase() === 'admin_departamento' ? 0 : 1;
+                  return leftAdmin - rightAdmin || fullName(left).localeCompare(fullName(right), 'es');
+                });
+                return `<section class="org-department-group">
+                  <div class="org-department-group__header"><i class="bi bi-diagram-3"></i><h3>${escapeHtml(department.name)}</h3><span>${orderedMembers.length}</span></div>
+                  <div class="org-users">
+                    ${orderedMembers.map(user => {
+                      const isDepartmentAdmin = String(user.tipo_jefatura || '').toLowerCase() === 'admin_departamento';
+                      const isSchoolAdmin = String(user.tipo_jefatura || '').toLowerCase() === 'admin_colegio';
+                      const isLeader = isDepartmentAdmin || isSchoolAdmin;
+                      return `<article class="org-user${isLeader ? ' org-user--leader' : ''}" title="${escapeHtml(fullName(user))}">
+                        <span class="user-avatar" aria-hidden="true">${escapeHtml(initials(user))}</span>
+                        <div class="org-user__info">
+                          <strong>${isLeader ? '<i class="bi bi-gem org-leader-icon" aria-label="Administrador"></i> ' : ''}${escapeHtml(fullName(user))}</strong>
+                          <small>${escapeHtml(user.email || 'Sin email')}</small>
+                          <div class="org-user__profiles">${profileBadges(user.perfiles)}</div>
+                        </div>
+                      </article>`;
+                    }).join('')}
+                  </div>
+                </section>`;
+              }).join('')}
           </div>
         </section>`;
       }).join('');
+  }
+
+  function abrirModalCorreo(schoolId) {
+    const school = schoolMailData.get(String(schoolId));
+    if (!school) return;
+    const count = school.recipients.length;
+    document.getElementById('modal-correo-titulo').textContent = `¿Enviar correo a todos los usuarios de ${school.name}?`;
+    document.getElementById('modal-correo-subtitulo').textContent = `${count} destinatario${count === 1 ? '' : 's'} recibirán el mensaje.`;
+    const error = document.getElementById('modal-correo-error');
+    error.hidden = true;
+    error.textContent = '';
+    const button = document.getElementById('modal-correo-confirmar');
+    button.disabled = count === 0;
+    button.onclick = () => enviarCorreoColegio(school);
+    openModal('modal-correo-colegio');
+  }
+
+  function cerrarMenusColegio(exceptMenu = null) {
+    orgView.querySelectorAll('[data-school-menu]').forEach(menu => {
+      if (menu !== exceptMenu) menu.hidden = true;
+    });
+    orgView.querySelectorAll('[data-school-menu-toggle]').forEach(toggle => {
+      const menu = orgView.querySelector(`[data-school-menu="${Number(toggle.dataset.schoolMenuToggle)}"]`);
+      toggle.setAttribute('aria-expanded', String(Boolean(menu && !menu.hidden)));
+    });
+  }
+
+  async function enviarCorreoColegio(school) {
+    const button = document.getElementById('modal-correo-confirmar');
+    const error = document.getElementById('modal-correo-error');
+    const originalHtml = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Enviando…';
+    try {
+      const result = await request(`${API}/enviar_correo.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({
+          id_colegio: school.id,
+          id_usuario_administrador: Number(orgView.dataset.administratorId || 0),
+          destinatarios: school.recipients,
+        }),
+      });
+      closeModal('modal-correo-colegio');
+      showFeedback(result.mensaje || 'Correos enviados correctamente.');
+    } catch (requestError) {
+      error.textContent = requestError.message;
+      error.hidden = false;
+    } finally {
+      button.disabled = false;
+      button.innerHTML = originalHtml;
+    }
   }
 
   function cambiarVista(view) {
@@ -278,7 +381,7 @@
   }
 
   function profileType(profile) {
-    const name = String(profile?.nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const name = String(profile?.nombre || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     if ((name.includes('administrador') || Number(profile?.id_perfil) === 3) && !name.includes('colegio') && !name.includes('area')) return 'administrador';
     if ((name.includes('admin') && name.includes('colegio')) || Number(profile?.id_perfil) === 4) return 'admin_colegio';
     if ((name.includes('admin') && (name.includes('area') || name.includes('departamento'))) || Number(profile?.id_perfil) === 5) return 'admin_area';
@@ -324,7 +427,7 @@
     return '';
   }
 
-  function abrirModalUsuario(datos = null) {
+  function abrirModalUsuario(datos = null, options = {}) {
     const editing = Boolean(datos);
     document.querySelector('#modal-usuario .modal').classList.toggle('is-editing', editing);
     document.getElementById('modal-usuario-titulo').textContent = editing ? 'Editar usuario' : 'Nuevo usuario';
@@ -339,10 +442,16 @@
 
     fillSelect(document.getElementById('u-area'), state.areas, 'id_area', 'nombre_area', 'Seleccionar', datos?.id_area_trabajo);
     fillSelect(document.getElementById('u-perfil'), state.perfiles, 'id_perfil', 'nombre', 'Seleccionar');
-    const currentSchool = datos?.id_colegio ?? datos?.colegios?.[0]?.id_colegio ?? '';
+    const requestedSchool = !editing ? Number(options.id_colegio || 0) : 0;
+    const currentSchool = requestedSchool || datos?.id_colegio || datos?.colegios?.[0]?.id_colegio || '';
     const schoolSelect = document.getElementById('u-colegio');
     fillSelect(schoolSelect, state.colegios, 'id_colegio', 'nom_colegio', 'Sin colegio', currentSchool);
     updateAssignmentFields(datos?.id_departamento_colegio ?? '');
+    if (requestedSchool > 0) {
+      schoolSelect.value = String(requestedSchool);
+      schoolSelect.disabled = false;
+      fillDepartmentSelect('');
+    }
 
     document.getElementById('u-menus-wrap').hidden = editing;
     document.getElementById('modal-usuario-error').hidden = true;
@@ -552,6 +661,33 @@
   });
   viewButtons.forEach(button => {
     button.addEventListener('click', () => cambiarVista(button.dataset.view));
+  });
+  orgView.addEventListener('click', event => {
+    const toggle = event.target.closest('[data-school-menu-toggle]');
+    if (toggle) {
+      event.stopPropagation();
+      const menu = orgView.querySelector(`[data-school-menu="${Number(toggle.dataset.schoolMenuToggle)}"]`);
+      if (!menu) return;
+      const shouldOpen = menu.hidden;
+      cerrarMenusColegio();
+      menu.hidden = !shouldOpen;
+      toggle.setAttribute('aria-expanded', String(shouldOpen));
+      return;
+    }
+
+    const action = event.target.closest('[data-school-action]');
+    if (!action) return;
+    const schoolId = Number(action.dataset.schoolId || 0);
+    cerrarMenusColegio();
+    if (action.dataset.schoolAction === 'email') {
+      abrirModalCorreo(schoolId);
+    } else if (action.dataset.schoolAction === 'add-user') {
+      abrirModalUsuario(null, { id_colegio: schoolId });
+    }
+  });
+  document.addEventListener('click', () => cerrarMenusColegio());
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') cerrarMenusColegio();
   });
   tableBody.addEventListener('click', event => {
     const button = event.target.closest('[data-action]');

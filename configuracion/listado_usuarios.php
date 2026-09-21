@@ -8,7 +8,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 <div class="page-header">
   <div>
     <h1>Listado de usuarios</h1>
-    <p>Administra cuentas, permisos y estado de acceso.</p>
+    <p>Administra cuentas, permisos y estado de acceso, organizados por colegio.</p>
   </div>
   <div class="page-header-actions">
     <button type="button" class="btn btn-outline" id="btn-descargar-usuarios" title="Descargar los usuarios que coinciden con los filtros actuales">
@@ -30,7 +30,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
       <button type="button" class="btn-view active" data-view="tabla" title="Vista tabla" aria-label="Vista tabla" aria-pressed="true">
         <i class="bi bi-list-ul" aria-hidden="true"></i>
       </button>
-      <button type="button" class="btn-view" data-view="organigrama" title="Vista organigrama" aria-label="Vista organigrama" aria-pressed="false">
+      <button type="button" class="btn-view" data-view="organigrama" title="Vista agrupada por colegio" aria-label="Agrupar usuarios por colegio" aria-pressed="false">
         <i class="bi bi-diagram-3" aria-hidden="true"></i>
       </button>
     </div>
@@ -59,7 +59,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     </div>
     <div class="paginacion" id="usr-paginacion"></div>
   </div>
-  <div id="vista-organigrama" class="org-view" hidden aria-live="polite"></div>
+  <div id="vista-organigrama" class="org-view" data-administrator-id="<?= (int) Sesion::get('id', 0) ?>" hidden aria-live="polite"></div>
 </div>
 
 <p id="usuarios-feedback" class="text-sm" role="status" hidden style="margin-top:12px"></p>
@@ -89,6 +89,24 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     <div class="modal-footer">
       <button type="button" class="btn btn-outline" onclick="closeModal('modal-permisos')">Cancelar</button>
       <button type="button" class="btn btn-primary" id="modal-permisos-guardar">Guardar permisos</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para confirmar correo masivo por colegio -->
+<div class="modal-overlay" id="modal-correo-colegio" onclick="closeModalOutside(event, 'modal-correo-colegio')">
+  <div class="modal" style="max-width:460px" role="dialog" aria-modal="true" aria-labelledby="modal-correo-titulo">
+    <div class="modal-header">
+      <h3 id="modal-correo-titulo">¿Enviar correo a todos los usuarios?</h3>
+      <p id="modal-correo-subtitulo"></p>
+    </div>
+    <div class="modal-body">
+      <div class="org-mail-notice"><i class="bi bi-envelope-check" aria-hidden="true"></i><p>Se enviará una notificación individual a cada dirección válida del colegio.</p></div>
+      <p id="modal-correo-error" class="text-sm" hidden style="color:var(--danger);margin-top:12px"></p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" onclick="closeModal('modal-correo-colegio')">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="modal-correo-confirmar"><i class="bi bi-send"></i> Sí, enviar correo</button>
     </div>
   </div>
 </div>

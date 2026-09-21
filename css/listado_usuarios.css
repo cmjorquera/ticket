@@ -41,49 +41,166 @@
   border-top: 1px solid var(--border);
 }
 
-.org-department {
+.org-school {
   position: relative;
-  padding: 16px 16px 16px 20px;
+  padding: 0;
   margin-bottom: 14px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
   box-shadow: var(--shadow-card);
+  overflow: hidden;
 }
 
-.org-department::before {
-  content: '';
-  position: absolute;
-  inset: 12px auto 12px 0;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--blue);
+.org-school::before {
+  content: none;
 }
 
-.org-department__header {
+.org-school__header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
-}
-
-.org-department__header h2 {
-  font-size: 14px;
-  font-weight: 700;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
   color: var(--fg);
 }
 
-.org-department__header span {
+.org-school__identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.org-school__icon {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--blue-mid);
+  border-radius: 9px;
+  background: var(--blue-light);
+  color: var(--blue);
+  font-size: 17px;
+}
+
+.org-school__header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.org-school__identity > div > span {
+  display: block;
+  margin-top: 3px;
   font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
+}
+
+.org-school__menu-wrap {
+  position: relative;
+  flex: none;
+  align-self: flex-start;
+}
+
+.org-school__menu-toggle.btn-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--fg);
+  font-size: 17px;
+}
+
+.org-school__menu-toggle.btn-icon:hover,
+.org-school__menu-toggle.btn-icon[aria-expanded="true"] {
+  border-color: var(--fg);
+  background: var(--bg);
+}
+
+.org-school__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 180px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-elevated);
+}
+
+.org-school__menu-item.btn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 9px 10px;
+  color: var(--fg);
+  text-align: left;
+}
+
+.org-school__menu-item i {
+  width: 18px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.org-departments {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.org-department-group {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.org-department-group__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.org-department-group__header > i { color: var(--blue); }
+
+.org-department-group__header h3 {
+  flex: 1;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.org-department-group__header > span {
+  min-width: 24px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--blue-light);
+  color: var(--blue);
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .org-users {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 9px;
+  padding: 11px;
 }
 
 .org-user {
@@ -96,6 +213,16 @@
   border: 1px solid var(--border);
   border-radius: 7px;
   background: #FAFAFA;
+}
+
+.org-user--leader {
+  border-color: #e1bd62;
+  background: #fffaf0;
+}
+
+.org-leader-icon {
+  color: #b57b00;
+  font-size: 11px;
 }
 
 .org-user .user-avatar {
@@ -145,10 +272,27 @@
   color: var(--muted);
 }
 
+.org-mail-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px;
+  border: 1px solid #cfe3ef;
+  border-radius: 9px;
+  background: #f3f9fc;
+  color: #49697e;
+}
+
+.org-mail-notice i { color: var(--blue); font-size: 20px; }
+.org-mail-notice p { margin: 0; font-size: 12px; line-height: 1.45; }
+
 @media (max-width: 700px) {
   .view-switch { order: 3; }
   .org-view { padding: 12px; }
   .org-users { grid-template-columns: 1fr; }
+  .org-school__header { align-items: stretch; flex-direction: column; padding-right: 58px; }
+  .org-school__menu-wrap { position: absolute; top: 14px; right: 14px; }
+  .org-departments { padding: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

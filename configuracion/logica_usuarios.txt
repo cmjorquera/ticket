@@ -286,7 +286,15 @@ configuracion/index.php
 
 configuracion/listado_usuarios.php
   Estructura visual del listado, filtros, selector tabla/organigrama y modales.
-  No ejecuta SQL directamente. Incluye el boton de descarga PDF.
+  No ejecuta SQL directamente. Incluye el boton de descarga PDF. La vista
+  jerarquica agrupa por colegio; el departamento queda como dato secundario
+  dentro de cada usuario.
+
+configuracion/organigrama_colegios.php
+  Vista exclusiva para el perfil 3 (super_admin). Lista los colegios activos,
+  excepto SEDUC/id 15, y presenta administradores de colegio, departamentos,
+  administradores de departamento y usuarios vinculados. Todas las consultas
+  pasan valores variables como parametros de prepared statements.
 
 configuracion/js/listado_usuarios.js
   Consume los endpoints AJAX, aplica filtros y paginacion, renderiza tabla y
@@ -349,6 +357,12 @@ ajax/departamentos_colegio_listar.php
 ajax/usuarios_guardar.php
   Valida y crea/edita usuarios. Guarda perfiles en usuario_perfil y la
   relacion colegio/departamento en jefatura_departamento.
+
+ajax/enviar_correo.php
+  Valida que el solicitante sea super_admin o Admin_Colegio autorizado,
+  comprueba que cada destinatario pertenezca al colegio y envía una
+  notificación individual. Usa variables de entorno SMTP cuando están
+  configuradas y el transporte mail() de PHP como alternativa.
 
 ajax/guardar_permisos_usuario.php
   Valida al administrador por usuario_perfil y actualiza permisos de menus y

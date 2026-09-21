@@ -14,6 +14,10 @@ try {
         'id_colegio' => (int) ($_GET['id_colegio'] ?? 0),
         'buscar'     => trim((string) ($_GET['buscar'] ?? '')),
     ];
+    $colegiosPermitidos = Usuario::colegiosPermitidosPara($db, (int) Sesion::get('id', 0));
+    if ($colegiosPermitidos !== null) {
+        $filtros['id_colegios_permitidos'] = $colegiosPermitidos;
+    }
     responder_json(['ok' => true, 'data' => Usuario::listar($db, $filtros)]);
 } catch (Throwable $e) {
     responder_json([

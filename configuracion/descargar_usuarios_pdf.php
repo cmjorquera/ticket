@@ -164,6 +164,10 @@ try {
         'id_area' => max(0, (int) ($_GET['id_area'] ?? 0)),
         'buscar'  => $busqueda,
     ];
+    $colegiosPermitidos = Usuario::colegiosPermitidosPara($db, (int) Sesion::get('id', 0));
+    if ($colegiosPermitidos !== null) {
+        $filtros['id_colegios_permitidos'] = $colegiosPermitidos;
+    }
     $usuarios = Usuario::listar($db, $filtros);
 
     $resumenEstados = [];

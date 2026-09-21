@@ -22,15 +22,20 @@ $csrf = (string) $_SESSION['csrf_usuarios_permisos'];
 function usuario_puede_administrar_permisos(Conexion $db, int $idUsuario): bool
 {
     $perfilSesion = strtolower(trim((string) Sesion::get('perfil', '')));
-    if (in_array($perfilSesion, ['administrador', 'admin'], true)) {
+    $perfilSesion = preg_replace('/[\s_-]+/', ' ', $perfilSesion) ?: '';
+    if (in_array($perfilSesion, ['administrador', 'admin', 'super admin', 'superadmin'], true)) {
         return true;
     }
     return (bool) $db->fetchOne(
         "SELECT 1
            FROM usuario_perfil up
-           JOIN perfiles p ON p.id_perfil = up.id_perfil
+          JOIN perfiles p ON p.id_perfil = up.id_perfil
           WHERE up.id_usuario = ?
-            AND LOWER(p.nombre) IN ('administrador', 'admin')
+            AND (
+                p.id_perfil = 3
+                OR LOWER(REPLACE(REPLACE(TRIM(p.nombre), '_', ' '), '-', ' '))
+                   IN ('administrador', 'admin', 'super admin', 'superadmin')
+            )
           LIMIT 1",
         [$idUsuario]
     );
@@ -56,14 +61,14 @@ try {
     }
 
     if (!$error) {
-        $columna = $db->fetchOne(
-            "SELECT COUNT(*) AS total
+        $estructuraSubmenus = $db->fetchOne(
+            "SELECT COUNT(DISTINCT COLUMN_NAME) AS total
                FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = DATABASE()
-                AND TABLE_NAME = 'permisos_menu_1'
-                AND COLUMN_NAME = 'id_submenu'"
+                AND TABLE_NAME = 'permiso_sub_menu'
+                AND COLUMN_NAME IN ('id_usuario', 'id_submenu', 'permiso')"
         );
-        $schemaPreparado = (int) ($columna['total'] ?? 0) > 0;
+        $schemaPreparado = (int) ($estructuraSubmenus['total'] ?? 0) === 3;
 
         $menus = $db->fetchAll(
             "SELECT id_menu, nombre, archivo, icono, orden
@@ -81,18 +86,24 @@ try {
         }
 
         if ($schemaPreparado) {
-            $permisos = $db->fetchAll(
-                "SELECT id_menu1, id_submenu
+            $permisosMenu = $db->fetchAll(
+                "SELECT DISTINCT id_menu1
                    FROM permisos_menu_1
                   WHERE id_usuario = ? AND id_tipo_permiso = 1",
                 [$usuarioObjetivo]
             );
-            foreach ($permisos as $permiso) {
-                if ($permiso['id_submenu'] === null) {
-                    $permisosMenus[(int) $permiso['id_menu1']] = true;
-                } else {
-                    $permisosSubmenus[(int) $permiso['id_submenu']] = true;
-                }
+            foreach ($permisosMenu as $permiso) {
+                $permisosMenus[(int) $permiso['id_menu1']] = true;
+            }
+
+            $permisosSubmenu = $db->fetchAll(
+                "SELECT DISTINCT id_submenu
+                   FROM permiso_sub_menu
+                  WHERE id_usuario = ? AND permiso = 1",
+                [$usuarioObjetivo]
+            );
+            foreach ($permisosSubmenu as $permiso) {
+                $permisosSubmenus[(int) $permiso['id_submenu']] = true;
             }
         }
     }
@@ -116,7 +127,7 @@ iniciar_layout_configuracion('Permisos de usuario', 'Permisos', 'usuarios_permis
 <?php if ($error): ?>
   <div class="card"><div class="card-body up-alert up-alert--danger"><i class="bi bi-exclamation-circle"></i><span><?= e($error) ?></span></div></div>
 <?php elseif (!$schemaPreparado): ?>
-  <div class="card"><div class="card-body up-alert up-alert--warning"><i class="bi bi-database-exclamation"></i><div><strong>Falta preparar la base de datos</strong><p>Ejecuta <code>sql/permisos_submenus.sql</code> y vuelve a cargar esta página.</p></div></div></div>
+  <div class="card"><div class="card-body up-alert up-alert--warning"><i class="bi bi-database-exclamation"></i><div><strong>Falta preparar la base de datos</strong><p>La tabla <code>permiso_sub_menu</code> no existe o no contiene las columnas requeridas.</p></div></div></div>
 <?php else: ?>
   <div class="up-user-card">
     <div class="user-avatar"><?= e(strtoupper(substr((string) $usuario['nombre'], 0, 1) . substr((string) $usuario['apellido_paterno'], 0, 1))) ?></div>
