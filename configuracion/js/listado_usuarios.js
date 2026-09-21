@@ -281,7 +281,7 @@
     const name = String(profile?.nombre || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     if ((name.includes('administrador') || Number(profile?.id_perfil) === 3) && !name.includes('colegio') && !name.includes('area')) return 'administrador';
     if ((name.includes('admin') && name.includes('colegio')) || Number(profile?.id_perfil) === 4) return 'admin_colegio';
-    if ((name.includes('admin') && name.includes('area')) || Number(profile?.id_perfil) === 5) return 'admin_area';
+    if ((name.includes('admin') && (name.includes('area') || name.includes('departamento'))) || Number(profile?.id_perfil) === 5) return 'admin_area';
     if (name.includes('tecn') || Number(profile?.id_perfil) === 2) return 'tecnico';
     return 'usuario';
   }
