@@ -19,6 +19,7 @@
   const orgView = document.getElementById('vista-organigrama');
   const userModal = document.getElementById('modal-usuario');
   const isSuperAdmin = userModal?.dataset.superAdmin === '1';
+  const manageableSchoolIds = new Set(JSON.parse(orgView.dataset.manageSchoolIds || '[]').map(Number));
   const viewButtons = [...document.querySelectorAll('.btn-view')];
 
   const escapeHtml = value => String(value ?? '')
@@ -177,6 +178,9 @@
       .sort(([, left], [, right]) => left.name.localeCompare(right.name, 'es'))
       .map(([colegioKey, { name: school, members }]) => {
         const schoolId = Number(members[0]?.id_colegio || 0);
+        const schoolInitials = school.split(/\s+/).filter(Boolean).slice(0, 2)
+          .map(word => word.charAt(0).toUpperCase()).join('') || 'C';
+        const canManageDepartments = schoolId > 0 && (isSuperAdmin || manageableSchoolIds.has(schoolId));
         const recipientIds = [...new Set(members.map(user => Number(user.id)).filter(id => id > 0))];
         if (schoolId > 0) {
           schoolMailData.set(String(schoolId), { id: schoolId, name: school, recipients: recipientIds });
@@ -190,14 +194,20 @@
             ? 'Administración del colegio'
             : (departmentName && departmentName !== '—' ? departmentName : 'Sin departamento');
           const key = isSchoolAdmin ? 'administracion-colegio' : (departmentId > 0 ? `departamento-${departmentId}` : 'sin-departamento');
-          (groups[key] ||= { name, members: [], priority: isSchoolAdmin ? 0 : (departmentId > 0 ? 1 : 2) }).members.push(user);
+          (groups[key] ||= {
+            id: departmentId,
+            name,
+            members: [],
+            priority: isSchoolAdmin ? 0 : (departmentId > 0 ? 1 : 2),
+            special: isSchoolAdmin || departmentId <= 0,
+          }).members.push(user);
           return groups;
         }, {});
 
-        return `<section class="org-school">
+        return `<section class="org-school" data-school-id="${schoolId}">
           <div class="org-school__header" data-colegio="${escapeHtml(colegioKey)}">
             <div class="org-school__identity">
-              <span class="org-school__icon" aria-hidden="true"><i class="bi bi-building"></i></span>
+              <span class="org-school__icon" data-school-logo="${schoolId}" data-fallback="${escapeHtml(schoolInitials)}" aria-hidden="true">${escapeHtml(schoolInitials)}</span>
               <div><h2>${escapeHtml(school)}</h2><span>${recipientIds.length} usuario${recipientIds.length === 1 ? '' : 's'}</span></div>
             </div>
             ${schoolId > 0 ? `<div class="org-school__menu-wrap">
@@ -207,10 +217,11 @@
               <div class="org-school__menu" data-school-menu="${schoolId}" role="menu" hidden>
                 <button type="button" class="btn btn-ghost org-school__menu-item" data-school-action="email" data-school-id="${schoolId}" role="menuitem"><i class="bi bi-envelope" aria-hidden="true"></i> Enviar correo</button>
                 <button type="button" class="btn btn-ghost org-school__menu-item" data-school-action="add-user" data-school-id="${schoolId}" role="menuitem"><i class="bi bi-person-plus" aria-hidden="true"></i> Agregar usuario</button>
+                ${canManageDepartments ? `<button type="button" class="btn btn-ghost org-school__menu-item" data-add-department data-school-id="${schoolId}" data-school-name="${escapeHtml(school)}" role="menuitem"><i class="bi bi-plus-circle" aria-hidden="true"></i> Agregar departamento</button>` : ''}
               </div>
             </div>` : ''}
           </div>
-          <div class="org-departments">
+          <div class="org-departments" data-school-departments="${schoolId}" data-departments-loaded="0">
             ${Object.values(departments)
               .sort((left, right) => left.priority - right.priority || left.name.localeCompare(right.name, 'es'))
               .map(department => {
@@ -219,9 +230,9 @@
                   const rightAdmin = String(right.tipo_jefatura || '').toLowerCase() === 'admin_departamento' ? 0 : 1;
                   return leftAdmin - rightAdmin || fullName(left).localeCompare(fullName(right), 'es');
                 });
-                return `<section class="org-department-group">
-                  <div class="org-department-group__header"><i class="bi bi-diagram-3"></i><h3>${escapeHtml(department.name)}</h3><span>${orderedMembers.length}</span></div>
-                  <div class="org-users">
+                return `<section class="org-department-group" ${department.id > 0 ? `data-department-id="${department.id}"` : 'data-department-special="1"'}>
+                  <button type="button" class="org-department-group__header" data-department-toggle aria-expanded="true"><i class="bi bi-diagram-3" aria-hidden="true"></i><h3>${escapeHtml(department.name)}</h3><span class="org-department-count">${orderedMembers.length}</span><i class="bi bi-chevron-down org-department-chevron" aria-hidden="true"></i></button>
+                  <div class="org-department-panel"><div class="org-users">
                     ${orderedMembers.map(user => {
                       const isDepartmentAdmin = String(user.tipo_jefatura || '').toLowerCase() === 'admin_departamento';
                       const isSchoolAdmin = String(user.tipo_jefatura || '').toLowerCase() === 'admin_colegio';
@@ -235,12 +246,13 @@
                         </div>
                       </article>`;
                     }).join('')}
-                  </div>
+                  </div></div>
                 </section>`;
               }).join('')}
           </div>
         </section>`;
       }).join('');
+    window.inicializarAcordeon?.(orgView);
   }
 
   function abrirModalCorreo(schoolId) {
