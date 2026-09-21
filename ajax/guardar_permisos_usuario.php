@@ -21,16 +21,21 @@ function ids_permisos(mixed $valor): array
 
 function puede_administrar_permisos(Conexion $db, int $idUsuario): bool
 {
-    $perfilSesion = strtolower(trim((string) ($_SESSION['perfil'] ?? '')));
-    if (in_array($perfilSesion, ['administrador', 'admin'], true)) {
+    $perfilSesion = strtolower(trim((string) Sesion::get('perfil', '')));
+    $perfilSesion = preg_replace('/[\s_-]+/', ' ', $perfilSesion) ?: '';
+    if (in_array($perfilSesion, ['administrador', 'admin', 'super admin', 'superadmin'], true)) {
         return true;
     }
     return (bool) $db->fetchOne(
         "SELECT 1
            FROM usuario_perfil up
-           JOIN perfiles p ON p.id_perfil = up.id_perfil
+          JOIN perfiles p ON p.id_perfil = up.id_perfil
           WHERE up.id_usuario = ?
-            AND LOWER(p.nombre) IN ('administrador', 'admin')
+            AND (
+                p.id_perfil = 3
+                OR LOWER(REPLACE(REPLACE(TRIM(p.nombre), '_', ' '), '-', ' '))
+                   IN ('administrador', 'admin', 'super admin', 'superadmin')
+            )
           LIMIT 1",
         [$idUsuario]
     );
@@ -56,12 +61,15 @@ try {
         responder_json(['ok' => false, 'error' => 'El usuario indicado no existe.'], 404);
     }
 
-    $columna = $db->fetchOne(
-        "SELECT COUNT(*) AS total FROM information_schema.COLUMNS
-          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'permisos_menu_1' AND COLUMN_NAME = 'id_submenu'"
+    $estructuraSubmenus = $db->fetchOne(
+        "SELECT COUNT(DISTINCT COLUMN_NAME) AS total
+           FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = 'permiso_sub_menu'
+            AND COLUMN_NAME IN ('id_permiso_sub', 'id_usuario', 'id_submenu', 'permiso')"
     );
-    if ((int) ($columna['total'] ?? 0) === 0) {
-        responder_json(['ok' => false, 'error' => 'Ejecuta primero sql/permisos_submenus.sql.'], 409);
+    if ((int) ($estructuraSubmenus['total'] ?? 0) !== 4) {
+        responder_json(['ok' => false, 'error' => 'La tabla permiso_sub_menu no está disponible o su estructura es incorrecta.'], 409);
     }
 
     $menusValidos = [];
@@ -69,13 +77,11 @@ try {
         $menusValidos[(int) $menu['id_menu']] = true;
     }
     $submenusValidos = [];
-    $submenusPorMenu = [];
     foreach ($db->fetchAll('SELECT id_submenu, id_menu FROM menu_1_sub') as $submenu) {
         $idSubmenu = (int) $submenu['id_submenu'];
         $idMenu = (int) $submenu['id_menu'];
         if (isset($menusValidos[$idMenu])) {
             $submenusValidos[$idSubmenu] = $idMenu;
-            $submenusPorMenu[$idMenu][] = $idSubmenu;
         }
     }
 
@@ -89,44 +95,42 @@ try {
     foreach ($submenusRecibidos as $idSubmenu) {
         if (isset($submenusValidos[$idSubmenu])) {
             $idMenuPadre = $submenusValidos[$idSubmenu];
-            $submenusSeleccionados[$idSubmenu] = $idMenuPadre;
+            $submenusSeleccionados[$idSubmenu] = true;
             $menusSeleccionados[$idMenuPadre] = true;
-        }
-    }
-
-    // Si llega un padre seleccionado sin ningún hijo suyo, se interpreta como
-    // selección directa del padre y se conceden todos sus submenús.
-    foreach (array_keys($menusSeleccionados) as $idMenu) {
-        $hijos = $submenusPorMenu[$idMenu] ?? [];
-        $tieneHijoMarcado = false;
-        foreach ($hijos as $idSubmenu) {
-            if (isset($submenusSeleccionados[$idSubmenu])) {
-                $tieneHijoMarcado = true;
-                break;
-            }
-        }
-        if ($hijos && !$tieneHijoMarcado) {
-            foreach ($hijos as $idSubmenu) {
-                $submenusSeleccionados[$idSubmenu] = $idMenu;
-            }
         }
     }
 
     $pdo = $db->getPDO();
     $pdo->beginTransaction();
     try {
-        $db->execute('DELETE FROM permisos_menu_1 WHERE id_usuario = ? AND id_tipo_permiso = 1', [$usuarioObjetivo]);
+        $db->execute(
+            'DELETE FROM permisos_menu_1 WHERE id_usuario = ? AND id_tipo_permiso = 1',
+            [$usuarioObjetivo]
+        );
         foreach (array_keys($menusSeleccionados) as $idMenu) {
             $db->execute(
-                'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_submenu, id_tipo_permiso) VALUES (?, ?, NULL, 1)',
+                'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_tipo_permiso) VALUES (?, ?, 1)',
                 [$usuarioObjetivo, $idMenu]
             );
         }
-        foreach ($submenusSeleccionados as $idSubmenu => $idMenu) {
-            $db->execute(
-                'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_submenu, id_tipo_permiso) VALUES (?, ?, ?, 1)',
-                [$usuarioObjetivo, $idMenu, $idSubmenu]
+
+        foreach ($submenusValidos as $idSubmenu => $_idMenu) {
+            $permiso = isset($submenusSeleccionados[$idSubmenu]) ? 1 : 0;
+            $registro = $db->fetchOne(
+                'SELECT id_permiso_sub FROM permiso_sub_menu WHERE id_usuario = ? AND id_submenu = ? LIMIT 1',
+                [$usuarioObjetivo, $idSubmenu]
             );
+            if ($registro) {
+                $db->execute(
+                    'UPDATE permiso_sub_menu SET permiso = ?, fecha_modificacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_submenu = ?',
+                    [$permiso, $usuarioObjetivo, $idSubmenu]
+                );
+            } else {
+                $db->execute(
+                    'INSERT INTO permiso_sub_menu (id_usuario, id_submenu, permiso) VALUES (?, ?, ?)',
+                    [$usuarioObjetivo, $idSubmenu, $permiso]
+                );
+            }
         }
         $pdo->commit();
     } catch (Throwable $ex) {
@@ -135,6 +139,14 @@ try {
         }
         throw $ex;
     }
+
+    error_log(sprintf(
+        'Permisos actualizados: administrador=%d usuario=%d menus=%d submenus=%d',
+        $usuarioActual,
+        $usuarioObjetivo,
+        count($menusSeleccionados),
+        count($submenusSeleccionados)
+    ));
 
     responder_json([
         'ok' => true,

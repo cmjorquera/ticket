@@ -34,16 +34,16 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
     $orden_secciones = ['PRINCIPAL', 'ADMINISTRACIÓN', 'OPERACIÓN'];
     $depth = (string) ($GLOBALS['depth'] ?? '');
 
-    // Compatibilidad progresiva: antes de ejecutar la migración los submenús
-    // conservan la herencia histórica del menú padre.
+    // Compatibilidad progresiva: los usuarios que todavía no tengan permisos
+    // granulares conservan la herencia histórica del menú padre.
     try {
-        $columna_submenu = $db->fetchOne(
-            "SELECT COUNT(*) AS total FROM information_schema.COLUMNS
+        $estructura_submenu = $db->fetchOne(
+            "SELECT COUNT(DISTINCT COLUMN_NAME) AS total FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = DATABASE()
-                AND TABLE_NAME = 'permisos_menu_1'
-                AND COLUMN_NAME = 'id_submenu'"
+                AND TABLE_NAME = 'permiso_sub_menu'
+                AND COLUMN_NAME IN ('id_usuario', 'id_submenu', 'permiso')"
         );
-        $permisos_submenu_habilitados = (int) ($columna_submenu['total'] ?? 0) > 0;
+        $permisos_submenu_habilitados = (int) ($estructura_submenu['total'] ?? 0) === 3;
     } catch (Throwable $e) {
         $permisos_submenu_habilitados = false;
     }
@@ -93,21 +93,27 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
                         $submenu = $db->fetchAll(
                             "SELECT DISTINCT sm.id_submenu, sm.nombre, sm.archivo, sm.icono, sm.orden
                                FROM menu_1_sub sm
-                               JOIN permisos_menu_1 pm
-                                 ON pm.id_menu1 = sm.id_menu
-                                AND pm.id_submenu = sm.id_submenu
-                                AND pm.id_usuario = ?
-                                AND pm.id_tipo_permiso = 1
+                               JOIN permiso_sub_menu psm
+                                 ON psm.id_submenu = sm.id_submenu
+                                AND psm.id_usuario = ?
+                                AND psm.permiso = 1
                               WHERE sm.id_menu = ?
                            ORDER BY sm.orden ASC",
                             [$id_usuario, (int) $menu['id_menu']]
                         );
 
-                        // Compatibilidad con permisos anteriores: si el usuario
-                        // tiene acceso al padre pero todavía no posee filas por
-                        // submenú, hereda todos sus hijos. En cuanto existen
-                        // permisos explícitos, se respeta exactamente esa lista.
-                        if (empty($submenu)) {
+                        $configuracionExplicita = $db->fetchOne(
+                            "SELECT 1
+                               FROM permiso_sub_menu psm
+                               JOIN menu_1_sub sm ON sm.id_submenu = psm.id_submenu
+                              WHERE psm.id_usuario = ? AND sm.id_menu = ?
+                              LIMIT 1",
+                            [$id_usuario, (int) $menu['id_menu']]
+                        );
+
+                        // Solo se heredan todos los hijos mientras el usuario no
+                        // tenga ninguna configuración explícita para este menú.
+                        if (!$configuracionExplicita) {
                             $submenu = $db->fetchAll(
                                 "SELECT id_submenu, nombre, archivo, icono, orden
                                    FROM menu_1_sub

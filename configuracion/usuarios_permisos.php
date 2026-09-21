@@ -13,6 +13,7 @@ $menus = [];
 $submenusPorMenu = [];
 $permisosMenus = [];
 $permisosSubmenus = [];
+$menusConSubmenusConfigurados = [];
 
 if (empty($_SESSION['csrf_usuarios_permisos'])) {
     $_SESSION['csrf_usuarios_permisos'] = bin2hex(random_bytes(32));
@@ -97,13 +98,28 @@ try {
             }
 
             $permisosSubmenu = $db->fetchAll(
-                "SELECT DISTINCT id_submenu
-                   FROM permiso_sub_menu
-                  WHERE id_usuario = ? AND permiso = 1",
+                "SELECT psm.id_submenu, psm.permiso, sm.id_menu
+                   FROM permiso_sub_menu psm
+                   JOIN menu_1_sub sm ON sm.id_submenu = psm.id_submenu
+                  WHERE psm.id_usuario = ?",
                 [$usuarioObjetivo]
             );
             foreach ($permisosSubmenu as $permiso) {
-                $permisosSubmenus[(int) $permiso['id_submenu']] = true;
+                $menusConSubmenusConfigurados[(int) $permiso['id_menu']] = true;
+                if ((int) $permiso['permiso'] === 1) {
+                    $permisosSubmenus[(int) $permiso['id_submenu']] = true;
+                }
+            }
+
+            // Compatibilidad con permisos históricos: un menú principal que
+            // aún no tenga configuración granular conserva todos sus hijos.
+            foreach (array_keys($permisosMenus) as $idMenu) {
+                if (isset($menusConSubmenusConfigurados[$idMenu])) {
+                    continue;
+                }
+                foreach ($submenusPorMenu[$idMenu] ?? [] as $submenu) {
+                    $permisosSubmenus[(int) $submenu['id_submenu']] = true;
+                }
             }
         }
     }
@@ -146,18 +162,18 @@ iniciar_layout_configuracion('Permisos de usuario', 'Permisos', 'usuarios_permis
         $submenusMarcados = count(array_filter($submenusMenu, static fn (array $submenu): bool => isset($permisosSubmenus[(int) $submenu['id_submenu']])));
         $menuVisualmenteMarcado = $menuMarcado || $submenusMarcados > 0;
         ?>
-        <section class="up-menu" data-menu-group="<?= $idMenu ?>">
+        <section class="up-menu" data-permission-group-id="<?= $idMenu ?>">
           <label class="up-menu__parent">
-            <input type="checkbox" class="menu-checkbox" name="menus[]" value="<?= $idMenu ?>" data-menu-id="<?= $idMenu ?>" <?= $menuVisualmenteMarcado ? 'checked' : '' ?>>
+            <input type="checkbox" class="menu-checkbox" name="menus[]" value="<?= $idMenu ?>" data-permission-menu-id="<?= $idMenu ?>" <?= $menuVisualmenteMarcado ? 'checked' : '' ?>>
             <span class="up-check-ui"><i class="bi bi-check"></i></span>
-            <span class="up-menu__identity"><strong><?= e((string) $menu['nombre']) ?></strong><small><?= count($submenusMenu) ?> submenú<?= count($submenusMenu) === 1 ? '' : 's' ?></small></span>
+            <span class="up-menu__identity"><strong><?= e((string) $menu['nombre']) ?> <span data-menu-order-id="<?= $idMenu ?>" data-order-fallback="<?= e((string) $menu['orden']) ?>"></span></strong><small><?= count($submenusMenu) ?> submenú<?= count($submenusMenu) === 1 ? '' : 's' ?></small></span>
             <span class="up-menu__count"><span><?= $submenusMarcados ?></span>/<?= count($submenusMenu) ?></span>
           </label>
           <?php if ($submenusMenu): ?>
             <div class="up-submenus">
               <?php foreach ($submenusMenu as $submenu): ?>
                 <?php $idSubmenu = (int) $submenu['id_submenu']; ?>
-                <label class="up-submenu"><input type="checkbox" class="submenu-checkbox" name="submenus[]" value="<?= $idSubmenu ?>" data-menu-parent="<?= $idMenu ?>" <?= isset($permisosSubmenus[$idSubmenu]) ? 'checked' : '' ?>><span class="up-check-ui"><i class="bi bi-check"></i></span><span><?= e((string) $submenu['nombre']) ?></span></label>
+                <label class="up-submenu"><input type="checkbox" class="submenu-checkbox" name="submenus[]" value="<?= $idSubmenu ?>" data-permission-submenu-id="<?= $idSubmenu ?>" data-parent-menu-id="<?= $idMenu ?>" <?= isset($permisosSubmenus[$idSubmenu]) ? 'checked' : '' ?>><span class="up-check-ui"><i class="bi bi-check"></i></span><span><?= e((string) $submenu['nombre']) ?> <span data-submenu-order-id="<?= $idSubmenu ?>" data-order-fallback="<?= e((string) $submenu['orden']) ?>"></span></span></label>
               <?php endforeach; ?>
             </div>
           <?php endif; ?>
@@ -184,10 +200,20 @@ iniciar_layout_configuracion('Permisos de usuario', 'Permisos', 'usuarios_permis
   const form = document.getElementById('form-permisos');
   const message = document.getElementById('up-mensaje');
   const saveButton = document.getElementById('up-guardar');
+  const permissionGroups = new Map(
+    [...form.querySelectorAll('[data-permission-group-id]')].map(group => {
+      const menuId = String(group.dataset.permissionGroupId);
+      return [menuId, {
+        group,
+        parent: group.querySelector(`[data-permission-menu-id="${menuId}"]`),
+        children: [...group.querySelectorAll(`[data-parent-menu-id="${menuId}"]`)],
+      }];
+    })
+  );
 
-  function syncGroup(group) {
-    const parent = group.querySelector('.menu-checkbox');
-    const children = [...group.querySelectorAll('.submenu-checkbox')];
+  function syncGroup(groupState) {
+    const { group, parent, children } = groupState;
+    if (!parent) return;
     const checked = children.filter(child => child.checked).length;
     if (children.length) {
       parent.checked = checked > 0;
@@ -195,25 +221,71 @@ iniciar_layout_configuracion('Permisos de usuario', 'Permisos', 'usuarios_permis
     }
     group.querySelector('.up-menu__count span').textContent = String(checked);
   }
+
   function syncSummary() {
-    const menus = form.querySelectorAll('.menu-checkbox:checked').length;
-    const submenus = form.querySelectorAll('.submenu-checkbox:checked').length;
+    const menus = form.querySelectorAll('[data-permission-menu-id]:checked').length;
+    const submenus = form.querySelectorAll('[data-permission-submenu-id]:checked').length;
     document.getElementById('up-resumen').textContent = `${menus} menús · ${submenus} submenús`;
   }
-  form.querySelectorAll('[data-menu-group]').forEach(syncGroup);
+
+  permissionGroups.forEach(groupState => {
+    const { parent, children } = groupState;
+    if (!parent) return;
+
+    parent.addEventListener('change', event => {
+      const checked = event.currentTarget.checked;
+      children.forEach(child => {
+        child.checked = checked;
+      });
+      parent.indeterminate = false;
+      syncGroup(groupState);
+      syncSummary();
+    });
+
+    children.forEach(child => {
+      child.addEventListener('change', event => {
+        if (event.currentTarget.dataset.parentMenuId !== parent.dataset.permissionMenuId) return;
+        syncGroup(groupState);
+        syncSummary();
+      });
+    });
+
+    syncGroup(groupState);
+  });
   syncSummary();
 
-  form.addEventListener('change', event => {
-    const parent = event.target.closest('.menu-checkbox');
-    if (parent) {
-      const group = parent.closest('[data-menu-group]');
-      group.querySelectorAll('.submenu-checkbox').forEach(child => { child.checked = parent.checked; });
-      parent.indeterminate = false;
-      syncGroup(group); syncSummary(); return;
+  function showOrders(data = null) {
+    form.querySelectorAll('[data-menu-order-id]').forEach(label => {
+      const item = data?.menus?.[label.dataset.menuOrderId];
+      const order = item?.orden ?? label.dataset.orderFallback ?? '';
+      label.textContent = order === '' ? '' : `(${order})`;
+    });
+    form.querySelectorAll('[data-submenu-order-id]').forEach(label => {
+      const item = data?.submenus?.[label.dataset.submenuOrderId];
+      const order = item?.orden ?? label.dataset.orderFallback ?? '';
+      label.textContent = order === '' ? '' : `(${order})`;
+    });
+  }
+
+  async function loadOrders() {
+    try {
+      const response = await fetch('ajax/obtener_orden_menus.php', {
+        method: 'GET',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.menus || !data.submenus) {
+        throw new Error(data.error || 'Respuesta inválida al consultar los órdenes.');
+      }
+      showOrders(data);
+    } catch (error) {
+      showOrders();
+      console.error('No fue posible cargar el orden de los menús.', error);
     }
-    const child = event.target.closest('.submenu-checkbox');
-    if (child) { syncGroup(child.closest('[data-menu-group]')); syncSummary(); }
-  });
+  }
+
+  loadOrders();
 
   form.addEventListener('submit', async event => {
     event.preventDefault(); saveButton.disabled = true; saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando…'; message.className = ''; message.textContent = 'Aplicando cambios…';

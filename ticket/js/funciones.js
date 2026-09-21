@@ -242,6 +242,9 @@ function validarCamposVacios(...elementos) {
 //*************AGREGAR USUARIO******************************* */
 
 function mostrarPermisos(userId) {
+    let permissionCsrf = '';
+    const escapePermissionHtml = value => $('<div>').text(String(value ?? '')).html();
+
     Swal.fire({
         title: '<div class="alert alert-dark" role="alert">PERMISOS PARA EL USUARIO</div>',
         html: '<div id="permisosContent"></div>',
@@ -257,25 +260,27 @@ function mostrarPermisos(userId) {
             cancelButton: 'bt_activar_alumno'
         },
         preConfirm: () => {
-            const permisos = [];
-            $('.lock-icon').each(function () {
-                const id_menu1 = $(this).attr('id').replace('lockIcon', '');
-                const id_tipo_permiso = $(this).hasClass('blue') ? 1 : 3;
-                permisos.push({
-                    id_menu1,
-                    id_tipo_permiso
-                });
-            });
+            const content = document.getElementById('permisosContent');
+            const menus = [...content.querySelectorAll('[data-permission-menu]:checked')]
+                .map(input => Number(input.dataset.permissionMenu));
+            const submenus = [...content.querySelectorAll('[data-permission-submenu]:checked')]
+                .map(input => Number(input.dataset.permissionSubmenu));
 
             return $.ajax({
                 url: 'modelos/guardar/guardar_permisos.php',
                 type: 'POST',
+                dataType: 'json',
                 data: {
                     user_id: userId,
-                    permisos: JSON.stringify(permisos)
+                    csrf: permissionCsrf,
+                    menus: JSON.stringify(menus),
+                    submenus: JSON.stringify(submenus)
                 },
                 success: function (response) {
-                    console.log("Permisos guardad   os: ", response);
+                    if (!response.ok) {
+                        Swal.showValidationMessage(response.error || 'No fue posible guardar los permisos.');
+                        return;
+                    }
                     Swal.fire({
                         title: '<div class="alert alert-dark" role="alert">PERMISOS GUARDADOS</div>',
                         showConfirmButton: false,
@@ -287,8 +292,9 @@ function mostrarPermisos(userId) {
                         },
                     });
                 },
-                error: function (xhr, status, error) {
-                    console.error("Error al guardar los permisos: ", status, error);
+                error: function (xhr) {
+                    const message = xhr.responseJSON?.error || 'No fue posible guardar los permisos.';
+                    Swal.showValidationMessage(message);
                 }
             });
         },
@@ -296,13 +302,17 @@ function mostrarPermisos(userId) {
             $.ajax({
                 url: 'modelos/rescatar/menu_1.php',
                 type: 'GET',
+                dataType: 'json',
                 data: {
                     user_id: userId
                 },
                 success: function (response) {
-                    console.log("Respuesta AJAX recibida: ", response);
                     try {
-                        var data = JSON.parse(response);
+                        if (!response.ok || !Array.isArray(response.data)) {
+                            throw new Error(response.error || 'Respuesta inválida.');
+                        }
+                        permissionCsrf = response.csrf;
+                        var data = response.data;
                         var html = `
                                 <style>
                                     .submenu-container {
@@ -356,30 +366,53 @@ function mostrarPermisos(userId) {
                                 submenusHtml += '<div class="submenu-container">';
                                 menu.submenus.forEach(function (submenu) {
                                     submenusHtml += `
-                                            <div class="submenu-item" onclick="toggleSubmenuColor(this)">
-                                                ${submenu.nombre}
-                                            </div>`;
+                                            <label class="submenu-item">
+                                                <input type="checkbox" class="form-check-input" data-permission-submenu="${Number(submenu.id_submenu)}" data-parent-menu="${Number(menu.id_menu)}" ${Number(submenu.permiso) === 1 ? 'checked' : ''}>
+                                                ${escapePermissionHtml(submenu.nombre)} (${Number(submenu.orden)})
+                                            </label>`;
                                 });
                                 submenusHtml += '</div>';
                             }
 
-                            var lockIcon = '';
-                            if (menu.id_tipo_permiso == 1) {
-                                lockIcon = `<i class="bi bi-unlock lock-icon blue" id="lockIcon${menu.id_menu}" onclick="toggleLock(${menu.id_menu})"></i>`;
-                            } else if (menu.id_tipo_permiso == 2 || menu.id_tipo_permiso == 3) {
-                                lockIcon = `<i class="bi bi-lock lock-icon red" id="lockIcon${menu.id_menu}" onclick="toggleLock(${menu.id_menu})"></i>`;
-                            }
-
                             html += `
-                                    <tr>
-                                        <td>${menu.nombre}</td>
+                                    <tr data-permission-group="${Number(menu.id_menu)}">
+                                        <td>${escapePermissionHtml(menu.nombre)} (${Number(menu.orden)})</td>
                                         <td>${submenusHtml}</td>
-                                        <td>${lockIcon}</td>
+                                        <td><label><input type="checkbox" class="form-check-input" data-permission-menu="${Number(menu.id_menu)}" ${Number(menu.id_tipo_permiso) === 1 ? 'checked' : ''}> Seleccionar menú completo</label></td>
                                     </tr>`;
                         });
 
                         html += '</tbody></table></div>';
                         $('#permisosContent').html(html);
+
+                        const content = document.getElementById('permisosContent');
+                        content.querySelectorAll('[data-permission-group]').forEach(group => {
+                            const menuId = group.dataset.permissionGroup;
+                            const parent = group.querySelector(`[data-permission-menu="${menuId}"]`);
+                            const children = [...group.querySelectorAll(`[data-parent-menu="${menuId}"]`)];
+                            if (!parent) return;
+
+                            const syncParent = () => {
+                                if (!children.length) return;
+                                const checked = children.filter(child => child.checked).length;
+                                parent.checked = checked === children.length;
+                                parent.indeterminate = checked > 0 && checked < children.length;
+                            };
+
+                            parent.addEventListener('change', event => {
+                                const checked = event.currentTarget.checked;
+                                children.forEach(child => {
+                                    child.checked = checked;
+                                });
+                                parent.indeterminate = false;
+                            });
+
+                            children.forEach(child => {
+                                child.addEventListener('change', syncParent);
+                            });
+
+                            syncParent();
+                        });
                     } catch (e) {
                         console.error("Error al parsear la respuesta: ", e);
                         $('#permisosContent').html('Error al cargar los permisos. Por favor, intente nuevamente.');
@@ -392,31 +425,6 @@ function mostrarPermisos(userId) {
             });
         }
     });
-}
-function toggleSubmenuColor(element) {
-    if (element.classList.contains('green')) {
-        element.classList.remove('green');
-        element.classList.add('red');
-    } else if (element.classList.contains('red')) {
-        element.classList.remove('red');
-        element.classList.add('green');
-    } else {
-        element.classList.add('green');
-    }
-}
-function toggleLock(menuId) {
-    var lockIcon = document.getElementById('lockIcon' + menuId);
-    if (lockIcon.classList.contains('bi-unlock')) {
-        lockIcon.classList.remove('bi-unlock');
-        lockIcon.classList.add('bi-lock');
-        lockIcon.classList.remove('blue');
-        lockIcon.classList.add('red');
-    } else {
-        lockIcon.classList.remove('bi-lock');
-        lockIcon.classList.add('bi-unlock');
-        lockIcon.classList.remove('red');
-        lockIcon.classList.add('blue');
-    }
 }
 function estadoUsuario(userId, currentState) {
     if (currentState === 'Bloqueado') {
