@@ -105,7 +105,7 @@ class Usuario
                     OR u.apellido_materno LIKE ?
                     OR u.email LIKE ?
                     OR at.nombre_area LIKE ?
-                    OR p.nombre LIKE ?
+                    OR p.nombre_perfil LIKE ?
                     OR dc.nombre_departamento LIKE ?
                     OR col.nom_colegio LIKE ?)';
                 $termino = '%' . $buscar . '%';
@@ -124,7 +124,7 @@ class Usuario
                         u.id_area_trabajo,
                         at.nombre_area,
                         at.sigla_area,
-                        GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ',') AS perfiles,
+                        GROUP_CONCAT(DISTINCT p.nombre_perfil ORDER BY p.id_perfil SEPARATOR ',') AS perfiles,
                         GROUP_CONCAT(DISTINCT p.id_perfil ORDER BY p.id_perfil SEPARATOR ',') AS perfil_ids,
                         MAX(jd.id_departamento_colegio) AS id_departamento_colegio,
                         MAX(dc.nombre_departamento) AS nombre_departamento,
@@ -210,7 +210,7 @@ class Usuario
     public static function colegiosPermitidosPara(Conexion $db, int $idUsuario): ?array
     {
         $perfiles = $db->fetchAll(
-            'SELECT p.id_perfil, p.nombre
+            'SELECT p.id_perfil, p.nombre_perfil
                FROM usuario_perfil up
                JOIN perfiles p ON p.id_perfil = up.id_perfil
               WHERE up.id_usuario = ? AND p.estado = 1',
@@ -221,7 +221,7 @@ class Usuario
         $esAdminColegio = false;
         foreach ($perfiles as $perfil) {
             $idPerfil = (int) ($perfil['id_perfil'] ?? 0);
-            $nombre = strtolower(trim((string) ($perfil['nombre'] ?? '')));
+            $nombre = strtolower(trim((string) ($perfil['nombre_perfil'] ?? '')));
             $esSuperAdmin = $esSuperAdmin || $idPerfil === 3 || in_array($nombre, ['super_admin', 'super admin', 'superadmin'], true);
             $esAdminColegio = $esAdminColegio || $idPerfil === 4
                 || (str_contains($nombre, 'admin') && str_contains($nombre, 'colegio'));

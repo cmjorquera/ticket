@@ -32,7 +32,7 @@ try {
                    JOIN colegio c ON c.id_colegio = uc.id_colegio
               LEFT JOIN perfiles p ON p.id_perfil = uc.id_perfil
                   WHERE uc.id_usuario = ? AND uc.estado = 1 AND c.estado = 1
-                    AND (uc.es_admin_colegio = 1 OR LOWER(p.nombre) IN ('admin colegio','admin_colegio','administrador colegio'))
+                    AND (uc.es_admin_colegio = 1 OR LOWER(p.nombre_perfil) IN ('admin colegio','admin_colegio','administrador colegio'))
                ORDER BY c.nom_colegio",
                 [$usuarioId]
             );

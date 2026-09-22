@@ -49,7 +49,7 @@ try {
                      ON uc.id_colegio = administrador.id_colegio AND uc.estado = 1
                    JOIN usuarios u ON u.id = uc.id_usuario AND LOWER(u.estado) = 'activo'
                   WHERE administrador.id_usuario = ? AND administrador.estado = 1
-                    AND (administrador.es_admin_colegio = 1 OR LOWER(p.nombre) IN ('admin colegio','admin_colegio','administrador colegio'))
+                    AND (administrador.es_admin_colegio = 1 OR LOWER(p.nombre_perfil) IN ('admin colegio','admin_colegio','administrador colegio'))
                ORDER BY nombre",
                 [$actorId]
             );

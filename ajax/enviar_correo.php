@@ -79,7 +79,7 @@ try {
 
     $db = Conexion::getInstance('sistema_panel_central');
     $perfiles = $db->fetchAll(
-        'SELECT p.id_perfil, p.nombre
+        'SELECT p.id_perfil, p.nombre_perfil
            FROM usuario_perfil up
            JOIN perfiles p ON p.id_perfil = up.id_perfil
           WHERE up.id_usuario = ? AND p.estado = 1',
@@ -89,7 +89,7 @@ try {
     $esAdminColegio = false;
     foreach ($perfiles as $perfil) {
         $idPerfil = (int) ($perfil['id_perfil'] ?? 0);
-        $nombrePerfil = strtolower(trim((string) ($perfil['nombre'] ?? '')));
+        $nombrePerfil = strtolower(trim((string) ($perfil['nombre_perfil'] ?? '')));
         $esSuperAdmin = $esSuperAdmin || $idPerfil === 3 || in_array($nombrePerfil, ['super_admin', 'super admin', 'superadmin'], true);
         $esAdminColegio = $esAdminColegio || $idPerfil === 4
             || (str_contains($nombrePerfil, 'admin') && str_contains($nombrePerfil, 'colegio'));

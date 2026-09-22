@@ -535,7 +535,7 @@ public function menuLateral($idUsuarioSession, $idPagActual)
 
     $sql1 = "SELECT m.id_menu, m.nombre AS NombreMenu, m.abreviacion AS abreviacion, 
                     m.icono AS iconoMenu, m.archivo AS archivoMenu, m.caracteristica AS descripcionMenu,
-                    p.nombre AS NombrePermiso, u.nombre AS NombreUsuario, pm.id AS PermisoMenuID  
+                    p.nombre_perfil AS NombrePermiso, u.nombre AS NombreUsuario, pm.id AS PermisoMenuID  
             FROM permisos_menu_1 pm 
             INNER JOIN menu_1 m ON pm.id_menu1 = m.id_menu 
             INNER JOIN usuarios u ON pm.id_usuario = u.id 
@@ -3559,7 +3559,7 @@ Si haces clic nuevamente en la lupa, se eliminará el filtro y se volverán a mo
             }
         
             // Obtener perfiles
-            $sql_perfiles = "SELECT p.id_perfil, p.nombre FROM usuario_perfil up
+            $sql_perfiles = "SELECT p.id_perfil, p.nombre_perfil FROM usuario_perfil up
                              JOIN perfiles p ON up.id_perfil = p.id_perfil
                              WHERE up.id_usuario = $id_usuario
                              ORDER BY FIELD(p.id_perfil, 3, 2, 1)";
@@ -3568,7 +3568,7 @@ Si haces clic nuevamente en la lupa, se eliminará el filtro y se volverán a mo
         
             while ($fila = $db->fetch_assoc($res_perfiles)) {
                 $perfil_id = $fila['id_perfil'];
-                $perfil_nombre = strtolower($fila['nombre']);
+                $perfil_nombre = strtolower($fila['nombre_perfil']);
                 $perfiles[$perfil_nombre] = [
                     'id_perfil' => $perfil_id,
                     'html' => ''
@@ -3707,14 +3707,14 @@ Si haces clic nuevamente en la lupa, se eliminará el filtro y se volverán a mo
             }
         
             // Perfiles disponibles
-            $sql_perfiles = "SELECT p.nombre FROM usuario_perfil up 
+            $sql_perfiles = "SELECT p.nombre_perfil FROM usuario_perfil up 
                              JOIN perfiles p ON up.id_perfil = p.id_perfil 
                              WHERE up.id_usuario = $id_usuario 
                              ORDER BY FIELD(p.id_perfil, 3, 2, 1)";
             $res_perfiles = $db->consulta($sql_perfiles);
             $perfiles = [];
             while ($fila = $db->fetch_assoc($res_perfiles)) {
-                $perfiles[] = strtolower($fila['nombre']); // admin, tecnico, usuario
+                $perfiles[] = strtolower($fila['nombre_perfil']); // admin, tecnico, usuario
             }
         
             // Construir contenido HTML del modal
@@ -3890,7 +3890,7 @@ Si haces clic nuevamente en la lupa, se eliminará el filtro y se volverán a mo
         // public function mostrarBotonesPerfiles($id_usuario) {
         //     $db = new MySQL("", "", "");
         
-        //     $sql = "SELECT p.nombre 
+        //     $sql = "SELECT p.nombre_perfil 
         //             FROM usuario_perfil up
         //             JOIN perfiles p ON up.id_perfil = p.id_perfil
         //             WHERE up.id_usuario = $id_usuario
@@ -4775,7 +4775,7 @@ public function tickets_resueltos_anio()
 // Estas son funciones sueltas, FUERA de la clase
 function obtenerPerfilesUsuario($idUsuario, $conexion) {
     $perfiles = [];
-    $sql = "SELECT LOWER(p.nombre) AS nombre
+    $sql = "SELECT LOWER(p.nombre_perfil) AS nombre
             FROM usuario_perfil up
             JOIN perfiles p ON up.id_perfil = p.id_perfil
             WHERE up.id_usuario = $idUsuario";

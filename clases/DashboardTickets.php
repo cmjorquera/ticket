@@ -36,7 +36,7 @@ final class DashboardTickets
             return $this->perfilesCache;
         }
         $filas = $this->db->fetchAll(
-            "SELECT DISTINCT p.id_perfil, p.nombre
+            "SELECT DISTINCT p.id_perfil, p.nombre_perfil
                FROM perfiles p
                JOIN usuario_perfil up ON up.id_perfil = p.id_perfil
               WHERE up.id_usuario = ?
@@ -47,7 +47,7 @@ final class DashboardTickets
 
         $perfiles = [];
         foreach ($filas as $fila) {
-            $clave = self::normalizarPerfil((string) ($fila['nombre'] ?? ''));
+            $clave = self::normalizarPerfil((string) ($fila['nombre_perfil'] ?? ''));
             $perfiles[$clave] = [
                 'clave' => $clave,
                 'nombre' => self::nombrePerfil($clave),

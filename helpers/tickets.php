@@ -14,7 +14,7 @@ function tiene_perfil(int $usuarioId, string $perfil, Conexion $db): bool
 {
     $buscado = ticket_normalizar_perfil($perfil);
     $filas = $db->fetchAll(
-        "SELECT DISTINCT p.nombre
+        "SELECT DISTINCT p.nombre_perfil
            FROM perfiles p
            JOIN usuario_perfil up ON up.id_perfil = p.id_perfil
           WHERE up.id_usuario = ?
@@ -23,7 +23,7 @@ function tiene_perfil(int $usuarioId, string $perfil, Conexion $db): bool
     );
 
     foreach ($filas as $fila) {
-        if (ticket_normalizar_perfil((string) ($fila['nombre'] ?? '')) === $buscado) {
+        if (ticket_normalizar_perfil((string) ($fila['nombre_perfil'] ?? '')) === $buscado) {
             return true;
         }
     }
@@ -53,7 +53,7 @@ function es_admin_colegio(int $usuarioId, ?int $colegioId, Conexion $db): bool
               JOIN perfiles p ON p.id_perfil = up.id_perfil AND p.estado = 1
              WHERE j.id_usuario = ?
                AND j.estado = 1
-               AND LOWER(REPLACE(p.nombre, ' ', '_')) IN ('admin_colegio', 'admin_area', 'administrador_colegio')";
+               AND LOWER(REPLACE(p.nombre_perfil, ' ', '_')) IN ('admin_colegio', 'admin_area', 'administrador_colegio')";
     $params = [$usuarioId];
     if ($colegioId !== null && $colegioId > 0) {
         $sql .= ' AND j.id_colegio = ?';
@@ -249,7 +249,7 @@ function puede_crear_ticket_para(int $actorId, int $solicitanteId, Conexion $db)
            JOIN perfiles p ON p.id_perfil = up.id_perfil AND p.estado = 1
           WHERE administrador.id_usuario = ?
             AND administrador.estado = 1
-            AND LOWER(REPLACE(p.nombre, ' ', '_')) IN ('admin_colegio','admin_area','administrador_colegio')
+            AND LOWER(REPLACE(p.nombre_perfil, ' ', '_')) IN ('admin_colegio','admin_area','administrador_colegio')
           LIMIT 1",
         [$solicitanteId, $actorId]
     );

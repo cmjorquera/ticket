@@ -40,7 +40,7 @@ try {
                 "SELECT u.id,
                         CONCAT_WS(' ', u.nombre, u.apellido_paterno, u.apellido_materno) AS nombre,
                         u.email,
-                        GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ', ') AS perfil
+                        GROUP_CONCAT(DISTINCT p.nombre_perfil ORDER BY p.id_perfil SEPARATOR ', ') AS perfil
                    FROM usuarios u
                    JOIN jefatura_departamento jd
                      ON jd.id_usuario = u.id
@@ -81,7 +81,7 @@ try {
                         CONCAT_WS(' ', u.nombre, u.apellido_paterno, u.apellido_materno) AS nombre,
                         u.email,
                         u.estado,
-                        GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.id_perfil SEPARATOR ', ') AS perfiles,
+                        GROUP_CONCAT(DISTINCT p.nombre_perfil ORDER BY p.id_perfil SEPARATOR ', ') AS perfiles,
                         MAX(dc.nombre_departamento) AS nombre_departamento
                    FROM usuarios u
                    JOIN jefatura_departamento jd

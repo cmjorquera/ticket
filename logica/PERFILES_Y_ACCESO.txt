@@ -1,0 +1,171 @@
+===============================================================================
+PERFILES DE USUARIO Y LÓGICA DE ACCESO
+===============================================================================
+
+BASE DE DATOS: crist668_sistema_panel_central
+TABLA: perfiles (id_perfil, nombre_perfil, descripcion)
+
+PERFILES DEL SISTEMA:
+===============================================================================
+
+PERFIL 1: USUARIO NORMAL
+- id_perfil = 1
+- Descripción: Usuario general del sistema
+- Ubicación en BD: usuarios.id_perfil = 1
+- Acceso a Usuarios Asociados:
+  * Puede ver SOLO usuarios de su MISMA ÁREA DE TRABAJO
+  * No puede ver usuarios de otras áreas
+  * No puede ver departamentos específicos
+
+PERFIL 2: JEFE DE DEPARTAMENTO
+- id_perfil = 2
+- Descripción: Administrador de un departamento específico
+- Ubicación en BD: usuarios.id_perfil = 2 + fila en tabla jefatura_departamento
+- Acceso a Usuarios Asociados:
+  * Puede ver SOLO usuarios de su DEPARTAMENTO en su COLEGIO
+  * Verifica tabla jefatura_departamento
+  * Filtra por: id_departamento_colegio + id_colegio
+  * Incluye solo usuarios estado='Activo'
+
+PERFIL 3: SUPER ADMIN ⭐ ACCESO TOTAL
+- id_perfil = 3
+- Descripción: Administrador del sistema (acceso total)
+- Ubicación en BD: usuarios.id_perfil = 3
+- Acceso a Usuarios Asociados:
+  * Puede ver TODOS los usuarios del sistema
+  * NO tiene restricciones por área ni departamento
+  * Puede ver usuarios de todos los colegios
+  * Puede ver usuarios de todos los departamentos
+  * Puede ver usuarios de todas las áreas
+
+LÓGICA DE ACCESO EN GestorAccesoModular.php:
+===============================================================================
+
+MÉTODO: obtenerUsuariosAsociados($idUsuarioActual)
+
+FLUJO DE DECISIÓN:
+
+1. OBTENER DATOS DEL USUARIO ACTUAL
+   ├─ Query: SELECT u.id, u.id_perfil, u.id_area_trabajo, 
+                    jd.id_departamento_colegio, jd.id_colegio
+   ├─ Retorna: $usuarioActual (array con datos del usuario)
+   └─ Si no existe → retorna []
+
+2. VERIFICAR PERFIL
+   
+   ┌─────────────────────────────────────────┐
+   │ ¿Es SUPER ADMIN (id_perfil = 3)?        │
+   └─────────────────────────────────────────┘
+              SÍ ↓                              NO ↓
+         [VER TODOS]              ┌──────────────────────┐
+         Query: SELECT *           │ ¿Está en             │
+         FROM usuarios             │ jefatura_            │
+         WHERE estado=             │ departamento?        │
+         'Activo'                  └──────────────────────┘
+         
+         ✅ Retorna todos            SÍ ↓            NO ↓
+            los usuarios         [VER DEPTO]    [VER ÁREA]
+                                 Query:         Query:
+                                 WHERE          WHERE
+                                 jd.id_depto=?  u.id_area=?
+                                 AND            
+                                 jd.id_colegio=?
+
+EJEMPLOS DE ACCESO:
+===============================================================================
+
+USUARIO: Cristian Jorquera (id=8, id_perfil=3 - SUPER ADMIN)
+├─ Perfil: Super Admin
+├─ Área: Informática (area 1)
+├─ Jefatura: Sí (departamento 1, colegio 15)
+├─ USUARIOS QUE VE: TODOS LOS USUARIOS ACTIVOS ✅
+└─ Restricción: NINGUNA (ve todo)
+
+USUARIO: Francisco Chavez (id=2, id_perfil=2 - JEFE DEPARTAMENTO)
+├─ Perfil: Jefe Departamento
+├─ Área: Contabilidad (area 2)
+├─ Jefatura: Sí (departamento 2, colegio 15)
+├─ USUARIOS QUE VE: Solo departamento 2, colegio 15 ✅
+└─ Restricción: Su departamento específico
+
+USUARIO: Carlos Gallardo (id=?, id_perfil=1 - USUARIO NORMAL)
+├─ Perfil: Usuario Normal
+├─ Área: Informática (area 1)
+├─ Jefatura: No
+├─ USUARIOS QUE VE: Solo usuarios del área 1 ✅
+└─ Restricción: Solo usuarios de su área
+
+QUERY PATRÓN POR PERFIL:
+===============================================================================
+
+SUPER ADMIN (id_perfil = 3):
+```sql
+SELECT u.id, u.nombre, u.email, u.cargo, 
+       a.nombre_area, dc.nombre_departamento, c.nom_colegio
+  FROM usuarios u
+  LEFT JOIN area_trabajo a ON a.id_area = u.id_area_trabajo
+  LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
+  LEFT JOIN departamentos_colegio dc ON dc.id = jd.id_departamento_colegio
+  LEFT JOIN colegio c ON c.id_colegio = jd.id_colegio
+ WHERE u.estado = 'Activo'
+ ORDER BY u.nombre ASC
+```
+
+JEFE DEPARTAMENTO (id_perfil = 2):
+```sql
+SELECT u.id, u.nombre, u.email, u.cargo,
+       a.nombre_area, dc.nombre_departamento, c.nom_colegio
+  FROM usuarios u
+  LEFT JOIN area_trabajo a ON a.id_area = u.id_area_trabajo
+  LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
+  LEFT JOIN departamentos_colegio dc ON dc.id = jd.id_departamento_colegio
+  LEFT JOIN colegio c ON c.id_colegio = jd.id_colegio
+ WHERE u.estado = 'Activo'
+   AND jd.id_departamento_colegio = ? AND jd.id_colegio = ?
+ ORDER BY u.nombre ASC
+```
+
+USUARIO NORMAL (id_perfil = 1):
+```sql
+SELECT u.id, u.nombre, u.email, u.cargo,
+       a.nombre_area, dc.nombre_departamento, c.nom_colegio
+  FROM usuarios u
+  LEFT JOIN area_trabajo a ON a.id_area = u.id_area_trabajo
+  LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
+  LEFT JOIN departamentos_colegio dc ON dc.id = jd.id_departamento_colegio
+  LEFT JOIN colegio c ON c.id_colegio = jd.id_colegio
+ WHERE u.estado = 'Activo'
+   AND u.id_area_trabajo = ?
+ ORDER BY u.nombre ASC
+```
+
+NOTAS IMPORTANTES:
+===============================================================================
+
+✅ SUPER ADMIN (perfil 3):
+   - Puede crear/editar/eliminar usuarios
+   - Puede modificar permisos de cualquier usuario
+   - Puede asignar jefaturas de departamento
+   - Puede ver reportes globales
+   - Puede acceder a configuración del sistema
+
+✅ JEFE DEPARTAMENTO (perfil 2):
+   - Limitado a su departamento/colegio
+   - Puede gestionar usuarios de su departamento
+   - REQUIERE estar en tabla jefatura_departamento
+
+✅ USUARIO NORMAL (perfil 1):
+   - Limitado a su área
+   - Solo puede ver compañeros de su área
+   - NO puede crear/editar usuarios
+
+SEGURIDAD:
+===============================================================================
+
+🔒 SIEMPRE verificar id_perfil en backend
+🔒 NUNCA confiar en id_perfil enviado desde el cliente
+🔒 SIEMPRE validar en sesión: $_SESSION['id_perfil']
+🔒 SIEMPRE usar prepared statements
+🔒 Log cada acción de SUPER ADMIN (auditoría)
+
+===============================================================================

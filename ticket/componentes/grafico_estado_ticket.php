@@ -11,12 +11,12 @@ $tipoUsuario = $_GET['tipoUsuario'] ?? 'auto';
 
 if ($tipoUsuario === 'auto') {
     // Detectar perfil por defecto del usuario
-    $sqlPerfil = "SELECT p.nombre FROM usuario_perfil up 
+    $sqlPerfil = "SELECT p.nombre_perfil FROM usuario_perfil up 
                   JOIN perfiles p ON up.id_perfil = p.id_perfil 
                   WHERE up.id_usuario = $idUsuario LIMIT 1";
     $res = $bdato->consulta($sqlPerfil);
     $row = $bdato->fetch_array($res);
-    $tipoUsuario = strtolower($row['nombre'] ?? 'usuario');
+    $tipoUsuario = strtolower($row['nombre_perfil'] ?? 'usuario');
 }
 
 $sql = "";

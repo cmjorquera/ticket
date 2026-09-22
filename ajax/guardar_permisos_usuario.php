@@ -33,7 +33,7 @@ function puede_administrar_permisos(Conexion $db, int $idUsuario): bool
           WHERE up.id_usuario = ?
             AND (
                 p.id_perfil = 3
-                OR LOWER(REPLACE(REPLACE(TRIM(p.nombre), '_', ' '), '-', ' '))
+                OR LOWER(REPLACE(REPLACE(TRIM(p.nombre_perfil), '_', ' '), '-', ' '))
                    IN ('administrador', 'admin', 'super admin', 'superadmin')
             )
           LIMIT 1",

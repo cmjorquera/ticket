@@ -209,7 +209,7 @@ final class PermisosManager
         $sql = "
             SELECT 
                 p.id_perfil,
-                p.nombre,
+                p.nombre_perfil,
                 p.descripcion
             FROM usuario_perfil up
             JOIN perfiles p ON up.id_perfil = p.id_perfil
@@ -227,7 +227,7 @@ final class PermisosManager
             $this->perfiles = [];
             
             foreach ($resultados as $row) {
-                $this->perfiles[] = $row['nombre'];
+                $this->perfiles[] = $row['nombre_perfil'];
             }
         } catch (Throwable $ex) {
             $this->registrarError('Cargar perfiles', $ex);

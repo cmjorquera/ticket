@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     [(int)$usuario['id']]
                 );
                 $perfiles = $db->fetchAll(
-                    "SELECT pf.id_perfil, pf.nombre
+                    "SELECT pf.id_perfil, pf.nombre_perfil
                        FROM usuario_perfil up
        INNER JOIN perfiles pf ON pf.id_perfil = up.id_perfil
                       WHERE up.id_usuario = ?
@@ -80,8 +80,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['id']       = (int)$usuario['id'];
                 $_SESSION['nombre']   = $usuario['nombre'];
                 $_SESSION['email']    = $usuario['email'];
-                $_SESSION['perfil']   = $perfiles[0]['nombre'] ?? 'Sin perfil';
-                $_SESSION['perfiles'] = array_column($perfiles, 'nombre');
+                $_SESSION['perfil']   = $perfiles[0]['nombre_perfil'] ?? 'Sin perfil';
+                $_SESSION['perfiles'] = array_column($perfiles, 'nombre_perfil');
 
                 header('Location: contenedores.php');
                 exit;
