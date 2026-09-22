@@ -1,0 +1,24 @@
+ESTRUCTURA DE CARPETAS MODULAR:
+
+/clases/
+  - Conexion.php (PDO, getInstance('sistema_panel_central'))
+  - Usuario.php (gestión de usuarios)
+  - GestorAccesoModular.php (control de acceso genérico)
+
+/configuracion/
+  /ajax/
+    - obtener_usuarios_asociados.php (retorna usuarios filtrados por rol)
+    - guardar_permisos_usuario.php (guarda permisos)
+  /class/
+    - GestorPermisosUsuarios.php (lógica de permisos configuración)
+  /js/
+    - listado_usuarios.js (interfaz de usuarios)
+
+/componentes/
+  - boot.php (inicializa sesiones, conexión BD, variables globales)
+  - validar_sesion.php (valida usuario activo)
+
+PRINCIPIO MODULAR:
+- Código genérico/compartido → /clases/ (raíz)
+- Código específico del módulo → /modulo/class/, /modulo/ajax/, /modulo/js/
+- Cada módulo independiente pero comparte /clases/ generales

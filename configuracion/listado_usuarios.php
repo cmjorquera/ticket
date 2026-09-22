@@ -166,8 +166,9 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
   </div>
 </div>
 
-<?php require __DIR__ . '/componentes/modal_agregar_departamento.php'; ?>
+<?php require __DIR__ . '/../componentes/modal_agregar_departamento.php'; ?>
 
+<script src="<?= $depth ?>js/permisos.js"></script>
 <script src="<?= $depth ?>js/paginacion.js"></script>
 <script src="<?= $depth ?>configuracion/js/usuarios_acordeon.js?v=<?= (int) filemtime(__DIR__ . '/js/usuarios_acordeon.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/listado_usuarios.js?v=<?= (int) filemtime(__DIR__ . '/js/listado_usuarios.js') ?>"></script>

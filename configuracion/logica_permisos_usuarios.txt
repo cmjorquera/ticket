@@ -1,0 +1,73 @@
+LÓGICA DE PERMISOS Y ACCESO MODULAR - CONFIGURACIÓN
+====================================================
+
+1. DESCRIPCIÓN GENERAL
+   Sistema de control de acceso por departamento/área para gestionar permisos de menú.
+   Jefes de departamento ven solo usuarios de su departamento.
+   Usuarios normales ven solo usuarios de su área de trabajo.
+
+2. ARQUITECTURA
+   - GestorAccesoModular (class/ raíz): Clase genérica reutilizable en todos módulos
+   - GestorPermisosUsuarios (configuracion/class/): Clase específica del módulo
+   - Endpoints AJAX (configuracion/ajax/): obtener_usuarios_asociados.php, guardar_permisos_usuario.php
+   - Frontend (js/permisos.js): Funciones para interactuar con endpoints
+
+3. TABLAS DE BASE DE DATOS
+   - usuarios: id, nombre, apellido_paterno, id_area_trabajo, id_colegio, jefatura_departamento
+   - departamentos_colegio: id, nombre, id_colegio
+   - area_trabajo: id, nombre, id_departamento_colegio
+   - menu_1: id, nombre, descripcion
+   - permiso_menu_1: id, id_usuario, id_menu, estado
+
+4. FLUJO DE ACCESO
+   a) Usuario inicia sesión → id_usuario se almacena en $_SESSION['id']
+   b) Al entrar a configuración → obtener_usuarios_asociados.php retorna usuarios asociados
+   c) Jefe de departamento (jefatura_departamento > 0):
+      - Ve usuarios del mismo departamento (id_departamento_colegio)
+   d) Usuario normal (jefatura_departamento = 0 o null):
+      - Ve usuarios de su misma área de trabajo (id_area_trabajo)
+
+5. ENDPOINTS AJAX
+   a) GET configuracion/ajax/obtener_usuarios_asociados.php
+      Parámetros: ninguno (usa sesión)
+      Retorna: {ok, usuarios[], total}
+      
+   b) POST configuracion/ajax/guardar_permisos_usuario.php
+      Parámetros: id_usuario (int), permisos (JSON array)
+      Estructura: [{id_menu, estado}, ...]
+      Retorna: {ok, mensaje, usuario_id, permisos_procesados, errores[]}
+
+6. SEGURIDAD
+   - Validación de acceso antes de modificar (validarAccesoAUsuario)
+   - Prepared statements para prevenir SQL injection
+   - Validación de tipos de datos (casting a int)
+   - Manejo de excepciones con JSON responses
+   - Verificación de sesión activa
+
+7. EXTENSIÓN A OTROS MÓDULOS
+   Inventario, eventos, licenciamiento usan GestorAccesoModular:
+   - Crear modulo/class/GestorTarea.php que use GestorAccesoModular
+   - Crear modulo/ajax/obtener_usuarios_asociados.php
+   - El método obtenerFiltroAccesoSQL() se usa en queries genéricas
+
+8. ESTRUCTURA FINAL
+   class/
+   └── GestorAccesoModular.php (NUEVO - Genérico)
+   
+   componentes/
+   └── boot.php (NUEVO - Bootstrap compartido)
+
+   configuracion/
+   ├── ajax/
+   │   ├── obtener_usuarios_asociados.php (NUEVO)
+   │   └── guardar_permisos_usuario.php (ACTUALIZADO)
+   ├── class/
+   │   └── GestorPermisosUsuarios.php (ACTUALIZADO)
+   └── logica_permisos_usuarios.txt (NUEVO)
+
+9. CAMBIOS REALIZADOS
+   - Creado class/GestorAccesoModular.php (genérico)
+   - Actualizado configuracion/class/GestorPermisosUsuarios.php
+   - Refactorizado configuracion/ajax/guardar_permisos_usuario.php
+   - Creado configuracion/ajax/obtener_usuarios_asociados.php
+   - ELIMINAR: modelos/guardar/guardar_permisos.php (duplicado)

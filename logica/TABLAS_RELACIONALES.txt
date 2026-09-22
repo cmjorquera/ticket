@@ -1,0 +1,31 @@
+RELACIONES CRÍTICAS:
+
+usuarios
+  ├── id (PK)
+  ├── id_area_trabajo (FK) → area_trabajo.id_area
+  ├── estado (Activo|Inactivo|Bloqueado|Pendiente)
+  └── [en jefatura_departamento?]
+
+jefatura_departamento (CLAVE)
+  ├── id (PK)
+  ├── id_usuario (FK) → usuarios.id
+  ├── id_departamento_colegio (FK) → departamentos_colegio.id
+  ├── id_colegio (FK) → colegio.id_colegio
+  ├── tipo_jefatura (Admin_Colegio | Admin_Departamento)
+  └── estado
+
+departamentos_colegio
+  ├── id (PK)
+  ├── id_colegio (FK) → colegio.id_colegio
+  ├── nombre_departamento
+  └── estado
+
+area_trabajo
+  ├── id_area (PK)
+  ├── nombre_area (INFORMATICA|CONTABILIDAD|etc)
+  └── encargado_area
+
+USUARIOS CLAVE PARA TESTING:
+- Francisco Chavez (id=2): jefe depto 2, colegio 15
+- Alex Espinoza (id=1): jefe depto 4, colegio 15
+- Cristian Jorquera (id=8): usuario normal, área 1

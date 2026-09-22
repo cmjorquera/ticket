@@ -1,0 +1,18 @@
+ENDPOINTS DEL SISTEMA:
+
+GET/POST: /configuracion/ajax/obtener_usuarios_asociados.php
+- Requiere: sesión válida ($_SESSION['id'])
+- Retorna: {ok: true, data: [usuarios]}
+- Errores: {ok: false, mensaje: "error"}
+- Lógica: GestorPermisosUsuarios->obtenerUsuariosAsociados()
+
+POST: /configuracion/ajax/guardar_permisos_usuario.php
+- Requiere: sesión válida, parámetro POST id_usuario
+- Valida: GestorAccesoModular->validarAccesoAUsuario()
+- Guarda: permiso_menu_1 con prepared statements
+- Retorna: {ok: true/false, procesados: N, errores: []}
+
+GET: /componentes/validar_sesion.php
+- Valida sesión actual
+- Redirige a login si inválida
+- Refresca datos de usuario

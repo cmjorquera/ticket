@@ -1,0 +1,112 @@
+===============================================================================
+CONTEXTO DEL SISTEMA DE TICKET - PANEL CENTRAL SEDUC
+===============================================================================
+
+BASE DE DATOS: crist668_sistema_panel_central
+
+ESTRUCTURA RELACIONAL Y LÓGICA:
+===============================================================================
+
+1. TABLA: usuarios
+   - id (PK)
+   - nombre, apellido_paterno, apellido_materno
+   - email, telefono, cargo
+   - id_area_trabajo (FK -> area_trabajo.id_area)
+   - estado (Activo, Inactivo, Bloqueado, Pendiente)
+
+   USUARIOS CLAVE:
+   - id=2: Francisco Chavez (Contador General, area 2, jefe departamento 2 en colegio 15)
+   - id=1: Alex Espinoza (Analista Recaudación, area 8, jefe departamento 4 en colegio 15)
+   - id=8: Cristian Jorquera (Analista Programador, area 1)
+
+2. TABLA: area_trabajo
+   - id_area (PK)
+   - nombre_area (INFORMATICA, CONTABILIDAD, RECURSOS HUMANOS, etc.)
+   - encargado_area
+
+3. TABLA: jefatura_departamento (RELACIÓN CLAVE)
+   - id (PK)
+   - id_usuario (FK -> usuarios.id)
+   - id_departamento_colegio (FK -> departamentos_colegio.id)
+   - id_colegio (FK -> colegio.id_colegio)
+   - tipo_jefatura: enum('Admin_Colegio', 'Admin_Departamento')
+
+   RELACIÓN:
+   - Un usuario puede ser jefe de departamento en un colegio específico
+   - Si un usuario está en jefatura_departamento con tipo='Admin_Departamento':
+     * Es jefe de departamento
+     * Ve solo usuarios de su departamento en ese colegio
+   - Si un usuario NO está en jefatura_departamento:
+     * Es usuario normal
+     * Ve solo usuarios de su área_trabajo
+
+4. TABLA: departamentos_colegio
+   - id (PK)
+   - id_colegio (FK -> colegio.id_colegio)
+   - nombre_departamento
+
+5. TABLA: colegio
+   - id_colegio (PK)
+   - nom_colegio (Cordillera, Tabancura, Los Andes, Los Alerces, Huelén, etc.)
+
+LÓGICA DE ACCESO MODULAR:
+===============================================================================
+
+REGLA 1: USUARIO JEFE DE DEPARTAMENTO
+- Verifica si el usuario actual está en jefatura_departamento
+- Si SI y tipo='Admin_Departamento':
+  * Obtiene su id_departamento_colegio e id_colegio
+  * Busca usuarios que:
+    - Trabajen en el MISMO departamento
+    - DEL MISMO colegio
+  * Muestra SOLO esos usuarios
+
+REGLA 2: USUARIO NORMAL
+- Verifica si el usuario NO está en jefatura_departamento
+- Obtiene su id_area_trabajo
+- Busca usuarios que tengan el MISMO id_area_trabajo
+- Muestra SOLO esos usuarios
+
+QUERY PATRÓN CORRECTO:
+```sql
+-- Para obtener usuarios asociados según rol
+SELECT u.id, u.nombre, u.email, u.cargo, u.id_area_trabajo
+FROM usuarios u
+LEFT JOIN jefatura_departamento jd ON u.id = jd.id_usuario
+WHERE u.estado = 'Activo'
+  AND (
+    -- Caso 1: Usuario es jefe de departamento
+    (jd.id IS NOT NULL AND jd.id_departamento_colegio = ? AND jd.id_colegio = ?)
+    -- Caso 2: Usuario normal ve su área
+    OR (jd.id IS NULL AND u.id_area_trabajo = ?)
+  )
+ORDER BY u.nombre ASC
+```
+
+ERRORES A EVITAR:
+===============================================================================
+- NO usar "u_id_colegio" (esta columna NO existe)
+- NO usar aliases incompletos en LEFT JOIN
+- SIEMPRE verificar que la tabla/columna exista en el schema
+- USAR prepared statements con ?
+- NUNCA concatenar valores directamente en SQL
+
+CONEXIÓN Y PDO:
+===============================================================================
+- Clase: clases/Conexion.php
+- Método: getInstance('sistema_panel_central')
+- Retorna: objeto PDO con métodos:
+  * prepare($sql) -> PDOStatement
+  * query($sql, $params) -> PDOStatement ejecutado
+  * fetchAll($sql, $params) -> array
+  * fetchOne($sql, $params) -> array|false
+  * execute($sql, $params) -> int rowCount
+
+SESIONES:
+===============================================================================
+- Archivo: validar_sesion.php (gestiona sesiones automáticamente)
+- Boot.php: inicializa sesión con sys_get_temp_dir() como fallback
+- Variable global: $bdato = Conexion::getInstance('sistema_panel_central')
+- Variables de sesión: $_SESSION['id'], $_SESSION['nombre'], $_SESSION['email']
+
+===============================================================================

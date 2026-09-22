@@ -1,0 +1,27 @@
+FLUJOS DE DATOS PRINCIPALES:
+
+FLUJO 1: Listar Usuarios (Configuración)
+1. Usuario accede a listado_usuarios.php
+2. Carga JS: configuracion/js/listado_usuarios.js
+3. JS llama: ../configuracion/ajax/obtener_usuarios_asociados.php
+4. AJAX requiere boot.php (inicializa $bdato)
+5. Crea GestorPermisosUsuarios($bdato)
+6. Llama obtenerUsuariosAsociados($idUsuarioSession)
+7. GestorPermisosUsuarios delega a GestorAccesoModular
+8. GestorAccesoModular verifica:
+   - ¿Usuario está en jefatura_departamento? → ve su departamento
+   - ¿Usuario NO está en jefatura_departamento? → ve su área
+9. Retorna JSON {ok: true, data: [usuarios filtrados]}
+10. JS llena tabla con usuarios filtrados
+
+FLUJO 2: Guardar Permisos
+1. POST a configuracion/ajax/guardar_permisos_usuario.php
+2. Valida acceso: GestorAccesoModular::validarAccesoAUsuario()
+3. Si válido: actualiza permiso_menu_1 con prepared statements
+4. Si inválido: retorna error 422
+
+PUNTOS CRÍTICOS:
+- SIEMPRE usar prepared statements (?)
+- SIEMPRE validar acceso del usuario actual
+- NUNCA concatenar valores en SQL
+- SIEMPRE retornar JSON con ok y data

@@ -702,7 +702,7 @@
   async function loadUsers() {
     tableBody.innerHTML = '<tr><td colspan="9" class="text-muted">Cargando usuarios…</td></tr>';
     try {
-      _todosUsuarios = await request(`${API}/usuarios_listar.php`);
+      _todosUsuarios = await request(`../configuracion/ajax/obtener_usuarios_asociados.php`);
       aplicarFiltros();
     } catch (error) {
       _todosUsuarios = [];

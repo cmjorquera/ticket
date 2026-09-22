@@ -1,0 +1,24 @@
+ERRORES Y SOLUCIONES:
+
+ERROR 1: "Column not found: u_id_colegio"
+CAUSA: Alias incorrecto en LEFT JOIN, tabla usuarios NO tiene id_colegio
+SOLUCIÓN: Usar jefatura_departamento como intermediaria
+
+ERROR 2: "Access denied for user 'acceso_comun'@'localhost'"
+CAUSA: Credenciales incorrectas en Conexion.php
+SOLUCIÓN: Usar crist668_jorquera / Ingeniero86#
+
+ERROR 3: "session_start(): Failed to read session data"
+CAUSA: Directorio /var/cpanel/php/sessions/ea-php83 no accesible
+SOLUCIÓN: Usar sys_get_temp_dir() como fallback (validar_sesion.php)
+
+ERROR 4: "Call to undefined method Conexion::prepare()"
+CAUSA: Código usa $bdato->prepare() pero no existe
+SOLUCIÓN: Agregar método prepare() a Conexion o usar $bdato->query()
+
+ERROR 5: No aparecen usuarios en listado
+CAUSA: Múltiple - verificar en orden:
+  1. ¿Boot.php carga correctamente?
+  2. ¿Conexión a BD es válida?
+  3. ¿Usuario tiene sesión válida?
+  4. ¿Query tiene alias correcto?

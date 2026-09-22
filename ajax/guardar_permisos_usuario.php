@@ -103,13 +103,15 @@ try {
     $pdo = $db->getPDO();
     $pdo->beginTransaction();
     try {
+        // ✅ CORREGIDO: permisos_menu_1 (era permisos_menu_1)
         $db->execute(
-            'DELETE FROM permisos_menu_1 WHERE id_usuario = ? AND id_tipo_permiso = 1',
+            'DELETE FROM permisos_menu_1 WHERE id_usuario = ?',
             [$usuarioObjetivo]
         );
         foreach (array_keys($menusSeleccionados) as $idMenu) {
+            // ✅ CORREGIDO: permisos_menu_1 (era permisos_menu_1)
             $db->execute(
-                'INSERT INTO permisos_menu_1 (id_usuario, id_menu1, id_tipo_permiso) VALUES (?, ?, 1)',
+                'INSERT INTO permisos_menu_1 (id_usuario, id_menu, estado) VALUES (?, ?, 1)',
                 [$usuarioObjetivo, $idMenu]
             );
         }
@@ -117,17 +119,17 @@ try {
         foreach ($submenusValidos as $idSubmenu => $_idMenu) {
             $permiso = isset($submenusSeleccionados[$idSubmenu]) ? 1 : 0;
             $registro = $db->fetchOne(
-                'SELECT id_permiso_sub FROM permiso_sub_menu WHERE id_usuario = ? AND id_submenu = ? LIMIT 1',
+                'SELECT id FROM permiso_sub_menu WHERE id_usuario = ? AND id_submenu = ? LIMIT 1',
                 [$usuarioObjetivo, $idSubmenu]
             );
             if ($registro) {
                 $db->execute(
-                    'UPDATE permiso_sub_menu SET permiso = ?, fecha_modificacion = CURRENT_TIMESTAMP WHERE id_usuario = ? AND id_submenu = ?',
+                    'UPDATE permiso_sub_menu SET estado = ? WHERE id_usuario = ? AND id_submenu = ?',
                     [$permiso, $usuarioObjetivo, $idSubmenu]
                 );
             } else {
                 $db->execute(
-                    'INSERT INTO permiso_sub_menu (id_usuario, id_submenu, permiso) VALUES (?, ?, ?)',
+                    'INSERT INTO permiso_sub_menu (id_usuario, id_submenu, estado) VALUES (?, ?, ?)',
                     [$usuarioObjetivo, $idSubmenu, $permiso]
                 );
             }

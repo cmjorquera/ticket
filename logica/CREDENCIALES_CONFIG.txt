@@ -1,0 +1,17 @@
+CREDENCIALES (NO COMPARTIR PÚBLICAMENTE):
+
+BD MySQL:
+- Host: localhost
+- Usuario: crist668_jorquera
+- Contraseña: Ingeniero86# (GUARDAR SEGURO)
+- BD: crist668_sistema_panel_central
+
+Clase de conexión:
+- Ubicación: /clases/Conexion.php
+- Método: getInstance('sistema_panel_central')
+- Parámetro: 'sistema_panel_central' (sin prefijo crist668_)
+
+Configuración PDO:
+- ERRMODE: EXCEPTION
+- FETCH_MODE: ASSOC
+- EMULATE_PREPARES: false

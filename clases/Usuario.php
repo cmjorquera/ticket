@@ -79,6 +79,12 @@ class Usuario
                 $parametros[] = $idColegio;
             }
 
+            $idDepartamento = (int) ($filtros['id_departamento_colegio'] ?? 0);
+            if ($idDepartamento > 0) {
+                $where[] = 'jd.id_departamento_colegio = ?';
+                $parametros[] = $idDepartamento;
+            }
+
             if (array_key_exists('id_colegios_permitidos', $filtros)) {
                 $colegiosPermitidos = array_values(array_unique(array_filter(
                     array_map('intval', (array) $filtros['id_colegios_permitidos']),

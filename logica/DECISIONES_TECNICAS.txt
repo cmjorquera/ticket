@@ -1,0 +1,17 @@
+POR QUÉ SE HIZO DE ESTA FORMA:
+
+1. Modular por módulo (configuracion/, inventario/, etc)
+   RAZÓN: Cada módulo tiene lógica independiente pero comparte utilidades
+
+2. Gestores en /clases/ vs /modulo/class/
+   RAZÓN: GestorAccesoModular es genérico (todos módulos lo usan)
+   RAZÓN: GestorPermisosUsuarios es específico (solo configuracion)
+
+3. PDO en lugar de mysqli
+   RAZÓN: Prepared statements más seguras, API moderna
+
+4. Patrón getInstance() con singleton
+   RAZÓN: Una sola conexión BD por request, eficiente
+
+5. Sesiones con sys_get_temp_dir() fallback
+   RAZÓN: Compatibilidad con diferentes tipos de hosting
