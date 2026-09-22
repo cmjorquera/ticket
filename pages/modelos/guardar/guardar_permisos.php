@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../ajax/_bootstrap.php';
 Sesion::requerir();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-    responder_json(['ok' => false, 'error' => 'Método no permitido.'], 405);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'Método no permitido.', 'error' => 'Método no permitido.'], 405);
 }
 
 function ids_seleccionados(mixed $valor): array
@@ -62,7 +62,7 @@ function puede_guardar_permisos_menu(Conexion $db, int $idUsuario): bool
 $csrf = (string) ($_POST['csrf'] ?? '');
 $csrfSesion = (string) ($_SESSION['csrf_permisos_menu'] ?? '');
 if ($csrfSesion === '' || !hash_equals($csrfSesion, $csrf)) {
-    responder_json(['ok' => false, 'error' => 'La sesión de edición expiró. Recarga los permisos.'], 419);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'La sesión de edición expiró. Recarga los permisos.', 'error' => 'La sesión de edición expiró. Recarga los permisos.'], 419);
 }
 
 try {
@@ -73,10 +73,10 @@ try {
     $submenusRecibidos = ids_seleccionados($_POST['submenus'] ?? []);
 
     if (!puede_guardar_permisos_menu($db, $usuarioActual)) {
-        responder_json(['ok' => false, 'error' => 'No tienes autorización para modificar permisos.'], 403);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'No tienes autorización para modificar permisos.', 'error' => 'No tienes autorización para modificar permisos.'], 403);
     }
     if ($usuarioObjetivo <= 0 || !$db->fetchOne('SELECT id FROM usuarios WHERE id = ? LIMIT 1', [$usuarioObjetivo])) {
-        responder_json(['ok' => false, 'error' => 'El usuario indicado no existe.'], 404);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'El usuario indicado no existe.', 'error' => 'El usuario indicado no existe.'], 404);
     }
 
     $menusValidos = [];
@@ -165,8 +165,8 @@ try {
         count($submenusSeleccionados)
     ));
 
-    responder_json(['ok' => true, 'mensaje' => 'Permisos guardados']);
+    responder_json(['success' => true, 'ok' => true, 'message' => 'Permisos guardados', 'mensaje' => 'Permisos guardados']);
 } catch (Throwable $ex) {
     error_log('Error al guardar permisos heredados: ' . $ex->getMessage());
-    responder_json(['ok' => false, 'error' => 'No fue posible guardar los permisos.'], 500);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'No fue posible guardar los permisos.', 'error' => 'No fue posible guardar los permisos.'], 500);
 }

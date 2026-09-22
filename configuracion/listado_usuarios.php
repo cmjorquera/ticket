@@ -16,18 +16,6 @@ if (empty($_SESSION['csrf_editar_usuario_avanzado'])) {
 if (empty($_SESSION['csrf_departamentos'])) {
     $_SESSION['csrf_departamentos'] = bin2hex(random_bytes(32));
 }
-$colegiosAdministrables = $esSuperAdmin ? [] : array_map(
-    'intval',
-    array_column($db->fetchAll(
-        "SELECT DISTINCT id_colegio
-           FROM jefatura_departamento
-          WHERE id_usuario = ?
-            AND tipo_jefatura = 'Admin_Colegio'
-            AND id_departamento_colegio IS NULL
-            AND estado = 1",
-        [$usuarioActual]
-    ), 'id_colegio')
-);
 $pagina_estilos = ['css/listado_usuarios.css?v=' . (string) filemtime(__DIR__ . '/../css/listado_usuarios.css')];
 iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuarios');
 ?>
@@ -85,7 +73,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     </div>
     <div class="paginacion" id="usr-paginacion"></div>
   </div>
-  <div id="vista-organigrama" class="org-view" data-administrator-id="<?= $usuarioActual ?>" data-super-admin="<?= $esSuperAdmin ? '1' : '0' ?>" data-manage-school-ids="<?= e(json_encode($colegiosAdministrables)) ?>" data-department-csrf="<?= e((string) $_SESSION['csrf_departamentos']) ?>" hidden aria-live="polite"></div>
+  <div id="vista-organigrama" class="org-view" data-administrator-id="<?= $usuarioActual ?>" data-super-admin="<?= $esSuperAdmin ? '1' : '0' ?>" data-department-csrf="<?= e((string) $_SESSION['csrf_departamentos']) ?>" hidden aria-live="polite"></div>
 </div>
 
 <p id="usuarios-feedback" class="text-sm" role="status" hidden style="margin-top:12px"></p>

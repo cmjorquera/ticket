@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../ajax/_bootstrap.php';
 Sesion::requerir();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
-    responder_json(['ok' => false, 'error' => 'Método no permitido.'], 405);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'Método no permitido.', 'error' => 'Método no permitido.'], 405);
 }
 
 function puede_gestionar_permisos_menu(Conexion $db, int $idUsuario): bool
@@ -37,10 +37,10 @@ try {
     $usuarioObjetivo = max(0, (int) ($_GET['user_id'] ?? 0));
 
     if (!puede_gestionar_permisos_menu($db, $usuarioActual)) {
-        responder_json(['ok' => false, 'error' => 'No tienes autorización para consultar permisos.'], 403);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'No tienes autorización para consultar permisos.', 'error' => 'No tienes autorización para consultar permisos.'], 403);
     }
     if ($usuarioObjetivo <= 0 || !$db->fetchOne('SELECT id FROM usuarios WHERE id = ? LIMIT 1', [$usuarioObjetivo])) {
-        responder_json(['ok' => false, 'error' => 'El usuario indicado no existe.'], 404);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'El usuario indicado no existe.', 'error' => 'El usuario indicado no existe.'], 404);
     }
 
     if (empty($_SESSION['csrf_permisos_menu'])) {
@@ -96,11 +96,13 @@ try {
     }
 
     responder_json([
+        'success' => true,
         'ok' => true,
+        'message' => 'Permisos cargados',
         'csrf' => (string) $_SESSION['csrf_permisos_menu'],
         'data' => $menus,
     ]);
 } catch (Throwable $ex) {
     error_log('Error al rescatar permisos de menús: ' . $ex->getMessage());
-    responder_json(['ok' => false, 'error' => 'No fue posible cargar los permisos.'], 500);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'No fue posible cargar los permisos.', 'error' => 'No fue posible cargar los permisos.'], 500);
 }

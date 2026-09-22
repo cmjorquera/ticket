@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../../ajax/_bootstrap.php';
 Sesion::requerir();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-    responder_json(['ok' => false, 'error' => 'Método no permitido.'], 405);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'Método no permitido.', 'error' => 'Método no permitido.'], 405);
 }
 
 function es_super_admin_edicion(Conexion $db, int $idUsuario): bool
@@ -40,7 +40,7 @@ $datos = entrada_ajax();
 $csrf = (string) ($datos['csrf'] ?? '');
 $csrfSesion = (string) ($_SESSION['csrf_editar_usuario_avanzado'] ?? '');
 if ($csrfSesion === '' || !hash_equals($csrfSesion, $csrf)) {
-    responder_json(['ok' => false, 'error' => 'La sesión de edición expiró. Recarga la página.'], 419);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'La sesión de edición expiró. Recarga la página.', 'error' => 'La sesión de edición expiró. Recarga la página.'], 419);
 }
 
 try {
@@ -53,22 +53,22 @@ try {
     $perfiles = ids_perfiles_edicion($datos['perfiles'] ?? []);
 
     if (!es_super_admin_edicion($db, $usuarioActual)) {
-        responder_json(['ok' => false, 'error' => 'Solo un super admin puede cambiar departamentos y perfiles.'], 403);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'Solo un super admin puede cambiar departamentos y perfiles.', 'error' => 'Solo un super admin puede cambiar departamentos y perfiles.'], 403);
     }
     if ($idUsuario <= 0 || !$db->fetchOne('SELECT id FROM usuarios WHERE id = ? LIMIT 1', [$idUsuario])) {
-        responder_json(['ok' => false, 'error' => 'El usuario indicado no existe.'], 404);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'El usuario indicado no existe.', 'error' => 'El usuario indicado no existe.'], 404);
     }
     if ($idColegio <= 0 || !$db->fetchOne('SELECT id_colegio FROM colegio WHERE id_colegio = ? AND estado = 1 LIMIT 1', [$idColegio])) {
-        responder_json(['ok' => false, 'error' => 'Selecciona un colegio válido.'], 422);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'Selecciona un colegio válido.', 'error' => 'Selecciona un colegio válido.'], 422);
     }
-    if ($idDepartamento <= 0 || !$db->fetchOne(
+    if ($idDepartamento > 0 && !$db->fetchOne(
         'SELECT id FROM departamentos_colegio WHERE id = ? AND id_colegio = ? AND estado = 1 LIMIT 1',
         [$idDepartamento, $idColegio]
     )) {
-        responder_json(['ok' => false, 'error' => 'Selecciona un departamento válido para el colegio.'], 422);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'El departamento seleccionado no pertenece al colegio.', 'error' => 'El departamento seleccionado no pertenece al colegio.'], 422);
     }
     if ($perfiles === []) {
-        responder_json(['ok' => false, 'error' => 'Selecciona al menos un perfil.'], 422);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'Selecciona al menos un perfil.', 'error' => 'Selecciona al menos un perfil.'], 422);
     }
 
     $marcas = implode(',', array_fill(0, count($perfiles), '?'));
@@ -77,7 +77,7 @@ try {
         $perfiles
     );
     if (count($perfilesValidos) !== count($perfiles)) {
-        responder_json(['ok' => false, 'error' => 'Uno de los perfiles seleccionados no existe o está inactivo.'], 422);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'Uno de los perfiles seleccionados no existe o está inactivo.', 'error' => 'Uno de los perfiles seleccionados no existe o está inactivo.'], 422);
     }
 
     $nombre = trim((string) ($datos['nombre'] ?? ''));
@@ -89,13 +89,13 @@ try {
     $idArea = max(0, (int) ($datos['id_area_trabajo'] ?? 0));
 
     if ($nombre === '' || $apellidoPaterno === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $idArea <= 0 || $sexo === '') {
-        responder_json(['ok' => false, 'error' => 'Completa correctamente los datos obligatorios del usuario.'], 422);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'Completa correctamente los datos obligatorios del usuario.', 'error' => 'Completa correctamente los datos obligatorios del usuario.'], 422);
     }
     if ($db->fetchOne('SELECT id FROM usuarios WHERE email = ? AND id <> ? LIMIT 1', [$email, $idUsuario])) {
-        responder_json(['ok' => false, 'error' => 'El email ya está registrado por otro usuario.'], 409);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'El email ya está registrado por otro usuario.', 'error' => 'El email ya está registrado por otro usuario.'], 409);
     }
     if (!$db->fetchOne('SELECT id_area FROM area_trabajo WHERE id_area = ? LIMIT 1', [$idArea])) {
-        responder_json(['ok' => false, 'error' => 'El área seleccionada no existe.'], 422);
+        responder_json(['success' => false, 'ok' => false, 'message' => 'El área seleccionada no existe.', 'error' => 'El área seleccionada no existe.'], 422);
     }
 
     $pdo->beginTransaction();
@@ -108,18 +108,32 @@ try {
             [$nombre, $apellidoPaterno, $apellidoMaterno, $email, $idArea, $telefono, $sexo, $idUsuario]
         );
 
-        $db->execute('DELETE FROM jefatura_departamento WHERE id_usuario = ?', [$idUsuario]);
-        $db->execute(
-            "INSERT INTO jefatura_departamento
-                (id_usuario, id_colegio, id_departamento_colegio, tipo_jefatura, estado)
-             VALUES (?, ?, ?, 'Admin_Departamento', 1)",
-            [$idUsuario, $idColegio, $idDepartamento]
+        $departamentoAsignado = $idDepartamento > 0 ? $idDepartamento : null;
+        $tipoJefatura = $departamentoAsignado === null ? 'Admin_Colegio' : 'Admin_Departamento';
+        $relacion = $db->fetchOne(
+            'SELECT 1 AS existe FROM jefatura_departamento WHERE id_usuario = ? LIMIT 1',
+            [$idUsuario]
         );
+        if ($relacion) {
+            $db->execute(
+                'UPDATE jefatura_departamento
+                    SET id_colegio = ?, id_departamento_colegio = ?, tipo_jefatura = ?, estado = 1
+                  WHERE id_usuario = ?',
+                [$idColegio, $departamentoAsignado, $tipoJefatura, $idUsuario]
+            );
+        } else {
+            $db->execute(
+                'INSERT INTO jefatura_departamento
+                    (id_usuario, id_colegio, id_departamento_colegio, tipo_jefatura, estado)
+                 VALUES (?, ?, ?, ?, 1)',
+                [$idUsuario, $idColegio, $departamentoAsignado, $tipoJefatura]
+            );
+        }
 
         $db->execute('DELETE FROM usuario_perfil WHERE id_usuario = ?', [$idUsuario]);
         foreach ($perfiles as $idPerfil) {
             $db->execute(
-                'INSERT INTO usuario_perfil (id_usuario, id_perfil, estado) VALUES (?, ?, 1)',
+                'INSERT INTO usuario_perfil (id_usuario, id_perfil) VALUES (?, ?)',
                 [$idUsuario, $idPerfil]
             );
         }
@@ -141,8 +155,8 @@ try {
         implode(',', $perfiles)
     ));
 
-    responder_json(['ok' => true, 'mensaje' => 'Usuario actualizado']);
+    responder_json(['success' => true, 'ok' => true, 'message' => 'Usuario actualizado', 'mensaje' => 'Usuario actualizado']);
 } catch (Throwable $ex) {
     error_log('Error al editar usuario avanzado: ' . $ex->getMessage());
-    responder_json(['ok' => false, 'error' => 'No fue posible actualizar el usuario.'], 500);
+    responder_json(['success' => false, 'ok' => false, 'message' => 'No fue posible actualizar el usuario.', 'error' => 'No fue posible actualizar el usuario.'], 500);
 }

@@ -19,7 +19,6 @@
   const orgView = document.getElementById('vista-organigrama');
   const userModal = document.getElementById('modal-usuario');
   const isSuperAdmin = userModal?.dataset.superAdmin === '1';
-  const manageableSchoolIds = new Set(JSON.parse(orgView.dataset.manageSchoolIds || '[]').map(Number));
   const viewButtons = [...document.querySelectorAll('.btn-view')];
 
   const escapeHtml = value => String(value ?? '')
@@ -180,7 +179,7 @@
         const schoolId = Number(members[0]?.id_colegio || 0);
         const schoolInitials = school.split(/\s+/).filter(Boolean).slice(0, 2)
           .map(word => word.charAt(0).toUpperCase()).join('') || 'C';
-        const canManageDepartments = schoolId > 0 && (isSuperAdmin || manageableSchoolIds.has(schoolId));
+        const canManageDepartments = schoolId > 0 && isSuperAdmin;
         const recipientIds = [...new Set(members.map(user => Number(user.id)).filter(id => id > 0))];
         if (schoolId > 0) {
           schoolMailData.set(String(schoolId), { id: schoolId, name: school, recipients: recipientIds });
@@ -217,6 +216,7 @@
               <div class="org-school__menu" data-school-menu="${schoolId}" role="menu" hidden>
                 <button type="button" class="btn btn-ghost org-school__menu-item" data-school-action="email" data-school-id="${schoolId}" role="menuitem"><i class="bi bi-envelope" aria-hidden="true"></i> Enviar correo</button>
                 <button type="button" class="btn btn-ghost org-school__menu-item" data-school-action="add-user" data-school-id="${schoolId}" role="menuitem"><i class="bi bi-person-plus" aria-hidden="true"></i> Agregar usuario</button>
+                <button type="button" class="btn btn-ghost org-school__menu-item" data-toggle-all-departments data-school-id="${schoolId}" role="menuitem"><i class="bi bi-arrows-expand" aria-hidden="true"></i> Expandir/contraer departamentos</button>
                 ${canManageDepartments ? `<button type="button" class="btn btn-ghost org-school__menu-item" data-add-department data-school-id="${schoolId}" data-school-name="${escapeHtml(school)}" role="menuitem"><i class="bi bi-plus-circle" aria-hidden="true"></i> Agregar departamento</button>` : ''}
               </div>
             </div>` : ''}
@@ -381,8 +381,8 @@
     if (!response.ok || !Array.isArray(departments)) {
       throw new Error(departments.error || 'No fue posible cargar los departamentos.');
     }
-    fillSelect(departmentSelect, departments, 'id', 'nombre', 'Seleccionar departamento', selected);
-    departmentSelect.disabled = departments.length === 0;
+    fillSelect(departmentSelect, departments, 'id', 'nombre', 'Sin departamento (Admin Colegio)', selected);
+    departmentSelect.disabled = false;
   }
 
   function updateAssignmentFields(selectedDepartment = '') {
@@ -579,8 +579,8 @@
       error.hidden = false;
       return;
     }
-    if (data.id && isSuperAdmin && (!data.id_colegio || !data.id_departamento_colegio || !data.perfiles.length)) {
-      error.textContent = 'Selecciona colegio, departamento y al menos un perfil.';
+    if (data.id && isSuperAdmin && (!data.id_colegio || !data.perfiles.length)) {
+      error.textContent = 'Selecciona un colegio y al menos un perfil.';
       error.hidden = false;
       return;
     }

@@ -13,15 +13,9 @@ declare(strict_types=1);
         <label class="form-label" for="departamento-nombre">Nombre departamento *</label>
         <input type="text" class="form-input" id="departamento-nombre" maxlength="100" autocomplete="off">
       </div>
-      <div class="modal-form-grid">
-        <div class="form-group">
-          <label class="form-label" for="departamento-sigla">Sigla *</label>
-          <input type="text" class="form-input" id="departamento-sigla" minlength="2" maxlength="3" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="departamento-orden">Orden *</label>
-          <input type="number" class="form-input" id="departamento-orden" min="1" step="1">
-        </div>
+      <div class="form-group">
+        <label class="form-label" for="departamento-sigla">Sigla *</label>
+        <input type="text" class="form-input" id="departamento-sigla" minlength="2" maxlength="3" autocomplete="off">
       </div>
       <p id="modal-departamento-error" class="text-sm" role="alert" hidden style="color:var(--danger);margin-top:10px"></p>
     </div>
