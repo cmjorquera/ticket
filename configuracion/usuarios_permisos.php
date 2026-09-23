@@ -290,7 +290,7 @@ iniciar_layout_configuracion('Permisos de usuario', 'Permisos', 'usuarios_permis
   form.addEventListener('submit', async event => {
     event.preventDefault(); saveButton.disabled = true; saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Guardando…'; message.className = ''; message.textContent = 'Aplicando cambios…';
     try {
-      const response = await fetch('../ajax/guardar_permisos_usuario.php', {method:'POST', credentials:'same-origin', body:new FormData(form)});
+      const response = await fetch('ajax/guardar_permisos_usuario.php', {method:'POST', credentials:'same-origin', body:new FormData(form)});
       const data = await response.json();
       if (!response.ok || !data.ok) throw new Error(data.error || 'No fue posible guardar los permisos.');
       message.className = 'is-success'; message.textContent = data.mensaje; saveButton.innerHTML = '<i class="bi bi-check-circle"></i> Guardado';

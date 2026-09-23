@@ -3,169 +3,120 @@ PERFILES DE USUARIO Y LÓGICA DE ACCESO
 ===============================================================================
 
 BASE DE DATOS: crist668_sistema_panel_central
-TABLA: perfiles (id_perfil, nombre_perfil, descripcion)
+TABLA: perfiles (id_perfil, nombre_perfil, descripcion, estado)
+TABLA: usuario_perfil (id_usuario, id_perfil)  ← N:N, un usuario puede tener VARIOS perfiles
 
 PERFILES DEL SISTEMA:
 ===============================================================================
 
 PERFIL 1: USUARIO NORMAL
 - id_perfil = 1
-- Descripción: Usuario general del sistema
-- Ubicación en BD: usuarios.id_perfil = 1
-- Acceso a Usuarios Asociados:
-  * Puede ver SOLO usuarios de su MISMA ÁREA DE TRABAJO
-  * No puede ver usuarios de otras áreas
-  * No puede ver departamentos específicos
+- Acceso: ve SOLO usuarios de su misma id_area_trabajo
 
-PERFIL 2: JEFE DE DEPARTAMENTO
+PERFIL 2: TÉCNICO
 - id_perfil = 2
-- Descripción: Administrador de un departamento específico
-- Ubicación en BD: usuarios.id_perfil = 2 + fila en tabla jefatura_departamento
-- Acceso a Usuarios Asociados:
-  * Puede ver SOLO usuarios de su DEPARTAMENTO en su COLEGIO
-  * Verifica tabla jefatura_departamento
-  * Filtra por: id_departamento_colegio + id_colegio
-  * Incluye solo usuarios estado='Activo'
+- Acceso: mismo que usuario normal (por área)
 
 PERFIL 3: SUPER ADMIN ⭐ ACCESO TOTAL
 - id_perfil = 3
-- Descripción: Administrador del sistema (acceso total)
-- Ubicación en BD: usuarios.id_perfil = 3
-- Acceso a Usuarios Asociados:
-  * Puede ver TODOS los usuarios del sistema
-  * NO tiene restricciones por área ni departamento
-  * Puede ver usuarios de todos los colegios
-  * Puede ver usuarios de todos los departamentos
-  * Puede ver usuarios de todas las áreas
+- Acceso: ve TODOS los usuarios del sistema sin restricción
 
-LÓGICA DE ACCESO EN GestorAccesoModular.php:
+PERFIL 4: ADMIN COLEGIO
+- id_perfil = 4
+- Acceso: ve todos los usuarios de su colegio
+- REQUIERE: fila en jefatura_departamento con id_departamento_colegio IS NULL
+  y tipo_jefatura = 'Admin_Colegio' y estado = 1
+
+PERFIL 5: ADMIN ÁREA / JEFE DEPARTAMENTO
+- id_perfil = 5
+- Acceso: ve usuarios de su departamento en su colegio
+- REQUIERE: fila en jefatura_departamento con id_departamento_colegio > 0
+  y tipo_jefatura = 'Admin_Departamento' y estado = 1
+
+NOTA IMPORTANTE — MÚLTIPLES PERFILES:
+Un usuario puede tener más de un perfil en usuario_perfil.
+Ejemplo: Cristian (id=8) tiene perfiles [1, 2, 3].
+La lógica usa MAX(id_perfil) para determinar el nivel de acceso.
+  MAX=3 → Super Admin → ve todo
+  MAX=4 o MAX=5 → verificar jefatura_departamento
+
+===============================================================================
+LÓGICA DE ACCESO — GestorAccesoModular.php (clases/GestorAccesoModular.php)
 ===============================================================================
 
 MÉTODO: obtenerUsuariosAsociados($idUsuarioActual)
 
-FLUJO DE DECISIÓN:
+FLUJO DE DECISIÓN (4 casos en orden):
 
-1. OBTENER DATOS DEL USUARIO ACTUAL
-   ├─ Query: SELECT u.id, u.id_perfil, u.id_area_trabajo, 
-                    jd.id_departamento_colegio, jd.id_colegio
-   ├─ Retorna: $usuarioActual (array con datos del usuario)
-   └─ Si no existe → retorna []
+  CASO 1: MAX(id_perfil) === 3
+  ─────────────────────────────
+  → Retorna TODOS los usuarios (sin filtro)
+  ⚠️  Solo id_perfil = 3 exactamente. Perfiles 4 y 5 NO son Super Admin.
 
-2. VERIFICAR PERFIL
-   
-   ┌─────────────────────────────────────────┐
-   │ ¿Es SUPER ADMIN (id_perfil = 3)?        │
-   └─────────────────────────────────────────┘
-              SÍ ↓                              NO ↓
-         [VER TODOS]              ┌──────────────────────┐
-         Query: SELECT *           │ ¿Está en             │
-         FROM usuarios             │ jefatura_            │
-         WHERE estado=             │ departamento?        │
-         'Activo'                  └──────────────────────┘
-         
-         ✅ Retorna todos            SÍ ↓            NO ↓
-            los usuarios         [VER DEPTO]    [VER ÁREA]
-                                 Query:         Query:
-                                 WHERE          WHERE
-                                 jd.id_depto=?  u.id_area=?
-                                 AND            
-                                 jd.id_colegio=?
+  CASO 2: Admin_Colegio
+  ──────────────────────
+  Condición: id_colegio > 0 Y id_departamento_colegio IS NULL en jefatura_departamento
+  → Retorna usuarios de su COLEGIO (jd.id_colegio = ?)
+  → tipo_jefatura = 'Admin_Colegio'
 
-EJEMPLOS DE ACCESO:
+  CASO 3: Admin_Departamento (Jefe de Departamento)
+  ───────────────────────────────────────────────────
+  Condición: id_colegio > 0 Y id_departamento_colegio > 0 en jefatura_departamento
+  → Retorna usuarios de su DEPARTAMENTO en su COLEGIO
+    (jd.id_departamento_colegio = ? AND jd.id_colegio = ?)
+  → tipo_jefatura = 'Admin_Departamento'
+
+  CASO 4: Usuario sin jefatura
+  ─────────────────────────────
+  Condición: sin fila activa en jefatura_departamento
+  → Retorna usuarios de su ÁREA (u.id_area_trabajo = ?)
+
+===============================================================================
+TABLA jefatura_departamento — CÓMO SE USA
 ===============================================================================
 
-USUARIO: Cristian Jorquera (id=8, id_perfil=3 - SUPER ADMIN)
-├─ Perfil: Super Admin
-├─ Área: Informática (area 1)
-├─ Jefatura: Sí (departamento 1, colegio 15)
-├─ USUARIOS QUE VE: TODOS LOS USUARIOS ACTIVOS ✅
-└─ Restricción: NINGUNA (ve todo)
+Esta tabla asigna usuarios a departamentos/colegios:
+  - id_usuario          → quién es el usuario
+  - id_departamento_colegio → FK a departamentos_colegio.id
+      NULL  = Admin_Colegio (administra todo el colegio)
+      int>0 = Admin_Departamento (administra ese departamento)
+  - id_colegio          → qué colegio
+  - tipo_jefatura       → 'Admin_Colegio' | 'Admin_Departamento'
+  - estado              → 1 = activo
 
-USUARIO: Francisco Chavez (id=2, id_perfil=2 - JEFE DEPARTAMENTO)
-├─ Perfil: Jefe Departamento
-├─ Área: Contabilidad (area 2)
-├─ Jefatura: Sí (departamento 2, colegio 15)
-├─ USUARIOS QUE VE: Solo departamento 2, colegio 15 ✅
-└─ Restricción: Su departamento específico
-
-USUARIO: Carlos Gallardo (id=?, id_perfil=1 - USUARIO NORMAL)
-├─ Perfil: Usuario Normal
-├─ Área: Informática (area 1)
-├─ Jefatura: No
-├─ USUARIOS QUE VE: Solo usuarios del área 1 ✅
-└─ Restricción: Solo usuarios de su área
-
-QUERY PATRÓN POR PERFIL:
+USUARIOS DE TESTING:
 ===============================================================================
 
-SUPER ADMIN (id_perfil = 3):
-```sql
-SELECT u.id, u.nombre, u.email, u.cargo, 
-       a.nombre_area, dc.nombre_departamento, c.nom_colegio
-  FROM usuarios u
-  LEFT JOIN area_trabajo a ON a.id_area = u.id_area_trabajo
-  LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
-  LEFT JOIN departamentos_colegio dc ON dc.id = jd.id_departamento_colegio
-  LEFT JOIN colegio c ON c.id_colegio = jd.id_colegio
- WHERE u.estado = 'Activo'
- ORDER BY u.nombre ASC
-```
+Cristian Jorquera (id=8)
+  perfiles: [1, 2, 3] → MAX=3 → Super Admin
+  VE: todos los usuarios ✅
 
-JEFE DEPARTAMENTO (id_perfil = 2):
-```sql
-SELECT u.id, u.nombre, u.email, u.cargo,
-       a.nombre_area, dc.nombre_departamento, c.nom_colegio
-  FROM usuarios u
-  LEFT JOIN area_trabajo a ON a.id_area = u.id_area_trabajo
-  LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
-  LEFT JOIN departamentos_colegio dc ON dc.id = jd.id_departamento_colegio
-  LEFT JOIN colegio c ON c.id_colegio = jd.id_colegio
- WHERE u.estado = 'Activo'
-   AND jd.id_departamento_colegio = ? AND jd.id_colegio = ?
- ORDER BY u.nombre ASC
-```
+Francisco Chavez (id=2)
+  perfiles: [1, 2, 5] → MAX=5 → Admin_Departamento
+  jefatura: id_departamento_colegio=2, id_colegio=15
+  VE: solo usuarios del departamento 2, colegio 15 ✅
 
-USUARIO NORMAL (id_perfil = 1):
-```sql
-SELECT u.id, u.nombre, u.email, u.cargo,
-       a.nombre_area, dc.nombre_departamento, c.nom_colegio
-  FROM usuarios u
-  LEFT JOIN area_trabajo a ON a.id_area = u.id_area_trabajo
-  LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
-  LEFT JOIN departamentos_colegio dc ON dc.id = jd.id_departamento_colegio
-  LEFT JOIN colegio c ON c.id_colegio = jd.id_colegio
- WHERE u.estado = 'Activo'
-   AND u.id_area_trabajo = ?
- ORDER BY u.nombre ASC
-```
+Alex Espinoza (id=1)
+  perfiles: [1, 2, 5] → MAX=5 → Admin_Departamento
+  jefatura: id_departamento_colegio=4, id_colegio=15
+  VE: solo usuarios del departamento 4, colegio 15 ✅
 
-NOTAS IMPORTANTES:
+===============================================================================
+ARCHIVO QUE IMPLEMENTA ESTA LÓGICA
 ===============================================================================
 
-✅ SUPER ADMIN (perfil 3):
-   - Puede crear/editar/eliminar usuarios
-   - Puede modificar permisos de cualquier usuario
-   - Puede asignar jefaturas de departamento
-   - Puede ver reportes globales
-   - Puede acceder a configuración del sistema
+  clases/GestorAccesoModular.php
+    - obtenerPerfil(int $id): int         → MAX(id_perfil) del usuario
+    - obtenerDatosAccesoUsuario(int $id)  → perfil + área + jefatura
+    - obtenerUsuariosAsociados(int $id)   → array de usuarios filtrados
+    - validarAccesoAUsuario(int $actual, int $objetivo): bool
+    - obtenerFiltroAccesoSQL(int $id): string
 
-✅ JEFE DEPARTAMENTO (perfil 2):
-   - Limitado a su departamento/colegio
-   - Puede gestionar usuarios de su departamento
-   - REQUIERE estar en tabla jefatura_departamento
+  configuracion/class/GestorPermisosUsuarios.php
+    → wrapper del módulo configuración que delega a GestorAccesoModular
 
-✅ USUARIO NORMAL (perfil 1):
-   - Limitado a su área
-   - Solo puede ver compañeros de su área
-   - NO puede crear/editar usuarios
-
-SEGURIDAD:
-===============================================================================
-
-🔒 SIEMPRE verificar id_perfil en backend
-🔒 NUNCA confiar en id_perfil enviado desde el cliente
-🔒 SIEMPRE validar en sesión: $_SESSION['id_perfil']
-🔒 SIEMPRE usar prepared statements
-🔒 Log cada acción de SUPER ADMIN (auditoría)
+CAMBIO CLAVE (2026-09-22):
+  La condición Super Admin es === 3, NO >= 3.
+  Usar >= 3 hacía que perfiles 4 y 5 vieran todos los usuarios (bug).
 
 ===============================================================================

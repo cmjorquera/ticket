@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
-require_once __DIR__ . '/../class/Usuarios.php';
+require_once __DIR__ . '/../clases/Usuario.php';
 
 Sesion::requerir();
 
@@ -14,7 +14,7 @@ try {
         'id_colegio' => (int) ($_GET['id_colegio'] ?? 0),
         'buscar'     => trim((string) ($_GET['buscar'] ?? '')),
     ];
-    responder_json(['ok' => true, 'data' => Usuarios::listar($db, $filtros)]);
+    responder_json(['ok' => true, 'data' => Usuario::listar($db, $filtros)]);
 } catch (Throwable $e) {
     responder_json([
         'ok'      => false,

@@ -1,37 +1,60 @@
 <?php
+declare(strict_types=1);
+
 require_once dirname(__DIR__, 2) . '/componentes/boot.php';
 header('Content-Type: application/json; charset=utf-8');
 
 try {
+    // ── Validar sesión ───────────────────────────────────────────────────────
     if ($idUsuarioSession <= 0) {
-        throw new RuntimeException('Sesión no válida.');
+        http_response_code(401);
+        echo json_encode(['ok' => false, 'error' => 'Sesión no válida.'], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
-    $idUsuario = (int)($_POST['id_usuario'] ?? 0);
-    $permisos = isset($_POST['permisos']) ? json_decode($_POST['permisos'], true) : [];
+    // ── Validar CSRF ─────────────────────────────────────────────────────────
+    $csrfPost    = trim((string) ($_POST['csrf'] ?? ''));
+    $csrfSession = (string) ($_SESSION['csrf_usuarios_permisos'] ?? '');
+    if ($csrfPost === '' || !hash_equals($csrfSession, $csrfPost)) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'error' => 'Token de seguridad inválido.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
+    // ── Parámetros ───────────────────────────────────────────────────────────
+    $idUsuario = (int) ($_POST['usuario_id'] ?? 0);
     if ($idUsuario <= 0) {
-        throw new RuntimeException('ID de usuario no válido.');
+        http_response_code(422);
+        echo json_encode(['ok' => false, 'error' => 'ID de usuario no válido.'], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
-    require_once dirname(__DIR__) . '/class/GestorPermisosUsuarios.php';
-    $gestorPermisos = new GestorPermisosUsuarios($bdato);
+    // menus[]    → ids de menús principales marcados
+    // submenus[] → ids de submenús marcados
+    $menusChecked    = (array) ($_POST['menus']    ?? []);
+    $submenusChecked = (array) ($_POST['submenus'] ?? []);
 
-    $resultado = $gestorPermisos->guardarPermisosUsuario($idUsuarioSession, $idUsuario, $permisos);
+    // ── Guardar ──────────────────────────────────────────────────────────────
+    require_once __DIR__ . '/../class/GestorPermisosUsuarios.php';
+    $gestor    = new GestorPermisosUsuarios($bdato);
+    $resultado = $gestor->guardarPermisosUsuario(
+        $idUsuarioSession,
+        $idUsuario,
+        $menusChecked,
+        $submenusChecked
+    );
 
     echo json_encode([
-        'ok' => true,
-        'mensaje' => 'Permisos guardados correctamente.',
-        'usuario_id' => $idUsuario,
-        'permisos_procesados' => $resultado['procesados'],
-        'errores' => $resultado['errores']
+        'ok'         => true,
+        'mensaje'    => 'Permisos guardados correctamente.',
+        'procesados' => $resultado['procesados'],
+        'errores'    => $resultado['errores'],
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Throwable $e) {
     http_response_code(422);
     echo json_encode([
-        'ok' => false,
-        'mensaje' => $e->getMessage(),
+        'ok'    => false,
+        'error' => $e->getMessage(),
     ], JSON_UNESCAPED_UNICODE);
 }
-?>
