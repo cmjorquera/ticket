@@ -1,0 +1,121 @@
+===============================================================================
+SISTEMA DE PERMISOS DE MENÚS Y SUBMENÚS
+===============================================================================
+
+BASE DE DATOS: crist668_sistema_panel_central
+Última actualización: 2026-09-22
+
+===============================================================================
+TABLAS INVOLUCRADAS
+===============================================================================
+
+menu_1
+  PK: id_menu
+  Contiene los 13 menús principales del sistema.
+
+menu_1_sub
+  PK: id_submenu
+  FK: id_menu → menu_1.id_menu
+  Submenús de cada menú principal.
+
+permisos_menu_1
+  Columnas: id, id_menu1, id_submenu, id_usuario, id_tipo_permiso
+  - id_tipo_permiso = 1 → visible
+  - id_tipo_permiso = 3 → legacy (antiguo, ignorar)
+  - id_submenu puede ser NULL (fila de menú principal) o int (fila de submenú)
+  Un usuario SIN fila aquí para un menú = ese menú está oculto.
+
+permiso_sub_menu
+  Columnas: id_permiso_sub, id_usuario, id_submenu, permiso
+  UNIQUE KEY: (id_usuario, id_submenu)
+  - permiso = 1 → submenú visible
+  - permiso = 0 → submenú oculto
+  Esta tabla es la que controla qué submenús ve el usuario en pantalla.
+
+===============================================================================
+FLUJO AL GUARDAR PERMISOS (pantalla configuracion/usuarios_permisos.php)
+===============================================================================
+
+1. El usuario marca/desmarca checkboxes de menús y submenús en la UI.
+2. El form hace POST a:
+     configuracion/ajax/guardar_permisos_usuario.php
+   Envía: menus[] (ids de menús marcados) y submenus[] (ids de submenús marcados)
+
+3. El endpoint llama a:
+     configuracion/class/GestorPermisosUsuarios.php → guardarPermisosUsuario()
+
+4. Dentro de guardarPermisosUsuario():
+   a. DELETE FROM permisos_menu_1 WHERE id_usuario = ?
+      (limpia todos los permisos anteriores de menús)
+
+   b. INSERT INTO permisos_menu_1 por cada menú marcado
+      (id_submenu = NULL, id_tipo_permiso = 1)
+
+   c. Para CADA submenú existente en menu_1_sub (marcado o no):
+      INSERT INTO permiso_sub_menu ... ON DUPLICATE KEY UPDATE permiso = VALUES(permiso)
+      permiso = 1 si estaba en submenus[], permiso = 0 si no.
+
+   Todo en una sola transacción (beginTransaction / commit / rollBack).
+
+===============================================================================
+FLUJO AL CREAR UN USUARIO NUEVO (ajax/usuarios_guardar.php action=crear)
+===============================================================================
+
+1. Se inserta el usuario en la tabla usuarios.
+2. Se llama a asignar_permisos_por_defecto() en helpers/permisos.php.
+3. Esa función detecta el tipo de perfil del usuario:
+     administrador  → todos los menús y submenús
+     tecnico        → inicio, colaboradores, administración + submenús de soporte
+     admin_colegio  → inicio, colaboradores, administración + submenús de gestión
+     admin_area     → inicio, colaboradores, administración + submenús básicos
+     usuario        → inicio, colaboradores + crear ticket, mis tickets
+
+4. Escribe en permisos_menu_1 los menús y submenús correspondientes.
+5. Escribe en permiso_sub_menu permiso=1 para los submenús asignados
+   y permiso=0 para el resto (todos los submenús existentes).
+
+Esto garantiza que al abrir la pantalla de permisos de un usuario nuevo,
+los checkboxes muestren el estado correcto desde el primer momento.
+
+===============================================================================
+RUTAS DE LOS ARCHIVOS CLAVE
+===============================================================================
+
+  configuracion/usuarios_permisos.php       → pantalla de gestión de permisos
+  configuracion/ajax/guardar_permisos_usuario.php  → endpoint que recibe el POST
+  configuracion/class/GestorPermisosUsuarios.php   → clase que ejecuta la lógica
+  helpers/permisos.php                      → asignar_permisos_por_defecto()
+  clases/GestorAccesoModular.php            → valida quién puede editar a quién
+
+===============================================================================
+ERRORES RESUELTOS (2026-09-22)
+===============================================================================
+
+1. 404 en guardar_permisos_usuario.php
+   Causa: el fetch en usuarios_permisos.php apuntaba a ../ajax/ (raíz)
+          en lugar de ajax/ (dentro de configuracion/).
+   Fix: cambiar '../ajax/guardar_permisos_usuario.php'
+        por    'ajax/guardar_permisos_usuario.php'
+
+2. 500 — require_once de boot.php con ruta incorrecta
+   Causa: dirname(__DIR__) desde configuracion/ajax/ sube solo 1 nivel
+          y buscaba configuracion/componentes/boot.php (no existe).
+   Fix: usar dirname(__DIR__, 2) para subir a la raíz del sitio.
+
+3. 500 — require_once de GestorPermisosUsuarios.php con ruta incorrecta
+   Causa: __DIR__ . '/../configuracion/class/' desde configuracion/ajax/
+          resultaba en configuracion/configuracion/class/ (doble carpeta).
+   Fix: usar __DIR__ . '/../class/GestorPermisosUsuarios.php'
+
+4. Submenús nunca se guardaban
+   Causa: el código anterior esperaba JSON pero el form enviaba FormData,
+          y escribía en tablas incorrectas.
+   Fix: reescritura completa de GestorPermisosUsuarios.php usando
+        $_POST['menus'][] y $_POST['submenus'][] con ON DUPLICATE KEY UPDATE.
+
+5. Usuarios nuevos sin estado en permiso_sub_menu
+   Causa: asignar_permisos_por_defecto() solo escribía en permisos_menu_1.
+   Fix: agregar bloque al final de esa función que inicializa permiso_sub_menu
+        con permiso=1 para submenús asignados y permiso=0 para el resto.
+
+===============================================================================
