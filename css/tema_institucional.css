@@ -1,0 +1,70 @@
+/* ==================================================================
+   Tema institucional SEDUC
+   Se carga DESPUÉS de tokens.css / layout.css / components.css y solo
+   sobrescribe colores y algunos detalles. Quitar este archivo devuelve
+   el sistema a su apariencia anterior.
+   Colores: azul marino institucional + ámbar del logo SEDUC.
+   ================================================================== */
+:root{
+  --navy-900:#0f2440;
+  --navy-800:#16365c;
+  --navy-700:#1d4675;
+  --ambar:#E8A33D;
+
+  --bg:#F3F4F6;
+  --sidebar:linear-gradient(180deg,#15335a 0%,#0f2440 100%);
+  --sidebar-fg:rgba(255,255,255,.88);
+  --sidebar-muted:rgba(203,213,225,.55);
+  --sidebar-accent:rgba(255,255,255,.07);
+  --sidebar-active-border:var(--ambar);
+
+  --blue:var(--navy-800);
+  --blue-light:rgba(22,54,92,.08);
+  --blue-mid:rgba(22,54,92,.16);
+  --yellow:var(--ambar);
+  --yellow-light:rgba(232,163,61,.14);
+}
+
+/* Barra lateral: azul marino con el símbolo SEDUC como marca de agua */
+#sidebar{background:var(--sidebar);overflow:hidden;}
+#sidebar::after{
+  content:"";position:absolute;pointer-events:none;z-index:0;
+  width:300px;height:288px;left:-90px;bottom:-110px;
+  background:url('../imagenes/logo_seduc_blanco.png') no-repeat center/contain;
+  opacity:.05;
+}
+#sidebar > *{position:relative;z-index:1;}
+.sidebar-logo{border-bottom-color:rgba(255,255,255,.08);}
+.logo-icon{background:#fff;border-radius:50%;}
+.logo-icon img{width:26px;height:26px;object-fit:contain;}
+.nav-item.active{background:rgba(232,163,61,.12);color:#fff;}
+.nav-item.active svg,.nav-item.active i{color:var(--ambar);}
+.nav-group-label{color:rgba(232,163,61,.75);}
+
+/* Barra superior: línea ámbar sutil */
+#topbar{box-shadow:inset 0 -2px 0 rgba(232,163,61,.0);border-bottom:1px solid var(--border);}
+#topbar::after{content:"";position:absolute;left:0;bottom:-1px;width:64px;height:2px;background:var(--ambar);}
+.avatar{background:var(--navy-800)!important;color:#fff!important;}
+.notif-badge{background:var(--ambar)!important;color:var(--navy-900)!important;}
+
+/* Encabezado de página: ícono en recuadro ámbar */
+.page-header h1 i{
+  display:inline-grid;place-items:center;width:34px;height:34px;margin-right:6px;
+  border-radius:9px;background:var(--yellow-light);color:var(--ambar);font-size:17px;vertical-align:-6px;
+}
+
+/* Botón principal azul marino */
+.btn-primary{background:var(--navy-800)!important;border-color:var(--navy-800)!important;}
+.btn-primary:hover{background:var(--navy-900)!important;}
+
+/* Tarjetas: al pasar el mouse, borde marino y línea ámbar arriba */
+.tile-card{overflow:visible;}
+.tile-card::before{
+  content:"";position:absolute;left:12px;right:12px;top:-1px;height:3px;border-radius:0 0 3px 3px;
+  background:var(--ambar);opacity:0;transition:opacity var(--transition);
+}
+.tile-card:hover{border-color:var(--navy-700);}
+.tile-card:hover::before{opacity:1;}
+
+/* Foco de campos */
+.input:focus,.form-input:focus{border-color:var(--navy-700)!important;box-shadow:0 0 0 3px rgba(29,70,117,.12)!important;}
