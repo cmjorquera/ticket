@@ -146,6 +146,18 @@ final class DashboardTickets
         };
     }
 
+    /**
+     * Condición SQL (sobre el alias `t` de tickets) y parámetros con los
+     * tickets que el usuario puede ver con ese perfil. La usan otros
+     * módulos (Estadística) para respetar las mismas reglas del dashboard.
+     *
+     * @return array{0:string,1:array<int,int>}
+     */
+    public function alcanceTickets(string $perfil): array
+    {
+        return $this->alcance($this->resolverPerfil($perfil));
+    }
+
     /** @return array{0:string,1:array<int,int>} */
     private function alcance(string $perfil): array
     {

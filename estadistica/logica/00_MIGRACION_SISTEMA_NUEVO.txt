@@ -1,0 +1,46 @@
+ESTADÍSTICA – MIGRACIÓN AL SISTEMA NUEVO (rama qa)
+==================================================
+
+Origen: rama "antiguo", carpeta estadistica/ (acceso.seduc.cl).
+Destino: estadistica/ (en minúscula; antes existía "Estadistica/" con un
+index "en construcción" y el menú apuntaba a "estadistica/...", por eso
+daba 404 en el servidor Linux).
+
+Páginas (menú Estadística)
+--------------------------
+- vida_ticket.php            Vida del Ticket (submenú 11)
+- index.php                  Estadística General (submenú 12)
+- probando.php               Estadística General versión 2, con gráficos (submenú 22)
+- dashboard_inventario.php   Dashboard Inventario PC (submenú 23)
+- vida_ticket_pdf.php, descargar_dashboard_inventario_pdf.php  Exportaciones
+- ajax/vida_ticket_detalle.php  Detalle expandible de cada ticket
+
+Datos
+-----
+- class/EstadisticaTickets.php: consultas de tickets (PDO, preparadas).
+- dashboard_inventario_data.php: consultas de equipos y monitores (PDO).
+- No requiere tablas nuevas ni SQL de instalación.
+
+Quién ve qué
+------------
+- Tickets: el mismo alcance del Dashboard (clases/DashboardTickets.php,
+  método nuevo alcanceTickets): usuario = sus tickets; técnico = los
+  asignados a él; administrador = todos (admin global) o los de sus
+  colegios (jefaturas). Si el usuario tiene varios perfiles aparecen los
+  botones "Ver como", y la elección se comparte con el Dashboard.
+  Antes, cualquier usuario con sesión veía TODOS los tickets.
+- Inventario: colegios de usuario_colegio; perfil 3 ve todos (igual que
+  el módulo Inventario PC). Antes eran 5 IDs de usuario fijos en el código.
+
+Cambios respecto al sistema antiguo
+-----------------------------------
+- Sin contraseñas en el código (probando.php tenía la clave de producción).
+- Los borradores no cuentan en las estadísticas.
+- "Avances registrados": el sistema nuevo no tiene la tabla avance_tecnicos;
+  se muestran los mensajes de ticket_conversaciones (y los avances si la
+  tabla existe, por ejemplo con datos migrados).
+- Los gráficos usan Chart.js 4; los meses sin tickets aparecen con 0.
+- PDF de la vida del ticket: mPDF si existe vendor/, si no página imprimible.
+  PDF del dashboard de inventario: FPDF (clases/PDF/fpdf.php).
+- Estadística General ya no usa log_sesiones ni mensajes (tablas que no
+  existen en el sistema nuevo) ni los IDs de usuario 28–34 fijos en el código.
