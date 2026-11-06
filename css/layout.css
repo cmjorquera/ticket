@@ -100,3 +100,12 @@
 
 /* ── Mobile menu button ──────────────────────────────────────────── */
 #mobile-menu-btn{display:none;align-items:center;justify-content:center;width:36px;height:36px;border:none;background:none;border-radius:var(--radius);color:var(--fg);flex-shrink:0;cursor:pointer;}
+
+/* ── Menú de usuario de la cabecera (independiente de components.css y de
+      Bootstrap, para que funcione igual en todos los módulos) ─────────── */
+#topbar .dropdown{position:relative;display:inline-block;}
+#topbar .dropdown-menu{position:absolute;right:0;left:auto;top:calc(100% + 6px);background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px -4px rgba(0,0,0,.12);min-width:160px;z-index:50;display:none;padding:4px;margin:0;}
+#topbar .dropdown-menu.open{display:block;}
+#topbar .dropdown-item{display:flex;align-items:center;gap:8px;width:100%;padding:7px 12px;font-size:13px;background:none;border:none;text-align:left;border-radius:5px;cursor:pointer;color:var(--fg);text-decoration:none;}
+#topbar .dropdown-item:hover{background:var(--bg);}
+#topbar .dropdown-item.danger{color:var(--danger);}

@@ -1,0 +1,215 @@
+/* =============================================================================
+ * graficos.css — Estilos centralizados para gráficos (Chart.js) en todo el sistema
+ * Sistema SEDUC | usado por: inventario/dashboard.php (y cualquier módulo futuro
+ * que incruste gráficos Chart.js dentro de un .inv-dashboard-section)
+ *
+ * Paleta y reglas de accesibilidad validadas con el skill "dataviz" del proyecto:
+ *   - Series nuevas: azul #2a78d6 (principal / "colegio seleccionado") y
+ *     verde #008300 (secundario / "promedio del sistema"). Par validado:
+ *     CVD deltaE 26.5, contraste >= 3:1 sobre fondo blanco.
+ *   - Un solo eje por gráfico: nunca mezclar cantidades (equipos) con montos
+ *     ($) en el mismo eje Y. Si se necesita comparar ambos, van en gráficos
+ *     o tarjetas separadas (ver .inv-card-info en cards.css).
+ * ========================================================================== */
+
+/* -----------------------------------------------------------------------
+ * 1) CONTENEDOR DE GRÁFICO
+ * Envoltorio del <canvas>. Reemplaza/complementa a .inv-chart-box: mismo
+ * alto por defecto, pero reusable fuera del módulo inventario.
+ * --------------------------------------------------------------------- */
+.chart-container {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    height: 286px;
+    padding: 24px 24px 18px;
+}
+
+/* Variante compacta: gráficos secundarios o en columnas angostas */
+.chart-container--sm {
+    height: 220px;
+    padding: 18px 20px 14px;
+}
+
+/* Variante "hero": gráfico principal a todo lo ancho */
+.chart-container--lg {
+    height: 360px;
+}
+
+.chart-container canvas {
+    /* Entrada suave al renderizar. Se puede omitir agregando
+       .chart-container--sin-animacion si el gráfico se redibuja seguido
+       (p.ej. tras un filtro), para no repetir la animación en cada refresh. */
+    animation: chart-fade-in .45s ease both;
+}
+
+.chart-container--sin-animacion canvas {
+    animation: none;
+}
+
+@keyframes chart-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Estado vacío (sin datos para los filtros actuales) */
+.chart-empty-state,
+.inv-chart-empty {
+    position: absolute;
+    inset: 24px;
+    display: grid;
+    place-items: center;
+    border: 1px dashed #cdd9e5;
+    border-radius: 8px;
+    color: #6b7c93;
+    text-align: center;
+    background: #fbfdff;
+    font-size: .9rem;
+    padding: 0 16px;
+}
+
+/* -----------------------------------------------------------------------
+ * 2) LEYENDA PERSONALIZADA
+ * Para gráficos donde la leyenda nativa de Chart.js se reemplaza por HTML
+ * (necesario en scatter, donde Chart.js v2 no genera leyenda automática
+ * de forma útil). Ubicar bajo el .chart-container.
+ * --------------------------------------------------------------------- */
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px 18px;
+}
+
+.chart-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #536174;
+    font-size: .82rem;
+    font-weight: 600;
+}
+
+.chart-legend__swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+}
+
+/* Variante "colegios": leyenda del scatter con logo por colegio (dashboard.php).
+   Cada item es un <a> clickeable -- alternativa mas facil de tocar en movil
+   que el punto del canvas, filtra el dashboard por ese colegio igual que un
+   click en el punto. */
+.chart-legend--colegios {
+    gap: 10px 18px;
+}
+
+.chart-legend__item--colegio {
+    color: #536174;
+    text-decoration: none;
+    border-radius: 999px;
+    padding: 4px 10px 4px 4px;
+    transition: background .2s ease, color .2s ease;
+}
+
+.chart-legend__item--colegio:hover,
+.chart-legend__item--colegio:focus {
+    background: #f1f5f9;
+    color: #0b243f;
+}
+
+.chart-legend__item--colegio.is-active {
+    background: #eaf4ff;
+    color: #0b243f;
+    font-weight: 700;
+}
+
+.chart-legend__logo {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+
+/* Roles de color — coinciden con las series de graficos nuevos (scatter,
+   comparativa). No reutilizar estos roles para "serie 3, 4...": son
+   semánticos (principal vs. contexto), no una paleta categórica. */
+.chart-legend__swatch--accent { background: #2a78d6; } /* colegio seleccionado / serie principal */
+.chart-legend__swatch--muted  { background: #94a3b8; } /* resto de colegios / contexto */
+.chart-legend__swatch--good   { background: #0ca30c; }
+.chart-legend__swatch--warn   { background: #fab219; }
+.chart-legend__swatch--bad    { background: #d03b3b; }
+
+/* -----------------------------------------------------------------------
+ * 3) TOOLTIP HTML (para overlays personalizados fuera del tooltip nativo
+ * de Chart.js — por ejemplo, un resumen fijo al hacer hover sobre una
+ * tarjeta o barra de progreso que no es un <canvas>).
+ * --------------------------------------------------------------------- */
+.chart-tooltip {
+    position: absolute;
+    z-index: 20;
+    min-width: 160px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #fff;
+    font-size: .8rem;
+    line-height: 1.4;
+    pointer-events: none;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.20);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+.chart-tooltip.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.chart-tooltip__title {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.chart-tooltip__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: #cbd5e1;
+}
+
+/* -----------------------------------------------------------------------
+ * 4) RESPONSIVE
+ * --------------------------------------------------------------------- */
+@media (max-width: 575px) {
+    .chart-container {
+        height: 240px;
+        padding: 18px 14px 14px;
+    }
+    .chart-container--sm {
+        height: 200px;
+    }
+    .chart-legend {
+        padding: 0 14px 14px;
+        gap: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chart-container canvas {
+        animation: none;
+    }
+    .chart-tooltip {
+        transition: none;
+    }
+}

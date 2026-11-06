@@ -46,11 +46,13 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="<?= $depth ?>css/tokens.css">
     <link rel="stylesheet" href="<?= $depth ?>css/layout.css">
+    <?php if (empty($pagina_sin_componentes)): /* módulos con Bootstrap propio (inventario) no cargan componentes */ ?>
     <link rel="stylesheet" href="<?= $depth ?>css/components.css">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?= $depth ?>css/tema_institucional.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <?php foreach (($pagina_estilos ?? []) as $estilo): ?>
-    <link rel="stylesheet" href="<?= $depth . htmlspecialchars((string) $estilo, ENT_QUOTES, 'UTF-8') ?>">
+    <link rel="stylesheet" href="<?= (preg_match('#^(https?:)?//#', (string) $estilo) ? '' : $depth) . htmlspecialchars((string) $estilo, ENT_QUOTES, 'UTF-8') ?>">
     <?php endforeach; ?>
     <?php foreach (($pagina_scripts_head ?? []) as $scriptHead): ?>
     <script src="<?= htmlspecialchars((string) $scriptHead, ENT_QUOTES, 'UTF-8') ?>" defer></script>

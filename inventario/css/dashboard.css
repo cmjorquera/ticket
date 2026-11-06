@@ -1,0 +1,518 @@
+.inv-dashboard-filters,
+.inv-dashboard-section,
+.inv-kpi-card {
+    border: 1px solid #dfe5ec;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10);
+}
+
+.inv-dashboard-filters {
+    padding: 18px;
+}
+
+.inv-dashboard-note {
+    color: #6b7c93;
+    font-size: 0.82rem;
+    align-self: center;
+}
+
+.inv-dashboard-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.inv-dashboard-grid--kpis {
+    grid-template-columns: repeat(6, minmax(150px, 1fr));
+}
+
+.inv-dashboard-grid--value {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
+.inv-kpi-card {
+    min-height: 132px;
+    padding: 18px 18px 16px;
+    position: relative;
+}
+
+.inv-kpi-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.inv-kpi-card span {
+    display: block;
+    color: #66809e;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    line-height: 1.25;
+}
+
+.inv-kpi-card strong {
+    display: block;
+    color: #0b243f;
+    font-size: 2.05rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-top: 12px;
+}
+
+.inv-kpi-card small {
+    display: block;
+    color: #5f7288;
+    font-size: 0.78rem;
+    margin-top: 8px;
+}
+
+.inv-kpi-card--money strong {
+    font-size: 1.38rem;
+}
+
+/* Tarjeta KPI con degradado del colegio filtrado (dashboard.php, $_kpiBranded).
+   Mismo criterio que .inv-hero--branded en inventario.css: texto blanco,
+   controles adaptados a fondo oscuro/saturado. El fondo en si es inline
+   (color dinamico por colegio), esta clase solo resuelve el contraste. */
+.inv-kpi-card--branded {
+    border-color: transparent;
+}
+
+.inv-kpi-card--branded span,
+.inv-kpi-card--branded strong,
+.inv-kpi-card--branded small {
+    color: #fff;
+}
+
+.inv-kpi-card--branded span {
+    opacity: .92;
+}
+
+.inv-kpi-card--branded small {
+    opacity: .85;
+}
+
+.inv-kpi-card--branded .inv-kpi-menu-btn {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.inv-kpi-card--branded .inv-kpi-menu-btn:hover,
+.inv-kpi-card--branded .inv-kpi-menu-btn:focus,
+.inv-kpi-card--branded .dropdown.show .inv-kpi-menu-btn {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.30);
+}
+
+/* Logo dinamico de la barra lateral (dashboard.php): logo SEDUC animado
+   para "Todos los colegios", o el logo circular del colegio filtrado
+   (borde = color_principal). Como cada cambio de filtro recarga la pagina
+   completa (ver seccion 17/18 de logica), no hay swap client-side: esta
+   transicion es solo un fade suave en el primer render de cada carga. */
+.inv-sidebar-logo {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: chart-fade-in .35s ease both;
+}
+
+.inv-sidebar-logo__img {
+    max-width: 140px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border: 3px solid transparent;
+    box-sizing: border-box;
+    transition: border-color .3s ease;
+}
+
+#colegioNombre {
+    transition: color .3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inv-sidebar-logo {
+        animation: none;
+    }
+    .inv-sidebar-logo__img,
+    #colegioNombre {
+        transition: none;
+    }
+}
+
+.inv-kpi-menu-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    color: #64748b;
+    background: #f8fafc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none !important;
+    flex: 0 0 auto;
+}
+
+.inv-kpi-menu-btn:hover,
+.inv-kpi-menu-btn:focus,
+.dropdown.show .inv-kpi-menu-btn {
+    color: #0b243f;
+    background: #eef5fb;
+}
+
+.inv-kpi-menu-btn:disabled {
+    opacity: .45;
+}
+
+.inv-kpi-menu {
+    min-width: 230px;
+    border: 1px solid #dbe5f0;
+    border-radius: 10px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+    padding: .45rem;
+}
+
+.inv-kpi-menu .dropdown-item,
+.inv-kpi-menu .dropdown-item-text {
+    border-radius: 8px;
+    white-space: normal;
+}
+
+.inv-section-menu-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #dbe5f0;
+    border-radius: 9px;
+    color: #64748b;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none !important;
+}
+
+.inv-section-menu-btn:hover,
+.inv-section-menu-btn:focus,
+.dropdown.show .inv-section-menu-btn {
+    color: #0b243f;
+    background: #f8fafc;
+}
+
+.inv-kpi-menu .dropdown-item.active {
+    color: #0b243f;
+    background: #eaf4ff;
+    font-weight: 700;
+}
+
+.inv-dashboard-mail-modal {
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.20);
+}
+
+.inv-mail-recipients {
+    border: 1px solid #dbe5f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 12px;
+}
+
+.inv-mail-select-all {
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+}
+
+.inv-mail-recipients-list {
+    display: grid;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.inv-mail-recipient-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    padding: 9px 10px;
+    margin: 0;
+}
+
+.inv-mail-recipient-item .form-check-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.inv-mail-recipient-item strong {
+    color: #172b43;
+    font-size: .9rem;
+}
+
+.inv-mail-recipient-item small {
+    color: #64748b;
+}
+
+.inv-dashboard-section {
+    padding: 0;
+    overflow: hidden;
+}
+
+.inv-dashboard-section__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 86px;
+    margin: 0;
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid #dfe5ec;
+}
+
+.inv-dashboard-section__head h2 {
+    color: #1f2937;
+    font-size: 1.02rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.25;
+}
+
+.inv-dashboard-section__head span {
+    color: #536174;
+    font-size: 0.9rem;
+}
+
+.inv-section-title {
+    display: grid;
+    gap: 4px;
+}
+
+.inv-chart-box {
+    height: 286px;
+    padding: 24px 24px 18px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.inv-chart-empty {
+    position: absolute;
+    inset: 24px;
+    display: grid;
+    place-items: center;
+    border: 1px dashed #cdd9e5;
+    border-radius: 8px;
+    color: #6b7c93;
+    text-align: center;
+    background: #fbfdff;
+    font-size: .9rem;
+}
+
+.inv-chart-box--sm {
+    height: 246px;
+}
+
+.inv-value-bars {
+    display: grid;
+    gap: 14px;
+    padding: 24px;
+}
+
+/* .inv-value-bar es un <a> clickeable (filtra por ese colegio) desde esta
+   iteracion -- antes era un <div> puramente informativo. */
+.inv-value-bar {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 4px;
+    margin: -4px;
+    transition: background .2s ease;
+}
+
+.inv-value-bar:hover,
+.inv-value-bar:focus {
+    background: #f8fafc;
+    color: inherit;
+}
+
+.inv-value-bar.is-active {
+    background: #eaf4ff;
+}
+
+.inv-value-bar__label {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.inv-value-bar__label span {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.inv-value-bar__label strong {
+    color: #0b243f;
+    white-space: nowrap;
+}
+
+.inv-value-bar__track {
+    height: 12px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #eef2f7;
+}
+
+.inv-value-bar__fill {
+    height: 100%;
+    border-radius: inherit;
+    /* background ya NO se fija aca: viene inline por colegio desde
+       dashboard.php (inv_dash_colores_colegio). #3a9131 queda solo como
+       respaldo por si algun caller no manda el inline style. */
+    background: #3a9131;
+    transition: width .3s ease, background-color .3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inv-value-bar,
+    .inv-value-bar__fill {
+        transition: none;
+    }
+}
+
+.inv-dashboard-table {
+    margin-bottom: 0;
+    min-width: 760px;
+}
+
+.inv-dashboard-table thead th {
+    border-bottom: 1px solid #dbe5f0;
+    color: #496582;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.inv-dashboard-table tbody td,
+.inv-dashboard-table tfoot th {
+    color: #172b43;
+    font-size: 0.86rem;
+    vertical-align: middle;
+}
+
+.inv-dashboard-table tfoot th {
+    border-top: 2px solid #dbe5f0;
+}
+
+.inv-alert-list {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+}
+
+.inv-alert-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #f2d6a2;
+    border-radius: 8px;
+    background: #fff8eb;
+    padding: 12px;
+}
+
+.inv-alert-item__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    color: #b46b00;
+    background: #ffe9bf;
+    flex: 0 0 auto;
+}
+
+.inv-alert-item strong {
+    display: block;
+    color: #0b243f;
+    font-size: 1.05rem;
+}
+
+.inv-alert-item span:last-child {
+    color: #5f7288;
+    font-size: 0.86rem;
+}
+
+.inv-detail-value {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+}
+
+.inv-detail-value span {
+    color: #66809e;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.inv-detail-value strong {
+    color: #0b243f;
+    font-size: 1.35rem;
+    line-height: 1.15;
+}
+
+.inv-detail-value small {
+    color: #5f7288;
+}
+
+.inv-empty-state {
+    border: 1px dashed #cdd9e5;
+    border-radius: 8px;
+    color: #6b7c93;
+    padding: 18px;
+    text-align: center;
+}
+
+.inv-dashboard-section > .table-responsive {
+    padding: 18px;
+}
+
+@media (max-width: 1399px) {
+    .inv-dashboard-grid--kpis {
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
+    }
+}
+
+@media (max-width: 991px) {
+    .inv-dashboard-grid--kpis,
+    .inv-dashboard-grid--value {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 575px) {
+    .inv-dashboard-grid--kpis,
+    .inv-dashboard-grid--value {
+        grid-template-columns: 1fr;
+    }
+
+    .inv-dashboard-filters,
+    .inv-dashboard-section,
+    .inv-kpi-card {
+        padding: 14px;
+    }
+
+    .inv-chart-box {
+        height: 240px;
+    }
+}

@@ -1,0 +1,136 @@
+LOGICA DEL AGENTE DE INVENTARIO
+===============================
+
+El agente de inventario SEDUC permite levantar informacion tecnica de un PC
+Windows y generar un archivo JSON que luego se importa en el formulario de
+registro de equipos del Sistema Ticket.
+
+El agente vigente es:
+
+  inventario/agente/seduc_inventario_agent.bat
+
+Version detectada en el archivo:
+
+  SEDUC Inventario Agent v1.7
+
+
+Distribucion
+------------
+El agente se distribuye como archivo .bat autocontenido. No requiere Python,
+pip, PyInstaller, instalador ni ejecutable .exe.
+
+El endpoint de descarga es:
+
+  inventario/ajax/descargar_agente.php
+
+Orden real de descarga del endpoint:
+
+  1. inventario/agente/seduc_inventario_agent.bat
+  2. inventario/agente/seduc_inventario_agent.exe (solo respaldo si existiera)
+
+Si no existe ningun agente descargable, el endpoint responde:
+
+  No se encontro el agente. Contacte al administrador del sistema.
+
+
+Flujo de uso
+------------
+1. El usuario entra a inventario/registrar_equipo.php.
+2. Presiona "Descargar Agente".
+3. Descarga seduc_inventario_agent.bat.
+4. Copia el .bat al equipo Windows que desea inventariar.
+5. Hace doble clic en el archivo.
+6. Si no se ejecuto como Administrador, el .bat se relanza con UAC.
+7. El agente recopila informacion tecnica del equipo con PowerShell/WMI.
+8. El agente genera en el Escritorio del usuario:
+
+     inventario_NOMBREEQUIPO.json
+
+9. El usuario vuelve a registrar_equipo.php.
+10. Importa el JSON con el boton "Importar Inventario Automatico".
+11. El sistema pre-rellena campos tecnicos; el usuario revisa y guarda.
+
+
+Funcionamiento interno del .bat
+-------------------------------
+La cabecera batch:
+
+  - Detecta si se ejecuta como Administrador usando net session.
+  - Si no tiene permisos, relanza el mismo .bat con PowerShell y UAC.
+  - Extrae el bloque PowerShell incrustado despues del marcador ##PS1START##.
+  - Escribe temporalmente ese bloque en %TEMP%\seduc_agent.ps1.
+  - Ejecuta el script PowerShell y borra el archivo temporal al terminar.
+
+El bloque PowerShell:
+
+  - Usa WMI/WMIC y clases .NET disponibles en Windows.
+  - No modifica configuracion del PC.
+  - No se conecta a la base de datos.
+  - Solo genera un JSON local para importacion manual.
+
+
+Datos que captura
+-----------------
+- nombre_equipo
+- fabricante
+- modelo
+- serial BIOS
+- procesador: nombre, fabricante y velocidad
+- ram_gb
+- almacenamiento[]: modelo, capacidad y tipo (SSD NVMe / SSD / HDD)
+- windows
+- usuario_windows
+- monitores[]: modelo y resolucion
+- generado_en
+- version_agente: "1.7"
+
+
+Datos que NO completa el agente
+-------------------------------
+- colegio
+- ubicacion
+- usuario asignado
+- estado operativo
+- datos de compra
+- fotos del equipo
+
+Esos datos se completan o confirman manualmente en el formulario del sistema.
+
+
+Mapeo del JSON al formulario
+----------------------------
+nombre_equipo  -> input[name="nombre_equipo"]
+fabricante     -> input[name="fabricante"]
+modelo         -> input[name="producto"]
+serial         -> input[name="numero_serie"]
+procesador_fab -> input[name="procesador_fabricante"]
+procesador     -> input[name="procesador_modelo"]
+procesador_vel -> input[name="procesador_velocidad"]
+
+almacenamiento[0].modelo    -> input[name="equipo_modelo"]
+almacenamiento[0].capacidad -> input[name="equipo_capacidad"]
+almacenamiento[0].tipo      -> input[name="equipo_tamano"]
+
+windows -> input[name="windows"]
+ram_gb  -> input[name="memoria[0][tamano_memoria]"]
+
+monitores[] -> filas monitor[N][modelo_monitor] y monitor[N][resolucion_monitor]
+
+
+Importacion del JSON
+--------------------
+La importacion se realiza desde:
+
+  inventario/registrar_equipo.php
+
+La importacion solo completa datos tecnicos del formulario. No guarda
+automaticamente el equipo. El guardado final depende de la revision y
+confirmacion del usuario.
+
+
+Documentacion operativa relacionada
+-----------------------------------
+La informacion operativa que antes estaba junto al agente fue consolidada en
+este documento para mantener la documentacion oficial dentro de:
+
+  inventario/logica/

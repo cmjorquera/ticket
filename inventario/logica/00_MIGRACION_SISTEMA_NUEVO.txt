@@ -1,0 +1,45 @@
+MIGRACIÓN DEL MÓDULO INVENTARIO AL SISTEMA NUEVO (2026-11-06)
+=============================================================
+
+El módulo se trajo desde el sistema antiguo (rama backup/qa-produccion-20261106)
+casi sin cambios en su lógica de negocio. Cambios realizados:
+
+1. Conexión
+   - class/InventarioConexion.php reemplaza la clase MySQL del sistema antiguo.
+   - Credenciales desde config_privada (clases/ConfigPrivada.php, sección 'db').
+
+2. Arranque (componentes/boot.php)
+   - Usa la sesión del sistema nuevo (clases/Session.php).
+   - Exige sesión iniciada en TODAS las páginas y endpoints (antes no).
+   - No muestra errores técnicos en pantalla (display_errors = 0).
+
+3. Diseño
+   - componentes/layout_top.php y layout_bottom.php usan includes/header.php y
+     includes/footer.php (menú lateral, cabecera y colores institucionales).
+   - Las páginas de inventario cargan Bootstrap 5 SIN css/components.css del
+     sistema nuevo ($pagina_sin_componentes), porque ambos definen .modal,
+     .btn, .card y .badge con estilos distintos.
+   - componentes/head.php se eliminó.
+   - css/graficos.css y css/cards.css del sistema antiguo se copiaron a
+     inventario/css/.
+
+4. Librerías
+   - FPDF:     clases/PDF/fpdf.php
+   - PHPExcel: clases/excel/Classes/PHPExcel.php
+   - PHPMailer: clases/PHPMailer/src/
+   - chillerlan/php-qrcode (imprimir_qr_equipos.php): NO incluida aún en el
+     sistema nuevo. La página muestra un aviso hasta instalarla.
+
+5. Correo (ajax/enviar_alerta_dashboard.php)
+   - Credenciales SMTP desde config_privada, sección 'smtp'. Sin esa sección,
+     responde "El envío de correos no está configurado".
+
+6. Datos y seguridad
+   - NO se copiaron inventario/logica/tablas/ ni inventario/sql/: eran
+     exportaciones con datos reales de producción (usuarios con hash de clave).
+   - La estructura de tablas está en sql/inventario_instalacion.sql.
+   - Las fotos subidas (uploads/) no se versionan; el script de despliegue
+     nunca las sobrescribe.
+   - Se eliminó test.php (mostraba configuración del servidor).
+   - .htaccess bloquea acceso web a logica/, class/, componentes/ y agente/.
+   - equipoQRinformacion.php ahora exige sesión (muestra responsable).

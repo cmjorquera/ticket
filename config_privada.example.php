@@ -37,6 +37,18 @@ return [
         'charset'  => 'utf8mb4',
     ],
 
+    // Correo SMTP (opcional). Lo usa el módulo de inventario para alertas.
+    // Si no se define, el sistema avisa que el correo no está configurado.
+    'smtp' => [
+        'host'             => 'smtp.ejemplo.cl',
+        'puerto'           => 465,
+        'usuario'          => 'CAMBIAR_usuario_smtp',
+        'password'         => 'CAMBIAR_password_smtp',
+        'seguridad'        => 'ssl',
+        'remitente'        => 'seduc.informa@seduc.cl',
+        'nombre_remitente' => 'SeducSPA',
+    ],
+
     // Clase antigua class_odd/conexion.php (no usada actualmente).
     // Puede quedar con valores vacíos.
     'db_antigua' => [

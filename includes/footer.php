@@ -27,7 +27,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <?php endif; ?>
 <?php foreach (($pagina_scripts ?? []) as $scriptPagina): ?>
-<script src="<?= $depth . htmlspecialchars((string) $scriptPagina, ENT_QUOTES, 'UTF-8') ?>"></script>
+<script src="<?= (preg_match('#^(https?:)?//#', (string) $scriptPagina) ? '' : $depth) . htmlspecialchars((string) $scriptPagina, ENT_QUOTES, 'UTF-8') ?>"></script>
 <?php endforeach; ?>
 </body>
 </html>

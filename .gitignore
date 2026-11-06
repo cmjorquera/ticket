@@ -18,3 +18,8 @@ clases/version_desplegada.json
 
 # Logs de errores de PHP (se generan en el servidor)
 error_log
+
+# Fotos subidas por los usuarios: viven solo en el servidor
+inventario/uploads/**
+!inventario/uploads/**/
+!inventario/uploads/**/.gitkeep

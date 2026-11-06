@@ -1,0 +1,1466 @@
+LOGICA DEL MODULO INVENTARIO
+============================
+
+1. Objetivo general
+- La carpeta `inventario` funciona como modulo independiente dentro del sistema principal `SISTEMA_TICKET`.
+- El modulo reutiliza la sesion, la conexion y varias funciones visuales del sistema general.
+- La portada del modulo es `inventario/index.php`.
+
+LOGICA DE NEGOCIO REAL DEL INVENTARIO
+=====================================
+
+1. Contexto del modulo
+- El modulo Inventario pertenece al SISTEMA TICKET.
+- El inventario administra activos tecnologicos por colegio.
+- La tabla `colegio` contiene los colegios del sistema.
+- El `id_colegio = 15` corresponde a SEDUC. En la logica de negocio, SEDUC
+  es la empresa/oficina central, aunque esta registrada dentro de la tabla
+  `colegio` igual que los colegios.
+
+2. Colegios y ubicaciones fisicas
+- Cada colegio puede tener multiples ubicaciones fisicas.
+- Ejemplos de ubicaciones:
+  - salas de computacion
+  - oficinas administrativas
+  - enfermeria
+  - salas de clases
+  - salas de matematicas
+  - bodegas
+  - otras dependencias
+- Las ubicaciones se guardan en `equipo_ubicacion`.
+- No se debe crear una tabla nueva para salas.
+- Si el usuario necesita registrar una sala o dependencia que no existe, el
+  formulario debe permitir escribir una nueva ubicacion.
+- Esa nueva ubicacion debe guardarse en `equipo_ubicacion.nombre_ubicacion`
+  asociada al `id_colegio` actual.
+
+3. Datos minimos de un activo inventariable
+- Un equipo o activo debe registrar:
+  - colegio
+  - ubicacion
+  - usuario responsable
+  - usuario que registra
+  - estado
+  - tipo de activo
+  - nombre del equipo
+  - numero de serie
+  - caracteristicas tecnicas
+  - fotos
+  - QR
+- El responsable del equipo se guarda en `equipos.id_usuario_asignado`.
+- El usuario que registra se guarda en `equipos.id_usuario_registra`.
+- El listado de usuarios asignables debe filtrar solamente usuarios asociados
+  al colegio actual mediante `usuario_colegio`.
+- No se deben listar usuarios de colegios no asociados al colegio de sesion.
+
+4. Tipos de activos
+- `tipo_pc_catalogo` define los tipos de activos que se pueden registrar dentro
+  de `equipos`.
+- Ejemplos:
+  - PC
+  - Notebook
+  - Tablet
+  - All in One
+- Por defecto, el tipo mas usado debe ser PC o Notebook segun la operacion del
+  sistema.
+- La pestana PC administra activos registrados en `equipos`.
+- La pestana Monitores administra monitores independientes registrados en
+  `monitores`.
+- Futuras pestanas como Tablet pueden usar `equipos` + `tipo_pc_catalogo`.
+- Futuras pestanas como Impresoras deben evaluarse antes de meterlas en
+  `equipos`, porque podrian requerir tabla propia.
+
+5. Codigo QR
+- Cada activo inventariable debe poder tener codigo QR.
+- Para equipos, el QR se guarda en `equipos.qr_code`.
+- Para monitores, el QR debe guardarse en `monitores.qr_code` si existe el
+  campo en la base real. En la estructura documentada actualmente no aparece
+  ese campo, por lo que queda como punto a validar antes de implementar QR para
+  monitores.
+- Al escanear el QR debe mostrarse una ficha resumida del activo.
+
+6. Pantalla principal
+- La pantalla principal permite:
+  - ver KPIs
+  - filtrar equipos
+  - buscar por nombre, serie o QR
+  - cambiar estado
+  - ver detalle
+  - editar
+  - administrar fotos
+  - asignar responsable
+  - eliminar logicamente
+  - carga masiva
+  - agregar PC uno a uno
+
+PERFILES Y ALCANCE DE VISIBILIDAD
+=================================
+
+- Inventario usa `usuario_colegio` como fuente principal para decidir alcance.
+- No se usa `usuario_perfil` para decidir colegios visibles dentro del modulo Inventario.
+- `usuario_colegio` contiene: `id_usuario`, `id_colegio`, `id_perfil`, `estado`, `fecha_asignacion`.
+- Perfiles usados por Inventario:
+  - Perfil 1 = usuario.
+  - Perfil 2 = tecnico.
+  - Perfil 3 = administrador.
+
+Perfil 1 — usuario:
+- Ve solo el inventario del colegio asignado activo en `usuario_colegio`.
+- No ve selector/filtro de colegio.
+- No ve columna Colegio en la tabla principal.
+- No ve filtro Tipo en la barra principal, porque los tipos se organizaran por pestanas.
+- Si por datos antiguos tiene mas de una fila activa en `usuario_colegio`, Inventario toma un
+  solo colegio: el primero ordenado por nombre. Esta decision mantiene la regla de colegio unico
+  para perfil 1 hasta que exista una seleccion explicita de colegio de sesion.
+
+Perfil 2 — tecnico:
+- Ve solo colegios activos asociados a su usuario en `usuario_colegio`.
+- Ve selector/filtro de colegio con sus colegios permitidos.
+- Ve columna Colegio.
+- Si no selecciona un colegio, las consultas usan todos sus colegios permitidos.
+- No puede consultar por GET/AJAX un colegio no asociado.
+
+Perfil 3 — administrador:
+- Ve todos los colegios activos.
+- Ve selector/filtro de colegio.
+- Ve columna Colegio.
+- Puede consultar todos los colegios activos o filtrar por uno.
+
+Implementacion actual:
+- `Inventario::obtenerAlcanceInventario($idUsuario)` calcula el perfil principal y colegios permitidos.
+- El perfil principal se obtiene desde filas activas de `usuario_colegio`; si hay perfil 3 en alguna fila,
+  el usuario se considera administrador para Inventario; si no, perfil 2 supera a perfil 1.
+- `Inventario::normalizarFiltrosPorAlcance($filtros, $alcance)` valida el `id_colegio` solicitado y
+  agrega `ids_colegio` cuando el usuario puede ver varios colegios.
+- `inventario/index.php` usa ese alcance para mostrar/ocultar filtro Colegio y columna Colegio.
+- `inventario/ajax/listar_equipos.php` y `inventario/ajax/listar_monitores.php` aplican el mismo alcance
+  para que KPIs, tabla, busqueda, paginacion y filtros combinados consulten solo colegios permitidos.
+- Los endpoints de detalle y acciones validan el colegio real del activo antes de mostrar o modificar.
+
+2. Conexion a base de datos
+- La conexion oficial del sistema esta en `class/conexion.php`.
+- El modulo inventario NO debe usar una conexion propiardentro de `inventario/class/conexion.php`.
+- La clase principal del modulo es `inventario/class/Inventario.php`.
+- Dentro de `Inventario.php` la conexion se crea siguiendo el patron del sistema:
+  `$bdato = new MySQL("", "", "");`
+- Desde esa clase se obtiene la conexion activa para las consultas necesarias del modulo.
+
+3. Regla importante de assets
+- Los CSS y JS globales del sistema NO estan dentro de la carpeta `inventario`.
+- Estan fuera, en carpetas como:
+  - `../css/...`
+  - `../js/...`
+  - `../vendor/...`
+  - `../imagenes/...`
+- Por eso, cualquier archivo dentro de `inventario` que cargue assets del sistema general debe usar rutas relativas hacia afuera de la carpeta.
+- Si se usan rutas como `css/...`, `js/...`, `vendor/...` o `imagenes/...` para recursos globales del sistema, la pagina se rompe visualmente al navegar dentro del modulo.
+
+4. Layout del modulo
+- `inventario/componentes/boot.php`
+  - inicia sesion si hace falta
+  - carga `class/conexion.php`
+  - carga `class/funciones.php`
+  - carga `inventario/class/Inventario.php`
+  - define helpers como:
+    - `inventario_url()`
+    - `inventario_sistema_url()`
+    - `inventario_h()`
+
+- `inventario/componentes/head.php`
+  - carga el HTML base del modulo
+  - carga los CSS del sistema general con rutas `../...`
+  - carga `inventario/css/inventario.css`
+
+- `inventario/componentes/layout_top.php`
+  - arma wrapper, menu lateral, topbar y contenedor principal
+
+- `inventario/componentes/layout_bottom.php`
+  - carga JS del modulo
+  - carga JS globales del sistema usando rutas `../...`
+  - agrega versionado por `filemtime` a CSS y JS propios del modulo para evitar caché vieja del navegador
+
+5. Regla para nuevas paginas dentro de inventario
+- Cualquier nueva vista dentro de `inventario` debe seguir esta estructura:
+  1. `require_once __DIR__ . '/componentes/boot.php';`
+  2. preparar datos desde `$inventario`
+  3. `require __DIR__ . '/componentes/layout_top.php';`
+  4. renderizar contenido
+  5. `require __DIR__ . '/componentes/layout_bottom.php';`
+
+- Esto asegura que todas las paginas mantengan:
+  - el mismo menu lateral
+  - el mismo topbar
+  - el mismo CSS
+  - el mismo JS
+  - la misma sesion del sistema
+
+6. Portada del modulo
+- `inventario/index.php` usa el layout comun del modulo.
+- Muestra:
+  - titulo del modulo
+  - boton "Agregar equipo"
+  - resumen KPI
+  - resumen por colegio
+  - filtros
+  - tabla DataTable
+
+7. Formularios y vistas internas
+- `inventario/registrar_equipo.php`
+  - usa el layout comun
+  - muestra el formulario de creacion
+
+- `inventario/editar_equipo.php`
+  - usa el layout comun
+  - muestra el formulario de edicion
+
+- `inventario/ver_equipo.php`
+  - usa el layout comun
+  - muestra la ficha del equipo
+
+8. JS principal del modulo
+- `inventario/js/inventario.js`
+  - inicializa DataTable
+  - carga datos via AJAX
+  - aplica filtros
+  - maneja eliminacion logica
+  - maneja botones de accion
+  - abre modal de galeria para ver imagenes del equipo
+  - maneja previews de fotos
+
+9. Criterio actual de UI
+- Los botones de acciones de la tabla deben verse como botones Bootstrap reales.
+- La tabla, formularios y tarjetas del modulo usan estilos propios en:
+  - `inventario/css/inventario.css`
+- Como el sistema general mezcla varios CSS globales, los botones de accion del inventario necesitan overrides propios para conservar apariencia Bootstrap dentro de la tabla.
+- El listado principal usa DataTables con paginacion visible.
+- La paginacion debe verse integrada al estilo Bootstrap del modulo.
+- Los botones de acciones del listado se presentan como botones Bootstrap solidos:
+  - ver: gris
+  - editar: azul
+  - fotos: gris
+  - eliminar: rojo
+- El boton de fotos del listado no redirige a otra pagina.
+- Debe abrir un modal Bootstrap con la galeria del equipo.
+- La galeria del modal usa una imagen principal grande, controles laterales y una franja de miniaturas para navegar entre fotos.
+
+10. Logica para imagenes adjuntas
+- Las imagenes del equipo se reciben desde el formulario en `fotos_equipo[]`.
+- El guardado actual usa la tabla `equipo_fotos`.
+- Estructura considerada:
+  - `id_foto`
+  - `id_equipo`
+  - `ruta_foto`
+  - `tipo_foto`
+  - `principal`
+  - `orden_foto`
+  - `fecha_subida`
+- La idea correcta de guardado es:
+  1. Crear primero el equipo.
+  2. Obtener `id_equipo`.
+  3. Crear carpeta fisica:
+     `inventario/uploads/equipos/{id_equipo}/`
+  4. Guardar cada archivo con nombre unico.
+  5. Registrar en `equipo_fotos` la ruta relativa y el orden.
+  6. Marcar una foto como principal.
+- Tipos recomendados:
+  - `normal` para galeria
+  - a futuro se puede agregar otro tipo si se necesita otra clase de evidencia
+
+11. Validaciones recomendadas para imagenes
+- Validar MIME real del archivo, no solo extension.
+- Permitir solo jpg, jpeg, png y webp.
+- Limitar tamano maximo por archivo.
+- Rechazar archivos vacios o con error de subida.
+- Si falla una foto dentro de una transaccion, decidir si:
+  - falla todo el guardado del equipo
+  - o se guarda el equipo y se informa que falto una evidencia
+- Para este modulo conviene mantener el guardado atomico: si fallan imagenes, falla toda la operacion.
+
+12. Flujo recomendado para guardar imagenes
+- El formulario envia `fotos_equipo[]`.
+- PHP guarda primero el equipo en la tabla `equipos`.
+- Con el `id_equipo` creado, PHP genera la carpeta:
+  `inventario/uploads/equipos/{id_equipo}/`
+- Cada archivo se mueve a esa carpeta.
+- Luego cada imagen se registra en la tabla `equipo_fotos`.
+- El modulo ya esta preparado para guardar varias imagenes por equipo, porque `fotos_equipo[]` es multiple y `equipo_fotos` guarda una fila por imagen.
+- La carpeta guarda el archivo fisico.
+- La tabla `equipo_fotos` guarda la relacion logica entre el archivo y el equipo.
+- No basta solo con guardar archivos en carpeta, porque la base de datos debe saber:
+  - a que equipo pertenece cada imagen
+  - cual es la principal
+  - en que orden se muestran
+  - cual borrar al editar
+
+13. Tabla recomendada para fotos
+- Tabla: `equipo_fotos`
+- Campos recomendados:
+  - `id_foto`
+  - `id_equipo`
+  - `ruta_foto`
+  - `principal`
+  - `orden_foto`
+  - `fecha_subida`
+- `tipo_foto` se puede mantener solo si a futuro se volveran a manejar tipos distintos de imagen.
+
+14. Regla de trabajo acordada
+- Toda nueva decision de estructura o logica del modulo inventario debe quedar documentada en este archivo `inventario/logica/01_logica_general_inventario.txt`.
+
+15. Modulo de carga masiva de equipos
+NOTA: $_SESSION no almacena 'id_colegio'. El colegio del usuario se obtiene
+consultando la tabla usuario_colegio por id_usuario (campo $_SESSION['id']).
+El metodo Inventario::obtenerColegioDelUsuario(int $idUsuario) encapsula esa consulta.
+
+- Logo del colegio: se busca en /img/colegios/colegio_{id_colegio}.png
+  (ruta fisica: dirname del proyecto . '/img/colegios/colegio_' . $id . '.png').
+  Si no existe el archivo, la plantilla se genera igual sin imagen.
+
+- Vista principal: `inventario/carga_masiva.php`
+  - Usa el layout comun del modulo (boot.php + layout_top.php + layout_bottom.php).
+  - Hero con degradado azul a teal (clase `.cm-hero`).
+  - Stepper horizontal de 4 pasos con circulos numerados: paso activo = azul (#0F4C81),
+    pasos completados = verde teal (#0f766e), inactivos = gris (#CBD5E1).
+    La linea entre pasos tambien cambia de color segun el estado.
+  - Zona drag&drop para soltar o seleccionar el archivo .xlsx/.xls.
+  - Tabla de resultados (inicialmente oculta) con una fila por equipo: numero de fila Excel, badge OK/ERROR, mensaje.
+  - El JS exclusivo de esta vista esta en `inventario/js/carga_masiva.js` y se carga con atributo `defer`.
+  - El stepper avanza automaticamente en el JS: paso 3 al seleccionar archivo, paso 4 al terminar.
+
+- Plantilla Excel: `inventario/exportar_plantilla.php`
+  - Genera y descarga directamente un .xlsx usando PHPExcel en `excel/Classes/PHPExcel.php`.
+  - Al inicio se suprimen deprecaciones de PHP 8.x con ini_set('display_errors', 0).
+  - Hoja 1 "Inventario" — estructura:
+      Filas 1-2: encabezado institucional (logo PNG en A1 si existe, nombre colegio en B1-C1)
+      Fila 3:    subtitulo "Plantilla de carga masiva de inventario de equipos"
+      Fila 4:    fecha de generacion
+      Fila 5:    separador vacio
+      Fila 6:    encabezados de columna con etiquetas legibles (fondo azul #0F4C81)
+      Fila 7:    fila de ejemplo en gris claro (el usuario la elimina antes de subir)
+      Fila 8+:   datos reales
+  - La unica hoja visible es "Inventario".
+  - Los catalogos de estados, tipos, usuarios y ubicaciones viven en la hoja
+    oculta `_catalogos`.
+  - No existe columna Colegio: el colegio real se asigna por sesion.
+  - El archivo incluye freeze en fila 7 (encabezado institucional + encabezados de columna fijos).
+
+  Columnas de la hoja "Inventario" (A a AG — 33 columnas, sin colegio, fotos ni QR manual):
+    Columna | Campo interno          | Etiqueta en Excel
+    --------|------------------------|----------------------------------
+    A       | id_ubicacion           | Ubicacion
+    B       | id_usuario_asignado    | Usuario asignado
+    C       | nombre_personalizado   | Nombre del equipo
+    D       | numero_serie           | Numero de serie
+    E       | tipo_pc                | Tipo de PC
+    F       | id_estado              | Estado
+    G       | fabricante             | Fabricante
+    H       | producto               | Producto / modelo
+    I       | valor_equipo           | Valor equipo
+    J       | proveedor              | Proveedor
+    K       | numero_factura         | Numero factura
+    L       | fecha_compra           | Fecha compra  (formato YYYY-MM-DD)
+    M       | observacion_compra     | Observacion compra
+    N       | almacenamiento_modelo  | Almacenamiento modelo
+    O       | almacenamiento_capacidad| Almacenamiento capacidad
+    P       | almacenamiento_tamano  | Almacenamiento tipo/tamano
+    Q       | procesador_fabricante  | Procesador fabricante
+    R       | procesador_modelo      | Procesador modelo
+    S       | procesador_velocidad   | Procesador velocidad
+    T       | windows                | Windows
+    U       | office                 | Office
+    V       | antivirus              | Antivirus
+    W       | memoria_designacion    | Memoria slot/designacion
+    X       | memoria_formato        | Memoria formato
+    Y       | memoria_tipo           | Memoria tipo
+    Z       | memoria_tamano         | Memoria tamano
+    AA      | memoria_frecuencia     | Memoria frecuencia
+    AB      | memoria_marca          | Memoria marca
+    AC      | monitor_modelo         | Monitor modelo
+    AD      | monitor_codigo         | Monitor codigo
+    AE      | monitor_serie          | Monitor serie
+    AF      | monitor_tamano         | Monitor tamano
+    AG      | monitor_resolucion     | Monitor resolucion
+
+  La plantilla incluye desplegables:
+    - Ubicacion: desde `_catalogos`, filtrada por colegio de sesion.
+    - Usuario asignado: desde `_catalogos`, filtrada por colegio de sesion.
+    - Tipo de PC: desde `_catalogos`, alimentada por tipo_pc_catalogo.activo = 1.
+    - Estado: desde `_catalogos`, alimentada por estado_equipo.estado = 1.
+  En carga masiva, nombre_equipo, qr_code y fotos NO se piden en Excel:
+    - Nombre del equipo alimenta equipos.nombre_personalizado.
+    - nombre_equipo se genera como "PC-" + numero_serie limpio.
+    - qr_code se genera con el mismo criterio automatico.
+
+  Si en el futuro se agregan o renombran columnas, actualizar AMBOS:
+    - el array $columnas en exportar_plantilla.php
+    - el array $columnaMap en ajax/procesar_carga_masiva.php
+
+- Endpoint de procesamiento: `inventario/ajax/procesar_carga_masiva.php`
+  - Recibe el archivo via POST (campo "archivo").
+  - Obtiene id_colegio consultando Inventario::obtenerColegioDelUsuario($idUsuarioSession).
+  - Lee el Excel con PHPExcel (setReadDataOnly=true).
+  - Salta las primeras 6 filas (indices 0-5): encabezado institucional + encabezados de columna.
+  - Datos desde indice 6 del array (Excel fila 7). El numero de fila reportado en resultados
+    corresponde a la fila real del Excel (fila 7 = primera fila de datos).
+  - Validaciones por fila: numero_serie, ubicacion, tipo_pc y estado obligatorios (id_colegio viene de sesion).
+  - Valida que usuario asignado pertenezca al colegio via usuario_colegio.
+  - Detecta automaticamente fechas en formato serial Excel en columna M (fecha_compra).
+  - Cada fila se guarda en su propia transaccion via Inventario::guardarEquipoDesdeArray().
+  - Responde JSON: { ok, total, ok_count, error_count, detalle[] }.
+
+- Metodo de guardado reutilizable: `Inventario::guardarEquipoDesdeArray(array $payload, int $idUsuario): int`
+  - Recibe directamente el array normalizado (misma estructura que normalizarPayload).
+  - No procesa fotos (solo datos tabulares).
+  - Usa el metodo privado `insertarRegistroEquipo()` extraido de `guardarEquipo()`.
+  - El formulario normal sigue usando `guardarEquipo()` que adicionalmente procesa fotos.
+
+- Metodo auxiliar: `Inventario::obtenerColoresColegio(int $idUsuario): array`
+  - Consulta usuario_colegio JOIN colegio WHERE id_usuario = ? AND uc.estado = 1 LIMIT 1.
+  - Retorna ['color_principal', 'color_secundario', 'color_terciario', 'color_cuaternario'] o [].
+  - Captura cualquier excepcion (por si las columnas no existen en el schema) y retorna [].
+  - Usado en index.php para aplicar branding del colegio al hero header.
+
+- Metodo auxiliar: `Inventario::obtenerColegioDelUsuario(int $idUsuario): array`
+  - Consulta usuario_colegio JOIN colegio WHERE id_usuario = ? AND uc.estado = 1 LIMIT 1.
+  - Retorna ['id_colegio' => int, 'nom_colegio' => string] o [] si no tiene colegio asignado.
+
+- JS: `inventario/js/carga_masiva.js`
+  - Vanilla JS (sin dependencia de jQuery).
+  - Funcion activarPaso(num): actualiza clases active/completed en circulos y lineas del stepper.
+  - Paso 1 activo al cargar, paso 3 al seleccionar archivo, paso 4 al recibir resultado.
+  - Maneja eventos dragover, dragleave, drop, click y keydown para la zona de subida.
+  - Funcion procesarCargaMasiva(archivo): encapsula toda la logica de envio AJAX (fetch + FormData +
+    mostrarResultados). Se llama automaticamente al seleccionar o soltar un archivo valido —
+    sin necesidad de click adicional. Incluye flag `procesando` para evitar envios dobles.
+  - El boton "Procesar carga" es reintento manual: llama procesarCargaMasiva(archivoSeleccionado).
+  - Durante el procesamiento: dropzone cambia a .cm-drop-processing (icono pulsante, pointer-events none).
+  - Construye la tabla de resultados dinamicamente en el DOM.
+  - Usa SweetAlert2 para alertas si esta disponible, alert() como fallback.
+
+- Estilos actualizados en `inventario/css/inventario.css` (modulo general):
+  - Botones de accion en tabla (`.inv-btn-view`, `.inv-btn-edit`, `.inv-btn-photo`, `.inv-btn-delete`):
+    cambiados de cajas solidas coloreadas a iconos transparentes. Icono visible en su color
+    (gris/azul/rojo); fondo sutil solo en hover. Tamano reducido a 32px.
+  - `.inv-hero--branded`: clase dinamica que se agrega via PHP cuando el colegio tiene
+    color_principal configurado. El hero muestra el degradado del colegio con texto blanco
+    y botones adaptados para fondo oscuro. Si no hay color configurado, se usa el fondo
+    blanco suave por defecto.
+  - `.inv-hero` y `.cm-hero`: fondo blanco muy suave con degradado casi imperceptible
+    (fafcff → f5f9fd → f0faf8). Sin colores saturados. Borde y sombra muy suaves.
+  - `.inv-kicker`: badge pill gris azulado claro (sin color primario saturado); texto #4a6580.
+  - `.inv-stat-card`: fondo blanco (var --inv-surface), borde gris sutil (var --inv-border).
+    Todas las variantes comparten el mismo fondo blanco — la unica diferencia por variante
+    es el circulo del icono (pastel suave por categoria). Label en gris #8a9db5, numero grande
+    en color de texto normal, descripcion small en gris.
+  - `#tablaInventario`: thead con fondo gris muy claro y texto uppercase espaciado; filas con
+    rayado minimo (blanco / #fafbfd); sin bordes verticales; hover azul muy suave.
+
+16. Estados de equipo
+- Los estados del inventario se administran desde la tabla `estado_equipo`.
+- La clase `Inventario.php` ya NO usa estados hardcodeados en `$estadosFallback` (propiedad eliminada).
+- El metodo `obtenerEstados()` consulta solo registros activos:
+  `WHERE estado = 1`
+- Si la tabla no existe, el metodo retorna array vacio para no romper el modulo.
+- Los colores se usan como clases Bootstrap de badge: success, secondary, warning, danger, info, etc.
+- El metodo `renderBadgeEstado()` consulta la tabla `estado_equipo` cuando no recibe nombre o color.
+  Si la tabla no existe, devuelve badge con texto "Sin estado" y color "dark".
+- En el listado de PC, el badge de estado es la accion correcta para cambiar `equipos.id_estado`.
+- `equipos.id_estado` representa el estado operativo: Activo, Bodega, Reparacion, Baja o Prestado.
+- Cambiar un equipo a estado Baja NO elimina el equipo ni lo oculta del inventario.
+- Los cambios de estado desde el listado se registran en `equipo_estado_historial` con estado anterior,
+  estado nuevo, usuario de accion y observacion "Cambio de estado desde listado.".
+
+16.1 Eliminacion logica de equipos PC
+- `equipos.eliminado` representa eliminacion logica:
+  - 0 = equipo visible.
+  - 1 = equipo eliminado logicamente.
+- El listado de PC y sus KPIs solo consideran equipos con `eliminado = 0`.
+- El boton basurero NO cambia `id_estado`.
+- El boton basurero marca `eliminado = 1`, `fecha_eliminado = NOW()` e `id_usuario_elimina = usuario de sesion`
+  cuando esas columnas existen.
+- No se borran registros fisicos de `equipos`.
+- Migracion: `inventario/sql/migracion_add_equipos_eliminado.sql`.
+- Endpoint de eliminacion: `inventario/ajax/eliminar_equipo.php`.
+- Endpoint de cambio de estado: `inventario/ajax/cambiar_estado_equipo.php`.
+
+16.2 Eliminacion logica de monitores
+- `monitores.eliminado` representa eliminacion logica:
+  - 0 = monitor visible.
+  - 1 = monitor eliminado logicamente.
+- El listado de Monitores y sus KPIs solo consideran monitores con `eliminado = 0`.
+- El boton basurero NO cambia `id_estado`.
+- El boton basurero marca `eliminado = 1` en la tabla `monitores`.
+- No se borran registros fisicos de `monitores`.
+- Migracion: `inventario/sql/migracion_add_monitores_eliminado.sql`.
+- Endpoint de eliminacion: `inventario/ajax/eliminar_monitor.php`.
+
+17. Fotos de equipo
+- Las fotos se guardan fisicamente en:
+  `inventario/uploads/equipos/{id_equipo}/`
+- La relacion logica se guarda en la tabla `equipo_fotos`.
+- Una foto principal NO se guarda en la tabla `equipos`.
+- La foto principal se identifica en `equipo_fotos.principal = 1`.
+- Solo debe existir una foto principal por equipo.
+- Antes de asignar una nueva foto principal, el sistema debe poner en 0 todas las fotos del mismo equipo:
+  UPDATE equipo_fotos SET principal = 0 WHERE id_equipo = ?
+- Luego se marca la foto elegida como principal:
+  UPDATE equipo_fotos SET principal = 1 WHERE id_foto = ? AND id_equipo = ?
+- `tipo_foto` usa los valores oficiales `normal` y `panoramica`.
+  - `normal`: foto de galeria estandar del equipo.
+  - `panoramica`: foto de vista amplia (usada en encabezado o banner de la ficha del equipo).
+- El SQL del archivo `equipo_fotos.sql` debe tener:
+  - `tipo_foto ENUM('normal', 'panoramica')`
+  - Motor InnoDB (no MyISAM).
+
+18. Ubicacion y movimiento de equipos
+- Cada equipo pertenece a un colegio mediante `equipos.id_colegio`.
+- Cada equipo puede estar ubicado en una sala, biblioteca, enfermeria, porteria, direccion, bodega
+  u otra ubicacion interna del colegio.
+- La ubicacion actual debe guardarse en `equipos.id_ubicacion` si ya existe esa columna.
+- Si un equipo cambia de ubicacion, el cambio debe registrarse en `equipo_movimiento`.
+- Logica recomendada para registrar un traslado:
+  1. Leer ubicacion actual desde `equipos.id_ubicacion`.
+  2. Insertar registro en `equipo_movimiento` con id_ubicacion_origen = valor actual.
+  3. Actualizar `equipos.id_ubicacion` con la nueva ubicacion (id_ubicacion_destino).
+- El usuario logueado es quien registra el movimiento (`id_usuario_movimiento`),
+  pero no necesariamente es el responsable del equipo.
+- Campos clave de `equipo_movimiento`:
+  - `id_ubicacion_origen`: puede ser NULL si es el primer registro del equipo.
+  - `motivo`: razon del traslado (opcional).
+  - `observacion`: detalle adicional (opcional).
+
+19. Tipos de PC (tipo_pc_catalogo)
+- Los tipos de PC del inventario se administran desde la tabla `tipo_pc_catalogo`.
+- La clase `Inventario.php` ya NO usa el arreglo hardcodeado de tipos en `obtenerTiposPc()`.
+- El metodo `obtenerTiposPc()` consulta solo registros activos:
+  `WHERE activo = 1`
+- Si la tabla no existe, el metodo retorna array vacio para no romper formularios.
+- El campo `equipos.tipo_pc` sigue siendo VARCHAR (texto). No se cambia a id_tipo_pc.
+  La tabla `tipo_pc_catalogo` sirve como catalogo fuente, pero el valor guardado en `equipos`
+  es el nombre textual (ej: 'Desktop', 'Notebook').
+- Mejora futura documentada: normalizar `equipos.tipo_pc` a `id_tipo_pc` FK si se requiere
+  reportes mas precisos por tipo.
+- Archivo SQL: `inventario/sql/tipo_pc_catalogo.sql`
+  Incluye UNIQUE KEY `uq_tipo_pc_nombre` para evitar duplicados.
+
+20. Ubicaciones de equipo (equipo_ubicacion)
+- Las ubicaciones internas de cada colegio se administran desde la tabla `equipo_ubicacion`.
+- Cada colegio tiene sus propias ubicaciones (filtradas por id_colegio).
+- La ubicacion actual de un equipo se guarda en `equipos.id_ubicacion` (nullable).
+  Si la columna no existe, el modulo la omite graciosamente (verificado con `columnaExiste()`).
+- Metodos en `Inventario.php`:
+  - `obtenerUbicacionesPorColegio($idColegio)`: retorna ubicaciones de un colegio especifico.
+  - `resolverUbicacionEquipo($post, $idColegio)`: valida la ubicacion enviada por el formulario.
+  - `obtenerOCrearUbicacionEquipo($idColegio, $nombreUbicacion)`: reutiliza una ubicacion existente
+    del mismo colegio o crea una nueva.
+  - `obtenerTodasUbicaciones()`: retorna todas las ubicaciones activas agrupadas por id_colegio.
+  - `columnaExiste($tabla, $columna)`: verifica si una columna existe en la tabla (con cache).
+    Permite que INSERT y UPDATE en `equipos` incluyan `id_ubicacion` solo si la columna existe.
+- Formulario manual de PC:
+  - `registrar_equipo.php` obtiene el colegio desde `$_SESSION['id']` via `usuario_colegio`.
+  - `editar_equipo.php` usa el colegio inmutable del equipo existente.
+  - Ambos cargan el select con `obtenerUbicacionesPorColegio($idColegioForm)`.
+  - El select permite elegir una ubicacion existente o seleccionar "Agregar nueva ubicacion...".
+  - Al seleccionar "Agregar nueva ubicacion..." se muestra el campo `nombre_ubicacion_nueva`.
+- Validacion en `normalizarPayload()`:
+  - Si se selecciona una ubicacion existente, verifica que pertenezca al colegio del equipo.
+  - Si se escribe una ubicacion nueva, limpia espacios, exige nombre no vacio y busca equivalencia
+    por colegio ignorando diferencias simples de mayusculas/minusculas.
+  - Si ya existe una ubicacion equivalente para el mismo colegio, reutiliza su id_ubicacion.
+  - Si no existe, inserta una fila en `equipo_ubicacion` con el id_colegio del equipo y estado = 1.
+  - Dos colegios distintos pueden tener la misma ubicacion visible, por ejemplo "Sala A1".
+- El INSERT usa `NULLIF(?, 0)` para convertir 0 en NULL en la BD.
+- Nota tecnica: la tabla `equipo_ubicacion` esta definida como MyISAM en el SQL oficial, por lo que
+  un rollback MySQLi no puede revertir fisicamente una ubicacion recien creada si falla despues el
+  guardado del equipo. El flujo igualmente ejecuta la resolucion dentro del bloque transaccional del
+  alta/edicion para mantener el mismo patron del modulo.
+- Ejemplos de ubicaciones cargadas inicialmente:
+  Sala Computacion 1, Sala Computacion 2, Biblioteca, Direccion, UTP,
+  Inspectoria, Enfermeria, Porteria, Laboratorio Ciencias, Bodega Informatica.
+- Archivo SQL: `inventario/sql/equipo_ubicacion.sql`
+  Inserta ubicaciones por SELECT desde la tabla colegio (sin hardcodear IDs).
+- Migracion requerida: `inventario/sql/migracion_add_equipos_id_ubicacion.sql`
+  Agrega la columna `id_ubicacion INT NULL` a la tabla `equipos`.
+
+21. Colegio automatico por sesion (formulario manual)
+- El colegio del equipo NO se selecciona en el formulario.
+- Se obtiene exclusivamente de la sesion del usuario logueado via:
+  `Inventario::obtenerColegioDelUsuario($_SESSION['id'])`
+- El formulario muestra el nombre del colegio como texto de solo lectura.
+- El backend (guardar_equipo.php) obtiene el id_colegio del usuario de sesion antes de llamar a guardarEquipo().
+- `guardarEquipo($post, $files, $idUsuario, $idColegio)` recibe idColegio como parametro.
+- `normalizarPayload` usa el $idColegio del parametro, NO de $_POST.
+- `actualizarEquipo` obtiene el id_colegio del equipo desde la BD (inmutable) y lo pasa a normalizarPayload.
+- El colegio del equipo no puede cambiarse desde el formulario de edicion.
+
+21.1 Responsable asignado filtrado por colegio
+- El responsable del equipo se guarda en `equipos.id_usuario_asignado`.
+- El usuario que registra se guarda aparte en `equipos.id_usuario_registra` y sale de `$_SESSION['id']`.
+- El selector de responsable en alta y edicion de PC usa:
+  `Inventario::obtenerUsuariosAsignablesPorColegio($idColegioForm)`.
+- Consulta logica:
+  `usuario_colegio.id_colegio = colegio actual`
+  + `usuario_colegio.estado = 1`
+  + `usuarios.estado = 'Activo'` cuando existe la columna.
+- No hay excepcion hardcodeada para SEDUC. Si el colegio activo es `id_colegio = 15`, se listan
+  solamente usuarios asociados a 15 en `usuario_colegio`.
+- El backend valida nuevamente con `usuarioAsignableEnColegio()` antes de guardar. Si se envia por POST
+  un id_usuario_asignado de otro colegio o no activo, se rechaza el guardado.
+
+22. id_usuario_registra
+- Columna nueva en equipos: `id_usuario_registra INT NULL`.
+- Se auto-completa desde $_SESSION['id'] al registrar. Nunca se modifica.
+- En normalizarPayload, se incluye en el array equipo como:
+  `'id_usuario_registra' => (int)$idUsuario`
+- En insertarRegistroEquipo, se incluye condicionalmente si columnaExiste('equipos', 'id_usuario_registra').
+- Migracion: `inventario/sql/migracion_add_equipos_id_usuario_registra.sql`
+- En ver_equipo.php se muestra como "Registrado por" usando el alias nombre_usuario_registra del JOIN.
+- Si la columna no existe aun (antes de migracion), el sistema usa el campo id_usuario como fallback.
+
+23. Movimiento inicial al crear equipo
+- Cuando se crea un equipo con una ubicacion, se inserta automaticamente un registro en equipo_movimiento:
+  - id_ubicacion_origen = NULL (NULLIF(0, 0))
+  - id_ubicacion_destino = id_ubicacion seleccionado
+  - motivo = 'Alta inicial de inventario'
+  - observacion = 'Equipo registrado inicialmente en esta ubicacion.'
+- Esto queda registrado en el historial de movimientos visible en ver_equipo.php.
+
+24. Movimiento por cambio de ubicacion (edicion)
+- En actualizarEquipo, antes del UPDATE se lee la ubicacion actual del equipo desde la BD.
+- Si la nueva id_ubicacion es distinta a la anterior, se registra un movimiento:
+  - id_ubicacion_origen = ubicacion anterior
+  - id_ubicacion_destino = ubicacion nueva
+  - motivo = 'Cambio de ubicacion'
+  - observacion = campo observacion_movimiento del formulario (opcional)
+- Si la ubicacion no cambia, no se registra ningun movimiento.
+- El formulario de edicion incluye el campo `observacion_movimiento` (opcional, visible siempre).
+
+25. Historial de movimientos en ver_equipo.php
+- Metodo: `Inventario::obtenerMovimientosEquipo(int $idEquipo): array`
+  - Verifica que la tabla equipo_movimiento exista antes de consultar.
+  - Retorna array con: fecha_movimiento, motivo, observacion, ubicacion_origen, ubicacion_destino, usuario_movimiento.
+  - Ordenado por fecha DESC.
+- Se muestra en ver_equipo.php como tabla con columnas:
+  Fecha | Origen | -> | Destino | Motivo | Usuario
+
+26. Foto principal y galeria en ver_equipo.php
+- La foto con equipo_fotos.principal = 1 se muestra como foto principal destacada (col-lg-4).
+- Las fotos sin principal se muestran en galeria (inv-photo-grid debajo).
+- En el formulario de edicion, cada foto existente tiene:
+  - Radio "Marcar como principal" (nombre foto_principal, valor id_foto)
+  - Checkbox "Eliminar" (nombre fotos_eliminar[], valor id_foto)
+- procesarFotoPrincipal() en Inventario.php maneja el cambio de principal:
+  - UPDATE equipo_fotos SET principal = 0 WHERE id_equipo = ?
+  - UPDATE equipo_fotos SET principal = 1 WHERE id_foto = ? AND id_equipo = ?
+- Cuando se suben nuevas fotos:
+  - Si ya existe una foto con principal=1, las nuevas fotos NO son principal.
+  - Si no existe ninguna foto principal, la primera nueva foto se convierte en principal.
+
+27. Preview de fotos nuevas (formulario)
+- Una foto seleccionada: preview centrado, max 250px alto, con badge "Principal".
+- Dos o mas fotos: carrusel Bootstrap con controles prev/next, indicadores y thumbnails.
+  La primera foto recibe el badge "Principal".
+- El badge es el overlay `.inv-badge-principal-overlay` (fondo ambar, posicion absoluta).
+- Para fotos existentes, el badge principal se muestra sobre la imagen directamente.
+- CSS relevantes: inv-preview-single, inv-badge-principal-overlay, inv-carousel-img-wrap,
+  inv-carousel-img, inv-thumb-strip, inv-carousel-thumb, inv-photo-grid, inv-photo-item,
+  inv-photo-principal, inv-photo-thumb, inv-photo-actions, inv-ver-foto-principal.
+
+28. Carga masiva: compatibilidad
+- La carga masiva (Inventario::guardarEquipoDesdeArray) NO llama a normalizarPayload.
+  Recibe el array ya normalizado desde procesar_carga_masiva.php.
+- La columna Ubicacion esta en la plantilla Excel actual. Puede venir como "ID - Nombre"
+  desde la hoja auxiliar `Ubicaciones` o como texto nuevo. Si es texto nuevo,
+  se crea en `equipo_ubicacion` asociada al colegio de sesion.
+- La columna id_usuario_registra SI se incluye en insertarRegistroEquipo (si existe la columna),
+  usando el idUsuario de sesion que viene de procesar_carga_masiva.php.
+
+- CSS nuevas en `inventario/css/inventario.css`:
+  - `.cm-hero`: hero con degradado linear-gradient(135deg, #0f4c81, #0e7490, #0f766e).
+  - `.cm-stepper`: contenedor flex horizontal del stepper.
+  - `.cm-stepper-step[.active|.completed]`: paso del stepper con su estado.
+  - `.cm-stepper-circle[.active|.completed]`: circulo numerado (gris/azul/verde).
+  - `.cm-stepper-label[.active|.completed]`: etiqueta debajo del circulo.
+  - `.cm-stepper-line[.active|.completed]`: linea conectora entre pasos.
+  - `.cm-step-num-sm`: circulo pequeño de numero dentro de cada tarjeta.
+  - `.cm-dropzone`, `.cm-drop-active`, `.cm-dropzone-icon`, `.cm-dropzone-text`: zona de carga.
+  - `.cm-drop-processing`: estado del dropzone mientras se procesa (fondo azul claro, sin interaccion, icono pulsante animado).
+
+29. Modulo Monitores (Tab en index.php)
+- `inventario/index.php` tiene dos pestanas Bootstrap:
+  - "PC" (tab-pc): inventario de equipos computacionales (existente, sin cambios).
+  - "Monitores" (tab-monitores): inventario independiente de monitores.
+- El boton "Agregar" del hero cambia dinamicamente segun la pestana activa:
+  - Tab PC    → href = registrar_equipo.php,  label = "Agregar PC"
+  - Tab Mon   → href = registrar_monitor.php, label = "Agregar monitor"
+- El boton "Carga masiva" se oculta al cambiar a la pestana Monitores.
+- La pestana inicial se puede pasar por URL: index.php?tab=monitores.
+- La tabla de monitores se inicializa de forma lazy: solo al activar la pestana por primera vez.
+
+30. Tablas del modulo Monitores
+- `monitores` — tabla principal de monitores.
+  - id_monitor, id_colegio, id_ubicacion (NULL), id_usuario_asignado (NULL),
+    id_usuario_registra (NULL), id_estado (1), nombre_monitor, marca, modelo,
+    numero_serie, codigo_interno, tamano_monitor, resolucion_monitor, tipo_panel,
+    tipo_conexion, observacion, fecha_registro, eliminado (requiere migracion).
+  - Requiere migracion: migracion_add_monitores_eliminado.sql
+    (ALTER TABLE monitores ADD COLUMN eliminado TINYINT(1) NOT NULL DEFAULT 0)
+  - La tabla equipo_monitor queda EN REVISION: codigo activo depende de ella,
+    pero su diseno actual duplica datos tecnicos y no es una tabla puente real.
+- `monitor_fotos` — fotos del monitor.
+  - id_foto, id_monitor, ruta_foto, tipo_foto ENUM('normal','panoramica'), principal, orden_foto, fecha_subida.
+  - Fotos guardadas fisicamente en: inventario/uploads/monitores/{id_monitor}/
+- `monitor_movimiento` — historial de movimientos del monitor.
+  - id_movimiento, id_monitor, id_ubicacion_origen (NULL), id_ubicacion_destino (NULL),
+    id_usuario_movimiento, fecha_movimiento, motivo, observacion.
+- `monitor_compra` — datos de compra del monitor (1:1 con monitores).
+  - id_monitor (PK), valor_monitor, proveedor, numero_factura, fecha_compra, observacion.
+
+31. Logica de eliminacion de monitores
+- La eliminacion logica usa la columna `eliminado TINYINT(1) DEFAULT 0`.
+- `Inventario::eliminarMonitor(int $idMonitor): bool`
+  - Si columnaExiste('monitores', 'eliminado'): UPDATE monitores SET eliminado = 1.
+  - Fallback (columna aun no migrada): UPDATE monitores SET id_estado = 4 (Baja).
+- `listarMonitores()` siempre incluye WHERE m.eliminado = 0 (si la columna existe).
+- `obtenerResumenMonitores()` siempre incluye el mismo filtro.
+- Los registros eliminados nunca se muestran en listados ni en KPIs.
+
+32. Metodos Inventario.php para monitores
+- normalizarPayloadMonitor($post, $idUsuario, $idColegio): array — valida y normaliza.
+- insertarMonitor(array $p): int — INSERT en monitores.
+- insertarCompraMonitor($idMonitor, $compra): void — INSERT/UPDATE en monitor_compra.
+- obtenerCompraMonitor($idMonitor): array — SELECT desde monitor_compra.
+- obtenerCamposBasicosMonitor($idMonitor): array — id_colegio, id_ubicacion actuales.
+- eliminarFotosMonitor($idMonitor, $ids): void — elimina fisicamente y de BD.
+- procesarFotoPrincipalMonitor($idMonitor, $post): void — maneja foto_principal.
+- guardarFotosMonitor($idMonitor, $files): void — publica en uploads/monitores/{id}/.
+- obtenerFotosMonitor($idMonitor): array — retorna fotos ordenadas.
+- marcarFotoPrincipalMonitor($idMonitor, $idFoto): void — cambia foto principal.
+- registrarMovimientoMonitor($idMonitor, $orig, $dest, $idUsu, $motivo, $obs): void.
+- obtenerMovimientosMonitor($idMonitor): array — historial ordenado DESC.
+- listarMonitores($filtros): array — lista con badge_estado, JOIN colegio/usuario/estado/ubicacion.
+- obtenerMonitorPorId($idMonitor): ?array — ficha completa con compra+fotos+movimientos.
+- guardarMonitor($post, $files, $idUsuario, $idColegio): int — transaccion completa.
+- actualizarMonitor($idMonitor, $post, $files, $idUsuario): bool — transaccion completa.
+- eliminarMonitor($idMonitor): bool — eliminacion logica.
+- obtenerResumenMonitores($filtros): array — KPIs para el componente resumen_monitores.php.
+
+33. Archivos nuevos del modulo monitores
+- inventario/registrar_monitor.php — formulario de alta.
+- inventario/editar_monitor.php — formulario de edicion.
+- inventario/ver_monitor.php — ficha completa (especificaciones, compra, movimientos, fotos).
+- inventario/guardar_monitor.php — endpoint POST JSON (guarda nuevo monitor).
+- inventario/actualizar_monitor.php — endpoint POST JSON (actualiza monitor existente).
+- inventario/componentes/formulario_monitor.php — formulario compartido crear/editar.
+- inventario/componentes/resumen_monitores.php — KPI cards para la pestana Monitores.
+- inventario/ajax/listar_monitores.php — AJAX lista + resumen HTML.
+- inventario/ajax/eliminar_monitor.php — AJAX eliminacion logica.
+- inventario/ajax/marcar_foto_principal_monitor.php — AJAX cambio de foto principal.
+- inventario/ajax/obtener_fotos_monitor.php — AJAX galeria para modal.
+- inventario/sql/migracion_add_monitores_eliminado.sql — ALTER TABLE para columna eliminado.
+
+34. Liberacion de equipo / monitor
+- Un equipo PC o monitor puede liberarse del usuario asignado sin eliminarlo ni cambiar su estado.
+- "Liberar" solo hace NULL la columna id_usuario_asignado.
+- El equipo o monitor queda "Disponible / Sin asignar" (texto en listados: "Sin asignar").
+- El estado del equipo (Activo, Bodega, etc.) NO cambia automaticamente.
+- La ubicacion del equipo NO cambia automaticamente.
+- La accion queda registrada en historial permanente:
+  - PC:      equipo_asignacion_historial
+  - Monitor: monitor_asignacion_historial
+- Campos del historial: id_equipo/id_monitor, id_usuario_anterior, id_usuario_nuevo (NULL al liberar),
+  id_usuario_accion (quien realizo la accion), fecha_accion, motivo, observacion.
+
+Metodos en Inventario.php:
+- liberarEquipo(int $idEquipo, int $idUsuarioAccion): void
+  1. Busca el equipo. Si no existe → excepcion.
+  2. Si id_usuario_asignado ya es NULL → excepcion "El equipo ya esta sin asignar."
+  3. En transaccion: INSERT en equipo_asignacion_historial, luego UPDATE equipos SET id_usuario_asignado = NULL.
+  4. La tabla historial se inserta condicionalmente: solo si tablaExiste('equipo_asignacion_historial').
+
+- liberarMonitor(int $idMonitor, int $idUsuarioAccion): void
+  1. Misma logica que liberarEquipo, sobre la tabla monitores.
+  2. Historial en monitor_asignacion_historial.
+
+AJAX:
+- inventario/ajax/liberar_equipo.php  — POST {id_equipo} → JSON {ok, mensaje}
+- inventario/ajax/liberar_monitor.php — POST {id_monitor} → JSON {ok, mensaje}
+
+Boton en listados:
+- Aparece unicamente si id_usuario_asignado IS NOT NULL (verificado en JS sobre datos del DataTable).
+- Icono: bi-person-x, color ambar (#d97706), clase CSS: inv-btn-release.
+- SweetAlert2 confirma antes de enviar.
+- Al confirmar, recarga el DataTable correspondiente.
+
+Tablas SQL:
+- inventario/sql/equipo_asignacion_historial.sql
+- inventario/sql/monitor_asignacion_historial.sql
+
+35. Campo id_usuario_asignado en listarEquipos / listarMonitores
+- listarEquipos(): ahora incluye e.id_usuario_asignado en el SELECT.
+  Permite que el JS evalue si mostrar el boton "Liberar" por fila.
+- listarMonitores(): ahora incluye m.id_usuario_asignado en el SELECT.
+  Misma logica que PC.
+
+36. Dos tipos de monitores — distincion importante
+Existen dos conceptos de "monitor" completamente separados en el inventario:
+
+A) equipo_monitor — Monitores asociados al PC (EN REVISION)
+- Son los monitores fisicamente conectados o asignados a un equipo PC especifico.
+- Se administran DENTRO del formulario de PC (registrar_equipo.php y editar_equipo.php).
+- Aparecen en la seccion accordion "Monitores asociados al PC".
+- La tabla equipo_monitor tiene estructura de detalle tecnico: id_monitor, id_equipo, modelo_monitor,
+  codigo_monitor, serie_monitor, tamano_monitor, resolucion_monitor, orden_monitor.
+- No es tabla puente real entre `equipos` y `monitores`, porque `id_monitor` es PK propia de
+  `equipo_monitor` y no FK hacia `monitores.id_monitor`.
+- Al editar un PC, se borran y reinsertan (DELETE + INSERT en limpiarRelacionados + guardarTablasRelacionadas).
+- Boton "Agregar monitor" tiene id="btnAgregarMonitorPC" para no colisionar con el tab de monitores.
+- NO confundir con la tabla "monitores" del modulo independiente.
+- NO eliminar esta tabla todavia: codigo activo depende de ella.
+
+B) monitores — Monitores independientes
+- Son monitores comprados de forma independiente, sin relacion directa con un PC especifico.
+- Se administran desde la PESTANA "Monitores" en inventario/index.php.
+- Pueden estar asignados a un usuario (id_usuario_asignado) o quedar sin asignar (NULL).
+- Tablas relacionadas: monitor_fotos, monitor_compra, monitor_movimiento.
+- Se crean desde registrar_monitor.php, se editan desde editar_monitor.php.
+- La accion "Liberar" desvincula el usuario asignado (id_usuario_asignado = NULL) y deja registro
+  en monitor_asignacion_historial.
+
+Reglas:
+- No duplicar informacion tecnica de monitor en dos tablas a futuro.
+- No borrar la tabla equipo_monitor sin plan de migracion y refactor.
+- Recomendacion actual: REFACTORIZAR/MIGRAR en fase posterior para que `monitores`
+  sea la ficha tecnica del monitor como activo propio y la relacion equipo-monitor
+  quede en una tabla puente real o mecanismo equivalente.
+- Un PC puede tener N monitores en equipo_monitor.
+- Un monitor independiente en la tabla monitores puede estar asignado a N usuarios a lo largo
+  del tiempo (historial), pero solo tiene uno activo a la vez.
+
+37. Fotos de equipos PC
+- Las fotos se guardan en inventario/uploads/equipos/{id_equipo}/
+- La tabla equipo_fotos guarda ruta relativa, tipo_foto (normal|panoramica), principal (0|1) y orden_foto.
+- Solo debe existir una foto con principal = 1 por equipo.
+- En el formulario, la seccion "Fotos del equipo" permite:
+  a) Ver fotos actuales (solo en edicion): con controles para marcar principal y eliminar.
+  b) Agregar nuevas fotos: input multiple accept=image/*.
+     Se puede subir varias imagenes en una misma operacion.
+     Si el equipo ya tiene foto principal, las nuevas quedan principal = 0.
+     Si no tiene foto principal, la primera nueva queda principal = 1.
+- El preview de fotos nuevas es un grid compacto (140x110px por imagen, object-fit: contain).
+- No se muestra imagen grande ni carrusel de ancho completo.
+- Clases CSS del preview: inv-new-photo-grid, inv-new-photo-card, inv-new-photo-wrap, inv-new-photo-name.
+- La primera imagen del preview lleva badge "★ Principal" (inv-badge-principal-overlay).
+
+38. Correccion bind_param en actualizarEquipo
+- El tipo del UPDATE en actualizarEquipo usaba 'isssssssi' (9 chars) para 8 params: ERROR.
+- Corregido a 'issssssi' (8 chars):
+  i=id_usuario_asignado, s*6=nombre+fabricante+producto+serie+tipo_pc+qr_code, i=id_estado.
+- El tipo de id_usuario_movimiento en registrarMovimiento fue corregido de 's' a 'i'.
+- Tipos correctos: 'iiiiss' (id_equipo, id_ubicacion_origen, id_ubicacion_destino, id_usuario_movimiento, motivo, observacion).
+
+39. Inventario Automatico mediante Agente
+El sistema permite completar el formulario de registro de PC usando un archivo JSON
+generado por el agente de inventario SEDUC.
+
+Que hace el agente:
+  - Se ejecuta localmente en un computador Windows.
+  - Consulta informacion tecnica del equipo con PowerShell/WMI nativo.
+  - No modifica datos del equipo ni se conecta a la base de datos.
+  - Genera un archivo JSON local para importarlo despues en el formulario.
+
+Por que ahora es un .bat nativo (version 1.7):
+  - El .bat incrusta directamente el script PowerShell usando un marcador interno.
+  - No requiere Python, PyInstaller, ni ninguna instalacion previa.
+  - PowerShell 3.0+ esta disponible en Windows 7 SP1 con actualizaciones y en todas
+    las versiones posteriores de Windows por defecto.
+  - El servidor Linux ya no necesita compilar ni mantener un .exe de Windows.
+  - El .bat se edita directamente en el repositorio sin proceso de build.
+
+Flujo completo:
+  1. El tecnico descarga el agente desde: Registrar Equipo → "Descargar Agente".
+  2. Copia seduc_inventario_agent.bat al equipo que desea inventariar.
+  3. Hace doble clic en el .bat (si aparece SmartScreen, "Mas informacion" → "Ejecutar").
+  4. El agente recopila hardware con PowerShell/WMI.
+  5. Genera inventario_<NOMBRE_EQUIPO>.json en el Escritorio del usuario.
+  6. El tecnico vuelve al sistema y usa "Importar Inventario Automatico".
+  7. El JS de registrar_equipo.php lee el JSON y completa automaticamente los campos del formulario.
+  8. El tecnico revisa, completa los datos manuales y guarda.
+
+Archivo que descarga el sistema:
+  - El endpoint inventario/ajax/descargar_agente.php busca en orden:
+      1. inventario/agente/seduc_inventario_agent.bat  (prioritario)
+      2. inventario/agente/seduc_inventario_agent.exe  (respaldo legacy)
+  - Si no existe ninguno, responde mensaje claro en texto plano.
+
+Como funciona el mecanismo interno del .bat:
+  - La cabecera batch detecta si se ejecuta como Administrador.
+  - Si no tiene permisos, relanza el mismo .bat con UAC.
+  - Extrae el bloque PowerShell incrustado despues del marcador ##PS1START##.
+  - Escribe temporalmente el script en %TEMP%\seduc_agent.ps1, lo ejecuta y lo borra al terminar.
+
+Como se genera el JSON:
+  - El script PS recopila hardware con WMI (Win32_ComputerSystem, Win32_BIOS,
+    Win32_Processor, Win32_PhysicalMemory, Win32_DiskDrive, Win32_OperatingSystem,
+    WmiMonitorID, System.Windows.Forms.Screen).
+  - Genera inventario_<NOMBRE_EQUIPO>.json en el Escritorio usando $env:COMPUTERNAME como nombre.
+  - El JSON se escribe con codificacion UTF-8 sin BOM.
+
+Como se importa el JSON:
+  - La pantalla inventario/registrar_equipo.php contiene el panel "Inventario Automatico mediante Agente".
+  - El boton "Importar Inventario Automatico" abre un input de archivo .json.
+  - El JavaScript de la misma pagina lee el JSON con FileReader.
+  - La funcion aplicarDatos() mapea los datos tecnicos a los campos del formulario.
+  - La importacion solo pre-rellena campos; no guarda automaticamente el equipo.
+
+Archivos del agente:
+  inventario/agente/seduc_inventario_agent.bat — agente nativo Windows (distribuir este)
+  inventario/ajax/descargar_agente.php         — endpoint de descarga (.bat primero, .exe respaldo)
+  inventario/registrar_equipo.php              — panel visual e importador JSON
+  inventario/logica/03_logica_agente_inventario.txt — documentacion oficial del agente
+
+Datos que captura el agente:
+  - nombre_equipo (hostname del equipo — dato informativo; el sistema no lo usa como nombre oficial)
+  - fabricante (Win32_ComputerSystem.Manufacturer)
+  - modelo (Win32_ComputerSystem.Model)
+  - serial (Win32_BIOS.SerialNumber)
+  - procesador: nombre, fabricante detectado (Intel/AMD), velocidad en GHz
+  - ram_gb: total de RAM en GB (Win32_PhysicalMemory)
+  - almacenamiento[]: modelo, capacidad (GB/TB), tipo (SSD NVMe/SSD/HDD) por disco
+  - windows: caption del SO (Win32_OperatingSystem.Caption)
+  - usuario_windows: $env:USERNAME de la sesion activa
+  - monitores[]: modelo (WmiMonitorID root\wmi) y resolucion (System.Windows.Forms.Screen)
+  - generado_en: timestamp de ejecucion
+  - version_agente: "1.7"
+
+Datos que NO completa el agente (ingreso manual obligatorio):
+  - id_colegio y id_ubicacion (siempre del servidor, no del cliente)
+  - id_usuario_asignado
+  - id_estado
+  - valor_equipo, proveedor, numero_factura, fecha_compra, observaciones
+  - fotos del equipo
+
+Mapeo JSON → campos del formulario (sin cambios desde v1.0):
+  nombre_equipo  → no se guarda manualmente; el sistema genera PC-{numero_serie}
+  fabricante     → input[name="fabricante"]
+  modelo         → input[name="producto"]
+  serial         → input[name="numero_serie"]
+  procesador_fab → input[name="procesador_fabricante"]
+  procesador     → input[name="procesador_modelo"]
+  procesador_vel → input[name="procesador_velocidad"]
+  almacenamiento[0].modelo    → input[name="equipo_modelo"]
+  almacenamiento[0].capacidad → input[name="equipo_capacidad"]
+  almacenamiento[0].tipo      → input[name="equipo_tamano"]
+  windows        → input[name="windows"]
+  ram_gb         → input[name="memoria[0][tamano_memoria]"] (ej: "16 GB")
+  monitores[]    → filas de monitor[N][modelo_monitor] y monitor[N][resolucion_monitor]
+
+Compatibilidad del agente:
+  - Windows 7 SP1 / 8 / 10 / 11 (PowerShell 3.0+)
+  - Sin dependencias externas (usa solo herramientas nativas de Windows)
+  - No requiere Python, pip, PyInstaller ni ningun runtime adicional
+
+Coexistencia con registro manual:
+  - Ambas formas son independientes.
+  - La importacion solo pre-rellena campos; el usuario puede editar antes de guardar.
+  - Si no se importa archivo, el formulario funciona igual que siempre.
+  - Si el .bat no existe en agente/, el endpoint muestra un mensaje para contactar al administrador.
+
+
+41. Nombre automatico y QR de equipos
+
+El nombre visible del equipo ya no se escribe manualmente en el formulario de
+registro o edicion.
+
+Regla oficial:
+  - numero_serie es obligatorio.
+  - numero_serie se limpia quitando espacios sobrantes, se convierte a
+    mayusculas y se limitan caracteres raros.
+  - nombre_equipo se genera siempre en backend como:
+      PC-{NUMERO_SERIE}
+
+Ejemplo:
+  numero_serie = SN-12345ABZ
+  nombre_equipo = PC-SN-12345ABZ
+
+El backend ignora cualquier valor recibido en POST["nombre_equipo"]. Esto evita
+que el usuario o una peticion manual deje nombres inconsistentes.
+
+La ficha QR de equipos apunta a:
+  inventario/equipoQRinformacion.php?id={id_equipo}
+
+La ficha muestra informacion basica y esta pensada para abrirse desde celular al
+escanear el codigo:
+  - nombre del equipo
+  - tipo
+  - numero de serie
+  - colegio
+  - ubicacion
+  - responsable
+  - estado
+  - fabricante y producto/modelo
+  - datos tecnicos resumidos cuando existen
+
+En el listado principal de Inventario PC cada fila tiene un boton QR. Ese boton
+abre un modal con el codigo, el nombre del equipo, la URL de escaneo y accesos
+para abrir la ficha o imprimir el QR individual.
+
+Tambien existe impresion masiva:
+  inventario/imprimir_qr_equipos.php
+
+Ese endpoint genera un PDF de etiquetas usando los equipos visibles segun los
+filtros y permisos actuales:
+  - perfil 1: solo su colegio permitido
+  - perfil 2: solo colegios asociados en usuario_colegio
+  - perfil 3: todos o filtrados
+  - respeta colegio, estado, ubicacion, responsable y busqueda
+
+El PDF masivo dibuja los QR directamente en FPDF como vector, por lo que no
+depende de archivos PNG intermedios. Si el servidor PHP tiene extension de
+imagenes disponible (GD/Imagick) y se habilita almacenamiento fisico de PNG,
+la carpeta oficial para equipos debe seguir siendo:
+  codigosQR/equipos/
+
+Formato nuevo preferido para PNG fisico:
+  {id_equipo}_PC-{NUMERO_SERIE}.png
+
+Los QR antiguos no se eliminan ni se renombran para no romper codigos ya
+impresos.
+
+
+40. Carga masiva de monitores
+Permite importar multiples monitores desde un archivo Excel (.xlsx/.xls).
+Es el equivalente exacto de la carga masiva de PC, pero para el modulo Monitores.
+
+Archivos:
+  inventario/carga_masiva_monitores.php             — pagina principal con hero, stepper y panel de carga
+  inventario/exportar_plantilla_monitores.php        — genera el Excel con 3 hojas
+  inventario/ajax/procesar_carga_masiva_monitores.php — lee el Excel, valida, llama guardarMonitorDesdeArray
+  inventario/js/carga_masiva_monitores.js            — drag&drop, fetch, stepper y tabla de resultados
+
+Boton en index.php:
+  - Hay dos botones de carga masiva en el hero:
+    - inv-btn-carga-masiva      → PC (carga_masiva.php)          — visible solo en pestana PC
+    - inv-btn-carga-masiva-mon  → Monitores (carga_masiva_monitores.php) — visible solo en pestana Monitores
+  - La logica de visibilidad esta en initTabBehavior() en inventario.js.
+  - En carga inicial, tabActiva determina cual boton es visible.
+
+Plantilla Excel (exportar_plantilla_monitores.php):
+  - 4 hojas: "Monitores", "Estados", "Ubicaciones", "Usuarios"
+  - 17 columnas A-Q en la hoja principal:
+    A=id_usuario_asignado, B=id_ubicacion*, C=id_estado*, D=marca,
+    E=modelo, F=numero_serie*, G=codigo_interno, H=tamano_monitor,
+    I=resolucion_monitor, J=tipo_panel, K=tipo_conexion, L=observacion,
+    M=valor_monitor, N=proveedor, O=numero_factura, P=fecha_compra, Q=observacion_compra
+  - (* = obligatorio)
+  - Filas 1-5: encabezado institucional (logo, colegio, titulo, fecha, separador)
+  - Fila 6: encabezados de columna (fondo azul #0F4C81, texto blanco)
+  - Fila 7: fila de ejemplo (gris italica, PHPExcel_Cell_DataType::TYPE_STRING para evitar conversion)
+  - Hoja 2 Estados: ID + nombre + seleccion Excel ("ID - Nombre")
+  - Hoja 3 Ubicaciones: ID + nombre + seleccion Excel ("ID - Nombre")
+  - Hoja 4 Usuarios: ID + nombre + seleccion Excel ("ID - Nombre")
+  - Las ubicaciones de la hoja 3 son solo las del colegio del usuario (id_colegio de sesion)
+  - La hoja principal incluye desplegables para Usuario asignado, Ubicacion y Estado.
+  - nombre_monitor NO se pide en Excel: se genera automaticamente como "MON-" + numero_serie limpio.
+
+Procesamiento (procesar_carga_masiva_monitores.php):
+  - Columnas 0-indexed mapeadas con $columnaMap
+  - Datos empiezan en fila 7 del Excel (array_slice($todasFilas, 6))
+  - Validaciones por fila: numero_serie, id_ubicacion > 0, id_estado > 0
+  - Cada fila llama a $inventario->guardarMonitorDesdeArray($payload, $idUsuarioSession)
+  - Transacciones independientes por fila (un error no cancela las demas)
+  - Respuesta JSON: {ok, total, ok_count, error_count, detalle[]}
+
+Metodo guardarMonitorDesdeArray(array $payload, int $idUsuario): int
+  - Metodo publico en inventario/class/Inventario.php
+  - Valida: id_colegio, nombre_monitor, numero_serie, id_estado, id_ubicacion (si tabla existe)
+  - Valida que id_ubicacion pertenezca al colegio (consulta equipo_ubicacion)
+  - Detecta numero_serie duplicado en el mismo colegio (error si existe)
+  - Usa insertarMonitor() + insertarCompraMonitor() + registrarMovimientoMonitor()
+  - Compra solo se guarda si tabla monitor_compra existe (tablaExiste)
+  - Movimiento inicial: origen=0, destino=id_ubicacion, motivo="Alta inicial de inventario"
+  - Transaccion atomica: begin_transaction / commit / rollback
+  - Retorna id_monitor del monitor creado
+
+Seguridad:
+  - id_colegio SIEMPRE viene de la sesion (via obtenerColegioDelUsuario), nunca del POST
+  - id_usuario_registra = $idUsuarioSession del servidor
+  - id_usuario_asignado puede ser NULL (campo opcional)
+  - Validacion de ubicacion: confirma que pertenece al colegio antes de insertar
+  - No se puede subir monitor con numero_serie ya existente en el colegio
+
+42. Nombre descriptivo vs identificador tecnico (equipos PC)
+- Columna nueva en equipos: `nombre_personalizado` VARCHAR(150) NULL.
+  Migracion: inventario/sql/migracion_add_equipos_nombre_personalizado.sql
+  (columna no existia antes de esta tarea; se agrega siguiendo el mismo patron
+  usado para id_ubicacion e id_usuario_registra: nullable + columnaExiste()).
+- Diferencia conceptual:
+  - `nombre_personalizado`: nombre amigable escrito por el usuario en el formulario
+    (ej: "PC Direccion"). Opcional. Puede repetirse entre equipos. Puede cambiar
+    libremente en cualquier edicion.
+  - `nombre_equipo`: identificador tecnico generado siempre en backend como
+    PC-{NUMERO_SERIE}. El formulario nunca lo permite editar directamente; solo
+    se muestra como vista previa de solo lectura ("Identificador tecnico").
+  - `numero_serie`: serie fisica del fabricante, obligatoria y unica.
+  Ejemplo: nombre_personalizado = "PC Direccion", nombre_equipo = "PC-SN-12345ABZ",
+  numero_serie = "SN-12345ABZ".
+- Guardado (Inventario.php):
+  - normalizarPayload() agrega 'nombre_personalizado' al array $equipo (trim,
+    limitado a 150 caracteres con mb_substr). nombre_equipo se sigue generando
+    igual que antes desde numero_serie, ignorando cualquier valor de POST.
+  - insertarRegistroEquipo() y actualizarEquipo() incluyen la columna solo si
+    columnaExiste('equipos', 'nombre_personalizado') es true (compatible con
+    entornos donde la migracion aun no se aplico). Se guarda como NULL si viene
+    vacio (NULLIF(?, '')).
+  - La carga masiva pide la columna "Nombre del equipo" y la guarda en
+    `nombre_personalizado`. Si viene vacia, queda NULL igual que cualquier
+    registro antiguo.
+- Listado (listarEquipos + inventario.js):
+  - El SELECT agrega `e.nombre_personalizado` (o NULL AS nombre_personalizado
+    si la columna no existe todavia).
+  - Columna "EQUIPO" del DataTable: si nombre_personalizado tiene valor, se
+    muestra en negrita arriba y nombre_equipo entre parentesis debajo en gris;
+    si esta vacio (NULL o ''), se muestra unicamente nombre_equipo, sin duplicar
+    el mismo texto en dos lineas.
+- Buscador (construirWhere):
+  - El grupo LIKE de busqueda agrega `e.nombre_personalizado LIKE ?` (solo si la
+    columna existe) ademas de nombre_equipo, numero_serie, producto y qr_code.
+- Detalle de equipo (detalle_equipo.php):
+  - Si hay nombre_personalizado, se muestra como titulo principal de la ficha y
+    nombre_equipo aparece debajo entre parentesis como texto secundario; si no,
+    el titulo es directamente nombre_equipo.
+  - La grilla de resumen agrega una fila "Nombre" (solo si existe) y una fila
+    "Identificador tecnico" siempre visible con nombre_equipo.
+- Ficha QR movil (inventario/equipoQRinformacion.php):
+  - El titulo de la ficha usa nombre_personalizado si existe; si no, usa
+    nombre_equipo (igual que antes).
+  - La seccion "Datos basicos" agrega el item "Nombre" (solo si hay valor) y el
+    item "Identificador tecnico" (siempre) antes de Colegio/Tipo/Serie/QR.
+- PDF masivo (imprimir_qr_equipos.php):
+  - Cada etiqueta muestra nombre_personalizado en negrita si existe, con el
+    identificador tecnico entre parentesis debajo en texto secundario; si no
+    hay nombre_personalizado, se muestra solo el identificador tecnico como
+    antes. El nombre de archivo fisico del QR sigue basandose siempre en
+    nombre_equipo (identificador tecnico), nunca en nombre_personalizado.
+- Compatibilidad con registros antiguos:
+  - Todo equipo existente antes de esta migracion queda con
+    nombre_personalizado = NULL. No se ejecuta backfill ni se inventan nombres.
+  - Todas las vistas (listado, detalle, QR, PDF) verifican vacio/NULL con
+    fallback a nombre_equipo, nunca duplican el mismo texto en dos lineas.
+
+43. Dashboard analitico del inventario
+- Pantalla oficial: inventario/dashboard.php
+- Acceso:
+  - Perfil 1 (usuario): no ve el boton "Ir al Dashboard" y no puede acceder
+    directamente a dashboard.php.
+  - Perfil 2 (tecnico): puede acceder solo a datos de los colegios activos
+    asociados en usuario_colegio.
+  - Perfil 3 (administrador): puede acceder a la vista global y filtrar por
+    cualquier colegio activo permitido por la logica del modulo.
+- Fuente de perfil y alcance:
+  - Inventario usa usuario_colegio.id_perfil y usuario_colegio.estado = 1.
+  - No se usa usuario_perfil para decidir colegios visibles en el dashboard.
+- Filtros:
+  - Colegio: respeta el alcance backend; no basta el select visual.
+  - Desde/Hasta: se aplica sobre equipos.fecha_registro solo si esa columna
+    existe en la base real. En la estructura SQL oficial actual de equipos.sql
+    no aparece fecha_registro, por lo que la pantalla lo desactiva de forma
+    compatible hasta que exista la columna.
+- KPIs:
+  - Total de PC visibles.
+  - Activos.
+  - Sin ubicacion.
+  - Sin responsable.
+  - En reparacion.
+  - Dados de baja.
+  - Ingresados este mes, solo si equipos.fecha_registro existe.
+- Valor:
+  - El valor total se calcula desde equipos_compra.valor_equipo.
+  - La relacion monetaria se calcula con una subconsulta agrupada por id_equipo
+    antes de unir con equipos. Esto evita duplicar montos por tablas 1:N como
+    memorias, fotos, movimientos, software o monitores.
+  - El promedio mostrado es valor total / total de equipos visibles.
+  - Los equipos sin valor consideran compra inexistente, NULL o valor <= 0.
+- Graficos y resumenes:
+  - Valor del inventario PC por colegio.
+  - Estado del inventario segun estado_equipo.nombre_estado.
+  - Distribucion de equipos segun equipos.tipo_pc.
+  - Resumen por colegio con totales, estados, pendientes y valor.
+- Alertas:
+  - Equipos sin ubicacion.
+  - Equipos sin responsable.
+  - Equipos sin QR.
+  - Equipos sin fotografia.
+  - Equipos sin valor de compra.
+  - Equipos sin numero de serie.
+- Hardware:
+  - Distribucion de RAM desde equipo_memoria.tamano_memoria, sumando memoria por
+    equipo.
+  - Equipos con menos de 8 GB RAM cuando existe dato de memoria.
+  - Sistemas operativos desde equipo_software.windows.
+- Arquitectura:
+  - La logica analitica se implementa en inventario/class/Inventario.php.
+  - dashboard.php solo arma filtros, valida acceso y renderiza la vista.
+  - El CSS especifico esta en inventario/css/dashboard.css y complementa el
+    estilo existente.
+  - El JavaScript de graficos esta en inventario/js/dashboard.js y usa Chart.js
+    ya cargado por el layout del sistema.
+
+
+CARGA MASIVA DE INVENTARIO
+==========================
+
+La plantilla oficial de carga masiva de Inventario PC se genera desde:
+  inventario/exportar_plantilla.php
+
+La carga se procesa desde:
+  inventario/ajax/procesar_carga_masiva.php
+
+Hoja visible:
+  Inventario
+
+La plantilla ya no muestra pestanas auxiliares al usuario. Los catalogos para
+listas desplegables se guardan en una hoja oculta llamada `_catalogos`.
+
+El Excel no incluye columna Colegio. El colegio se determina siempre desde la
+sesion/contexto permitido del usuario mediante la logica vigente de
+`usuario_colegio`. El backend no toma ni confia en datos de colegio escritos en
+Excel.
+
+Columnas oficiales, en orden:
+  1. Ubicacion
+  2. Usuario asignado
+  3. Nombre del equipo
+  4. Numero de serie
+  5. Tipo de PC
+  6. Estado
+  7. Fabricante
+  8. Producto / modelo
+  9. Valor equipo
+  10. Proveedor
+  11. Numero factura
+  12. Fecha compra
+  13. Observacion compra
+  14. Almacenamiento modelo
+  15. Almacenamiento capacidad
+  16. Almacenamiento tipo/tamano
+  17. Procesador fabricante
+  18. Procesador modelo
+  19. Procesador velocidad
+  20. Windows
+  21. Office
+  22. Antivirus
+  23. Memoria slot/designacion
+  24. Memoria formato
+  25. Memoria tipo
+  26. Memoria tamano
+  27. Memoria frecuencia
+  28. Memoria marca
+  29. Monitor modelo
+  30. Monitor codigo
+  31. Monitor serie
+  32. Monitor tamano
+  33. Monitor resolucion
+
+Catalogos ocultos:
+  - Estados: viene de `estado_equipo` filtrando estado = 1.
+  - Tipos PC: viene de `tipo_pc_catalogo` filtrando activo = 1.
+  - Usuarios: viene de `usuario_colegio` + `usuarios`, filtrando solo usuarios
+    activos asociados al colegio de sesion e incluyendo "0 - Sin asignar".
+  - Ubicaciones: viene de `equipo_ubicacion`, filtrando solo ubicaciones activas
+    del colegio de sesion.
+
+Reglas de identidad:
+  - El QR no viene desde Excel.
+  - Las fotos no se cargan desde Excel.
+  - `equipos.nombre_equipo` se genera automaticamente en backend como
+    PC-{NUMERO_SERIE}.
+  - `Nombre del equipo` en Excel corresponde a `equipos.nombre_personalizado`.
+    Es el nombre amigable escrito por el usuario, por ejemplo "PC Direccion" o
+    "Notebook Inspectoria".
+  - `Numero de serie` sigue siendo obligatorio y alimenta tanto
+    `equipos.numero_serie` como el identificador tecnico automatico.
+
+Validaciones de importacion:
+  - Numero de serie obligatorio.
+  - Ubicacion obligatoria. Si el valor es un ID/lista, debe pertenecer al colegio
+    de sesion. Si se escribe una ubicacion nueva, se usa la misma logica del
+    formulario y se crea en `equipo_ubicacion` asociada al colegio correcto.
+  - Tipo de PC obligatorio y activo en `tipo_pc_catalogo`.
+  - Estado obligatorio y activo en `estado_equipo`.
+  - Usuario asignado opcional. Si viene vacio o "0 - Sin asignar", se guarda sin
+    responsable.
+  - Si usuario asignado viene informado, debe existir, estar activo cuando la
+    columna `usuarios.estado` existe, y tener relacion activa en
+    `usuario_colegio` con el colegio de la plantilla.
+
+Flujo de carga:
+  1. El usuario selecciona el Excel.
+  2. Presiona "Cargar / previsualizar".
+  3. El backend lee y valida el Excel, pero NO inserta registros.
+  4. La pantalla muestra una tabla con los PC encontrados, errores y checkbox
+     por fila.
+  5. "Seleccionar todos" marca solo filas validas; las filas con errores quedan
+     bloqueadas.
+  6. El usuario presiona "Insertar PC".
+  7. Se muestra modal de confirmacion con la cantidad seleccionada.
+  8. Al confirmar, el backend vuelve a leer y validar el Excel, y solo inserta
+     las filas seleccionadas y validas.
+  9. Las filas no seleccionadas se reportan como omitidas.
+
+Datos repetibles:
+  - Cada fila permite una sola memoria RAM.
+  - Cada fila permite un solo monitor asociado al PC.
+  - Para mas memorias o monitores del mismo equipo se requiere extender el
+    diseno de carga masiva o registrar los datos despues desde la edicion.
+
+17. Dashboard: pestanas de tipo de equipo, branding por colegio filtrado (Agosto 2026)
+
+- El `<select id="tipo_equipo">` de dashboard.php fue reemplazado por pestanas
+  Bootstrap (`nav nav-tabs`, una por tipo: pc/tablet/monitor/impresora).
+  SON ENLACES REALES (`<a href="dashboard.php?id_colegio=..&tipo_equipo=..">`),
+  NO `data-bs-toggle="tab"`: esta pagina no tiene un panel de contenido por
+  tipo ya cargado en el DOM (serian 4 dashboards completos a la vez). Cada
+  click recarga la pagina completa con el nuevo tipo_equipo, igual que el
+  select anterior. El select de colegio (`#id_colegio`) no cambio.
+
+- Nuevo metodo `Inventario::obtenerColoresPorColegio(int $idColegio): array`
+  (class/Inventario.php). Diferencia con el ya existente
+  `obtenerColoresColegio(int $idUsuario)`:
+    - `obtenerColoresColegio($idUsuario)` -> colores del colegio DEL USUARIO
+      EN SESION (fijo, usado en el hero de index.php/carga_masiva.php).
+    - `obtenerColoresPorColegio($idColegio)` -> colores de UN colegio
+      especifico por su id. Se usa en dashboard.php para pintar con los
+      colores del colegio que el usuario tiene SELECCIONADO EN EL FILTRO,
+      que puede no ser el suyo (p.ej. un usuario de RRHH viendo el
+      inventario de un colegio especifico).
+    - dashboard.php combina ambos: si hay colegio filtrado Y tiene
+      color_principal cargado, se usa ese; si no, se cae al del usuario en
+      sesion ($coloresActivos en dashboard.php).
+
+- Foto del colegio en el dashboard: `img/colegios/colegio_{id_colegio}.png`
+  (MISMO prefijo "colegio_" que ya usaban exportar_plantilla.php e
+  inventario.js -- NO es solo "{id}.png"). Se verifica con `is_file()` sobre
+  la ruta fisica (`dirname(__DIR__) . '/img/colegios/colegio_' . $id . '.png'`)
+  antes de mostrar el `<img>`, para no romper el layout con un icono roto si
+  el colegio no tiene foto cargada.
+
+- Logo institucional SEDUC (`/include/logo_3d_seduc.php`) se incluye en la
+  tarjeta de la barra lateral del dashboard junto al logo/nombre del
+  colegio filtrado. OJO: ese componente fue disenado para la pantalla de
+  carga (`/include/pantallaCargando.php`) y su animacion de "rayos"
+  gira en loop infinito por CSS -- al usarlo como logo estatico permanente
+  en el dashboard, se mantiene animando todo el tiempo, no solo "cargando".
+  Es una decision de diseno deliberada (se pidio explicitamente), no un bug.
+
+- Tarjetas KPI con degradado del colegio (`.inv-kpi-card--branded` en
+  dashboard.css): solo se activa cuando hay un colegio puntual filtrado
+  ($idColegioFiltro > 0) Y tiene color_principal valido. Con "Todos los
+  colegios" las tarjetas KPI quedan neutras (blancas) -- no existe "un"
+  colegio al que pintarlas. Las 3 tarjetas de valor (`.inv-kpi-card--money`)
+  NO se branded: la de "colegio con mayor valor" compara colegios entre si,
+  pintarla con los colores del colegio filtrado seria enganoso.
+
+- Colores de graficos: `$coloresChartColegio` en dashboard.php SIEMPRE
+  entrega 4 hex validos (usa el respaldo azul/naranja/aqua/amarillo si el
+  colegio no tiene sus 4 colores cargados -- muy comun que terciario/
+  cuaternario esten vacios). Se usan en:
+    - chartEstados (dona): principal/secundario/terciario/cuaternario para
+      las primeras 4 categorias; mas de 4 categorias caen a la paleta
+      generica de dashboard.js.
+    - chartScatterColegios: colorPrincipal = punto del colegio filtrado,
+      colorSecundario = resto de colegios.
+  Los colores de un colegio son un campo varchar editable por un admin, NO
+  una paleta validada por accesibilidad -- solo se valida que sea un HEX
+  con formato correcto (mismo criterio que ya usaba `$_heroBranded`), no
+  contraste ni distincion para daltonismo. El respaldo si esta validado
+  (ver css/graficos.css / skill dataviz de este proyecto).
+
+- CSS afectado: `inventario/css/dashboard.css` (`.inv-kpi-card--branded`).
+  No se toco `css/graficos.css` ni `css/cards.css` (ya cubren `.inv-card`,
+  `.chart-container`, etc. del dashboard).
+
+18. Scatter "equipos vs valor por colegio": logos por colegio + click-to-filter (Agosto 2026)
+
+- Cada punto del scatter ahora es el LOGO del colegio (no un punto de color
+  generico): fondo = color_principal del colegio, borde = color_secundario,
+  logo recortado en circulo encima. Esto es POR COLEGIO -- distinto de
+  `$coloresChartColegio` (que es del colegio FILTRADO, usado en chartEstados).
+  $chartScatterColegios en dashboard.php ahora trae, por cada punto:
+  id_colegio, colegio, x, y, imagen, color_principal, color_secundario,
+  seleccionado. Los colores de cada punto salen de
+  `Inventario::obtenerColoresPorColegio($idColegioDeEsaFila)` (una consulta
+  por colegio -- son pocos, no se pagino/batchea).
+
+- Logo: `img/colegios/colegio_{id}.png` (mismo prefijo real "colegio_" que
+  el resto del modulo). Si no existe el archivo, `imagen` queda null y el
+  punto se dibuja como circulo de color solo (sin logo).
+
+- Implementacion del logo en canvas: plugin LOCAL de Chart.js v2
+  (`scatterLogoPlugin` en dashboard.js, hook `afterDatasetsDraw`). OJO:
+  este proyecto usa Chart.js 2.9.4 (`vendor/chart.js/Chart.min.js`), NO v3/v4
+  -- la API de plugins locales, escalas (`xAxes`/`yAxes` como arrays, no
+  `x`/`y`) y opciones (`tooltips`/`legend` a nivel raiz, no anidadas en
+  `plugins: {}`) es la de v2. Un plugin local SOLO funciona si se pasa en
+  `plugins: [...]` DENTRO del objeto que recibe `new Chart(ctx, config)`;
+  asignarlo despues (`chart.config.plugins = [...]`) no funciona porque v2
+  cachea la lista de plugins de cada chart en el primer draw.
+
+- Las imagenes se precargan con `precargarImagenesScatter()` (cache por
+  URL a nivel de modulo, `scatterImageCache`) y cada `img.onload` fuerza un
+  `chart.update()` -- sin esto, el primer render queda sin logo (el <img>
+  carga async y nada redibuja el canvas solo).
+
+- Click en un punto (o en la leyenda de logos debajo del grafico) navega a
+  `dashboard.php?id_colegio={id}&tipo_equipo={tab_actual}` -- mismo patron
+  que las pestanas de tipo de equipo (enlace real, no fetch/AJAX). El punto
+  del colegio ya filtrado se dibuja con anillo extra + radio mayor
+  (`punto.seleccionado`), ya no se le cambia el color (antes el punto
+  "seleccionado" usaba un color distinto al resto; ahora cada punto ya
+  tiene su propio color de colegio, la seleccion se marca con el anillo).
+
+- Leyenda: se reemplazo la leyenda de 2 franjas ("Otros colegios" /
+  "[colegio filtrado]") por una grilla de logos+nombres (uno por colegio en
+  `$chartScatterColegios`), cada uno clickeable -- ademas de ser mas
+  informativa, es mas facil de tocar en movil que un punto pequeno del
+  canvas. CSS: `.chart-legend--colegios` / `.chart-legend__item--colegio` /
+  `.chart-legend__logo` en `css/graficos.css`.
+
+19. Fix click del scatter, barras con color por colegio, logo sidebar reemplaza (no apila) (Agosto 2026)
+
+- BUG REAL encontrado y corregido: el click en los puntos del scatter casi
+  nunca "acertaba". Causa: en Chart.js v2, el area clickeable/hoverable de
+  un point-element NO es `pointRadius` (eso es solo el tamano VISUAL) sino
+  `pointHitRadius`, que por defecto vale 1px. El dataset del scatter
+  (dashboard.js, createScatterChart) dibujaba circulos de 14-18px pero solo
+  detectaba click/hover en el pixel exacto del dato. Fix: se agrego
+  `pointHitRadius` (radio visual + 6px) al dataset.
+
+- Helpers PHP nuevos en dashboard.php (evitan duplicar la logica de colores/
+  logo por colegio que ya estaba solo en el mapeo del scatter):
+    - `inv_dash_colores_colegio($inventario, $idColegio, $fallbackPrincipal,
+      $fallbackSecundario)`: colores validados + respaldo de UN colegio.
+      Usa `Inventario::obtenerColoresPorColegio()` -- NUNCA
+      `obtenerColoresColegio()`, que espera un id_usuario, no un id_colegio.
+    - `inv_dash_logo_colegio($idColegio)`: URL del logo
+      (img/colegios/colegio_{id}.png) o null si el archivo no existe.
+  El scatter, las barras de "Valor por colegio" y el logo del sidebar
+  ahora usan estos mismos dos helpers.
+
+- Barras de "Valor del inventario por colegio" (`.inv-value-bar`): antes
+  siempre verdes (`background: #3a9131` fijo en dashboard.css). Ahora cada
+  barra usa el `color_principal` de SU colegio (inline style, via
+  `inv_dash_colores_colegio`). La barra completa es un `<a>` clickeable que
+  filtra el dashboard por ese colegio (antes era un `<div>` sin accion).
+
+- Logo del sidebar (`#colegioLogoContainer` en dashboard.php): con
+  "Todos los colegios" se muestra el logo SEDUC animado
+  (`/include/logo_3d_seduc.php`); con un colegio filtrado se REEMPLAZA por
+  el logo circular de ESE colegio (borde = su color_principal) -- ya NO se
+  muestran los dos juntos como en la iteracion anterior. No hay JS
+  involucrado: como cualquier cambio de filtro (tabs, select colegio,
+  scatter, barra, leyenda) ya recarga la pagina completa, el logo correcto
+  simplemente sale del render PHP de la nueva carga. (Se descarto a
+  proposito la idea de "actualizar el logo via JS sin recargar": el patron
+  `container.innerHTML = '<?php include ...; ?>'` para inyectar el output
+  de un include PHP dentro de un string JS no es valido -- el include emite
+  HTML multilinea con comillas sin escapar, rompe el literal de string.)

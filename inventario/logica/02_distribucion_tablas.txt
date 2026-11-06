@@ -1,0 +1,689 @@
+Distribucion de tablas de inventario
+
+Fuente oficial de estructuras
+=============================
+
+Las estructuras SQL documentadas para auditoria tecnica estan en:
+
+  inventario/logica/tablas/
+
+Esta carpeta contiene las definiciones exportadas de las tablas reales usadas o
+referenciadas por el modulo. La documentacion funcional oficial esta en los
+archivos TXT de inventario/logica/.
+
+Estados usados en esta documentacion:
+- OFICIAL: tabla vigente del modelo actual.
+- EN REVISION: tabla existente o usada, pero con diseno o responsabilidad que
+  debe auditarse antes de conservarla, migrarla o eliminarla.
+- EXTERNA DEL SISTEMA: tabla del sistema general que inventario consume.
+
+====================================================
+A) INVENTARIO PC
+====================================================
+
+1. Tabla principal: equipos
+- id_equipo
+- id_usuario (usuario que creo el registro — campo original, se mantiene)
+- id_colegio (inmutable: no se puede cambiar desde el formulario)
+- id_ubicacion (nullable, FK logica -> equipo_ubicacion.id_ubicacion — requiere migracion: migracion_add_equipos_id_ubicacion.sql)
+- id_usuario_asignado
+  Usuario responsable actual. Debe pertenecer al colegio del equipo mediante usuario_colegio activo.
+- id_usuario_registra (nullable, usuario de sesion que registra el equipo — requiere migracion: migracion_add_equipos_id_usuario_registra.sql)
+- nombre_personalizado (nullable, VARCHAR(150), nombre amigable escrito por el usuario — requiere migracion: migracion_add_equipos_nombre_personalizado.sql. No reemplaza a nombre_equipo; puede repetirse; puede quedar NULL en registros antiguos o creados por carga masiva)
+- nombre_equipo (obligatorio, generado automaticamente como PC-{numero_serie}; no se escribe manualmente)
+- fabricante
+- producto
+- numero_serie (obligatorio, unico; base del identificador visible del equipo)
+- tipo_pc (VARCHAR, valor textual del catalogo tipo_pc_catalogo — obligatorio)
+- qr_code (codigo interno/QR funcional segun implementacion; no se debe asumir como ruta fisica del PNG)
+- id_estado (obligatorio, estado operativo; cambiar a Baja NO elimina el equipo)
+- eliminado (TINYINT, 0 = visible, 1 = eliminado logicamente; requiere migracion: migracion_add_equipos_eliminado.sql)
+- fecha_eliminado (nullable, auditoria de eliminacion logica)
+- id_usuario_elimina (nullable, usuario que marco eliminado = 1)
+
+Reglas de identificacion y QR:
+- El formulario no permite escribir nombre_equipo manualmente.
+- El backend ignora POST["nombre_equipo"] y calcula nombre_equipo desde numero_serie.
+- El formato vigente es PC-{NUMERO_SERIE}, incluso si el tipo es Notebook, Desktop o Tablet.
+- La ficha QR publica/interna de equipos es:
+  inventario/equipoQRinformacion.php?id={id_equipo}
+- El PDF masivo actual dibuja QR vectorial con FPDF, sin PNG intermedio.
+- Si se habilita almacenamiento fisico PNG, la carpeta debe ser codigosQR/equipos/ con formato:
+  {id_equipo}_PC-{NUMERO_SERIE}.png
+- fecha_registro indica cuando el activo fue ingresado al inventario si la
+  columna existe en la tabla real.
+
+Reglas de eliminacion logica:
+- equipos.eliminado = 0 → equipo visible en listados y KPIs.
+- equipos.eliminado = 1 → equipo eliminado logicamente, no aparece.
+- El boton basurero marca eliminado = 1. NO cambia id_estado.
+- El basurero no borra registros fisicos de la tabla equipos.
+- El cambio de estado operativo (Activo, Baja, Bodega...) se realiza desde el badge de estado.
+
+2. Tabla relacionada: equipos_compra
+- id_equipo
+- valor_equipo
+- proveedor
+- numero_factura
+- fecha_compra
+- observacion
+
+3. Tabla relacionada: equipo_almacenamiento
+- id_equipo
+- equipo_modelo
+- equipo_capacidad
+- equipo_tamano
+
+4. Tabla relacionada: equipo_memoria
+- id_memoria
+- id_equipo
+- designacion_memoria
+- formato_memoria
+- tipo_memoria
+- tamano_memoria
+- frecuencia_memoria
+- marca_memoria
+- orden_memoria
+
+5. Tabla relacionada: equipo_monitor
+ESTADO: EN REVISION.
+PROPOSITO ACTUAL: Monitores fisicamente asociados a un PC especifico.
+NO confundir con la tabla "monitores" (inventario independiente de monitores).
+Gestionada desde el formulario de PC (seccion "Monitores asociados al PC").
+- id_monitor (PK autoincremental)
+- id_equipo (FK -> equipos)
+- modelo_monitor
+- codigo_monitor
+- serie_monitor
+- tamano_monitor
+- resolucion_monitor
+- orden_monitor
+
+DIFERENCIA CRITICA:
+  equipo_monitor  = detalle de monitor vinculado a un PC, usado por codigo activo.
+  monitores       = monitor independiente (pestana Monitores, modulo separado).
+
+Diagnostico actual:
+- No es tabla puente real entre `equipos` y `monitores`.
+- `equipo_monitor.id_monitor` es la PK propia de `equipo_monitor`, no una FK a
+  `monitores.id_monitor`.
+- Guarda datos tecnicos del monitor (`modelo_monitor`, `codigo_monitor`,
+  `serie_monitor`, `tamano_monitor`, `resolucion_monitor`) que tambien existen
+  o pueden existir en `monitores`.
+- Por lo tanto, actualmente corresponde al CASO B + CASO D:
+  - CASO B: tabla de detalle tecnico que puede duplicar informacion.
+  - CASO D: tabla usada por codigo activo.
+- No debe eliminarse sin refactor, porque el formulario de PC, la vista de
+  detalle, la carga masiva de PC y la importacion desde agente dependen de ella.
+
+6. Tabla relacionada: equipo_procesador
+- id_equipo
+- equipo_fabricante
+- equipo_modelo
+- equipo_velocidad
+
+7. Tabla relacionada: equipo_software
+- id_equipo
+- windows
+- office
+- antivirus
+
+8. Tabla relacionada: equipo_fotos
+Objetivo:
+- Guarda las imagenes asociadas a cada equipo.
+- Permite varias fotos por equipo.
+- Una foto puede marcarse como principal usando principal = 1.
+- El campo tipo_foto maneja los valores oficiales: normal y panoramica.
+
+Campos:
+- id_foto: clave primaria.
+- id_equipo: equipo relacionado.
+- ruta_foto: ruta relativa del archivo fisico.
+- tipo_foto: tipo de imagen, valores oficiales 'normal' o 'panoramica'.
+- principal: 1 si es la foto principal del equipo, 0 si no.
+- orden_foto: orden visual en la galeria.
+- fecha_subida: fecha de carga.
+
+Relacion:
+- equipo_fotos.id_equipo referencia a equipos.id_equipo (1:N).
+
+Regla:
+- Solo debe existir una foto principal por equipo.
+- Antes de marcar una foto como principal, poner en 0 todas las del mismo equipo:
+  UPDATE equipo_fotos SET principal = 0 WHERE id_equipo = ?
+- Luego marcar la nueva:
+  UPDATE equipo_fotos SET principal = 1 WHERE id_foto = ? AND id_equipo = ?
+
+9. Tabla de historial: equipo_movimiento
+Objetivo:
+- Guarda el historial de cambios de ubicacion de un equipo.
+
+Campos:
+- id_movimiento: clave primaria.
+- id_equipo: equipo que fue movido.
+- id_ubicacion_origen: ubicacion desde donde salio (puede ser NULL si es primer registro).
+- id_ubicacion_destino: ubicacion a la que llego el equipo.
+- id_usuario_movimiento: usuario que registro el movimiento.
+- fecha_movimiento: fecha y hora del traslado.
+- motivo: razon del traslado (opcional).
+- observacion: detalle adicional (opcional).
+
+10. Tabla de historial: equipo_asignacion_historial
+Objetivo:
+- Registra cada cambio de usuario asignado para equipos PC.
+- Incluye la liberacion (id_usuario_nuevo = NULL).
+- Nunca se borra; es un log permanente.
+
+Campos:
+- id_asignacion: clave primaria autoincremental.
+- id_equipo: equipo relacionado.
+- id_usuario_anterior: usuario que tenia asignado el equipo antes del cambio (nullable).
+- id_usuario_nuevo: usuario nuevo al que se asigna (NULL cuando se libera).
+- id_usuario_accion: usuario de sesion que realizo la accion.
+- fecha_accion: fecha y hora de la accion (auto, DEFAULT CURRENT_TIMESTAMP).
+- motivo: descripcion corta del tipo de accion.
+- observacion: detalle textual adicional (opcional).
+
+11. Tabla de historial: equipo_estado_historial
+Objetivo:
+- Registra cada cambio de estado operativo de equipos PC.
+
+Campos:
+- id_historial: clave primaria autoincremental.
+- id_equipo: equipo relacionado.
+- id_estado_anterior: estado antes del cambio.
+- id_estado_nuevo: estado nuevo.
+- id_usuario_accion: usuario de sesion que realizo el cambio.
+- fecha_accion: fecha y hora de la accion.
+- observacion: detalle textual.
+
+Reglas:
+- Cambiar a Baja solo actualiza id_estado.
+- Eliminar desde basurero solo marca eliminado = 1.
+- No borrar fisicamente registros de equipos.
+
+12. Aclaracion: equipo_historial NO es tabla oficial
+- La base de datos real no contiene la tabla `equipo_historial`.
+- `equipo_historial` no forma parte del modelo oficial actual del modulo Inventario PC.
+- No debe crearse ni incluirse en scripts sugeridos.
+- El historial oficial se maneja con tablas especificas:
+  - `equipo_movimiento`: movimientos fisicos o cambios de ubicacion.
+  - `equipo_estado_historial`: cambios de estado operativo.
+  - `equipo_asignacion_historial`: asignaciones, cambios o liberaciones de usuario responsable.
+
+====================================================
+B) INVENTARIO MONITORES INDEPENDIENTES
+====================================================
+
+IMPORTANTE: Este modulo es DISTINTO a la tabla equipo_monitor del modulo PC.
+- equipo_monitor: monitores vinculados a un PC desde el formulario PC; EN REVISION.
+- monitores: monitores comprados de forma independiente (pestana "Monitores", tablas nuevas).
+No se migran datos entre ambas tablas. No se mezclan las logicas.
+
+12. Tabla principal: monitores
+ESTADO: OFICIAL para inventario independiente de monitores.
+- id_monitor: clave primaria autoincremental.
+- id_monitor_legacy: referencia a datos migrados desde equipo_monitor cuando existe en la estructura exportada.
+- id_colegio: colegio al que pertenece (obligatorio, inmutable desde formulario).
+- id_ubicacion: ubicacion interna actual (nullable, FK logica -> equipo_ubicacion).
+- id_usuario_asignado: usuario responsable del monitor (nullable).
+- id_usuario_registra: usuario de sesion que creo el registro (auto desde sesion).
+- id_estado: estado actual (FK logica -> estado_equipo.id_estado).
+- nombre_monitor, marca, modelo, numero_serie (obligatorios).
+- codigo_interno, tamano_monitor, resolucion_monitor, tipo_panel, tipo_conexion, observacion.
+- fecha_registro: auto.
+- eliminado: TINYINT(1) DEFAULT 0. Requiere migracion: migracion_add_monitores_eliminado.sql
+- qr_code: no aparece en la estructura SQL documentada actualmente. Si se requiere QR para monitores,
+  debe validarse la existencia del campo antes de implementar.
+
+Reglas de eliminacion logica:
+- monitores.eliminado = 0 → monitor visible en listados y KPIs.
+- monitores.eliminado = 1 → monitor eliminado logicamente, no aparece.
+- El boton basurero marca eliminado = 1. NO cambia id_estado.
+- El basurero no borra registros fisicos de la tabla monitores.
+- El estado operativo se maneja con monitores.id_estado (igual que equipos.id_estado).
+
+13. Tabla relacionada: monitor_fotos
+- id_foto, id_monitor, ruta_foto, tipo_foto ENUM('normal','panoramica'), principal, orden_foto, fecha_subida.
+- Fotos guardadas en: inventario/uploads/monitores/{id_monitor}/
+- Solo una foto principal por monitor (principal = 1).
+
+14. Tabla relacionada: monitor_movimiento
+- id_movimiento, id_monitor, id_ubicacion_origen (NULL si alta inicial), id_ubicacion_destino,
+  id_usuario_movimiento, fecha_movimiento, motivo, observacion.
+
+15. Tabla relacionada: monitor_compra (1:1 con monitores)
+- id_monitor (PK), valor_monitor, proveedor, numero_factura, fecha_compra, observacion.
+
+16. Tabla de historial: monitor_asignacion_historial
+- Misma estructura que equipo_asignacion_historial, pero para monitores.
+- Campos: id_asignacion, id_monitor, id_usuario_anterior, id_usuario_nuevo,
+  id_usuario_accion, fecha_accion, motivo, observacion.
+
+REVISION TECNICA DE equipo_monitor
+==================================
+
+1. Uso actual
+- `equipo_monitor` se usa actualmente para registrar monitores conectados o
+  asociados a un equipo PC dentro del formulario de equipos.
+- El agente de inventario captura monitores detectados en Windows y el importador
+  JSON los vuelca a filas `monitor[N][modelo_monitor]` y
+  `monitor[N][resolucion_monitor]` del formulario PC.
+- La carga masiva de PC tambien incluye columnas de monitor que terminan en
+  `equipo_monitor`.
+
+2. Archivos donde aparece
+- `inventario/class/Inventario.php`
+  - Lee `equipo_monitor` al obtener la ficha de equipo.
+  - Inserta filas en `equipo_monitor` desde `guardarTablasRelacionadas()`.
+  - Borra y reinserta `equipo_monitor` al editar mediante `limpiarRelacionados()`.
+- `inventario/componentes/formulario_equipo.php`
+  - Renderiza los campos `monitor[N][...]`.
+- `inventario/componentes/detalle_equipo.php`
+  - Muestra los monitores asociados al PC.
+- `inventario/registrar_equipo.php`
+  - Importa monitores detectados por el agente al formulario PC.
+- `inventario/exportar_plantilla.php`
+  - Incluye columnas de monitor en la plantilla de carga masiva PC.
+- `inventario/ajax/procesar_carga_masiva.php`
+  - Mapea columnas de monitor hacia el payload de equipo.
+- `inventario/sql/equipo_monitor.sql`
+  - Define la estructura actual.
+- `inventario/logica/tablas/equipo_monitor.sql`
+  - Contiene la estructura/documentacion SQL exportada para auditoria.
+
+3. Campos actuales
+- id_monitor
+- id_equipo
+- modelo_monitor
+- codigo_monitor
+- serie_monitor
+- tamano_monitor
+- resolucion_monitor
+- orden_monitor
+
+4. Duplicacion con monitores
+- Si `monitores` es el inventario oficial de monitores como activos propios,
+  entonces `equipo_monitor` duplica informacion tecnica de monitor.
+- En `inventario/logica/tablas/monitores.sql` se observa `id_monitor_legacy` y
+  observaciones "Migrado desde equipo_monitor", lo que confirma que ya existio
+  o se probo una migracion desde `equipo_monitor` hacia `monitores`.
+- La duplicacion impide tener una sola ficha historica del monitor cuando cambia
+  de equipo, colegio, ubicacion o responsable.
+
+5. Puede servir como tabla puente?
+- No con el diseno actual.
+- Para ser tabla puente real deberia vincular `equipos` con `monitores`, por
+  ejemplo:
+  - id_equipo
+  - id_monitor
+  - principal
+  - fecha_asignacion
+  - estado
+- El campo actual `id_monitor` no cumple ese rol porque es PK propia de
+  `equipo_monitor`.
+
+6. Decision recomendada
+- REFACTORIZAR, pero NO TOCAR todavia porque codigo activo depende de ella.
+- Recomendacion tecnica: migrar gradualmente los monitores fisicos hacia
+  `monitores` como activos propios y convertir `equipo_monitor` en una tabla
+  puente real, o reemplazarla por una tabla puente nueva definida formalmente.
+- No se recomienda conservarla indefinidamente como tabla de detalle tecnico,
+  porque duplica datos con `monitores`.
+
+7. Riesgos si se elimina ahora
+- Se romperia el formulario de registro/edicion de PC.
+- La ficha de equipo dejaria de mostrar monitores asociados.
+- La importacion automatica del agente perderia los monitores detectados.
+- La carga masiva de PC perderia columnas de monitor.
+- Podrian perderse asociaciones historicas de equipos con una o dos pantallas,
+  especialmente en SEDUC (`id_colegio = 15`) donde es comun que equipos tengan
+  dos pantallas.
+
+8. Pasos antes de eliminarla definitivamente
+- Confirmar datos reales y volumen de filas en `equipo_monitor`.
+- Confirmar si cada fila tiene equivalente confiable en `monitores`.
+- Definir una relacion oficial equipo-monitor:
+  - tabla puente sobre `equipos` + `monitores`, o
+  - campo/asignacion en `monitores` si solo se permite un equipo activo.
+- Migrar datos con respaldo y trazabilidad.
+- Actualizar formulario PC, detalle de equipo, carga masiva e importacion del
+  agente para usar `monitores` o la tabla puente.
+- Validar reportes, busquedas, QR y fotos.
+- Solo despues marcar `equipo_monitor` para eliminacion futura.
+
+DOCUMENTACION DE MONITORES
+==========================
+
+- La tabla `monitores` representa el inventario independiente de monitores.
+- Un monitor puede existir como activo propio.
+- Un equipo puede tener 0, 1 o varios monitores.
+- SEDUC (`id_colegio = 15`) normalmente tiene equipos asociados a dos pantallas.
+- Otros colegios tambien pueden tener equipos con una o varias pantallas.
+- No se debe duplicar informacion tecnica del monitor en dos tablas distintas.
+- La decision final entre `monitores` y `equipo_monitor` debe cerrarse despues
+  de la auditoria de datos y antes de programar cambios funcionales.
+
+====================================================
+C) CATALOGOS COMPARTIDOS
+====================================================
+
+17. Tabla de estados: estado_equipo
+Objetivo:
+- Mantiene los estados disponibles para los equipos del inventario.
+- Compartida entre modulo PC y modulo Monitores.
+- Solo se deben mostrar los registros con estado = 1.
+
+Campos:
+- id_estado: clave primaria.
+- nombre_estado: nombre visible del estado.
+- color_badge: color Bootstrap usado para mostrar el badge (success, secondary, warning, danger, info, etc.).
+- estado: permite activar o desactivar estados (1 = activo, 0 = inactivo).
+
+Datos actuales:
+1 | Activo     | success
+2 | Bodega     | secondary
+3 | Reparacion | warning
+4 | Baja       | danger
+5 | Prestado   | info
+
+Relaciones:
+- equipos.id_estado referencia a estado_equipo.id_estado (N:1).
+- monitores.id_estado referencia a estado_equipo.id_estado (N:1).
+- `id_estado` es estado operativo. Estado "Baja" NO equivale a eliminacion logica.
+- Los cambios de estado se registran en equipo_estado_historial.
+
+18. Tabla de ubicaciones: equipo_ubicacion
+Objetivo:
+- Guarda las ubicaciones fisicas internas disponibles por colegio.
+- Compartida entre modulo PC y modulo Monitores.
+- Cada colegio tiene su propio conjunto de ubicaciones.
+- En alta y edicion de PC se puede seleccionar una ubicacion existente o crear una nueva desde el formulario.
+- No existe tabla separada de salas. Las salas, bodegas, oficinas y dependencias se guardan aqui.
+- Antes de insertar una ubicacion nueva, el backend busca una equivalente por id_colegio y nombre
+  normalizado para evitar duplicados por mayusculas/minusculas.
+- La misma ubicacion visible puede existir en colegios distintos porque la unicidad es por colegio.
+
+Campos:
+- id_ubicacion: clave primaria.
+- id_colegio: colegio al que pertenece la ubicacion.
+- nombre_ubicacion: nombre visible.
+- tipo_ubicacion: categoria de la ubicacion.
+- descripcion: texto descriptivo opcional.
+- estado: 1 = activa, 0 = inactiva.
+
+Ubicaciones cargadas inicialmente (por cada colegio activo):
+- Sala Computacion 1 (Sala Computacion)
+- Sala Computacion 2 (Sala Computacion)
+- Biblioteca (Biblioteca)
+- Direccion (Oficina)
+- UTP (Oficina)
+- Inspectoria (Oficina)
+- Enfermeria (Enfermeria)
+- Porteria (Porteria)
+- Laboratorio Ciencias (Laboratorio)
+- Bodega Informatica (Bodega)
+
+19. Catalogo de tipos de PC: tipo_pc_catalogo
+Objetivo:
+- Provee los tipos de PC disponibles para el modulo de inventario PC.
+- Solo se muestran los tipos con activo = 1.
+
+Campos:
+- id_tipo_pc: clave primaria autoincremental.
+- nombre_tipo: nombre del tipo (Desktop, Notebook, All In One, etc.) — UNIQUE.
+- activo: 1 = visible en formularios, 0 = oculto.
+
+Datos iniciales:
+Desktop, Notebook, All In One, Mini PC, Servidor, Otro
+
+Nota:
+- equipos.tipo_pc (VARCHAR) toma su valor desde tipo_pc_catalogo.nombre_tipo.
+- No hay FK formal, la relacion es logica.
+
+20. Tabla de referencia: colegio
+Objetivo:
+- Registro de colegios administrados por SEDUC.
+- Compartida con el sistema general.
+
+Campos relevantes para inventario:
+- id_colegio: clave primaria.
+- nom_colegio: nombre del colegio.
+- color_principal, color_secundario, color_terciario, color_cuaternario: branding visual.
+
+21. Tabla de referencia: usuarios
+Objetivo:
+- Registro de usuarios del sistema.
+- Compartida con el sistema general.
+
+Campos relevantes para inventario:
+- id: clave primaria.
+- nombre, apellido_paterno: nombre del usuario.
+- estado: si existe y vale "Activo", el usuario puede aparecer como responsable asignable.
+- Los usuarios no se listan directamente como responsables; se filtran via usuario_colegio.
+
+22. Tabla externa de relacion: usuario_colegio
+Objetivo:
+- Relaciona usuarios con colegios.
+- El modulo la usa para determinar el colegio del usuario logueado cuando
+  registra equipos, lista inventario o procesa cargas masivas.
+- Tambien se usa para filtrar el selector de responsable en alta y edicion de PC.
+- La regla es colegio actual -> usuario_colegio -> usuarios.
+- Es la fuente principal de perfil y alcance para Inventario.
+- `usuario_perfil` no se usa actualmente para decidir colegios visibles dentro de Inventario.
+
+Campos usados por inventario:
+- id_usuario: usuario del sistema.
+- id_colegio: colegio asociado.
+- id_perfil: perfil usado por Inventario.
+  - 1 = usuario.
+  - 2 = tecnico.
+  - 3 = administrador.
+- estado: solo se consideran relaciones activas (estado = 1).
+
+23. Tabla externa: perfiles
+Objetivo:
+- Define la descripcion general del rol/perfil del sistema.
+- Inventario interpreta los ids 1, 2 y 3 segun la regla documentada arriba.
+
+24. Tabla externa en revision para Inventario: usuario_perfil
+Objetivo:
+- Relacion historica/general de usuario con perfil en el sistema.
+- No se modifica ni se elimina en esta tarea.
+- Queda fuera del alcance funcional de Inventario para decidir colegios visibles.
+- La regla vigente del modulo usa `usuario_colegio.id_perfil`.
+
+====================================================
+RELACIONES GENERALES
+====================================================
+
+Modulo PC
+- equipos es la tabla principal.
+- equipos_compra se relaciona por id_equipo.
+- equipo_almacenamiento se relaciona por id_equipo.
+- equipo_memoria se relaciona por id_equipo.
+- equipo_monitor se relaciona por id_equipo, pero queda EN REVISION porque no es puente real hacia `monitores`.
+- equipo_procesador se relaciona por id_equipo.
+- equipo_software se relaciona por id_equipo.
+- equipo_fotos se relaciona por id_equipo.
+- equipo_movimiento se relaciona por id_equipo.
+- equipo_asignacion_historial se relaciona por id_equipo.
+- equipo_estado_historial se relaciona por id_equipo.
+- estado_equipo se relaciona con equipos por id_estado (N:1).
+- equipo_ubicacion se relaciona con equipos por id_ubicacion (1:N).
+- tipo_pc_catalogo provee valores logicos para equipos.tipo_pc (sin FK formal).
+
+Modulo Monitores
+- monitores es la tabla principal independiente del modulo Monitores.
+- monitor_fotos, monitor_movimiento, monitor_compra se relacionan por id_monitor.
+- monitor_asignacion_historial se relaciona por id_monitor.
+- estado_equipo y equipo_ubicacion son compartidas con el modulo PC.
+- equipo_monitor (legacy) NO pertenece a este modulo.
+
+Tablas externas del sistema general
+- colegio entrega el colegio propietario de equipos, monitores y ubicaciones.
+- usuarios entrega usuarios creadores, asignados y responsables de acciones.
+- usuario_colegio determina el colegio asociado al usuario de sesion.
+
+====================================================
+DASHBOARD ANALITICO DEL INVENTARIO PC
+====================================================
+
+Pantalla:
+- inventario/dashboard.php
+
+Acceso:
+- Solo perfiles 2 y 3 pueden acceder.
+- El alcance se obtiene desde usuario_colegio:
+  - id_usuario
+  - id_colegio
+  - id_perfil
+  - estado
+- usuario_perfil no alimenta el alcance del dashboard.
+
+Tablas que alimentan KPIs:
+- equipos:
+  - total de PC.
+  - id_estado.
+  - id_ubicacion.
+  - id_usuario_asignado.
+  - qr_code.
+  - numero_serie.
+  - eliminado.
+  - fecha_registro solo si existe en la base real.
+- estado_equipo:
+  - nombre_estado para Activo, Reparacion y Baja.
+
+Tablas que alimentan valores monetarios:
+- equipos_compra:
+  - id_equipo.
+  - valor_equipo.
+  - fecha_compra, proveedor y factura quedan disponibles para analisis futuro.
+- El dashboard suma valor_equipo mediante una subconsulta agrupada por id_equipo.
+  Esto evita duplicar valores por relaciones 1:N con memoria, fotos, software,
+  almacenamiento, movimientos o monitores.
+
+Tablas que alimentan colegios y alcance:
+- colegio:
+  - id_colegio.
+  - nom_colegio.
+  - estado.
+- usuario_colegio:
+  - define colegios visibles y perfil para Inventario.
+
+Tablas que alimentan responsables:
+- usuarios:
+  - nombre y apellidos del responsable asignado.
+- equipos.id_usuario_asignado:
+  - relaciona el equipo con el responsable.
+
+Tablas que alimentan ubicaciones:
+- equipo_ubicacion:
+  - id_ubicacion.
+  - nombre_ubicacion.
+- equipos.id_ubicacion:
+  - relaciona el equipo con su ubicacion actual.
+
+Tablas que alimentan graficos:
+- estado_equipo:
+  - distribucion por estado real.
+- equipos.tipo_pc:
+  - distribucion por tipo registrado.
+- equipo_memoria:
+  - distribucion de RAM; se suma tamano_memoria por equipo.
+- equipo_software:
+  - distribucion de sistemas operativos desde windows.
+
+Tablas que alimentan alertas:
+- equipos:
+  - sin ubicacion, sin responsable, sin QR, sin serie.
+- equipo_fotos:
+  - equipos sin fotografia.
+- equipos_compra:
+  - equipos sin valor registrado.
+
+Notas tecnicas:
+- El dashboard no modifica estructura de base de datos.
+- No crea tablas nuevas.
+- No incluye monitores independientes.
+- No usa datos de ejemplo.
+- Si equipos.fecha_registro no existe, el filtro de fechas y el KPI de ingresos
+  del mes quedan desactivados o en 0 de forma compatible.
+
+
+MAPEO EXCEL DE CARGA MASIVA PC
+==============================
+
+La plantilla oficial de PC usa una sola hoja visible: `Inventario`.
+Los catalogos para listas desplegables viven en una hoja oculta `_catalogos`.
+No se muestran pestanas visibles llamadas Estados, Tipos PC, Usuarios o
+Ubicaciones.
+
+Columnas que alimentan `equipos`:
+- Colegio: no existe como columna Excel. El backend usa el colegio activo o
+  permitido obtenido por sesion y `usuario_colegio`; nunca toma `id_colegio`
+  desde Excel.
+- Ubicacion: se resuelve a `equipos.id_ubicacion`. Si el ID existe, debe
+  pertenecer al colegio. Si se escribe una ubicacion nueva, se crea en
+  `equipo_ubicacion` para el colegio correcto y luego se guarda el ID.
+- Usuario asignado: alimenta `equipos.id_usuario_asignado`. Es opcional. Debe
+  existir en `usuarios`, estar activo si aplica y estar asociado al colegio por
+  `usuario_colegio`.
+- Nombre del equipo: alimenta `equipos.nombre_personalizado`.
+- Numero de serie: alimenta `equipos.numero_serie` y se usa para generar
+  `equipos.nombre_equipo = PC-{NUMERO_SERIE}`.
+- Tipo de PC: alimenta `equipos.tipo_pc` y debe venir de `tipo_pc_catalogo`.
+- Estado: alimenta `equipos.id_estado` y debe venir de `estado_equipo`.
+- Fabricante: alimenta `equipos.fabricante`.
+- Producto / modelo: alimenta `equipos.producto`.
+- QR / codigo interno: no existe en la plantilla. `equipos.qr_code` se genera en
+  backend con el mismo identificador tecnico cuando el flujo no trae otro valor.
+- Fotos: no existen en la plantilla. Las fotos se gestionan desde formulario y
+  `equipo_fotos`, no desde Excel.
+
+Columnas que alimentan `equipos_compra`:
+- Valor equipo -> `equipos_compra.valor_equipo`
+- Proveedor -> `equipos_compra.proveedor`
+- Numero factura -> `equipos_compra.numero_factura`
+- Fecha compra -> `equipos_compra.fecha_compra`
+- Observacion compra -> `equipos_compra.observacion`
+
+Columnas que alimentan `equipo_almacenamiento`:
+- Almacenamiento modelo -> `equipo_almacenamiento.equipo_modelo`
+- Almacenamiento capacidad -> `equipo_almacenamiento.equipo_capacidad`
+- Almacenamiento tipo/tamano -> `equipo_almacenamiento.equipo_tamano`
+
+Columnas que alimentan `equipo_procesador`:
+- Procesador fabricante -> `equipo_procesador.equipo_fabricante`
+- Procesador modelo -> `equipo_procesador.equipo_modelo`
+- Procesador velocidad -> `equipo_procesador.equipo_velocidad`
+
+Columnas que alimentan `equipo_software`:
+- Windows -> `equipo_software.windows`
+- Office -> `equipo_software.office`
+- Antivirus -> `equipo_software.antivirus`
+
+Columnas que alimentan `equipo_memoria`:
+- Memoria slot/designacion -> `equipo_memoria.designacion_memoria`
+- Memoria formato -> `equipo_memoria.formato_memoria`
+- Memoria tipo -> `equipo_memoria.tipo_memoria`
+- Memoria tamano -> `equipo_memoria.tamano_memoria`
+- Memoria frecuencia -> `equipo_memoria.frecuencia_memoria`
+- Memoria marca -> `equipo_memoria.marca_memoria`
+- La carga masiva crea como maximo una fila de memoria por fila Excel, con
+  `orden_memoria = 1`.
+
+Columnas que alimentan `equipo_monitor`:
+- Monitor modelo -> `equipo_monitor.modelo_monitor`
+- Monitor codigo -> `equipo_monitor.codigo_monitor`
+- Monitor serie -> `equipo_monitor.serie_monitor`
+- Monitor tamano -> `equipo_monitor.tamano_monitor`
+- Monitor resolucion -> `equipo_monitor.resolucion_monitor`
+- La carga masiva crea como maximo un monitor asociado por fila Excel, con
+  `orden_monitor = 1`.
+
+Tablas de historial tocadas por la carga masiva:
+- `equipo_movimiento`: si hay ubicacion resuelta, registra alta inicial de
+  inventario.
+- `equipo_asignacion_historial`: si hay usuario asignado, registra asignacion
+  inicial.
