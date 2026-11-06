@@ -1,0 +1,23 @@
+LÓGICA DEL MÓDULO INVENTARIO DE ASEO
+====================================
+
+- Portada: inventario_aseo/index.php (menú Inventario > submenú id 8).
+- Controla productos de aseo por colegio: ingresos, salidas, stock actual y
+  alertas de stock mínimo.
+- El stock NO se guarda como número fijo: se calcula desde aseo_movimientos
+  (ingreso suma, salida resta). Agotado = stock <= 0; Bajo mínimo = stock <= stock_minimo.
+- Clase principal: inventario_aseo/class/Inventario.php
+
+Tablas (sql/aseo_instalacion.sql):
+  aseo_productos           producto, colegio, categoría, unidad, stock mínimo, activo
+  aseo_movimientos         ingreso/salida, cantidad, fecha, responsable, observación
+  aseo_historial           auditoría: creación, actualización, cambio de estado
+  aseo_categoria_catalogo  categorías (Desinfectantes, Pisos, Baños, ...)
+  aseo_unidad_catalogo     unidades (Litro, Botella, Bidón, ...)
+
+Páginas: index.php, registrar_producto.php, editar_producto.php,
+ver_producto.php, reporte.php.
+Endpoints: ajax/listar_productos.php, ajax/obtener_detalle_producto.php,
+guardar_producto.php, actualizar_producto.php, eliminar_logico_producto.php (POST).
+
+Desactivar un producto (basurero) solo marca activo = 0: conserva su historial.

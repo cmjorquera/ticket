@@ -164,3 +164,58 @@
 .inventario-body .cm-hero .cm-feature-pill i{color:var(--navy-700,var(--blue))}
 .inventario-body .cm-hero .btn-light{background:var(--card)!important;color:var(--fg)!important;border:1px solid var(--border)!important;border-radius:8px;font-size:13px;padding:8px 14px}
 .inventario-body .cm-hero .btn-light:hover{background:var(--bg)!important}
+
+/* =====================================================================
+   Compartido con Inventario de Aseo (tarjetas, stock por colegio, ficha, acciones)
+   ===================================================================== */
+/* Tarjetas de listado fuera de pestañas (portada, ficha, reportes) */
+.inventario-body .inv-list-card,
+.inventario-body .inv-ficha-card{
+  background:var(--card)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important;
+  box-shadow:var(--shadow-card)!important;overflow:hidden;margin:18px 0 0!important;
+}
+.inventario-body .inv-list-card > .card-body,
+.inventario-body .inv-ficha-card > .card-body{padding:0!important}
+.inventario-body .inv-ficha-card .inv-ficha-body{padding:18px 20px}
+
+/* Stock por colegio */
+.inventario-body .inv-stock-colegios{margin-top:14px!important}
+.inventario-body .inv-colegio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;padding:14px 16px}
+.inventario-body .inv-colegio-pill{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px!important;
+  background:var(--bg)!important;border:1px solid var(--border)!important;border-radius:8px!important;
+  color:var(--fg)!important;font-size:13px;box-shadow:none!important;
+}
+.inventario-body .inv-colegio-pill strong{font:700 15px 'DM Mono',monospace;color:var(--fg)}
+.inventario-body .inv-colegio-grid .inv-empty-text{grid-column:1/-1;padding:0}
+
+/* Encabezado de páginas internas (registrar, editar, ficha, reportes) */
+.inventario-body > .inv-hero{margin-bottom:20px!important}
+
+/* Ficha: datos en grilla */
+.inventario-body .inv-dato span{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.inventario-body .inv-dato strong{font-size:14px;font-weight:600;color:var(--fg)}
+.inventario-body .inv-list li{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid #F3F4F6;font-size:13px}
+.inventario-body .inv-list li:last-child{border-bottom:0}
+.inventario-body .inv-list li span{color:var(--muted)}
+
+/* Movimientos: ingreso / salida */
+.inventario-body .inv-mov{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:99px;padding:3px 10px}
+.inventario-body .inv-mov--ingreso{background:var(--success-light);color:var(--success)}
+.inventario-body .inv-mov--salida{background:var(--warning-light);color:var(--warning)}
+
+/* Formulario en acordeón con el estilo del sistema */
+.inventario-body .inv-accordion .accordion-item{border:1px solid var(--border);border-radius:var(--radius)!important;overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow-card)}
+.inventario-body .inv-accordion .accordion-button{font-size:14px;font-weight:600;color:var(--fg);background:var(--card);box-shadow:none}
+.inventario-body .inv-accordion .accordion-button:not(.collapsed){background:var(--card);color:var(--fg);border-bottom:1px solid var(--border)}
+.inventario-body .inv-accordion .accordion-button:focus{box-shadow:0 0 0 3px var(--blue-light)}
+.inventario-body .inv-repeat-card{background:var(--bg)!important;border:1px solid var(--border)!important;border-radius:8px!important;padding:14px!important;margin-bottom:10px;box-shadow:none!important}
+.inventario-body .inv-form .btn-primary{background:var(--navy-800,var(--blue));border-color:var(--navy-800,var(--blue));border-radius:8px;font-size:13px;padding:8px 16px}
+.inventario-body .inv-form .btn-light{border-radius:8px;font-size:13px;padding:8px 16px;background:var(--card);border:1px solid var(--border)}
+
+/* Botones de acción de la tabla */
+.inventario-body .inv-action-buttons .btn{width:32px!important;height:32px!important;padding:0!important;display:inline-grid!important;place-items:center;border-radius:8px!important;border:1px solid var(--border)!important;background:var(--card)!important;color:var(--fg)!important;box-shadow:none!important}
+.inventario-body .inv-action-buttons .btn:hover{background:var(--bg)!important}
+.inventario-body .inv-action-buttons .inv-btn-edit{color:var(--navy-700,var(--blue))!important}
+.inventario-body .inv-action-buttons .inv-btn-delete{color:var(--danger)!important}
+.inventario-body .inv-action-buttons .inv-btn-delete:hover{background:var(--danger-light)!important}

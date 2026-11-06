@@ -23,23 +23,21 @@ $porColegio = $resumen['por_colegio'] ?? [];
     </div>
 </div>
 
-<div class="card shadow-sm border-0 inv-panel mb-4">
+<div class="card shadow-sm border-0 inv-panel inv-list-card inv-stock-colegios">
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="inv-card-head">
             <div>
-                <h6 class="mb-1">Distribucion por colegio</h6>
-                <small class="text-muted">Cantidad total de herramientas por sede o colegio</small>
+                <h5 class="mb-1">Distribución por colegio</h5>
+                <p class="text-muted mb-0 small">Cantidad total de herramientas por sede o colegio.</p>
             </div>
         </div>
-        <div class="row g-3">
+        <div class="inv-colegio-grid">
             <?php if (!empty($porColegio)): ?>
                 <?php foreach ($porColegio as $item): ?>
-                    <div class="col-12 col-md-6 col-xl-4">
-                        <div class="inv-colegio-pill"><span><?= inventario_h($item['nom_colegio']) ?></span><strong><?= (int)$item['cantidad'] ?></strong></div>
-                    </div>
+                    <div class="inv-colegio-pill"><span><?= inventario_h($item['nom_colegio']) ?></span><strong><?= (int)$item['cantidad'] ?></strong></div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <div class="col-12"><div class="alert alert-light border mb-0">No hay datos para los filtros seleccionados.</div></div>
+                <p class="inv-empty-text">No hay datos para los filtros seleccionados.</p>
             <?php endif; ?>
         </div>
     </div>

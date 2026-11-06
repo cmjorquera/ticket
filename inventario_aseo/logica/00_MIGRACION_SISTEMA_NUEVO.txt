@@ -1,0 +1,20 @@
+MIGRACIÓN DEL INVENTARIO DE ASEO AL SISTEMA NUEVO (2026-11-06)
+==============================================================
+
+Origen: rama backup/qa-produccion-20261106, carpeta inventario_aseo/.
+
+- Conexión: reutiliza inventario/class/InventarioConexion.php (credenciales en
+  config_privada, sección 'db'). Sin contraseñas en el código.
+- Sesión del sistema y login obligatorio en todas las páginas y endpoints.
+- Plantilla: includes/header.php / includes/footer.php + css/estilo_sistema.css,
+  con la misma estructura visual que inventario/index.php (Mesa de ayuda).
+- Si faltan tablas, el módulo muestra un aviso (503) en vez de un error 500.
+- Errores: solo los mensajes de validación llegan al usuario; los técnicos van
+  al log del servidor (antes se mostraban en pantalla).
+- Corregido: stock_minimo se guardaba como entero (2,5 -> 2); ahora decimal.
+- Corregido: fechas de movimiento se validan antes de guardar (MySQL estricto).
+- Guardar/actualizar/desactivar solo aceptan POST.
+- Cantidades y fechas en formato chileno (1.234,5 · dd-mm-aaaa hh:mm).
+- No se copiaron: error_log, views/sql_sugerido_inventario_aseo.sql (reemplazado
+  por sql/aseo_instalacion.sql), componentes/head.php (plantilla antigua),
+  carpetas uploads/ e img/ (el módulo no usa fotos).

@@ -36,8 +36,11 @@
             info: true,
             lengthChange: false,
             pagingType: 'simple_numbers',
-            dom: "<'row align-items-center mb-3'<'col-md-6'i><'col-md-6 text-md-end'p>>rt<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
+            dom: "<'row align-items-center'<'col-md-12'i>>rt<'row align-items-center'<'col-md-6'i><'col-md-6 text-md-end'p>>",
             language: {
+                emptyTable: 'No hay registros para mostrar',
+                zeroRecords: 'No hay registros que coincidan con los filtros',
+                loadingRecords: 'Cargando…',
                 url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json',
                 info: 'Mostrando _START_ a _END_ de _TOTAL_ herramientas',
                 infoEmpty: 'Sin herramientas para mostrar',

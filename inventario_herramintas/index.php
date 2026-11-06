@@ -34,11 +34,11 @@ require __DIR__ . '/componentes/layout_top.php';
                             <p class="inv-subtitle mb-0">Controla herramientas por colegio, bodega o empresa con seguimiento de stock, prestamos, mantenciones y responsables.</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
-                            <button type="button" class="btn btn-outline-dark" id="btnCargaMasivaHerramientas">
-                                <i class="bi bi-file-earmark-excel me-1"></i>Carga masiva
+                            <button type="button" class="module-btn module-btn--secondary" id="btnCargaMasivaHerramientas">
+                                <i class="bi bi-file-earmark-excel"></i>Carga masiva
                             </button>
-                            <a href="registrar_herramienta.php" class="btn btn-primary">
-                                <i class="bi bi-plus-circle me-1"></i>Agregar herramienta
+                            <a href="registrar_herramienta.php" class="module-btn module-btn--primary">
+                                <i class="bi bi-plus-circle"></i>Agregar herramienta
                             </a>
                         </div>
                     </div>
@@ -49,9 +49,15 @@ require __DIR__ . '/componentes/layout_top.php';
                     <?php require __DIR__ . '/componentes/resumen.php'; ?>
                 </div>
 
-                <div class="card shadow-sm border-0 inv-panel">
+                <div class="card shadow-sm border-0 inv-panel inv-list-card">
                     <div class="card-body">
-                        <div class="row g-3 align-items-end mb-4">
+                        <div class="inv-card-head">
+                            <div>
+                                <h5 class="mb-1">Herramientas registradas</h5>
+                                <p class="text-muted mb-0 small">Listado operativo según filtros actuales.</p>
+                            </div>
+                        </div>
+                        <div class="inv-toolbar row g-3 align-items-end">
                             <div class="col-md-3">
                                 <label class="form-label">Colegio</label>
                                 <select id="filtroColegio" class="form-select">
@@ -71,7 +77,7 @@ require __DIR__ . '/componentes/layout_top.php';
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label">Categoria</label>
+                                <label class="form-label">Categoría</label>
                                 <select id="filtroCategoria" class="form-select">
                                     <option value="">Todas</option>
                                     <?php foreach ($categorias as $categoria): ?>
@@ -98,10 +104,10 @@ require __DIR__ . '/componentes/layout_top.php';
                             <table class="table table-striped table-hover align-middle" id="tablaInventario">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>N°</th>
                                         <th>Herramienta</th>
                                         <th>Colegio</th>
-                                        <th>Categoria</th>
+                                        <th>Categoría</th>
                                         <th>Serie</th>
                                         <th>Cantidad</th>
                                         <th>Responsable</th>
