@@ -64,14 +64,15 @@ function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $d
 
         $menus = array_map(static fn (array $fila): array => [
             'id_menu' => (int) $fila['id_menu'],
-            'nombre' => (string) $fila['nombre'],
+            'nombre'  => (string) $fila['nombre'],
             'archivo' => (string) ($fila['archivo'] ?? ''),
         ], $db->fetchAll('SELECT id_menu, nombre, archivo FROM menu_1 WHERE id_menu > 0'));
+
         $submenus = array_map(static fn (array $fila): array => [
             'id_submenu' => (int) $fila['id_submenu'],
-            'id_menu' => (int) $fila['id_menu'],
-            'nombre' => (string) $fila['nombre'],
-            'archivo' => (string) ($fila['archivo'] ?? ''),
+            'id_menu'    => (int) $fila['id_menu'],
+            'nombre'     => (string) $fila['nombre'],
+            'archivo'    => (string) ($fila['archivo'] ?? ''),
         ], $db->fetchAll('SELECT id_submenu, id_menu, nombre, archivo FROM menu_1_sub'));
 
         $columna = $db->fetchOne(
@@ -82,7 +83,8 @@ function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $d
         if (!$soportaSubmenus) {
             throw new RuntimeException('Falta ejecutar sql/permisos_submenus.sql.');
         }
-        $menusSeleccionados = [];
+
+        $menusSeleccionados    = [];
         $submenusSeleccionados = [];
 
         if ($tipoPerfil === 'administrador') {
@@ -95,19 +97,19 @@ function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $d
         } else {
             $configuracion = [
                 'usuario' => [
-                    'menus' => [['inicio', 'dashboard'], ['colaboradores']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets']],
                 ],
                 'tecnico' => [
-                    'menus' => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets'], ['tickets asignados', 'ticket asignado'], ['admin categorias', 'categorias y tecnicos']],
                 ],
                 'admin_colegio' => [
-                    'menus' => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets'], ['listado usuarios', 'usuarios'], ['admin categorias', 'categorias y tecnicos'], ['permisos']],
                 ],
                 'admin_area' => [
-                    'menus' => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets'], ['admin categorias', 'categorias y tecnicos']],
                 ],
             ][$tipoPerfil];
@@ -122,11 +124,12 @@ function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $d
                 $submenu = buscar_permiso_por_alias($submenus, $aliases);
                 if ($submenu) {
                     $submenusSeleccionados[$submenu['id_submenu']] = $submenu['id_menu'];
-                    $menusSeleccionados[$submenu['id_menu']] = true;
+                    $menusSeleccionados[$submenu['id_menu']]       = true;
                 }
             }
         }
 
+        // ── permisos_menu_1 ─────────────────────────────────────────────────────
         $db->execute('DELETE FROM permisos_menu_1 WHERE id_usuario = ?', [$usuarioId]);
         foreach (array_keys($menusSeleccionados) as $idMenu) {
             insertar_permiso_defecto($db, (int) $idMenu, $usuarioId, null, $soportaSubmenus);
@@ -134,6 +137,20 @@ function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $d
         foreach ($submenusSeleccionados as $idSubmenu => $idMenu) {
             insertar_permiso_defecto($db, (int) $idMenu, $usuarioId, (int) $idSubmenu, $soportaSubmenus);
         }
+
+        // ── permiso_sub_menu ────────────────────────────────────────────────────
+        // permiso=1 si el submenú fue asignado al perfil, permiso=0 para el resto.
+        foreach ($submenus as $submenu) {
+            $idSubmenu = (int) $submenu['id_submenu'];
+            $permiso   = isset($submenusSeleccionados[$idSubmenu]) ? 1 : 0;
+            $db->execute(
+                'INSERT INTO permiso_sub_menu (id_usuario, id_submenu, permiso)
+                 VALUES (?, ?, ?)
+                 ON DUPLICATE KEY UPDATE permiso = VALUES(permiso)',
+                [$usuarioId, $idSubmenu, $permiso]
+            );
+        }
+
         return true;
     } catch (Throwable $ex) {
         error_log('Error al asignar permisos por defecto: ' . $ex->getMessage());

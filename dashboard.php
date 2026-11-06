@@ -36,7 +36,7 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
     <header class="page-header dashboard-heading">
         <div>
             <h1>Dashboard</h1>
-            <p>Estado operativo de tus solicitudes y carga de atención.</p>
+            <!--<p>Estado operativo de tus solicitudes y carga de atención.</p>-->
         </div>
         <?php if (count($perfiles) > 1): ?>
             <nav class="dashboard-profiles" aria-label="Vista del dashboard" style="--profile-count:<?= count($perfiles) ?>">
@@ -63,10 +63,10 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
 
     <section aria-labelledby="dashboard-kpi-title">
         <div class="dashboard-section-heading">
-            <div>
+            <!-- <div>
                 <h2 id="dashboard-kpi-title">Resumen de atención</h2>
                 <p>Selecciona una tarjeta para filtrar el listado.</p>
-            </div>
+            </div> -->
             <p class="dashboard-filter-status" id="dashboard-filter-status" role="status" aria-live="polite" hidden></p>
         </div>
         <div class="contenedor-tickets dashboard-kpi-grid" id="dashboard-kpis">
