@@ -60,6 +60,11 @@ try {
     inventario_responder_error('No fue posible iniciar el módulo de inventario. Intenta nuevamente o contacta al administrador.');
 }
 
+// Si las tablas del módulo no están instaladas, avisar en vez de un error 500.
+if (!$inventario->tablaExiste('equipos') || !$inventario->tablaExiste('usuario_colegio')) {
+    inventario_responder_error('El módulo de inventario aún no está instalado en esta base de datos. Ejecuta sql/inventario_instalacion.sql y luego sql/inventario_asignar_usuarios.sql.', 503);
+}
+
 function inventario_url($ruta = '')
 {
     $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
