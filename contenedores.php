@@ -67,7 +67,7 @@ iniciar_layout_configuracion('Mis contenedores', 'Contenedores', 'contenedores')
 ?>
 
 <div class="page-header">
-  <div><h1><i class="bi bi-grid" aria-hidden="true"></i> Mis contenedoreswwwwww</h1><p>Accesos directos configurados para <?= e($usuarioNombre) ?>.</p></div>
+  <div><h1><i class="bi bi-grid" aria-hidden="true"></i> Mis contenedores</h1><p>Accesos directos configurados para <?= e($usuarioNombre) ?>.</p></div>
   <div class="page-header-actions"><button type="button" class="btn btn-primary" id="btn-nuevo-contenedor"><i class="bi bi-plus-circle"></i> Nuevo contenedor</button></div>
 </div>
 
