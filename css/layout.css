@@ -16,6 +16,11 @@
   #sidebar.mobile-open ~ #mobile-overlay{display:block;}
   #mobile-menu-btn{display:flex !important;}
   #content{padding:16px;}
+  /* Cabecera en celular: sin buscador ni nombre, para que no desborde la pantalla */
+  #topbar{padding:0 12px;gap:8px;}
+  #topbar .search-wrap,#topbar .user-info{display:none;}
+  #topbar .breadcrumb{min-width:0;overflow:hidden;white-space:nowrap;}
+  #main{min-width:0;}
   .chart-grid,.bottom-grid{grid-template-columns:1fr !important;}
   .stat-grid{grid-template-columns:repeat(2,1fr);}
   .colegios-grid{grid-template-columns:1fr !important;}
