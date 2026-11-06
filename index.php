@@ -165,7 +165,11 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
 
         .modulos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 34px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.1); }
         .modulo { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: #e2e8f0; line-height: 1.35; }
-        .modulo i { flex: 0 0 auto; color: #8fa8c8; font-size: 16px; line-height: 1.2; }
+        .modulo i {
+            flex: 0 0 28px; height: 28px; border-radius: 8px;
+            background: rgba(232,163,61,.14); color: var(--ambar);
+            display: grid; place-items: center; font-size: 14px;
+        }
         .modulo small { display: block; color: #94a3b8; font-size: 12px; margin-top: 1px; }
 
         .lema { color: #cbd5e1; font-style: italic; font-size: 14px; }
