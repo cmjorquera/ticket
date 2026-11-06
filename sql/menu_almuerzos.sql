@@ -21,12 +21,13 @@ SELECT id_menu, nombre, archivo, orden FROM menu_1 ORDER BY id_menu;
 --         Si el id 19 ya existe, MySQL da error de clave duplicada y
 --         no se crea nada (es seguro); en ese caso avisar antes de seguir.
 -- ---------------------------------------------------------------------
-INSERT INTO menu_1 (id_menu, nombre, archivo, icono, caracteristica, orden)
+INSERT INTO menu_1 (id_menu, nombre, abreviacion, archivo, icono, caracteristica, orden)
 SELECT 19,
        'Almuerzos',
+       'alm',
        'almuerzos/index.php',
        '<i class="bi bi-cup-hot"></i>',
-       'Almuerzos',
+       'Gestión de almuerzos del personal SEDUC.',
        CAST(COALESCE(MAX(CAST(orden AS UNSIGNED)), 0) + 1 AS CHAR)
   FROM menu_1;
 
