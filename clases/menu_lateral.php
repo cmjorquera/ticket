@@ -68,6 +68,32 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
 
     $pagina_ruta = (string) (parse_url((string) $pagina_actual, PHP_URL_PATH) ?: $pagina_actual);
     $pagina_actual = basename($pagina_ruta, '.php');
+
+    // Ruta completa de la página abierta (ej: "almuerzos/index"). Se usa cuando
+    // el nombre del archivo se repite en varias carpetas (todos los módulos
+    // tienen su propio index.php) para no marcar varios menús a la vez.
+    $raiz_sitio = realpath(dirname(__DIR__));
+    $script_real = realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    $ruta_actual = '';
+    if ($raiz_sitio !== false && $script_real !== false && str_starts_with($script_real, $raiz_sitio)) {
+        $ruta_actual = menu_lateral_normalizar_ruta(substr($script_real, strlen($raiz_sitio)));
+    }
+    $es_activo = static function (string $archivo) use ($pagina_actual, $ruta_actual): bool {
+        if ($pagina_actual === '' || $archivo === '') {
+            return false;
+        }
+        $ruta = (string) (parse_url($archivo, PHP_URL_PATH) ?: $archivo);
+        $nombre = pathinfo($ruta, PATHINFO_FILENAME);
+        if ($nombre !== $pagina_actual) {
+            return false;
+        }
+        // Mismo nombre de archivo: si el nombre es ambiguo (index) y
+        // conocemos la ruta real, exigir que también coincida la carpeta.
+        if ($pagina_actual === 'index' && $ruta_actual !== '') {
+            return menu_lateral_normalizar_ruta($ruta) === $ruta_actual;
+        }
+        return true;
+    };
     ?>
     <nav class="sidebar-nav" aria-label="Menú principal">
         <?php if (empty($menus_agrupados)): ?>
@@ -83,7 +109,7 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
                     $archivo = (string) ($menu['archivo'] ?? '');
                     $ruta_archivo = (string) (parse_url($archivo, PHP_URL_PATH) ?: $archivo);
                     $archivo_normalizado = basename($ruta_archivo, '.php');
-                    $activo = $pagina_actual !== '' && $pagina_actual === $archivo_normalizado;
+                    $activo = $es_activo($archivo);
                     $es_ruta_absoluta = preg_match('#^(?:[a-z][a-z0-9+.-]*:|/|\#)#i', $archivo) === 1;
                     $href = $es_ruta_absoluta ? $archivo : $depth . $archivo;
                     $icono_raw = (string) ($menu['icono'] ?? '');
@@ -138,7 +164,7 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
                         $sub_archivo = (string) ($sub['archivo'] ?? '');
                         $sub_base = basename($sub_archivo, '.php');
                         $sub_base2 = pathinfo($sub_archivo, PATHINFO_FILENAME);
-                        if ($pagina_actual !== '' && ($sub_base === $pagina_actual || $sub_base2 === $pagina_actual)) {
+                        if ($es_activo($sub_archivo)) {
                             $tiene_sub_activo = true;
                             break;
                         }
@@ -169,7 +195,7 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
                                     $sub_ruta = (string) (parse_url($sub_archivo, PHP_URL_PATH) ?: $sub_archivo);
                                     $sub_base = basename($sub_ruta, '.php');
                                     $sub_base2 = pathinfo($sub_ruta, PATHINFO_FILENAME);
-                                    $sub_activo = $pagina_actual !== '' && ($sub_base === $pagina_actual || $sub_base2 === $pagina_actual);
+                                    $sub_activo = $es_activo($sub_archivo);
                                     $sub_es_ruta_absoluta = preg_match('#^(?:[a-z][a-z0-9+.-]*:|/|\#)#i', $sub_archivo) === 1;
                                     $sub_href = $sub_es_ruta_absoluta ? $sub_archivo : $depth . $sub_archivo;
                                     ?>
@@ -230,4 +256,15 @@ function verificar_permiso_menu($id_usuario, $id_menu, $db)
     return isset($resultado['tiene_permiso']) && $resultado['tiene_permiso'] > 0;
 }
 
-?>
+
+/**
+ * Normaliza una ruta de menú para compararla: sin "/" inicial, sin "./",
+ * sin extensión .php, con "/" como separador. Ej: "/almuerzos/index.php"
+ * y "almuerzos/index.php" quedan ambos como "almuerzos/index".
+ */
+function menu_lateral_normalizar_ruta(string $ruta): string
+{
+    $ruta = str_replace('\\', '/', $ruta);
+    $ruta = ltrim(preg_replace('#^(\./)+#', '', ltrim($ruta, '/')) ?? '', '/');
+    return (string) preg_replace('/\.php$/i', '', $ruta);
+}
