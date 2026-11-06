@@ -1,0 +1,19 @@
+# Inventario de Herramientas – sistema nuevo
+Options -Indexes
+DirectoryIndex index.php
+
+# Documentación interna, clases y componentes no se sirven por web
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(logica|class|componentes)(/|$) - [F,L]
+    # Nunca ejecutar PHP dentro de uploads
+    RewriteRule ^uploads/.*\.(php|phtml|php[3-8]|pht|phar)$ - [F,L,NC]
+</IfModule>
+
+<FilesMatch "\.(env|log|sql|bak|ini|conf|zip|rar|txt)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>

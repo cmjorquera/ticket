@@ -1,0 +1,34 @@
+LOGICA DEL MODULO INVENTARIO_HERRAMINTAS
+
+- La portada del modulo es `inventario_herramintas/index.php`.
+- Reutiliza la base visual del modulo `inventario`, pero la logica apunta a herramientas y no a PCs.
+- La clase principal sigue siendo `inventario_herramintas/class/Inventario.php` para mantener compatibilidad simple con `boot.php`.
+- Tablas esperadas:
+  - `herramientas`
+  - `herramienta_detalle`
+  - `herramienta_compra`
+  - `herramienta_prestamos`
+  - `herramienta_mantenciones`
+  - `herramienta_fotos`
+  - `herramienta_historial`
+  - `estado_herramienta`
+  - `categoria_herramienta_catalogo`
+- La ficha de herramienta considera:
+  - datos generales
+  - categoria y ubicacion
+  - cantidad y stock minimo
+  - mantencion
+  - prestamos
+  - compra
+  - fotos
+- Los uploads se guardan en `inventario_herramintas/uploads/herramientas/{id_herramienta}/`.
+- Las nuevas vistas principales son:
+  - `registrar_herramienta.php`
+  - `editar_herramienta.php`
+  - `ver_herramienta.php`
+- Los endpoints AJAX principales son:
+  - `ajax/listar_herramientas.php`
+  - `ajax/obtener_detalle_herramienta.php`
+- El SQL sugerido inicial esta en:
+  - `inventario_herramintas/views/sql_sugerido_inventario_herramientas.sql`
+- Si faltan tablas, el index muestra una alerta de instalacion en lugar de romper la vista.

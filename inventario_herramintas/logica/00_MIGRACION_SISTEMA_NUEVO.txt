@@ -1,0 +1,19 @@
+MIGRACIÓN DEL INVENTARIO DE HERRAMIENTAS AL SISTEMA NUEVO
+==========================================================
+
+- Portada: inventario_herramintas/index.php (antes portada_herramientas.php,
+  que ahora solo redirige a index.php para no romper enlaces antiguos).
+- Menú: submenú id 9 "Inventario Herramientas" -> inventario_herramintas/index.php.
+- Conexión: reutiliza inventario/class/InventarioConexion.php (credenciales en
+  config_privada, sección 'db'). No hay contraseñas en el código.
+- Plantilla: includes/header.php / includes/footer.php (menú lateral, barra
+  superior y tema del sistema nuevo) + css/estilo_sistema.css (look Mesa de ayuda).
+- Instalación de tablas: sql/herramientas_instalacion.sql (solo estructura y
+  catálogos; idempotente). Si faltan tablas, el módulo muestra un aviso 503.
+- Carga masiva: usa PHPExcel (clases/excel), no PhpSpreadsheet/vendor.
+- Fechas vacías se guardan como NULL (MySQL estricto rechaza '' en DATE) y
+  "Sin asignar" como NULL en id_usuario_asignado.
+- Fotos: solo JPG/PNG/WEBP/GIF; carpeta uploads/ es persistente en el deploy
+  (no se versiona ni se sobrescribe).
+- No se copiaron: archivos *_equipo* (restos del módulo PC, que ya existe en
+  inventario/), logs, fotos subidas ni el SQL sugerido antiguo (views/).

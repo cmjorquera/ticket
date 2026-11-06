@@ -1,0 +1,155 @@
+Distribucion de tablas - modulo inventario_herramintas
+
+1. Tabla catalogo: estado_herramienta
+- id_estado (PK)
+- nombre_estado
+- color_badge
+
+2. Tabla catalogo: categoria_herramienta_catalogo
+- id_categoria (PK)
+- nombre_categoria
+- activo
+
+3. Tabla principal: herramientas
+- id_herramienta (PK)
+- id_usuario (FK -> usuarios.id)
+- id_colegio (FK -> colegio.id_colegio)
+- id_usuario_asignado (FK -> usuarios.id)
+- nombre_herramienta
+- marca
+- modelo
+- numero_serie
+- categoria
+- qr_code
+- id_estado (FK -> estado_herramienta.id_estado)
+- cantidad
+- stock_minimo
+- ubicacion
+- observaciones
+- creado_en
+- actualizado_en
+
+4. Tabla relacionada 1 a 1: herramienta_detalle
+- id_detalle (PK)
+- id_herramienta (FK -> herramientas.id_herramienta)
+- tipo_energia
+- medida
+- capacidad
+- requiere_mantencion
+- frecuencia_mantencion_dias
+- fecha_ultima_mantencion
+- fecha_proxima_mantencion
+- garantia_hasta
+
+5. Tabla relacionada 1 a 1: herramienta_compra
+- id_compra (PK)
+- id_herramienta (FK -> herramientas.id_herramienta)
+- valor_herramienta
+- proveedor
+- numero_factura
+- fecha_compra
+- observacion
+
+6. Tabla relacionada 1 a N: herramienta_prestamos
+- id_prestamo (PK)
+- id_herramienta (FK -> herramientas.id_herramienta)
+- responsable_entrega
+- responsable_recibe
+- fecha_salida
+- fecha_devolucion_prevista
+- fecha_devolucion_real
+- estado_prestamo
+- observacion
+
+7. Tabla relacionada 1 a N: herramienta_mantenciones
+- id_mantencion (PK)
+- id_herramienta (FK -> herramientas.id_herramienta)
+- fecha_mantencion
+- tipo_mantencion
+- proveedor
+- costo
+- proxima_fecha
+- observacion
+
+8. Tabla relacionada 1 a N: herramienta_fotos
+- id_foto (PK)
+- id_herramienta (FK -> herramientas.id_herramienta)
+- ruta_foto
+- principal
+- orden_foto
+- fecha_subida
+
+9. Tabla relacionada 1 a N: herramienta_historial
+- id_historial (PK)
+- id_herramienta (FK -> herramientas.id_herramienta)
+- accion
+- descripcion
+- id_usuario (FK -> usuarios.id)
+- fecha
+
+Relaciones principales
+- estado_herramienta 1 ---- N herramientas
+- colegio 1 ---- N herramientas
+- usuarios 1 ---- N herramientas (usuario que registra)
+- usuarios 1 ---- N herramientas (usuario asignado)
+- herramientas 1 ---- 1 herramienta_detalle
+- herramientas 1 ---- 1 herramienta_compra
+- herramientas 1 ---- N herramienta_prestamos
+- herramientas 1 ---- N herramienta_mantenciones
+- herramientas 1 ---- N herramienta_fotos
+- herramientas 1 ---- N herramienta_historial
+- usuarios 1 ---- N herramienta_historial
+
+Diagrama de relacion
+
+usuarios ----------------------.
+  id                           |
+                               v
+                        +--------------------+        +----------------------+
+colegio ------------->  |    herramientas    | <----  |  estado_herramienta  |
+  id_colegio            |--------------------|        |----------------------|
+                        | id_herramienta PK  |        | id_estado PK         |
+                        | id_usuario FK      |        | nombre_estado        |
+                        | id_colegio FK      |        | color_badge          |
+                        | id_usuario_asig FK |
+                        | id_estado FK       |
+                        +--------------------+
+                          |        |        |\
+                          |        |        | \
+                       1:1|     1:1|      1:N\ \1:N
+                          v        v           v  v
+                  +---------------+   +--------------------+   +----------------------+
+                  |herramienta_   |   | herramienta_       |   | herramienta_fotos    |
+                  |detalle        |   | compra             |   |----------------------|
+                  |---------------|   |--------------------|   | id_foto PK           |
+                  | id_detalle PK |   | id_compra PK       |   | id_herramienta FK    |
+                  | id_herr FK UQ |   | id_herr FK UQ      |   | ruta_foto            |
+                  +---------------+   +--------------------+   | principal            |
+                                                               | orden_foto           |
+                                                               +----------------------+
+
+                          +----------------------+   +----------------------+
+                          | herramienta_         |   | herramienta_         |
+                          | prestamos            |   | mantenciones         |
+                          |----------------------|   |----------------------|
+                          | id_prestamo PK       |   | id_mantencion PK     |
+                          | id_herramienta FK    |   | id_herramienta FK    |
+                          +----------------------+   +----------------------+
+
+                          +----------------------+
+                          | herramienta_         |
+                          | historial            |
+                          |----------------------|
+                          | id_historial PK      |
+                          | id_herramienta FK    |
+                          | id_usuario FK        |
+                          +----------------------+
+                                      ^
+                                      |
+                                  usuarios
+
+Notas de implementacion
+- `categoria` hoy se guarda como texto en `herramientas`; el catalogo `categoria_herramienta_catalogo` se usa para poblar el selector.
+- `herramienta_detalle` y `herramienta_compra` son 1 a 1, por eso conviene dejar `id_herramienta` como unico.
+- `herramienta_prestamos`, `herramienta_mantenciones`, `herramienta_fotos` y `herramienta_historial` permiten multiples registros por herramienta.
+- Los scripts SQL completos estan en `inventario_herramintas/views/sql_sugerido_inventario_herramientas.sql`.

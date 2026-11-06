@@ -23,3 +23,6 @@ error_log
 inventario/uploads/**
 !inventario/uploads/**/
 !inventario/uploads/**/.gitkeep
+inventario_herramintas/uploads/**
+!inventario_herramintas/uploads/**/
+!inventario_herramintas/uploads/**/.gitkeep
