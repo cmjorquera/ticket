@@ -87,10 +87,11 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
         if ($nombre !== $pagina_actual) {
             return false;
         }
-        // Mismo nombre de archivo: si el nombre es ambiguo (index) y
-        // conocemos la ruta real, exigir que también coincida la carpeta.
-        if ($pagina_actual === 'index' && $ruta_actual !== '') {
-            return menu_lateral_normalizar_ruta($ruta) === $ruta_actual;
+        // Mismo nombre de archivo: si conocemos la ruta real, exigir que
+        // también coincida la carpeta (index.php, dashboard.php, etc. se
+        // repiten en varios módulos y no deben marcar varios menús).
+        if ($ruta_actual !== '') {
+            return strcasecmp(menu_lateral_normalizar_ruta($ruta), $ruta_actual) === 0;
         }
         return true;
     };

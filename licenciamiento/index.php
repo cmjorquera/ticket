@@ -1,8 +1,4 @@
 <?php
-require_once __DIR__ . '/../validar_sesion.php';
-$pagina_titulo = 'Licenciamiento';
-require_once __DIR__ . '/../includes/header.php';
-?>
-<div class="page-header"><h2>Licenciamiento</h2></div>
-<div class="card"><p>Módulo en construcción.</p></div>
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+// La portada del módulo es Software y Licencias (menú Licenciamiento > Sofware).
+header('Location: sofware_licenciamiento.php');
+exit;

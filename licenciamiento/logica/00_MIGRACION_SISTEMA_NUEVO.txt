@@ -1,0 +1,42 @@
+LICENCIAMIENTO – MIGRACIÓN AL SISTEMA NUEVO (rama qa)
+=====================================================
+
+Origen: rama "antiguo", carpeta licenciamiento/ (acceso.seduc.cl).
+Destino: licenciamiento/ con la plantilla del sistema nuevo
+(includes/header.php + footer.php) y el mismo estilo de Inventario PC.
+
+Páginas
+-------
+- sofware_licenciamiento.php  Listado de software (submenú 20).
+- sitios_web_apps.php         Listado de sitios web / apps / clientes (submenú 21).
+- index.php                   Redirige a sofware_licenciamiento.php.
+- registrar_/editar_/ver_software.php y registrar_/editar_/ver_sitio_web.php.
+- dashboard.php, consulta_nueva.php  Gráficos y consultas.
+- ficha_qr.php                Ficha rápida a la que apunta el QR.
+- descargar_pdf.php           Exportación (PDF con mPDF o página imprimible).
+
+Instalación
+-----------
+1. Ejecutar sql/licenciamiento_instalacion.sql (crea las 8 tablas si no
+   existen, carga catálogos y da permisos de menú). Se puede repetir.
+2. Subir con scripts/deploy_qa.sh.
+
+Cambios respecto al sistema antiguo
+-----------------------------------
+- Conexión: usa inventario/class/InventarioConexion.php (credenciales en
+  config_privada, fuera del docroot). Ya no hay contraseñas en el código.
+- Login obligatorio en todas las páginas, incluida ficha_qr.php (antes era
+  pública y mostraba costos y datos sensibles a cualquiera con el enlace).
+- Endpoints de escritura solo aceptan POST; los errores de base de datos
+  muestran un mensaje genérico y el detalle queda en el log.
+- Enlaces a URL externas solo si empiezan con http:// o https://.
+- Gasto: se muestra separado por moneda (CLP y USD). Antes se sumaban
+  pesos y dólares juntos y se mostraba todo como "USD".
+- En Sitios web, el indicador "Gasto total" (siempre 0) se reemplazó por
+  "Con URL".
+- QR: se genera en el navegador (qrcodejs), ya no necesita la librería
+  chillerlan/vendor. Botón "Descargar QR" en cada ficha.
+- PDF: si el servidor tiene vendor/autoload.php con mPDF se descarga el
+  PDF; si no, se abre una página lista para imprimir / guardar como PDF.
+- Colegios: solo se listan los activos (colegio.estado = 1).
+- Se eliminaron archivos de prueba, logs y el .sql con datos de producción.
