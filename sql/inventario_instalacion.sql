@@ -310,13 +310,9 @@ ALTER TABLE `monitores`
   ADD KEY IF NOT EXISTS `idx_monitor_eliminado` (`eliminado`);
 
 -- ---------------------------------------------------------------------
--- VERIFICACIÓN: debe listar 20 tablas.
+-- VERIFICACIÓN (opcional, en la pestaña SQL): deben aparecer las tablas
+-- equipos, equipo_*, monitor*, estado_equipo, tipo_pc_catalogo y usuario_colegio.
+--   SHOW TABLES;
+-- (No se consulta information_schema: en phpMyAdmin de HostGator el usuario
+--  temporal no tiene permiso y muestra un error aunque todo se haya creado.)
 -- ---------------------------------------------------------------------
-SELECT TABLE_NAME FROM information_schema.TABLES
- WHERE TABLE_SCHEMA = DATABASE()
-   AND TABLE_NAME IN ('usuario_colegio','estado_equipo','tipo_pc_catalogo','equipo_ubicacion','equipos',
-       'equipos_compra','equipo_almacenamiento','equipo_memoria','equipo_monitor','equipo_procesador',
-       'equipo_software','equipo_fotos','equipo_movimiento','equipo_estado_historial',
-       'equipo_asignacion_historial','monitores','monitor_compra','monitor_fotos','monitor_movimiento',
-       'monitor_asignacion_historial')
- ORDER BY TABLE_NAME;
