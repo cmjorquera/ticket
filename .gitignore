@@ -13,3 +13,6 @@ logica/logs/
 
 # Archivo generado en cada despliegue
 clases/version_desplegada.json
+
+# Logs de errores de PHP (se generan en el servidor)
+error_log
