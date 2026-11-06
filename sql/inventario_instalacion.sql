@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS `equipos` (
   `id_usuario_asignado` int(11) DEFAULT NULL,
   `id_usuario_registra` int(11) DEFAULT NULL,
   `nombre_equipo` varchar(255) DEFAULT NULL,
+  `nombre_personalizado` varchar(150) DEFAULT NULL,
   `fabricante` varchar(255) DEFAULT NULL,
   `producto` varchar(255) DEFAULT NULL,
   `numero_serie` varchar(255) DEFAULT NULL,
@@ -89,6 +90,8 @@ CREATE TABLE IF NOT EXISTS `equipos` (
   `qr_code` varchar(255) DEFAULT NULL,
   `id_estado` int(11) NOT NULL DEFAULT 1,
   `eliminado` tinyint(4) NOT NULL DEFAULT 0,
+  `fecha_eliminado` datetime DEFAULT NULL,
+  `id_usuario_elimina` int(11) DEFAULT NULL,
   PRIMARY KEY (`id_equipo`),
   UNIQUE KEY `ux_equipos_numero_serie` (`numero_serie`),
   KEY `idx_equipos_asignado` (`id_usuario_asignado`),
@@ -239,13 +242,15 @@ CREATE TABLE IF NOT EXISTS `monitores` (
   `tipo_panel` varchar(100) DEFAULT NULL,
   `tipo_conexion` varchar(150) DEFAULT NULL,
   `observacion` text DEFAULT NULL,
+  `eliminado` tinyint(1) NOT NULL DEFAULT 0,
   `fecha_registro` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id_monitor`),
   UNIQUE KEY `uq_monitores_legacy` (`id_monitor_legacy`),
   KEY `idx_monitor_colegio` (`id_colegio`),
   KEY `idx_monitor_ubicacion` (`id_ubicacion`),
   KEY `idx_monitor_usuario` (`id_usuario_asignado`),
-  KEY `idx_monitor_estado` (`id_estado`)
+  KEY `idx_monitor_estado` (`id_estado`),
+  KEY `idx_monitor_eliminado` (`eliminado`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ------------------------------------------------------------ monitor_compra
@@ -301,18 +306,8 @@ CREATE TABLE IF NOT EXISTS `monitor_asignacion_historial` (
   PRIMARY KEY (`id_asignacion`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- ---------------------------------------------------------------------
--- Columnas agregadas por migraciones del sistema antiguo que no estaban
--- en las estructuras exportadas (inventario/sql/migracion_add_*.sql).
--- ---------------------------------------------------------------------
-ALTER TABLE `equipos`
-  ADD COLUMN IF NOT EXISTS `nombre_personalizado` VARCHAR(150) NULL DEFAULT NULL AFTER `nombre_equipo`,
-  ADD COLUMN IF NOT EXISTS `fecha_eliminado` DATETIME NULL AFTER `eliminado`,
-  ADD COLUMN IF NOT EXISTS `id_usuario_elimina` INT NULL AFTER `fecha_eliminado`;
-
-ALTER TABLE `monitores`
-  ADD COLUMN IF NOT EXISTS `eliminado` TINYINT(1) NOT NULL DEFAULT 0 AFTER `observacion`,
-  ADD KEY IF NOT EXISTS `idx_monitor_eliminado` (`eliminado`);
+-- (Las columnas de migraciones antiguas ya van incluidas en los CREATE TABLE.
+--  Compatible con MySQL y MariaDB.)
 
 -- ---------------------------------------------------------------------
 -- VERIFICACIÓN (opcional, en la pestaña SQL): deben aparecer las tablas
