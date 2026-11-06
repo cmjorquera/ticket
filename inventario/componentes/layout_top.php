@@ -13,7 +13,10 @@ $pagina_estilos = array_merge([
 ], array_map(
     static fn ($css) => 'inventario/' . ltrim((string) $css, '/') . '?v=' . inventario_asset_version($css),
     $cssExtraInventario ?? []
-));
+), [
+    // Siempre al final: estructura visual del sistema nuevo para todo el módulo
+    'inventario/css/estilo_sistema.css?v=' . inventario_asset_version('css/estilo_sistema.css'),
+]);
 require dirname(__DIR__, 2) . '/includes/header.php';
 ?>
 <input type="hidden" id="idUsuario" value="<?= (int) $idUsuarioSession ?>">

@@ -35,14 +35,7 @@ function inv_dash_colores_colegio($inventario, int $idColegio, string $fallbackP
 // verificacion en disco antes de exponer la URL al HTML/JSON.
 function inv_dash_logo_colegio(int $idColegio): ?string
 {
-    if ($idColegio <= 0) {
-        return null;
-    }
-    $ruta = dirname(__DIR__) . '/img/colegios/colegio_' . $idColegio . '.png';
-    if (!is_file($ruta)) {
-        return null;
-    }
-    return inventario_sistema_url('img/colegios/colegio_' . $idColegio . '.png');
+    return inventario_logo_colegio($idColegio);
 }
 
 function inv_dash_section_menu(): string

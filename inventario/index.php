@@ -181,7 +181,7 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
 
                         <div class="card shadow-sm border-0 inv-panel">
                             <div class="card-body">
-                                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3">
+                                <div class="inv-card-head d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
                                     <div>
                                         <h5 class="mb-1">Equipos inventariados</h5>
                                         <p class="text-muted mb-0 small">Listado operativo segun filtros y permisos actuales.</p>
@@ -190,7 +190,7 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
                                         <i class="bi bi-qr-code me-1"></i>Imprimir todos los códigos
                                     </button>
                                 </div>
-                                <div class="row g-3 align-items-end mb-4">
+                                <div class="inv-toolbar row g-3 align-items-end">
                                     <?php if ($mostrarFiltroColegio): ?>
                                     <div class="col-md-3">
                                         <label class="form-label">Colegio</label>
@@ -279,7 +279,13 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
 
                         <div class="card shadow-sm border-0 inv-panel">
                             <div class="card-body">
-                                <div class="row g-3 align-items-end mb-4">
+                                <div class="inv-card-head">
+                                    <div>
+                                        <h5 class="mb-1">Monitores inventariados</h5>
+                                        <p class="text-muted mb-0 small">Monitores independientes según filtros y permisos actuales.</p>
+                                    </div>
+                                </div>
+                                <div class="inv-toolbar row g-3 align-items-end">
                                     <?php if ($mostrarFiltroColegio): ?>
                                     <div class="col-md-3">
                                         <label class="form-label">Colegio</label>
@@ -439,6 +445,10 @@ window.INVENTARIO_CONFIG = {
     mostrarColumnaColegio: <?= $mostrarColumnaColegio ? 'true' : 'false' ?>,
     qrEquipoBaseUrl: <?= json_encode(inventario_url_absoluta('equipoQRinformacion.php')) ?>,
     colegioLogoBaseUrl: '../img/colegios/',
+    colegioLogos: <?= json_encode(array_filter(array_combine(
+        array_map(static fn ($c) => (int) $c['id_colegio'], $colegios ?? []),
+        array_map(static fn ($c) => inventario_logo_colegio((int) $c['id_colegio']), $colegios ?? [])
+    ) ?: []), JSON_UNESCAPED_SLASHES) ?>,
     endpoints: {
         listar:          'ajax/listar_equipos.php',
         detalle:         'ajax/obtener_detalle_equipo.php',

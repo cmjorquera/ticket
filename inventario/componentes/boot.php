@@ -108,6 +108,30 @@ function inventario_sistema_url_absoluta($ruta = '')
     return $scheme . '://' . $host . '/' . ltrim((string)$ruta, '/');
 }
 
+/**
+ * URL del logo de un colegio, o null si no hay archivo.
+ * Busca primero img/colegios/colegio_{id}.png (sistema antiguo) y luego los
+ * escudos del sistema nuevo assets/images/escudo/{id}.png|jpg.
+ */
+function inventario_logo_colegio(int $idColegio): ?string
+{
+    if ($idColegio <= 0) {
+        return null;
+    }
+    $raiz = dirname(__DIR__, 2);
+    $candidatos = [
+        'img/colegios/colegio_' . $idColegio . '.png',
+        'assets/images/escudo/' . $idColegio . '.png',
+        'assets/images/escudo/' . $idColegio . '.jpg',
+    ];
+    foreach ($candidatos as $relativa) {
+        if (is_file($raiz . '/' . $relativa)) {
+            return inventario_sistema_url($relativa);
+        }
+    }
+    return null;
+}
+
 function inventario_h($valor)
 {
     return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');

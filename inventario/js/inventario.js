@@ -63,6 +63,10 @@
 
     function buildColegioLogoUrl(idColegio) {
         const cfg = window.INVENTARIO_CONFIG || {};
+        // Mapa {id_colegio: url} calculado en PHP con los logos que sí existen
+        if (cfg.colegioLogos) {
+            return cfg.colegioLogos[idColegio] || '';
+        }
         const base = cfg.colegioLogoBaseUrl || '../img/colegios/';
         return base + 'colegio_' + encodeURIComponent(idColegio) + '.png';
     }
@@ -70,13 +74,14 @@
     function renderColegioCell(row) {
         const idColegio = parseInt(row.id_colegio, 10) || 0;
         const nombre = escapeHtml(row.nom_colegio || 'Sin colegio');
-        const logo = idColegio > 0
-            ? '<span class="inv-school-avatar"><img src="' + buildColegioLogoUrl(idColegio) + '" alt="" loading="lazy" onerror="this.closest(\'.inv-school-avatar\').classList.add(\'is-empty\');this.remove();"></span>'
-            : '<span class="inv-school-avatar is-empty"><i class="bi bi-building"></i></span>';
+        const logoUrl = idColegio > 0 ? buildColegioLogoUrl(idColegio) : '';
+        const logo = logoUrl
+            ? '<span class="inv-school-avatar"><img src="' + escapeHtml(logoUrl) + '" alt="" loading="lazy" onerror="this.closest(\'.inv-school-avatar\').classList.add(\'is-empty\');this.remove();"></span>'
+            : '';
 
         return '<div class="inv-school-cell">' +
             '<div class="inv-school-name">' + nombre + '</div>' +
-            '<div class="inv-school-logo-line">' + logo + '</div>' +
+            (logo ? '<div class="inv-school-logo-line">' + logo + '</div>' : '') +
             '</div>';
     }
 
