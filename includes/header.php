@@ -47,6 +47,7 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
     <link rel="stylesheet" href="<?= $depth ?>css/tokens.css">
     <link rel="stylesheet" href="<?= $depth ?>css/layout.css">
     <link rel="stylesheet" href="<?= $depth ?>css/components.css">
+    <link rel="stylesheet" href="<?= $depth ?>css/tema_institucional.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <?php foreach (($pagina_estilos ?? []) as $estilo): ?>
     <link rel="stylesheet" href="<?= $depth . htmlspecialchars((string) $estilo, ENT_QUOTES, 'UTF-8') ?>">

@@ -20,6 +20,7 @@ $GLOBALS['depth'] = $depth;
 <link rel="stylesheet" href="<?= $depth ?? '' ?>css/tokens.css"/>
 <link rel="stylesheet" href="<?= $depth ?? '' ?>css/layout.css"/>
 <link rel="stylesheet" href="<?= $depth ?? '' ?>css/components.css"/>
+<link rel="stylesheet" href="<?= $depth ?? '' ?>css/tema_institucional.css"/>
 <?php if (!empty($con_charts)): ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <?php endif; ?>
