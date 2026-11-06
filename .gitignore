@@ -10,3 +10,6 @@ config_privada/
 *.sql
 *.log
 logica/logs/
+
+# Archivo generado en cada despliegue
+clases/version_desplegada.json
