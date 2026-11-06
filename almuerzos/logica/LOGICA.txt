@@ -1,0 +1,35 @@
+ALMUERZOS – etapa 1: interfaz (datos de ejemplo)
+================================================
+
+Qué hace la pantalla (almuerzos/index.php)
+-----------------------------------------
+- Cada persona elige su almuerzo del día entre 09:00 y 12:00 (lunes a viernes):
+  Menú del día, Hipocalórico o Picnic. También puede marcar "Hoy no almorzaré".
+  Puede cambiar su elección hasta las 12:00; después solo ve el menú.
+- Barra de estado: abierto / aún no abre / cerrado, con el tiempo que queda.
+- "Mis pedidos del mes": cuántas veces eligió cada opción y los próximos días.
+- "Menú del mes": calendario de días hábiles con los tres menús; al tocar un
+  día se ve el detalle (entrada + fondo + postre) y lo que pidió.
+- Administración (es_administrador_global): botón "Cargar almuerzos del mes"
+  1) elegir mes, 2) descargar plantilla .csv (una fila por día hábil,
+  separada por ";" para Excel), 3) subir el archivo, ver vista previa con
+  validaciones (fecha del mes, día hábil, tres menús) y publicar.
+  Panel "Para cocina · hoy" con los pedidos por opción.
+
+Por ahora (sin base de datos)
+-----------------------------
+- Los menús se generan de ejemplo (siempre los mismos para cada fecha).
+- La elección y el menú publicado se guardan solo en el navegador
+  (localStorage). Los pedidos de días pasados y los números de cocina son
+  inventados. "Simular horario abierto" permite probar fuera de 09:00–12:00.
+
+Propuesta para la etapa 2 (base de datos)
+-----------------------------------------
+almuerzo_menu      (fecha DATE PK, menu_dia TEXT, hipocalorico TEXT, picnic TEXT,
+                    publicado_por INT, publicado_en DATETIME)
+almuerzo_pedido    (id_usuario INT, fecha DATE, opcion ENUM('menu','hipo','picnic','no'),
+                    actualizado_en DATETIME, PRIMARY KEY (id_usuario, fecha))
+almuerzo_config    (hora_inicio TIME '09:00', hora_fin TIME '12:00')
+- El servidor valida el horario (no el navegador) con la hora de Chile.
+- Cocina: SELECT opcion, COUNT(*) FROM almuerzo_pedido WHERE fecha = CURDATE() GROUP BY opcion.
+- Exportar a Excel/PDF la lista del día para cocina.
