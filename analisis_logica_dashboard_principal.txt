@@ -1,0 +1,741 @@
+ANALISIS LOGICA DASHBOARD ANTIGUA (principal.php)
+==================================================
+Sistema: SEDUC TICKET  (PHP 8.1 + MariaDB 10.6)
+Archivo: principal.php  (1844 lineas)  -  idPagActual = "8"
+Objetivo de este documento: extraer SOLO la logica para reimplementar en dashboard.php
+Fecha: 2026-09-09
+
+
+==================================================
+1. ESTRUCTURA GENERAL
+==================================================
+
+QUE HACE:
+principal.php es el dashboard/panel de inicio del sistema. Es una sola pagina
+que muestra el estado de los tickets del usuario logueado y adapta TODO su
+contenido segun el "perfil" activo (Usuario / Tecnico / Admin). El mismo
+archivo sirve a los 3 roles; no hay 3 dashboards separados.
+
+BOOTSTRAP DE LA PAGINA (lineas 1-32):
+  session_start()
+  require class/conexion.php      -> clase MySQL
+  require class/funciones.php     -> clase Funciones
+  require componentes/offcanvas.php
+  $funciones = new Funciones()
+  $idUsuarioSession = $_SESSION['id']
+  $nombre           = $_SESSION['nombre'] . ' ' . $_SESSION['apellido_paterno']
+  $AreaTrabajo      = $_SESSION['id_area_trabajo']
+  $idPagActual      = "8"
+  $contadorPasos    = 10                 (pasos del tour Intro.js)
+  $funciones->actualizarTicketsDemoradosAutomaticamente();   <-- CRON MANUAL, se ejecuta en cada carga
+  if ($_SESSION['primera_vez'] == 0) $_SESSION['primera_vez'] = 1;
+  Cache-busting: filemtime() de css/modalesTicket.css, css/ticket_admin.css, js/ticket.js
+
+SECCIONES PRINCIPALES (de arriba a abajo):
+  1. <head>: carga masiva de librerias (ver seccion 10) + <style> embebido
+     (Google Calendar, tabs laterales de perfil, overlay de carga).
+  2. Offcanvas globales: mostrarOffcanvasActividad() y mostrarOffcanvasConversacion()
+     (se invocan ANTES del <body>, generan HTML de 2 paneles laterales).
+  3. Menu lateral: $funciones->menuLateral2($idUsuarioSession, $idPagActual)
+  4. Topbar: $funciones->cabezera()
+  5. Bloque #botonesDescargar (casi todo comentado; queda logica de bloqueo por IDs 28-34).
+  6. Tabs laterales de cambio de perfil (.perfil-side-tabs) - solo si el usuario
+     tiene mas de 1 perfil.
+  7. 3 filas de "contenedores de estado" (tarjetas KPI), una por perfil:
+     #contenedorEstadosUsuario / #contenedorEstadosTecnico / #contenedorEstadosAdmin
+     (solo una visible segun perfil).
+  8. Fila con 2 graficos:
+     - Grafico de Tickets (barras horizontales, Chart.js)
+     - Estados por Categoria de Ticket (area/lineas, ApexCharts)
+  9. Card "Listado de Tickets": 3 divs (#contenedorUsuario / #contenedorTecnico /
+     #contenedorAdmin), cada uno incluye un bloque_tabla_*.php. Solo uno visible.
+ 10. Offcanvas #offcanvasAsunto (detalle del asunto de un ticket).
+ 11. Footer: $funciones->footer() + include modal_salir.php + $funciones->script()
+ 12. Modal #modalGoogleCalendar + toda la integracion Google Calendar (API JS).
+
+PATRON CLAVE:
+El dashboard renderiza en el servidor los 3 juegos de contenedores/tablas a la
+vez (Usuario, Tecnico, Admin) y usa CSS display:none/grid/block para mostrar
+solo el del perfil activo. El cambio de perfil por las tabs laterales RECARGA
+la pagina (principal.php?vista_perfil=xxx). El cambio por los menus "3 puntos"
+de cada grafico NO recarga: solo hace fetch AJAX y togglea divs.
+
+
+==================================================
+2. CONTENEDORES / CARDS  (tarjetas KPI de estado)
+==================================================
+
+Se renderizan con metodos de la clase Funciones. Firma:
+  $funciones->contenedorTicketXXX($idUsuarioSession, $modo)
+donde $modo determina el filtro de propiedad:
+  modo 3 = solo tickets del usuario     (WHERE id_usuario = sesion)
+  modo 5 = solo tickets del tecnico     (WHERE id_tecnico = sesion)
+  modo 4 = todos los tickets            (sin filtro de propietario = admin)
+
+Cada metodo hace internamente 3 consultas:
+  a) COUNT de tickets en ESE estado (con el filtro del modo)
+  b) COUNT total de tickets (del mismo ambito, sin filtro de estado)
+  c) SELECT color_degradado, descripcion_estado FROM estados_ticket WHERE id = <estado>
+Y calcula: porcentaje = round(contador / max(1,total) * 100)
+
+------------------------------------------------------------
+FILA #contenedorEstadosUsuario  (display grid si perfil=usuario)   modo 3
+------------------------------------------------------------
+CONTENEDOR: Tickets Asignados
+  Muestra: cantidad de tickets del usuario en estado 2 + (porcentaje%)
+  Fuente:  SELECT COUNT(*) FROM tickets WHERE id_estado = 2 AND id_usuario = ?
+  Total:   SELECT COUNT(*) FROM tickets WHERE id_usuario = ?
+  Calculo: porcentaje = contador/total*100 ; barra de progreso Bootstrap
+  Accion:  lupa -> filtrarTickets(2)
+
+CONTENEDOR: Tickets en Proceso
+  Estado 3.  SELECT COUNT(*) FROM tickets WHERE id_estado = 3 AND id_usuario = ?
+  Accion: filtrarTickets(3)
+
+CONTENEDOR: Tickets Terminados
+  Estado 5.  SELECT COUNT(*) FROM tickets WHERE id_estado = 5 AND id_usuario = ?
+  Accion: filtrarTickets(5)
+
+CONTENEDOR: Tickets Atrasados  (titulo visible "Tickets Atrasados", estado interno 7 = Demorado)
+  Estado 7.  SELECT COUNT(*) FROM tickets WHERE id_estado = 7 AND id_usuario = ?
+  Accion: filtrarTickets(7)
+
+NOTA: contenedorTicketRecibidos (estado 1) esta COMENTADO para usuario y tecnico.
+
+------------------------------------------------------------
+FILA #contenedorEstadosTecnico  (display grid si perfil=tecnico)   modo 5
+------------------------------------------------------------
+Mismas 4 tarjetas (Asignados 2, En Proceso 3, Terminados 5, Atrasados 7)
+pero con  AND id_tecnico = ?  en vez de id_usuario.
+Total del ambito: SELECT COUNT(*) FROM tickets WHERE id_tecnico = ?
+
+------------------------------------------------------------
+FILA #contenedorEstadosAdmin  (display grid si perfil=admin)       modo 4
+------------------------------------------------------------
+CONTENEDOR: Tickets No Asignados / Recibidos   (SI se muestra en admin)
+  Estado 1.  SELECT COUNT(*) FROM tickets WHERE id_estado = 1
+  Total:     SELECT COUNT(*) FROM tickets
+  Extra: si contador >= 1 agrega clase 'estado-atencion' (resalte)
+  Accion: filtrarTickets(1)
+CONTENEDOR: Tickets Asignados      Estado 2.  SELECT COUNT(*) FROM tickets WHERE id_estado = 2
+CONTENEDOR: Tickets en Proceso     Estado 3.  SELECT COUNT(*) FROM tickets WHERE id_estado = 3
+CONTENEDOR: Tickets Terminados     Estado 5.  SELECT COUNT(*) FROM tickets WHERE id_estado = 5
+CONTENEDOR: Tickets Atrasados      Estado 7.  SELECT COUNT(*) FROM tickets WHERE id_estado = 7
+Total en todas: SELECT COUNT(*) FROM tickets
+
+------------------------------------------------------------
+VISUAL DE CADA TARJETA (identico en los 3 modos):
+  - Fondo: degradado desde estados_ticket.color_degradado (o degradado por defecto)
+  - Titulo del estado
+  - "contador (porcentaje%)" con tooltip "contador de total"
+  - Icono bootstrap-icon con popover = estados_ticket.descripcion_estado
+  - Barra de progreso Bootstrap con width = porcentaje%
+    (color de barra: warning/info/success/danger/dark segun el estado)
+  - Footer con lupa <i class="bi bi-search" onclick="filtrarTickets(N)">
+
+
+==================================================
+3. GRAFICOS
+==================================================
+
+------------------------------------------------------------
+GRAFICO 1: "Grafico de Tickets"
+------------------------------------------------------------
+Libreria:   Chart.js
+Tipo:       Barras HORIZONTALES (type:'bar', indexAxis:'y')
+Contenedor: <canvas id="canvasGraficoTicket"> dentro de #contenedorGraficoTicket
+Funcion JS: generarGraficoTicket(tipoUsuario)   (definida INLINE en principal.php, ~linea 952)
+Overlay carga: #loadingGraficoTicket (spinner, minimo 1000 ms via esperarMinimoCarga)
+
+Datos en Y (categorias / labels): los 7 estados, en este ORDEN FIJO:
+   Recibido(1), Asignado(2), En proceso(3), Terminado(5), Borrador(4), Demorado(7), Cerrado(6)
+Datos en X (valores): cantidad de tickets por estado (cantidad_tickets)
+Serie unica: "Cantidad de Tickets"
+Colores: cada barra usa estados_ticket.color (campo color_estado del JSON);
+         si viene 0 o nulo -> 'rgba(200,200,200,0.3)' / fallback 'rgba(54,162,235,0.5)'
+Eje X: lineal, beginAtZero, stepSize 1, solo enteros, suggestedMax = ceil(max(cantidades,10))
+Tooltip: "<n> tickets"
+Si todos los estados = 0 -> mensaje "No hay tickets registrados para este perfil."
+
+ENDPOINT (fuente de datos):
+   GET modelos/filtros/filtro_estadoTicketGrafico.php?tipoUsuario=<perfil>[&idUsuario=<id>]&_=<timestamp>
+   - Llama antes actualizarTicketsDemoradosAutomaticamente()
+   - Segun tipoUsuario:
+       'tecnico' + idUsuario -> Funciones::cargarEstadosTicket($idUsuario)
+       'usuario' + idUsuario -> Funciones::cargarEstadosTicketUsuario($idUsuario)
+       otro / 'admin' / 'todos' -> Funciones::cargarEstadosTicketTodos()
+   - Devuelve JSON: array de { id_estado, estado, color_estado, cantidad_tickets }
+
+QUERIES REALES (class/funciones.php):
+   cargarEstadosTicket($idUsuario)  [TECNICO]:
+     SELECT e.id AS id_estado, e.nombre AS estado, e.color AS color_estado,
+            COALESCE(COUNT(t.id_ticket),0) AS cantidad_tickets
+     FROM estados_ticket e
+     LEFT JOIN tickets t ON e.id = t.id_estado AND t.id_tecnico = $idUsuario
+     GROUP BY e.id, e.nombre, e.color
+     ORDER BY e.orden ASC
+
+   cargarEstadosTicketUsuario($idUsuario)  [USUARIO]:
+     ... LEFT JOIN tickets t ON e.id = t.id_estado AND t.id_usuario = $idUsuario ...
+     (resto identico)
+
+   cargarEstadosTicketTodos()  [ADMIN]:
+     SELECT e.id AS id_estado, e.nombre AS estado, e.color AS color_estado,
+            COUNT(t.id_ticket) AS cantidad_tickets
+     FROM estados_ticket e
+     LEFT JOIN tickets t ON e.id = t.id_estado
+     GROUP BY e.id, e.nombre, e.color
+     ORDER BY e.orden ASC
+
+------------------------------------------------------------
+GRAFICO 2: "Estados por Categoria de Ticket"
+------------------------------------------------------------
+Libreria:   ApexCharts  (js/apexcharts.min.js)
+Tipo:       Area con curva suave (type:'area', stroke curve 'smooth', fill gradient)
+Contenedor: <div id="grafico_estados_categoria"> -> se le inyecta <div id="chartEstadosPorCategoria">
+Funcion JS: cargarGraficoPorPerfil(perfil)   (definida INLINE en principal.php, ~linea 870)
+Overlay carga: #loadingGraficoCategorias
+
+Eje X (categorias): abreviaciones de categoria_de_ticket (c.abreviacion), ordenadas por c.orden
+Series: una por cada estado de estados_ticket (name = e.nombre)
+Datos de cada serie: cantidad de tickets de ese estado en cada categoria (0 si no hay)
+Altura: 330
+Markers: size 4
+Colores (paleta fija de 10):
+   #4154f1, #2eca6a, #ff771d, #e91e63, #9c27b0, #3f51b5, #00bcd4, #8bc34a, #ffc107, #ff5722
+Fill: gradient (opacityFrom 0.3, opacityTo 0.4)
+Eje Y: min 0, tickAmount 10, labels como enteros
+dataLabels: off ; toolbar: off
+Si no hay datos (todas las series en 0) -> mensaje "No hay tickets asociados para este perfil."
+
+ENDPOINT (fuente de datos):
+   GET grafico_estados_categoria.php?perfil=<usuario|tecnico|admin|auto>
+   - session_start() ; usa $_SESSION['id']
+   - Llama antes actualizarTicketsDemoradosAutomaticamente()
+   - Si perfil = 'auto' detecta el perfil real del usuario (usuario_perfil):
+       tiene id_perfil 3 -> admin ; 2 -> tecnico ; si no -> usuario
+   - Filtro:
+       'usuario' -> AND t.id_usuario = $idUsuarioSession
+       'tecnico' -> AND t.id_tecnico = $idUsuarioSession
+       'admin'   -> sin filtro
+   - QUERY principal:
+       SELECT c.abreviacion AS categoria, e.nombre AS estado, COUNT(*) AS cantidad
+       FROM tickets t
+       JOIN categoria_de_ticket c ON t.id_categoria_ticket = c.id_categoria
+       JOIN estados_ticket e ON t.id_estado = e.id
+       <filtro>
+       GROUP BY c.abreviacion, e.nombre, c.orden
+       ORDER BY c.orden ASC, e.nombre ASC
+   - QUERY estados (para asegurar todas las series):
+       SELECT nombre FROM estados_ticket ORDER BY orden
+   - Devuelve JSON: { series: [ {name, data[]}... ], categorias: [...] }
+
+   OJO BUG: el JS espera "data.categorias" pero al construir el grafico usa
+   "xaxis.categories: data.categorias" correctamente; sin embargo el chequeo
+   "hayDatos" recorre data.series[].data - OK. El endpoint NO usa el filtro cuando
+   perfil='auto' resuelve a 'admin' (correcto), pero si perfil llega vacio el
+   $filtro queda "" (= admin). Revisar al migrar.
+
+
+==================================================
+4. FILTROS Y DINAMICAS
+==================================================
+
+A) CAMBIO DE PERFIL POR TABS LATERALES (.perfil-side-tab)  -> RECARGA PAGINA
+   - Solo se muestran si count($perfilesDashboardDisponibles) > 1
+   - href = principal.php?vista_perfil=<usuario|tecnico|admin>
+   - JS intercepta el click (event.preventDefault) y llama
+     prepararCambioPerfilConCarga(this.href): muestra overlays de carga en los
+     3 bloques y hace window.location.href = destino tras 1000 ms.
+   - Al recargar, PHP lee $_GET['vista_perfil'] y si es valido para el usuario
+     lo usa como $perfilDashboardInicial.
+
+B) CAMBIO DE PERFIL POR MENU "3 PUNTOS" DE CADA CARD  -> SIN RECARGA (AJAX + toggle CSS)
+   - Grafico de Tickets: onclick="generarGraficoTicket('usuario'|'tecnico'|'admin')"
+   - Estados por Categoria: onclick="cargarGraficoPorPerfil('usuario'|'tecnico'|'admin')"
+   - Listado de Tickets: onclick="mostrarListado('usuario'|'tecnico'|'admin')"
+   - Estos menus solo aparecen si el usuario tiene mas de 1 perfil.
+
+C) mostrarListado(tipo)  (JS inline ~linea 780):
+   - Muestra overlay #loadingListadoTickets (minimo 1000 ms)
+   - Togglea display de #contenedorUsuario/#contenedorTecnico/#contenedorAdmin
+     (block al elegido, none al resto)
+   - Togglea display de #contenedorEstadosUsuario/Tecnico/Admin (grid / none)
+   - Llama inicializarTablaPerfilDashboard(contenedorId) para inicializar el
+     DataTable de la tabla que quedo visible.
+
+D) cambiarPerfil(perfil)  (JS inline ~linea 1223):
+   - Muestra SweetAlert2 de confirmacion "Cambiar a X"
+   - Al confirmar: actualiza texto #textoPerfilActual, llama mostrarListado(),
+     generarGraficoTicket() y cargarGraficoPorPerfil() con el nuevo perfil.
+   - (Es la version "todo en uno" sin recarga; convive con las tabs que si recargan.)
+
+E) FILTRO POR ESTADO EN LOS KPI: lupa de cada tarjeta -> filtrarTickets(idEstado)
+   (funcion definida en el bloque_tabla_* / ticket.js). Filtra la tabla del
+   listado por ese estado. Toggle: volver a pulsar el mismo estado quita el filtro.
+
+F) FILTROS DE CABECERA DE CADA TABLA (dentro de bloque_tabla_*):
+   selects/date inputs (estado, fecha creacion, tecnico, fecha respuesta) que
+   filtran client-side via $.fn.dataTable.ext.search. (Ver doc de bloque_tabla_*).
+
+G QUE SE MUESTRA / OCULTA SEGUN ROL: ver seccion 6.
+
+
+==================================================
+5. TABLA DE TICKETS  ("Listado de Tickets")
+==================================================
+
+Card unica con 3 divs, cada uno incluye un componente PHP:
+   #contenedorUsuario  -> include componentes/bloque_tabla_usuario.php   (tabla #tablaUsuario)
+   #contenedorTecnico  -> include componentes/bloque_tabla_tecnico.php   (tabla #tablaTecnicoTicketAsignados)
+   #contenedorAdmin    -> $GLOBALS['ticketAdminColorColumn'] = true;
+                          include componentes/bloque_tabla_adminn.php    (tabla #dataTableAdministrador)
+Solo el div del $perfilDashboardInicial arranca con display:block; el resto none.
+Los 3 se renderizan SIEMPRE en el servidor (los 3 SELECT se ejecutan en cada carga).
+
+DATOS: cada bloque llama a su metodo de Funciones:
+   bloque_tabla_usuario.php  -> $funciones->ticketUsuario($idUsuarioSession, $estado)
+       WHERE t.id_usuario = sesion
+   bloque_tabla_tecnico.php  -> $funciones->obtenerTicketsTecnico($idUsuarioSession, $estado)
+       WHERE t.id_tecnico = sesion AND t.id_estado != 4
+   bloque_tabla_adminn.php   -> $funciones->ticketAdministrador($idUsuarioSession, $estado)
+       WHERE t.id_estado != 4   (todos menos borrador)
+   Todas: JOIN estados_ticket, usuarios; LEFT JOIN proceso_tickets,
+   calificacion_tickett; subconsultas COUNT de archivos_adjuntos_ticket,
+   conversaciones, ticket_conversaciones. GROUP BY t.id_ticket.
+   ORDER BY pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC.
+   $estado viene de $GLOBALS['estadoTicketFiltro'] (lo setean los endpoints AJAX).
+
+COLUMNAS por tabla:
+  USUARIO (#tablaUsuario):
+     N | FECHA/HORA | DE | ASUNTO | ESTADO | FEC RES | DIAS RESTANTES | PROGRESO (x/4) | OPCIONES
+  TECNICO (#tablaTecnicoTicketAsignados):
+     ID | FECHA/HORA | DE | ASUNTO | ESTADO | FECHA RESPUESTA | CALIFICACION | OPCIONES
+  ADMIN (#dataTableAdministrador):
+     ID | FECHA/HORA | DE | ASUNTO | TECNICO | FECHA RESPUESTA | CALIFICACION | OPCIONES
+
+CADA <tr> lleva data-attributes para los filtros client-side:
+     data-estado, data-fecha-creacion (Y-m-d), data-tecnico-id, data-fecha-respuesta (Y-m-d)
+Clase de fila: estado-ticket-<id_estado> (+ fila-ticket-admin-compacta en admin/usuario).
+En admin, $GLOBALS['ticketAdminColorColumn']=true => modo compacto: puntito de
+color de estado en la celda ID (en vez de pintar toda la fila).
+
+BOTONES / ACCIONES por fila (segun rol y estado):
+  Comunes:
+    - Ver detalle asunto: icono (i) -> mostrarOffcanvasAsunto(id_ticket)
+      (AJAX POST modelos/rescatar/asunto_del_ticket.php -> #offcanvasAsunto)
+    - Ver ticket:
+        usuario  -> modalTicketUsuario(id)  (o ticketBorrador(id) si estado 4)
+        tecnico  -> modalTicketTecnico(id)
+        admin    -> modalTicketAdministrativo(id)
+    - Chat usuario<->tecnico: boton chat -> cargarTicketConversacion(id, idA, idB, id_estado)
+      (badge rojo con cantidad de mensajes; inyecta offcanvas en #offcanvasContainerTicket)
+    - Archivos adjuntos: si cantidadArchivos > 0 -> archivosAdjuntos(id) (badge con nro)
+  Usuario:
+    - Calificar: si id_estado = 5 y sin calificacion -> boton estrella ->
+      validacionTicketPorUsuario(id, id_usuario, id_tecnico)
+  Tecnico:
+    - Reprogramar: si id_estado = 7 -> reprogramarFechaTicketDemorado(id, fechaIso)
+    - Ver calificacion: si id_estado = 5 y tiene calificacion -> calificarTicket(id)
+  Admin:
+    - Asignar/Cambiar tecnico: si id_estado 1 o 2 -> asignacionTecnico(id_ticket)
+      (modal SweetAlert2: datos del ticket + avatares de tecnicos + categorias +
+       tecnico sugerido por categoria; guarda con guardar_responsable_ticket.php)
+    - Estrellas: si id_estado 5 con calificacion -> <div class="contenedor-estrellas-admin"
+      data-ticket-id> que JS rellena via modelos/rescatar/calificacionUsuario.php
+    - Aviso ultimo dia: si id_estado 3, queda 1 dia y hay tecnico ->
+      enviarAvisoUltimoDiaTecnico(id) (correo)
+    - Menu 3 puntos por fila: Eliminar (eliminarTicketDesdeMenu), Fusionar
+      (fusionarTicketDesdeMenu), Historial del Ticket (estadistica/vida_ticket.php)
+
+INICIALIZACION DE DATATABLES: inicializarTablaPerfilDashboard(contenedor)
+  (JS inline ~linea 1117). Busca dentro del contenedor #tablaUsuario /
+  #tablaTecnicoTicketAsignados / #dataTableAdministrador y hace .DataTable({
+  language es-ES, responsive:true, pageLength:10, pagingType:'simple_numbers'}).
+  Para admin llama tambien configurarFiltrosTablaAdmin(dt).
+  Al final: $.fn.dataTable.tables({visible:true, api:true}).columns.adjust().draw(false)
+
+
+==================================================
+6. PERFILES Y ROLES  (Usuario / Tecnico / Admin)
+==================================================
+
+DETECCION DE PERFILES (PHP, ~linea 456):
+   SELECT id_perfil FROM usuario_perfil WHERE id_usuario = <sesion>
+   Mapa de id_perfil:  1 = Usuario | 2 = Tecnico | 3 = Administrador
+   (la consulta se repite ~5 veces en el archivo, una por card).
+
+$perfilesDashboardDisponibles: se arma con las opciones que el usuario tiene.
+   orden de armado: admin, usuario, tecnico  (para las tabs laterales)
+
+$perfilDashboardInicial (perfil activo al cargar):
+   1) por defecto 'usuario'
+   2) si tiene perfil 3 -> 'admin'
+      sino si tiene 2   -> 'tecnico'
+      sino si tiene 1   -> 'usuario'
+   3) si llega $_GET['vista_perfil'] y es un perfil valido del usuario -> ese gana
+
+QUE VE CADA ROL (con el perfil activo):
+
+  USUARIO (perfil 1):
+    KPIs: Asignados, En Proceso, Terminados, Atrasados  (SOLO de sus tickets, id_usuario)
+    Grafico Tickets: cargarEstadosTicketUsuario (barras de SUS tickets por estado)
+    Grafico Categorias: filtro AND t.id_usuario = sesion
+    Listado: tabla #tablaUsuario (sus tickets). Puede crear ticket, chatear,
+             calificar tickets terminados.
+    NO ve: boton asignar tecnico, columna TECNICO, menu eliminar/fusionar.
+
+  TECNICO (perfil 2):
+    KPIs: Asignados, En Proceso, Terminados, Atrasados  (SOLO donde el es tecnico, id_tecnico)
+    Grafico Tickets: cargarEstadosTicket (barras de los tickets asignados a el)
+    Grafico Categorias: filtro AND t.id_tecnico = sesion
+    Listado: tabla #tablaTecnicoTicketAsignados (excluye borradores). Puede
+             comenzar/terminar tickets, registrar avances, reprogramar demorados,
+             ver calificacion recibida.
+    NO ve: creacion de ticket como flujo principal, asignacion de tecnico.
+
+  ADMIN (perfil 3):
+    KPIs: Recibidos(1) + Asignados + En Proceso + Terminados + Atrasados  (TODOS los tickets)
+    Grafico Tickets: cargarEstadosTicketTodos (barras globales)
+    Grafico Categorias: sin filtro (global)
+    Listado: tabla #dataTableAdministrador en modo compacto/color
+             ($GLOBALS['ticketAdminColorColumn']=true). Puede asignar/cambiar
+             tecnico, eliminar, fusionar, avisar ultimo dia, ver historial.
+    Ve TODO.
+
+MENUS "3 PUNTOS": solo aparecen si el usuario tiene mas de 1 perfil
+   (count($perfilesUsuario) > 1). Un usuario con un solo perfil no puede cambiar de vista.
+
+BLOQUEO POR IDs (linea 429): $bloqueados = [28,29,30,31,32,33,34]  (colegios).
+   Si $idUsuarioSession esta en la lista se oculta un bloque de botones
+   (actualmente ese bloque esta casi todo comentado, pero la logica de exclusion existe).
+
+
+==================================================
+7. QUERIES SQL USADAS  (todas las del dashboard)
+==================================================
+
+--- En principal.php (inline, repetidas por card) ---
+
+Q1. Perfiles del usuario (id):
+    SELECT id_perfil FROM usuario_perfil WHERE id_usuario = $idUsuarioSession
+
+Q2. Perfiles del usuario (nombre):
+    SELECT p.nombre FROM usuario_perfil up
+    JOIN perfiles p ON up.id_perfil = p.id_perfil
+    WHERE up.id_usuario = $idUsuarioSession
+
+--- En los contenedores KPI (Funciones::contenedorTicketXXX), por cada tarjeta ---
+
+Q3. Conteo por estado (modo usuario / modo 3):
+    SELECT COUNT(*) as total FROM tickets WHERE id_estado = <E> AND id_usuario = $id
+Q4. Total ambito usuario:
+    SELECT COUNT(*) as total FROM tickets WHERE id_usuario = $id
+Q5. Conteo por estado (modo tecnico / modo 5):
+    SELECT COUNT(*) as total FROM tickets WHERE id_estado = <E> AND id_tecnico = $id
+Q6. Total ambito tecnico:
+    SELECT COUNT(*) as total FROM tickets WHERE id_tecnico = $id
+Q7. Conteo por estado (modo admin / modo 4):
+    SELECT COUNT(*) as total FROM tickets WHERE id_estado = <E>
+Q8. Total global:
+    SELECT COUNT(*) as total FROM tickets
+Q9. Color y descripcion del estado:
+    SELECT color_degradado, descripcion_estado FROM estados_ticket WHERE id = <E>
+    (<E> = 1 Recibido, 2 Asignado, 3 En proceso, 5 Terminado, 7 Demorado)
+
+--- Grafico 1 (barras) - filtro_estadoTicketGrafico.php via Funciones ---
+
+Q10. cargarEstadosTicket($idUsuario)  [tecnico]:
+     SELECT e.id AS id_estado, e.nombre AS estado, e.color AS color_estado,
+            COALESCE(COUNT(t.id_ticket),0) AS cantidad_tickets
+     FROM estados_ticket e
+     LEFT JOIN tickets t ON e.id = t.id_estado AND t.id_tecnico = $idUsuario
+     GROUP BY e.id, e.nombre, e.color ORDER BY e.orden ASC
+
+Q11. cargarEstadosTicketUsuario($idUsuario)  [usuario]:
+     ... LEFT JOIN tickets t ON e.id = t.id_estado AND t.id_usuario = $idUsuario ...
+
+Q12. cargarEstadosTicketTodos()  [admin]:
+     SELECT e.id AS id_estado, e.nombre AS estado, e.color AS color_estado,
+            COUNT(t.id_ticket) AS cantidad_tickets
+     FROM estados_ticket e
+     LEFT JOIN tickets t ON e.id = t.id_estado
+     GROUP BY e.id, e.nombre, e.color ORDER BY e.orden ASC
+
+--- Grafico 2 (area por categoria) - grafico_estados_categoria.php ---
+
+Q13. Deteccion de perfil (si perfil=auto):
+     SELECT id_perfil FROM usuario_perfil WHERE id_usuario = $idUsuarioSession
+
+Q14. Conteo tickets por categoria y estado:
+     SELECT c.abreviacion AS categoria, e.nombre AS estado, COUNT(*) AS cantidad
+     FROM tickets t
+     JOIN categoria_de_ticket c ON t.id_categoria_ticket = c.id_categoria
+     JOIN estados_ticket e ON t.id_estado = e.id
+     [AND t.id_usuario = $id] | [AND t.id_tecnico = $id] | (nada = admin)
+     GROUP BY c.abreviacion, e.nombre, c.orden
+     ORDER BY c.orden ASC, e.nombre ASC
+
+Q15. Lista de estados (para completar series):
+     SELECT nombre FROM estados_ticket ORDER BY orden
+
+--- Listado de tickets - bloque_tabla_*.php via Funciones ---
+
+Q16. ticketUsuario($id, $estado):
+     SELECT t.*, et.nombre nombreEstado, et.orden ordenEstado, et.color colorEstado,
+            et.descripcion_estado, pt.fecha_creacion_inicio,
+            pt.dias_estimada_admin AS dias_administrador_estima, pt.hora_creacion_inicio,
+            pt.fecha_estimada_admin, pt.fecha_asignacion_tecnico, pt.hora_asignacion_tecnico,
+            pt.fecha_comienzo_ticket, pt.hora_comienzo_ticket, pt.fecha_termino_ticket,
+            pt.hora_termino_ticket, ct.id_ticket AS tieneCalificacion,
+            ct.id_calificacion AS calificacionEstrellas,
+            (SELECT COUNT(*) FROM archivos_adjuntos_ticket aa WHERE aa.id_ticket=t.id_ticket) cantidadArchivos,
+            (SELECT COUNT(*) FROM conversaciones c WHERE c.id_ticket=t.id_ticket) cantidadConversaciones,
+            (SELECT COUNT(*) FROM ticket_conversaciones tc WHERE tc.id_ticket=t.id_ticket) cantidadMensajes,
+            (SELECT COUNT(*) FROM ticket_conversaciones tc WHERE tc.id_ticket=t.id_ticket AND tc.leido=0 AND tc.receptor='$id') cantidadMensajesNoLeidos,
+            us.nombre, us.apellido_paterno, us.apellido_materno
+     FROM tickets t
+     JOIN estados_ticket et ON et.id=t.id_estado
+     JOIN usuarios us ON us.id=t.id_usuario
+     LEFT JOIN proceso_tickets pt ON pt.id_ticket=t.id_ticket
+     LEFT JOIN calificacion_tickett ct ON ct.id_ticket=t.id_ticket
+     WHERE t.id_usuario='$id'  [AND t.id_estado='$estado']
+     GROUP BY t.id_ticket
+     ORDER BY pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC
+
+Q17. obtenerTicketsTecnico($id, $estado):
+     (similar, con JOIN usuarios tecnico, COUNT(tc.id) cantidadMensajes,
+      COUNT(c.id) cantidadConversaciones)
+     WHERE t.id_tecnico='$id' AND t.id_estado != 4  [AND t.id_estado='$estado']
+     GROUP BY t.id_ticket ORDER BY pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC
+
+Q18. ticketAdministrador($id, $estado):
+     (similar a Q17 sin el WHERE por tecnico)
+     WHERE t.id_estado != 4  [AND t.id_estado='$estado']
+     GROUP BY t.id_ticket ORDER BY pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC
+
+Q19. Select de tecnicos para el filtro de tabla (dentro de bloque_tabla_usuario / adminn):
+     SELECT id, nombre, apellido_paterno FROM usuarios
+     WHERE id IN (6,7,8,42) ORDER BY FIELD(id, 6,7,8,42)
+
+--- Cron manual (se ejecuta al inicio de principal.php y de ambos endpoints de grafico) ---
+
+Q20. actualizarTicketsDemoradosAutomaticamente():
+     UPDATE tickets t
+     INNER JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket
+     SET t.id_estado = 7
+     WHERE t.id_estado IN (2,3)
+       AND pt.fecha_estimada_admin IS NOT NULL
+       AND pt.fecha_estimada_admin <> '0000-00-00'
+       AND pt.fecha_estimada_admin < CURDATE()
+
+
+==================================================
+8. FUNCIONES JAVASCRIPT
+==================================================
+
+--- Definidas INLINE en principal.php ---
+
+normalizarPerfilDashboard(perfil)
+   Devuelve 'usuario' si vacio; 'admin' si perfil==='administrador'; si no perfil.toLowerCase().
+
+esperarMinimoCarga(inicio, minimo=1000)
+   Promise que resuelve tras asegurar que pasaron 'minimo' ms desde 'inicio'
+   (para que el spinner se vea al menos 1 s).
+
+cambiarVisibilidadCarga(idOverlay, visible)
+   Togglea la clase 'is-visible' del overlay de carga indicado.
+
+mostrarCargaDashboard()
+   Muestra los 3 overlays: loadingGraficoTicket, loadingGraficoCategorias, loadingListadoTickets.
+
+prepararCambioPerfilConCarga(destino)
+   Muestra overlays y hace window.location.href = destino tras 1000 ms (usado por las tabs).
+
+cargarGraficoPorPerfil(perfil='usuario')   -> GRAFICO 2 (ApexCharts area)
+   fetch grafico_estados_categoria.php?perfil=... ; si no hay datos muestra mensaje;
+   si hay, renderiza ApexCharts en #chartEstadosPorCategoria.
+
+generarGraficoTicket(tipoUsuario='auto')   -> GRAFICO 1 (Chart.js barras)
+   fetch modelos/filtros/filtro_estadoTicketGrafico.php?tipoUsuario=...&idUsuario=...&_=ts ;
+   mapea los 7 estados en orden fijo; si todo 0 muestra mensaje; si no, destruye
+   el chart previo (canvas.chart.destroy()) y crea Chart bar horizontal.
+
+inicializarTablaPerfilDashboard(contenedor)
+   Inicializa el DataTable de la tabla (#tablaUsuario / #tablaTecnicoTicketAsignados /
+   #dataTableAdministrador) que este dentro de 'contenedor', si no lo estaba ya.
+   Para admin llama configurarFiltrosTablaAdmin(dt). Ajusta columnas de tablas visibles.
+
+mostrarListado(tipo)   ('usuario' | 'tecnico' | 'admin')
+   Togglea display de los 3 #contenedorX y de los 3 #contenedorEstadosX,
+   inicializa el DataTable del que quedo visible, maneja overlay de carga.
+
+cambiarPerfil(perfil)
+   SweetAlert2 de confirmacion; al aceptar: actualiza #textoPerfilActual,
+   llama mostrarListado(), generarGraficoTicket() y cargarGraficoPorPerfil().
+
+mostrarOffcanvasAsunto(idTicket)
+   Abre offcanvas #offcanvasAsunto y carga por AJAX POST
+   modelos/rescatar/asunto_del_ticket.php dentro de #contenidoOffcanvasAsunto.
+
+iniciarTour()
+   introJs().start()  (tour guiado Intro.js).
+
+Listeners DOMContentLoaded (varios):
+   - generarGraficoTicket(perfilDashboardInicial)  al cargar
+   - cargarGraficoPorPerfil(perfilDashboardInicial)  al cargar
+   - inicializarTablaPerfilDashboard(contenedorInicial)  segun perfil visible
+   - .perfil-side-tab click -> prepararCambioPerfilConCarga(href)
+   - boton .btn-success -> togglea #contenedorAccesosDirectos (d-none)
+
+--- Google Calendar (inline, seccion independiente) ---
+   abrirModalGoogleCalendarDesdeTicket(id, asunto, fechaInicio, fechaFin, detalle)
+   abrirModalGoogleCalendar()
+   setEstadoGoogle(mensaje, tipo)
+   formatearFechaGoogle(fecha, esTodoElDia)
+   normalizarEventoGoogle(evento)
+   obtenerClaveFechaLocal(fecha) / obtenerFechaEventoParaCalendario(evento)
+   renderizarCalendarioGoogle()      (dibuja la grilla mensual)
+   renderizarEventosGoogle(eventos)  (lista de proximos 10 eventos)
+   mostrarResumenEventoCreado(evento)
+   gapiLoaded() / initializeGapiClient() / gisLoaded() / maybeEnableButtons()
+   conectarGoogleCalendar()          (OAuth token client)
+   listarEventosGoogle()             (calendar.events.list, calendarId 'primary', max 10)
+   crearEventoGoogle()               (calendar.events.insert)
+   CLIENT_ID / API_KEY hardcodeados en el archivo (revisar antes de migrar).
+
+--- Externas cargadas (relevantes al dashboard) ---
+   js/ticket.js       -> modalTicketUsuario, modalTicketTecnico, modalTicketAdministrativo,
+                         ticketBorrador, archivosAdjuntos, calificarTicket, asignacionTecnico,
+                         reprogramarFechaTicketDemorado, crearTicketGuadalupe, etc.
+   js/chat_ticket.js  -> cargarTicketConversacion, actualizarTicketChat, enviarMensajeTicket, enviarAdjuntoTicket
+   js/validacionTicket.js -> validacionTicketPorUsuario (modal calificacion estrellas)
+   js/cronologiaTicket.js -> mostrarToastTicket, mostrarCronologia (timeline del ticket)
+   js/buscadores.js   -> buscador de texto libre sobre tablas
+   js/funciones.js    -> utilidades globales (eliminarTicketDesdeMenu, fusionarTicketDesdeMenu, filtrarTickets...)
+   js/tour.js         -> pasos del tour Intro.js
+   js/apexcharts.min.js, chart.js (CDN), DataTables, SweetAlert2, jQuery
+
+
+==================================================
+9. COMPONENTES DINAMICOS  (archivos que incluye)
+==================================================
+
+require_once (siempre):
+   class/conexion.php
+   class/funciones.php
+   componentes/offcanvas.php        -> define mostrarOffcanvasActividad() y
+                                       mostrarOffcanvasConversacion() (se invocan
+                                       antes del <body>; la de Actividad es
+                                       CONTENIDO DUMMY/ejemplo, la de Conversacion
+                                       usa $_SESSION['id'])
+
+include (siempre, los 3 a la vez):
+   componentes/bloque_tabla_usuario.php   (dentro de #contenedorUsuario)
+   componentes/bloque_tabla_tecnico.php   (dentro de #contenedorTecnico)
+   componentes/bloque_tabla_adminn.php    (dentro de #contenedorAdmin; con
+                                           $GLOBALS['ticketAdminColorColumn']=true)
+   modal_salir.php                        (modal de cierre de sesion)
+
+Metodos de Funciones que "inyectan" HTML:
+   $funciones->header()               <head> (CSS/JS base sb-admin-2)
+   $funciones->menuLateral2($id,$pag) menu lateral segun permisos
+   $funciones->cabezera()             topbar
+   $funciones->footer()               pie
+   $funciones->script()               JS global de cierre
+   $funciones->contenedorTicketRecibidos/Asignados/EnProceso/Terminados/Demorados()
+
+Endpoints AJAX que consume (fetch/$.ajax):
+   modelos/filtros/filtro_estadoTicketGrafico.php   (grafico barras)
+   grafico_estados_categoria.php                    (grafico area por categoria)
+   modelos/rescatar/asunto_del_ticket.php           (offcanvas asunto)
+   + los que disparan los botones de las tablas (ver seccion 5 y doc de bloque_tabla_*)
+   + Google Calendar API (apis.google.com / accounts.google.com)
+
+NO usa (a diferencia de ticket_admin_v2.php): el polling AJAX cada 3s de
+componentes/ajax/bloque_tabla_*.php. En principal.php las tablas se cargan una
+vez (server-side) y se refrescan solo al cambiar de perfil o recargar.
+
+
+==================================================
+10. NOTAS IMPORTANTES  (para replicar en dashboard.php)
+==================================================
+
+1. idPagActual = "8"  identifica a principal.php en el menu y en la logica de
+   permisos. Los contenedores KPI reciben modo 3/4/5 (NO 8) para elegir el
+   filtro; el modo 8 existe en Funciones pero se comporta como el 3 (usuario).
+
+2. El cron actualizarTicketsDemoradosAutomaticamente() se llama en 3 sitios
+   (principal.php, filtro_estadoTicketGrafico.php, grafico_estados_categoria.php).
+   Mueve tickets estado 2/3 a estado 7 si pt.fecha_estimada_admin < CURDATE().
+   Mantener esa llamada antes de calcular cualquier KPI o grafico.
+
+3. Estados (estados_ticket): 1 Recibido, 2 Asignado, 3 En proceso, 4 Borrador,
+   5 Terminado, 6 Cerrado, 7 Demorado. El grafico de barras los pinta en orden
+   fijo: 1,2,3,5,4,7,6. El estado 4 (Borrador) se EXCLUYE del listado de tecnico
+   y admin (WHERE id_estado != 4) pero SI aparece en el grafico de barras.
+
+4. Perfiles (usuario_perfil.id_perfil): 1 Usuario, 2 Tecnico, 3 Admin.
+   Perfil inicial: admin > tecnico > usuario (el "mas alto" que tenga).
+   $_GET['vista_perfil'] puede forzar el perfil si el usuario lo posee.
+   Los menus de cambio de perfil solo se muestran si tiene MAS DE UN perfil.
+
+5. Renderizado triple: el dashboard genera Usuario+Tecnico+Admin siempre y
+   oculta con CSS. Esto significa 3x consultas en cada carga (KPIs y tablas).
+   Si en dashboard.php quieres optimizar, carga solo el perfil activo y trae
+   los otros por AJAX al cambiar.
+
+6. Dos mecanismos de cambio de perfil CONVIVEN:
+   - Tabs laterales (.perfil-side-tab): RECARGAN la pagina (?vista_perfil=).
+   - Menus "3 puntos" + cambiarPerfil(): NO recargan, solo AJAX + toggle CSS.
+   Al migrar conviene unificar en uno solo (recomendado: sin recarga).
+
+7. Overlays de carga: patron .dashboard-loading-overlay + .is-visible con
+   minimo 1000 ms (esperarMinimoCarga). Ids: loadingGraficoTicket,
+   loadingGraficoCategorias, loadingListadoTickets.
+
+8. Grafico 1 = Chart.js (barras horizontales, color por estado desde BD).
+   Grafico 2 = ApexCharts (area, paleta fija de 10 colores, X = categorias).
+   Son librerias distintas; ambas deben estar cargadas.
+
+9. filtro_estadoTicketGrafico.php espera:
+   tipoUsuario = usuario|tecnico|admin (normalizado en JS; 'administrador'->'admin')
+   idUsuario   = solo se manda si tipoUsuario es 'usuario' o 'tecnico'
+   Devuelve array [{id_estado, estado, color_estado, cantidad_tickets}].
+
+10. grafico_estados_categoria.php usa $_SESSION['id'] (no recibe idUsuario por
+    GET, solo 'perfil'). Devuelve {series:[{name,data[]}], categorias:[]}.
+    El filtro admin = sin WHERE; ojo si 'perfil' llega vacio -> tambien admin.
+
+11. IDs hardcodeados:
+    - $bloqueados = [28..34]  (colegios) -> ocultan bloque de botones.
+    - Filtro de tecnicos en tablas: IDs [6,7,8,42].
+    - Google Calendar CLIENT_ID / API_KEY en el JS.
+
+12. Consultas por concatenacion de strings (sin prepared statements) en todo el
+    flujo. $idUsuarioSession sale de $_SESSION. Al migrar, parametrizar.
+
+13. Charset mixto (utf8mb4 / latin1) en tablas legacy: cuidado con acentos al
+    mostrar nombres de estado/categoria.
+
+14. Componente offcanvas.php: mostrarOffcanvasActividad() tiene contenido de
+    ejemplo (textos dummy) - NO trae datos reales de una tabla de actividad.
+    Si el nuevo dashboard necesita "actividad reciente" hay que implementarla.
+
+15. offcanvas.php hace session_start() dentro de mostrarOffcanvasConversacion(),
+    y principal.php ya hizo session_start() al inicio -> puede emitir un
+    warning "session already started". Revisar al migrar.
+
+16. Contenedores KPI: el titulo visible del estado 7 es "Tickets Atrasados"
+    aunque internamente el estado se llama "Demorado". filtrarTickets(7).
+
+17. Tabla admin: setear $GLOBALS['ticketAdminColorColumn'] = true ANTES del
+    include de bloque_tabla_adminn.php para el modo compacto con punto de color.
+
+18. $GLOBALS['estadoTicketFiltro'] es la variable que los bloque_tabla_* leen
+    para filtrar por estado; en principal.php no se setea (llega null = sin
+    filtro). La usan los endpoints AJAX de refresco (que aqui no se usan).
+
+==================================================
+FIN DEL DOCUMENTO
+==================================================

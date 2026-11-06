@@ -139,6 +139,10 @@ if ($esSuperAdmin) {
                                             <i class="bi bi-search"></i>
                                             <input type="text" id="lu-buscar" placeholder="Buscar nombre o correo…">
                                         </div>
+                                        <a href="descargar_usuarios_pdf.php" class="btn btn-sm px-3 lu-btn-pdf"
+                                           title="Descargar el registro completo de usuarios en PDF">
+                                            <i class="bi bi-file-earmark-pdf-fill me-1"></i>Descargar PDF
+                                        </a>
                                         <a href="#" class="btn btn-primary btn-sm px-3" onclick="agregarUsuario()">
                                             <i class="bi bi-person-plus-fill me-1"></i>Agregar usuario
                                         </a>

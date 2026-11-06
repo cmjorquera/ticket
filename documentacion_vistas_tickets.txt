@@ -1,0 +1,1022 @@
+================================================================================
+DOCUMENTACION TECNICA - VISTAS DE TICKETS
+Sistema SEDUC TICKET  (PHP 8.1 + MariaDB 10.6)
+Archivos analizados:
+    - ticket.php            (vista USUARIO,      idPagActual = 3)
+    - ticket_asignados.php  (vista TECNICO,      idPagActual = 5)
+    - ticket_admin_v2.php   (vista ADMINISTRADOR, idPagActual = 4)
+Fecha de analisis: 2026-09-08
+================================================================================
+
+
+================================================================================
+0. RESUMEN EJECUTIVO
+================================================================================
+
+Los tres archivos son las tres "caras" del mismo modulo de tickets. Comparten
+casi toda la estructura HTML, los mismos CSS/JS y el mismo patron de
+funcionamiento; lo unico que cambia es:
+
+    a) El valor de $idPagActual (3 = usuario, 4 = admin, 5 = tecnico).
+       Ese numero se usa como discriminador en la clase Funciones para
+       decidir QUE tickets contar/mostrar y con que filtro (id_usuario,
+       id_tecnico o todos).
+
+    b) La tabla principal que incluyen:
+         ticket.php            -> componentes/bloque_tabla_usuario.php
+         ticket_asignados.php  -> componentes/bloque_tabla_tecnico.php
+         ticket_admin_v2.php   -> componentes/bloque_tabla_adminn.php
+
+    c) El metodo de consulta de la clase Funciones que alimenta esa tabla:
+         usuario -> $funciones->ticketUsuario($id, $estado)
+         tecnico -> $funciones->obtenerTicketsTecnico($id, $estado)
+         admin   -> $funciones->ticketAdministrador($id, $estado)
+
+    d) Las acciones disponibles en la columna OPCIONES de cada fila.
+
+Patron general de las 3 vistas:
+    1. session_start() + require conexion.php + require funciones.php
+    2. Se instancia $funciones = new Funciones()
+    3. Se pinta <head> con librerias (Bootstrap, DataTables, jQuery, SweetAlert2,
+       Quill, Font Awesome, Bootstrap Icons, XLSX, Intro.js) + CSS/JS propios
+    4. Menu lateral: $funciones->menuLateral2($idUsuarioSession, $idPagActual)
+    5. Barra superior: $funciones->cabezera()
+    6. Fila de "contenedores de estado" (tarjetas KPI) -> $funciones->contenedorTicket*()
+    7. Card con la tabla de tickets (include del bloque_tabla_*)
+    8. Offcanvas "Detalle del Asunto" (#offcanvasAsunto)
+    9. Div vacio #offcanvasContainerTicket (donde chat_ticket.js inyecta el chat)
+   10. $funciones->footer() + $funciones->script()
+   11. Bloque <script> inline que:
+         - inicializa el DataTable
+         - hace polling AJAX cada 3 segundos para refrescar el <tbody>
+         - define window.filtrarTickets(estado) y window.mostrarTodosLosTickets()
+
+
+================================================================================
+1. FUNCIONALIDADES PRINCIPALES DE CADA ARCHIVO
+================================================================================
+
+--------------------------------------------------------------------------------
+1.1  ticket.php   ->  VISTA DEL USUARIO FINAL (solicitante)   idPagActual = 3
+--------------------------------------------------------------------------------
+Es el panel donde un usuario ve y gestiona SUS PROPIOS tickets (los que el creo,
+filtrados por t.id_usuario = sesion).
+
+Funcionalidades:
+    - Ver KPIs de sus tickets por estado (Asignados, En proceso, Terminados,
+      Demorados/Atrasados). NOTA: la linea de "Recibidos" esta comentada en esta
+      vista.
+    - Crear un ticket nuevo -> boton "Agregar ticket" que llama
+      crearTicketGuadalupe(idUsuarioSession) (modal SweetAlert2 con editor Quill).
+      Puede guardarse como TICKET (estado 1) o como BORRADOR (estado 4).
+    - Tabla "Tickets creados" (#tablaUsuario) con: N, fecha/hora, De, Asunto,
+      Estado, Fec Res, Dias restantes, barra de Progreso (x/4 pasos), Opciones.
+    - Ver detalle del asunto en un offcanvas lateral (mostrarOffcanvasAsunto).
+    - Ver el ticket completo:
+         estado 4 (borrador) -> ticketBorrador(id)   (permite editar/enviar)
+         otro estado         -> modalTicketUsuario(id) (solo lectura + timeline)
+    - Chat con el tecnico -> cargarTicketConversacion(id, id_usuario, id_tecnico,
+      id_estado); badge rojo con cantidad de mensajes.
+    - Ver archivos adjuntos -> archivosAdjuntos(id) (badge con cantidad).
+    - Calificar el ticket cuando esta Terminado (estado 5) y aun no tiene
+      calificacion -> validacionTicketPorUsuario(id, id_usuario, id_tecnico)
+      (estrellas 1-4 + comentario). Este es el paso que "cierra" el ciclo para
+      el usuario.
+    - Auto-refresco de la tabla cada 3 s por AJAX (sin recargar pagina).
+    - Filtro por estado al hacer click en la lupa de cada tarjeta KPI.
+    - Tour de ayuda con Intro.js (iniciarTour(), actualmente el boton esta
+      comentado pero los atributos data-intro siguen en el HTML).
+
+--------------------------------------------------------------------------------
+1.2  ticket_asignados.php  ->  VISTA DEL TECNICO            idPagActual = 5
+--------------------------------------------------------------------------------
+Panel del tecnico: ve los tickets donde el es el responsable
+(t.id_tecnico = sesion  AND  t.id_estado != 4  -> nunca ve borradores).
+
+Funcionalidades:
+    - KPIs filtrados a SUS tickets (Asignados, En proceso, Terminados, Demorados).
+    - Publica en JS global: var nombresession y var idUsuarioSession
+      (json_encode) para uso de los scripts.
+    - Tabla "Tickets Tecnico" (#tablaTecnicoTicketAsignados) con: ID, fecha/hora,
+      De, Asunto, Estado, Fecha respuesta (con subtitulo de dias transcurridos /
+      dias totales y dias restantes), Calificacion (estrellas si el usuario ya
+      califico), Opciones.
+    - Ver ticket -> modalTicketTecnico(id): desde aqui el tecnico COMIENZA el
+      ticket (estado 2 -> 3), registra avances (avance_tecnicos) y lo da por
+      TERMINADO (estado 3 -> 5) con comentario final.
+    - Chat con el usuario -> cargarTicketConversacion(...).
+    - Archivos adjuntos -> archivosAdjuntos(id).
+    - Si el ticket esta DEMORADO (estado 7): boton para
+      reprogramarFechaTicketDemorado(id, fechaActualIso) -> actualiza
+      fecha_estimada_admin / reprogramar_ticket.
+    - Si esta Terminado y calificado: calificarTicket(id) para ver la
+      calificacion que dejo el usuario (solo lectura).
+    - Auto-refresco cada 3 s.
+    - Filtros de tabla persistentes en sessionStorage
+      (clave 'filtrosTablaTecnico': estado, fecha creacion, fecha respuesta).
+    - Incluye modal_salir.php (modal de cierre de sesion).
+    - CSS <style> embebido que reduce el font-size de la tabla del tecnico.
+
+--------------------------------------------------------------------------------
+1.3  ticket_admin_v2.php  ->  VISTA DEL ADMINISTRADOR        idPagActual = 4
+--------------------------------------------------------------------------------
+Panel de control global: ve TODOS los tickets del sistema
+(WHERE t.id_estado != 4, es decir todos menos borradores).
+
+Funcionalidades:
+    - KPIs globales: aqui SI se muestra "Tickets Recibidos" (contenedorTicketRecibidos)
+      ademas de Asignados, En proceso, Terminados, Demorados.
+    - Publica var nombresession y var idUsuarioSession en JS.
+    - Activa $GLOBALS['ticketAdminColorColumn'] = true ANTES del include, lo que
+      hace que la tabla use un "punto indicador" de color de estado por fila en
+      vez de pintar toda la fila del color del estado (modo compacto).
+    - Tabla "Tickets Administrador" (#dataTableAdministrador) con: ID, fecha/hora,
+      De, Asunto, TECNICO (boton Asignar/Cambiar tecnico o nombre del tecnico),
+      Fecha respuesta, Calificacion, Opciones.
+    - Asignar / cambiar tecnico -> asignacionTecnico(id_ticket): modal SweetAlert2
+      grande. Carga datos del ticket, lista de tecnicos (avatares clickeables),
+      categorias; al cambiar la categoria puede autoseleccionar el tecnico
+      sugerido para esa categoria (tecnico_por_categoria.php). Guarda con
+      guardar_responsable_ticket.php (id_responsable, comentario, categoria,
+      idTicket). Al asignar, el ticket pasa a estado 2.
+    - Ver ticket -> modalTicketAdministrativo(id) (lectura completa + timeline).
+    - Archivos adjuntos -> archivosAdjuntos(id).
+    - Calificacion:
+         * si el ticket esta en estado 5 y tiene calificacion, se renderiza un
+           contenedor <div class="contenedor-estrellas-admin" data-ticket-id="..">
+           que JS rellena via modelos/rescatar/calificacionUsuario.php
+           (funcion mostrarEstrellas / renderizarCalificacionesTablaAdmin).
+         * calificarTicket(id) abre modal de solo lectura.
+    - Aviso "ultimo dia" al tecnico: si el ticket esta En proceso (3), le queda
+      1 dia y tiene tecnico -> boton enviarAvisoUltimoDiaTecnico(id) que envia
+      correo (modelos/guardar/avisar_ultimo_dia_tecnico.php).
+    - Menu contextual (tres puntos) por fila:
+         * Eliminar   -> eliminarTicketDesdeMenu(id)   (soft delete, log_eliminacion_tickets)
+         * Fusionar    -> fusionarTicketDesdeMenu(id)
+         * Historial   -> estadistica/vida_ticket.php   (link, actualmente sin ?id_ticket)
+    - Filtros avanzados de tabla: Estado, Fecha creacion, Tecnico
+      (incluye opcion "Sin asignar" = __sin_asignar__), Fecha respuesta.
+      Se aplican via un plugin de busqueda de DataTables (ext.search.push).
+    - Auto-refresco cada 3 s con guarda "actualizacionTablaEnCurso" para evitar
+      solapamiento de peticiones.
+    - Incluye modal_salir.php.
+
+    *** OBSERVACION / BUG POTENCIAL ***
+    El JS de ticket_admin_v2.php hace  $.post('componentes/ajax/bloque_tabla_adminn.php', ...)
+    (doble "n"), pero el archivo real en disco es
+    'componentes/ajax/bloque_tabla_admin.php' (una sola "n").
+    Salvo que exista un rewrite en el servidor, el polling de refresco de la
+    tabla admin devuelve 404 y la tabla no se auto-actualiza (solo se llena en
+    la carga inicial por el include PHP). El include de PHP
+    ('componentes/bloque_tabla_adminn.php', doble n) si existe y es correcto.
+
+
+================================================================================
+2. FUNCIONES LLAMADAS  (especialmente de la clase Funciones)
+================================================================================
+
+--------------------------------------------------------------------------------
+2.1  Metodos de la clase Funciones  (class/funciones.php)
+--------------------------------------------------------------------------------
+
+Comunes a las 3 vistas (invocados directamente en el .php):
+
+  $funciones->header()
+        Imprime <meta>, <title>SEDUC SPA</title>, favicon y CSS/JS base
+        (FontAwesome, Bootstrap 5.1.3, bootstrap-icons, sb-admin-2.css /
+        sb-admin-2.min.css, fuente Nunito, SweetAlert2, bootstrap.bundle).
+
+  $funciones->menuLateral2($idUsuarioSession, $idPagActual)
+        Renderiza el menu lateral (offcanvas/sidebar) segun permisos del
+        usuario (tablas permisos_menu_1 / menu_1 / menu_1_sub). $idPagActual
+        marca el item activo. (Existe tambien menuLateral() y
+        menuLateral2Antiguo() como versiones historicas.)
+
+  $funciones->cabezera()
+        Barra superior (topbar): nombre del usuario, notificaciones, avatar,
+        acceso a perfil / cerrar sesion.
+
+  $funciones->footer()
+        Pie de pagina + scroll-to-top.
+
+  $funciones->script()
+        Imprime JS global de cierre: bootstrap.bundle, jquery.easing,
+        sb-admin-2.min.js, Chart.min.js, chart-area-demo.js, SweetAlert2,
+        js/funciones.js, flatpickr.
+
+  Contenedores de estado (tarjetas KPI). Cada uno hace 3 consultas:
+  COUNT de tickets en ese estado (segun idPagActual), COUNT total, y
+  SELECT color_degradado / descripcion_estado de la tabla estados_ticket.
+  Renderiza una tarjeta con contador, porcentaje, barra de progreso, popover
+  con la descripcion del estado y una lupa que llama filtrarTickets(idEstado).
+
+        $funciones->contenedorTicketRecibidos($id, $idPag)   estado 1  (SOLO admin)
+        $funciones->contenedorTicketAsignados($id, $idPag)    estado 2  (las 3 vistas)
+        $funciones->contenedorTicketEnProceso($id, $idPag)    estado 3  (las 3 vistas)
+        $funciones->contenedorTicketTerminados($id, $idPag)   estado 5  (las 3 vistas)
+        $funciones->contenedorTicketDemorados($id, $idPag)    estado 7  (las 3 vistas)
+        (existen tambien contenedorTicketCerrados=6 y contenedorTicketBorrador=4,
+         no usados en estas 3 vistas)
+
+  Logica del contador segun $idPagActual dentro de cada contenedor:
+        idPag == 4 (admin)  : WHERE id_estado = X            / total = todos
+        idPag == 5 (tecnico): WHERE id_estado = X AND id_tecnico = sesion
+        idPag == 3 (usuario): WHERE id_estado = X AND id_usuario = sesion
+        idPag == 8          : igual que usuario (otra vista)
+
+Invocados dentro de los includes bloque_tabla_* :
+
+  $funciones->ticketUsuario($idUsuarioSession, $estado = null)
+        SELECT de tickets del usuario (t.id_usuario = sesion).
+        JOIN estados_ticket, usuarios; LEFT JOIN proceso_tickets,
+        calificacion_tickett. Subconsultas para contar
+        archivos_adjuntos_ticket, conversaciones, ticket_conversaciones
+        (total y no leidos por el usuario).
+        GROUP BY t.id_ticket, ORDER BY fecha/hora_creacion_inicio DESC.
+        Si $estado != null agrega AND t.id_estado = $estado.
+
+  $funciones->obtenerTicketsTecnico($idUsuarioSession, $estado = null)
+        SELECT de tickets donde t.id_tecnico = sesion AND t.id_estado != 4.
+        JOIN estados_ticket, usuarios (solicitante); LEFT JOIN usuarios
+        (tecnico), proceso_tickets, conversaciones, calificacion_tickett,
+        ticket_conversaciones. COUNT de mensajes / conversaciones / adjuntos.
+        Trae calificacionEstrellas (ct.id_calificacion).
+
+  $funciones->ticketAdministrador($idUsuarioSession, $estado = null)
+        SELECT de TODOS los tickets con t.id_estado != 4.
+        Mismos JOIN que la del tecnico pero sin el WHERE por tecnico.
+        Trae nombreTecnico / apellidoTecnico, tieneCalificacion,
+        cantidadArchivos, cantidadConversaciones.
+
+  $funciones->actualizarTicketsDemoradosAutomaticamente()
+        NO se llama desde estos 3 archivos (se llama en principal.php), pero
+        es la que mueve a estado 7 los tickets con id_estado IN (2,3) cuya
+        pt.fecha_estimada_admin < CURDATE(). Es el "cron manual" que explica
+        por que aparecen tickets Demorados en estas vistas.
+
+Helpers internos usados por los bloques:
+  $funciones->obtenerColorEstado($id_estado)   (mapa fijo de colores 1/2/3/5)
+
+--------------------------------------------------------------------------------
+2.2  Consultas SQL directas dentro de los bloque_tabla_*  (sin pasar por metodo)
+--------------------------------------------------------------------------------
+  bloque_tabla_usuario.php y bloque_tabla_adminn.php:
+        SELECT id, nombre, apellido_paterno FROM usuarios
+        WHERE id IN (6,7,8,42) ORDER BY FIELD(id, 6,7,8,42)
+        -> arma el <select> "Tecnico" de los filtros
+        (IDs de tecnicos hardcodeados: 6, 7, 8, 42).
+
+--------------------------------------------------------------------------------
+2.3  Funciones JavaScript llamadas desde el HTML  (onclick / include)
+--------------------------------------------------------------------------------
+Definidas en js/ticket.js salvo que se indique otra cosa.
+
+  crearTicketGuadalupe(idUsuarioSession)      Modal crear ticket / borrador
+  enviarDatosTicket(data, estado, msg, accion) Envio del formulario de creacion
+  modalTicketUsuario(id_ticket)               Ver ticket (rol usuario)
+  ticketBorrador(id_ticket)                   Editar / enviar borrador
+  modalTicketTecnico(id_ticket)               Ver/gestionar ticket (rol tecnico)
+  modalTicketAdministrativo(id_ticket)        Ver ticket (rol admin)
+  archivosAdjuntos(id)                        Modal de adjuntos del ticket
+  reactivarTicket(id_ticket, idUsuarioSession) Reabrir ticket terminado
+  lineaDeTiempoTicket(id_ticket)              Timeline dentro del modal
+  actualizarAvanceTecnico(idTicket)           Registrar avance del tecnico
+  renderizarAvancesTecnicos(idTicket,idEstado,acciones)
+  construirAccionesHTML(...)                  Render de la bitacora de avances
+  reprogramarFechaTicketDemorado(id, fechaIso) Nueva fecha estimada
+  enviarTicketPorCorreo(id_ticket)            Envio del ticket por correo
+  descargarTicket(id_ticket) / descargarTicketExcel / exportarTicketAPDF
+  calificarTicket(id_ticket)                  Ver calificacion (solo lectura)
+  activarCambioDePrioridad() / rescatandoPrioridad()
+  rescatandoTecnicos()                        Lista tecnicos para selects
+
+  validacionTicketPorUsuario(idTicket,id_usuario,id_tecnico)  (js/validacionTicket.js)
+        Modal de estrellas 1-4 + comentario; guarda en
+        modelos/guardar/calificaion_ticket.php ; luego location.reload().
+  mostrarModalPositivo() / mostrarModalNegativo() / mostrarTexarea(mostrar)
+        (js/validacionTicket.js)
+
+  cargarTicketConversacion(idTicket, idUsuarioSession, idUsuarioOtro, estado)  (js/chat_ticket.js)
+  actualizarTicketChat(idTicket, emisor, otro)                                 (js/chat_ticket.js)
+  enviarMensajeTicket(idTicket, emisor, receptor)                              (js/chat_ticket.js)
+  enviarAdjuntoTicket(idTicket, emisor, receptor, inputFileId)                 (js/chat_ticket.js)
+  obtenerNombre(id) / formatearFecha(fecha)                                    (js/chat_ticket.js)
+
+  mostrarToastTicket(id_ticket) / mostrarCronologia(resp, tecnicoHTML)
+  generarBloqueEstado(nombre, fecha, hora)                                     (js/cronologiaTicket.js)
+
+  asignacionTecnico(id_ticket)     Definida INLINE en ticket_admin_v2.php
+                                   (y duplicada dentro de bloque_tabla_adminn.php)
+  enviarAvisoUltimoDiaTecnico(idTicket)  Inline en bloque_tabla_adminn.php
+  eliminarTicketDesdeMenu(id) / fusionarTicketDesdeMenu(id)  (js/funciones.js o ticket.js)
+  mostrarOffcanvasAsunto(idTicket) Inline en ticket.php y ticket_admin_v2.php
+  mostrarEstrellas(id, contId) / renderizarCalificacionesTablaAdmin()  Inline en ticket_admin_v2.php
+  filtrarTickets(estado) / mostrarTodosLosTickets()  Inline en cada vista (window.*)
+  iniciarTour()  Inline en ticket.php (introJs().start())
+
+
+================================================================================
+3. JAVASCRIPT INVOLUCRADO  (detallado)
+================================================================================
+
+--------------------------------------------------------------------------------
+3.1  Librerias externas (CDN) cargadas en el <head>
+--------------------------------------------------------------------------------
+  jQuery 3.7.0
+  DataTables 1.13.6 + integracion Bootstrap 5  (+ i18n es-ES por CDN)
+  Bootstrap 5.3.3 / 5.3.2 bundle  (Popper 2.11.8)
+  SweetAlert2 v11                 (todos los modales/alertas)
+  Quill 1.3.7                     (editor rich-text de la descripcion, solo ticket.php)
+  Font Awesome 6.0.0-beta3  +  Bootstrap Icons 1.11.x
+  SheetJS xlsx 0.18.5            (exportar/leer Excel, solo ticket.php)
+  Intro.js                       (tour guiado, solo ticket.php)
+
+--------------------------------------------------------------------------------
+3.2  Scripts propios del sistema (carpeta js/)
+--------------------------------------------------------------------------------
+  js/ticket.js            (~3136 lineas) NUCLEO. Todos los modales de ticket,
+                          creacion, avances, prioridad, exportaciones,
+                          calificacion (lectura), sanitizado HTML.
+                          Versionado con ?v=filemtime(js/ticket.js).
+  js/funciones.js         (~5526 lineas) utilidades globales del sistema
+                          (eliminar/fusionar ticket, helpers varios).
+  js/chat_ticket.js       Chat usuario<->tecnico dentro del offcanvas
+                          #offcanvasContainerTicket. Polling cada 3 s.
+  js/validacionTicket.js  Modal de calificacion del usuario (estrellas 1-4).
+  js/cronologiaTicket.js  Modal "Cronologia del Ticket" (timeline Creado/
+                          Asignado/En proceso/Finalizado).
+  js/buscadores.js        Buscador generico por texto sobre <tbody> para
+                          tablas con ids: dataTable, idTablaTicket,
+                          IDdataTablaAdmin, idTablaUsuarios. (En estas 3
+                          vistas casi no aplica porque las tablas usan
+                          DataTables; queda por compatibilidad.)
+  js/mensajes.js          Mensajeria/alertas del usuario (solo ticket.php).
+  js/toast.js             Toasts (ticket_asignados.php y ticket_admin_v2.php).
+  js/comunes.js, js/equipos.js, js/dispositivos.js  cargados en ticket.php
+                          (reuso desde inventario; poco relevantes aqui).
+
+--------------------------------------------------------------------------------
+3.3  JavaScript INLINE en cada archivo
+--------------------------------------------------------------------------------
+
+ticket.php  -- 4 bloques <script>:
+  (1) function iniciarTour() { introJs().start(); }
+  (2) DOMContentLoaded: inicializa todos los popovers de Bootstrap
+      ([data-bs-toggle="popover"]).
+  (3) $(document).ready  -- CONTROLADOR DE LA TABLA USUARIO:
+        - inicializarTablaUsuario(): crea el DataTable #tablaUsuario
+          (idioma es-ES, responsive, pageLength 10). Si ya existe, lo reutiliza.
+        - actualizarTablaUsuario(): $.post a
+          componentes/ajax/bloque_tabla_usuario.php  con
+          { idUsuarioSession, [estado] }. Extrae el <tbody> nuevo, calcula una
+          "huella" (string sin espacios) y SOLO redibuja si cambio respecto a
+          ultimaHuellaTabla (evita parpadeo). Usa clear() + rows.add() + draw(false).
+        - setInterval(actualizarTablaUsuario, 3000)  -> polling cada 3 s.
+        - window.filtrarTickets(estado): toggle de filtro por estado
+          (si se vuelve a pulsar el mismo estado, se quita el filtro).
+        - window.mostrarTodosLosTickets(): limpia el filtro.
+  (4) function mostrarOffcanvasAsunto(idTicket): abre #offcanvasAsunto y carga
+      su contenido via $.ajax POST a modelos/rescatar/asunto_del_ticket.php
+      (con estados "Cargando..." y de error).
+
+ticket_asignados.php  -- 1 bloque <script> + 1 <style>:
+  - <style> reduce tamanos de fuente de #tablaTecnicoTicketAsignados.
+  - $(document).ready  -- CONTROLADOR DE LA TABLA TECNICO: identico patron al
+    de ticket.php pero sobre #tablaTecnicoTicketAsignados y POST a
+    componentes/ajax/bloque_tabla_tecnico.php. Variables: tablaTecnico,
+    filtroActivo, estadoFiltrado, ultimaHuellaTabla. setInterval 3000.
+    window.filtrarTickets / window.mostrarTodosLosTickets.
+  - mostrarOffcanvasAsunto: definido dentro de bloque_tabla_tecnico.php /
+    ticket.js (compartido).
+  - Bloque JS al final de bloque_tabla_tecnico.php:
+        * Registra plugin $.fn.dataTable.ext.search.push que filtra por
+          data-estado / data-fecha-creacion / data-fecha-respuesta de cada <tr>
+          (normaliza "atrasado" -> "demorado").
+        * guardarFiltrosTecnico() / restaurarFiltrosTecnico() usando
+          sessionStorage clave 'filtrosTablaTecnico'.
+        * configurarFiltrosTablaTecnico(dt): enlaza change/input de
+          #filtroEstadoTecnico, #filtroFechaTecnico, #filtroFechaRespuestaTecnico
+          -> dt.draw(). Se ejecuta en init.dt y en $(function()).
+
+ticket_admin_v2.php  -- 3 bloques <script>:
+  (1) function asignacionTecnico(id_ticket)  (ver seccion 6/1.3). Encadena:
+        modelos/rescatar/ticket.php            (datos del ticket)
+        modelos/rescatar/tecnicos.php          (avatares de tecnicos)
+        modelos/rescatar/categoria_de_ticket.php (select de categorias)
+        modelos/rescatar/tecnico_por_categoria.php (tecnico sugerido)
+        modelos/guardar/guardar_responsable_ticket.php (guardar asignacion)
+      Incluye sanitizarDescripcionHtml(html): whitelist de etiquetas
+      (BR,P,OL,UL,LI,B,STRONG,I,EM,U) y borra todos los atributos.
+  (2) $(document).ready  -- CONTROLADOR DE LA TABLA ADMIN:
+        - Plugin ext.search.push para #dataTableAdministrador que filtra por
+          data-estado, data-fecha-creacion, data-tecnico-id (soporta
+          '__sin_asignar__') y data-fecha-respuesta. Se registra una sola vez
+          (window.adminTableFiltersSearchRegistered).
+        - configurarFiltrosTablaAdmin(): enlaza los 4 filtros
+          (#filtroEstadoAdmin, #filtroFechaAdmin, #filtroTecnicoAdmin,
+          #filtroFechaRespuestaAdmin) -> tablaAdmin.draw(). Guarda flag
+          data('admin-filters-bound').
+        - inicializarTablaAdmin(): DataTable con pagingType 'simple_numbers'.
+        - mostrarEstrellas(id_ticket, contenedorID): fetch POST a
+          modelos/rescatar/calificacionUsuario.php, pinta 4 estrellas
+          (fas/far) o badge "Sin calificacion".
+        - renderizarCalificacionesTablaAdmin(): recorre
+          .contenedor-estrellas-admin[data-ticket-id] y llama mostrarEstrellas.
+        - actualizarTablaAdministrador(): guarda actualizacionTablaEnCurso,
+          $.post a componentes/ajax/bloque_tabla_adminn.php  <-- (ver BUG 1.3)
+          con { idUsuarioSession, vista:'ticket_admin', [estado] }. Compara
+          html normalizado y solo redibuja si cambio; luego
+          renderizarCalificacionesTablaAdmin(). .always() libera el flag.
+        - setInterval(actualizarTablaAdministrador, 3000).
+        - window.filtrarTickets(estado): hace su PROPIO $.post inmediato
+          (no reusa actualizarTablaAdministrador) con vista:'ticket_admin'.
+        - window.mostrarTodosLosTickets().
+  (3) function mostrarOffcanvasAsunto(idTicket): igual que en ticket.php.
+
+  En bloque_tabla_adminn.php ademas hay JS inline:
+        - DOMContentLoaded: inicializa tooltips de Bootstrap.
+        - function enviarAvisoUltimoDiaTecnico(idTicket): SweetAlert2 de
+          confirmacion + $.ajax POST modelos/guardar/avisar_ultimo_dia_tecnico.php.
+        - Duplicado de asignacionTecnico y del plugin de filtros admin.
+
+--------------------------------------------------------------------------------
+3.4  Patron comun del auto-refresco (las 3 vistas)
+--------------------------------------------------------------------------------
+    1. Estado local: tabla (instancia DataTable), filtroActivo (bool),
+       estadoFiltrado (int|null), ultimaHuella/ultimaTablaAdminHtml (string).
+    2. Cada 3000 ms: POST al endpoint AJAX del bloque correspondiente.
+    3. Del HTML devuelto se toma SOLO  #<tablaId> tbody  con jQuery.
+    4. Se normaliza (.replace(/\s+/g,' ').trim()) y se compara con la ultima
+       huella. Si es igual -> return (no se toca el DOM, no hay parpadeo).
+    5. Si cambio -> tabla.clear(); tabla.rows.add(filasNuevas); tabla.draw(false).
+       draw(false) mantiene la pagina actual del paginador.
+    6. El filtro por KPI (filtrarTickets) manda el parametro 'estado' al backend
+       (filtro server-side), mientras que los <select>/<input date> de arriba de
+       la tabla filtran client-side via ext.search.push (filtro DOM).
+
+
+================================================================================
+4. FLUJO DE DATOS
+================================================================================
+
+--------------------------------------------------------------------------------
+4.1  Carga inicial de la pagina (server-side)
+--------------------------------------------------------------------------------
+  Navegador -> GET ticket.php|ticket_asignados.php|ticket_admin_v2.php
+    -> session_start(); lee $_SESSION['id'], ['nombre'], ['apellido_paterno'],
+       ['id_area_trabajo']
+    -> require class/conexion.php  (define clase MySQL con credenciales internas)
+    -> require class/funciones.php ; $funciones = new Funciones()
+    -> $idPagActual = 3 | 5 | 4
+    -> filemtime() de css/modalesTicket.css, css/ticket_admin.css, js/ticket.js
+       para cache-busting (?v=...)
+    -> header() / menuLateral2() / cabezera()      [consultan usuarios, permisos_menu_1, menu_1, menu_1_sub]
+    -> contenedorTicket*()  x4/x5                   [COUNT sobre tickets + estados_ticket]
+    -> include bloque_tabla_*                       [ejecuta ticketUsuario / obtenerTicketsTecnico / ticketAdministrador]
+         cada fila del <tbody> se calcula en PHP: dias restantes, porcentaje de
+         avance, textos de estado, data-attributes (data-estado,
+         data-fecha-creacion, data-tecnico-id, data-fecha-respuesta)
+    -> footer() / script()
+    -> HTML completo al navegador
+    -> JS: DataTables toma el <table> ya renderizado y lo pagina/ordena.
+
+--------------------------------------------------------------------------------
+4.2  Refresco periodico (cada 3 s, AJAX)
+--------------------------------------------------------------------------------
+  JS setInterval -> $.post( componentes/ajax/bloque_tabla_<rol>.php ,
+                            { idUsuarioSession, estado?, vista? } )
+     -> el endpoint hace require conexion + funciones, setea
+        $GLOBALS['estadoTicketFiltro'] (y $GLOBALS['ticketAdminColorColumn'])
+        e include del mismo bloque_tabla_* que en la carga inicial
+     -> devuelve el HTML de la tabla (filtros + <table> completa)
+     -> JS extrae SOLO el <tbody>, compara huella y redibuja el DataTable si cambio.
+
+--------------------------------------------------------------------------------
+4.3  Crear ticket  (ticket.php)
+--------------------------------------------------------------------------------
+  Boton "Agregar ticket" -> crearTicketGuadalupe(idUsuarioSession)
+    - Si el usuario es admin (id in [7,8,42]): fetch modelos/rescatar/usuarios.php
+      -> <select> para elegir a nombre de quien se crea.
+      Si no: fetch modelos/rescatar/usuario.php -> input readonly con su nombre.
+    - fetch modelos/rescatar/categoria_de_ticket.php -> <select> categorias.
+    - Modal SweetAlert2 con editor Quill (asunto, categoria, descripcion HTML,
+      archivos multiples).
+    - Confirmar = estado 1 ("TICKET CREADO") ; Deny = estado 4 ("BORRADOR").
+    - enviarDatosTicket(data, estado, mensaje, "ingresar_ticket"):
+         FormData: usuarioId, asunto, descripcion_ticket (HTML), categoria,
+         estado, accion, prioridad, dias_resolucion, fecha_resolucion, archivo[]
+    - Endpoint segun categoria:
+         categoria === "10"  -> modelos/guardar/guardar_ticket_sin_tecnico.php
+         cualquier otra      -> modelos/guardar/guardar_ticket1.php
+    - Exito -> SweetAlert2 timer 2 s -> location.reload().
+  Efecto BD: INSERT en tickets (+ identificador de 16 chars, id_estado,
+  id_usuario, id_categoria_ticket), INSERT en proceso_tickets
+  (fecha_creacion_inicio / hora_creacion_inicio), archivos en carpeta archivos/
+  + registros en archivos_adjuntos_ticket. Correo via modelos/correos/.
+
+--------------------------------------------------------------------------------
+4.4  Asignar tecnico  (ticket_admin_v2.php)
+--------------------------------------------------------------------------------
+  Boton "Asignar/Cambiar Tecnico" (fila con id_estado 1 o 2)
+    -> asignacionTecnico(id_ticket)
+       GET/POST modelos/rescatar/ticket.php               (asunto, descripcion, categoria, solicitante)
+       POST     modelos/rescatar/tecnicos.php             (avatares)
+       POST     modelos/rescatar/categoria_de_ticket.php  (select categorias)
+       onChange categoria -> POST modelos/rescatar/tecnico_por_categoria.php
+                             (data.id_tecnico -> preselecciona avatar/badge)
+    -> Confirmar -> POST modelos/guardar/guardar_responsable_ticket.php
+       { id_responsable, comentario, categoria, idTicket }
+  Efecto BD: UPDATE tickets SET id_tecnico, id_categoria_ticket,
+  comentario_administrador, id_estado = 2 ; UPDATE proceso_tickets
+  (fecha_asignacion_tecnico / hora_asignacion_tecnico). Correo al tecnico.
+
+--------------------------------------------------------------------------------
+4.5  Ciclo de trabajo del tecnico  (ticket_asignados.php)
+--------------------------------------------------------------------------------
+  modalTicketTecnico(id) -> "Comenzar" (estado 2 -> 3): UPDATE tickets.id_estado=3
+     + proceso_tickets.fecha_comienzo_ticket / hora_comienzo_ticket.
+  actualizarAvanceTecnico(id) -> INSERT en avance_tecnicos (bitacora).
+  "Terminar" (estado 3 -> 5): UPDATE tickets.id_estado=5 + comentario_final
+     + proceso_tickets.fecha_termino_ticket / hora_termino_ticket.
+  Si vencio la fecha estimada, el cron actualizarTicketsDemoradosAutomaticamente()
+     (en principal.php) lo pasa a estado 7. El tecnico puede
+     reprogramarFechaTicketDemorado(id, fechaIso) -> UPDATE proceso_tickets
+     .fecha_estimada_admin + INSERT reprogramar_ticket.
+
+--------------------------------------------------------------------------------
+4.6  Cierre por el usuario  (ticket.php)
+--------------------------------------------------------------------------------
+  Ticket en estado 5 sin calificacion -> boton estrella ->
+  validacionTicketPorUsuario(id, id_usuario, id_tecnico)
+     GET  modelos/rescatar/calificacion_ticket.php  (opciones de calificacion, ordenadas)
+     POST modelos/guardar/calificaion_ticket.php
+          { accion:"calificando_ticket", id_ticket, id_usuario, id_tecnico,
+            calificacion (id de la opcion/estrellas), comentario }
+  Efecto BD: INSERT en calificacion_tickett (id_ticket, id_calificacion,
+  comentario, fecha, hora, ip_usuario). El ticket se considera cerrado/resuelto.
+  -> mostrarModalNegativo()/Positivo() -> location.reload().
+
+--------------------------------------------------------------------------------
+4.7  Chat interno del ticket  (las 3 vistas)
+--------------------------------------------------------------------------------
+  Boton chat -> cargarTicketConversacion(idTicket, idA, idB, estado)
+     inyecta un offcanvas en #offcanvasContainerTicket.
+     POST modelos/actualizar/marcar_leido_ticket.php  (marca leidos del receptor)
+     Polling cada 3 s: POST modelos/rescatar/conversacionTecnicoUsuario.php
+        { id_ticket, usuario1, usuario2 } -> { success, mensajes[] }
+        por cada mensaje: POST modelos/rescatar/usuario.php (nombre del emisor, async:false)
+     Enviar texto: enviarMensajeTicket -> POST modelos/guardar/conversacionTecnicoUsuario.php
+        (FormData: id_ticket, emisor, receptor, mensaje, tipo:'texto')
+     Enviar archivo: enviarAdjuntoTicket -> POST modelos/guardar/conversacionAdjuntosTicket.php
+        (FormData: id_ticket, emisor, receptor, archivo)
+     Render de adjuntos: imagenes inline, PDF en <iframe>, XLS/XLSX via
+        view.officeapps.live.com, otros como link de descarga.
+  Si estado == 5 (cerrado) el chat es de solo lectura (sin input).
+  Tabla involucrada: ticket_conversaciones (emisor, receptor, mensaje, adjunto,
+  fecha, hora, leido).
+
+--------------------------------------------------------------------------------
+4.8  Offcanvas "Detalle del Asunto"  (las 3 vistas)
+--------------------------------------------------------------------------------
+  Icono (i) en la celda Asunto -> mostrarOffcanvasAsunto(id_ticket)
+     POST modelos/rescatar/asunto_del_ticket.php { id_ticket }
+     -> HTML renderizado dentro de #contenidoOffcanvasAsunto.
+
+--------------------------------------------------------------------------------
+4.9  Fuente de verdad de los estados
+--------------------------------------------------------------------------------
+  tickets.id_estado (int)          -> estado del ciclo
+  estados_ticket (id, nombre, orden, color, color_degradado, descripcion_estado)
+  Mapa:  1 Recibido | 2 Asignado | 3 En proceso | 4 Borrador |
+         5 Terminado | 6 Cerrado | 7 Demorado/Atrasado
+  proceso_tickets                  -> todas las fechas/horas del ciclo
+  calificacion_tickett (doble t)   -> calificacion del usuario
+  El "avance" (barra x/4) se deriva en PHP de id_estado:
+         estado 1 -> 1/4 ; 2 -> 2/4 ; 3 -> 3/4 ; 5 -> 4/4.
+
+
+================================================================================
+5. DEPENDENCIAS  (clases, helpers, librerias, endpoints)
+================================================================================
+
+--------------------------------------------------------------------------------
+5.1  PHP - includes / require
+--------------------------------------------------------------------------------
+  class/conexion.php        -> clase MySQL (metodos: consulta(), guardar(),
+                               fetch_array(), num_rows). Credenciales internas
+                               (se instancia como new MySQL("","","")).
+  class/funciones.php       -> clase Funciones (ver seccion 2.1).
+  componentes/bloque_tabla_usuario.php   (include en ticket.php)
+  componentes/bloque_tabla_tecnico.php   (include en ticket_asignados.php)
+  componentes/bloque_tabla_adminn.php    (include en ticket_admin_v2.php)
+  componentes/ajax/bloque_tabla_usuario.php  (endpoint AJAX refresco usuario)
+  componentes/ajax/bloque_tabla_tecnico.php  (endpoint AJAX refresco tecnico)
+  componentes/ajax/bloque_tabla_admin.php    (endpoint AJAX refresco admin;
+        el JS lo pide como '...adminn.php' -> mismatch, ver 1.3)
+  modal_salir.php           (include en ticket_asignados.php y ticket_admin_v2.php)
+
+--------------------------------------------------------------------------------
+5.2  Endpoints backend usados por el JS de estas vistas
+--------------------------------------------------------------------------------
+  modelos/rescatar/asunto_del_ticket.php          detalle del asunto (offcanvas)
+  modelos/rescatar/ticket.php                     datos de un ticket (JSON)
+  modelos/rescatar/tecnicos.php                   lista de tecnicos (avatares)
+  modelos/rescatar/tecnico_por_categoria.php      tecnico sugerido por categoria
+  modelos/rescatar/categoria_de_ticket.php        catalogo de categorias
+  modelos/rescatar/usuarios.php                   lista de usuarios (admin crea a nombre de)
+  modelos/rescatar/usuario.php                    datos de un usuario por id
+  modelos/rescatar/rescatarTecnico.php            datos de un tecnico por id
+  modelos/rescatar/calificacion_ticket.php        opciones de calificacion (GET)
+  modelos/rescatar/calificacionUsuario.php        calificacion existente de un ticket
+  modelos/rescatar/conversacionTecnicoUsuario.php mensajes del chat
+  modelos/guardar/guardar_ticket1.php             crear ticket (flujo normal)
+  modelos/guardar/guardar_ticket_sin_tecnico.php  crear ticket categoria 10
+  modelos/guardar/guardar_responsable_ticket.php  asignar/cambiar tecnico
+  modelos/guardar/calificaion_ticket.php          guardar calificacion (sic, sin 'c')
+  modelos/guardar/avisar_ultimo_dia_tecnico.php   correo aviso "ultimo dia"
+  modelos/guardar/conversacionTecnicoUsuario.php  enviar mensaje de chat
+  modelos/guardar/conversacionAdjuntosTicket.php  enviar adjunto de chat
+  modelos/actualizar/marcar_leido_ticket.php      marcar mensajes como leidos
+  estadistica/vida_ticket.php                     historial/vida del ticket (link)
+
+--------------------------------------------------------------------------------
+5.3  CSS propios (carpeta css/)
+--------------------------------------------------------------------------------
+  contenedor_estados.css, modalesTicket.css (?v), estilo.css, bitacora.css,
+  contenedor.css, cronologiaTicket.css, tour.css, principal.css,
+  ticket_admin.css (?v), sb-admin-2.css / sb-admin-2.min.css (via header()).
+  configuracion/css/mantenedor_colegios.css NO participa (aparece modificado en
+  git status pero no lo cargan estas vistas).
+
+--------------------------------------------------------------------------------
+5.4  CSS/JS externos (CDN)  -> ver seccion 3.1
+--------------------------------------------------------------------------------
+  jQuery, DataTables+BS5, Bootstrap 5.3.x + Popper, SweetAlert2 v11,
+  Quill 1.3.7, Font Awesome 6 beta3, Bootstrap Icons, SheetJS xlsx 0.18.5,
+  Intro.js. (header() ademas trae Bootstrap 5.1.3 y otro SweetAlert2 -> hay
+  DOBLE carga de Bootstrap y de SweetAlert2, ver seccion 8.)
+
+--------------------------------------------------------------------------------
+5.5  Variables de sesion / globales requeridas
+--------------------------------------------------------------------------------
+  $_SESSION['id']                  (obligatoria; si falta, la tabla del tecnico
+                                    imprime "ID del tecnico no definido")
+  $_SESSION['nombre'], $_SESSION['apellido_paterno']
+  $_SESSION['id_area_trabajo']     (solo se lee en ticket.php -> $AreaTrabajo)
+  $GLOBALS['estadoTicketFiltro']   set por los endpoints AJAX; leido por los bloques
+  $GLOBALS['ticketAdminColorColumn'] set por ticket_admin_v2.php y por el endpoint
+                                     admin; controla modo "punto indicador" vs
+                                     "fila coloreada"
+  JS: window.idUsuarioSession, window.nombresession (solo en admin y tecnico)
+
+--------------------------------------------------------------------------------
+5.6  Tablas de BD tocadas (lectura/escritura)
+--------------------------------------------------------------------------------
+  tickets, proceso_tickets, estados_ticket, categoria_de_ticket, prioridad,
+  usuarios, permisos_menu_1, menu_1, menu_1_sub,
+  archivos_adjuntos_ticket, conversaciones, ticket_conversaciones,
+  calificacion_tickett, reprogramar_ticket, reactivacion_ticket,
+  avance_tecnicos, log_eliminacion_tickets.
+
+
+================================================================================
+6. COMO FUNCIONAN LOS "CONTENEDORES" DE TICKETS
+================================================================================
+
+Hay DOS conceptos distintos que en el codigo se llaman "contenedor":
+
+--------------------------------------------------------------------------------
+6.1  Contenedores de ESTADO  (tarjetas KPI de la parte superior)
+--------------------------------------------------------------------------------
+  <div class="contenedor-estados-ticket" id="idContenedoresEstadosTicket">
+     ... aqui se pintan las tarjetas ...
+  </div>
+
+  Cada tarjeta la genera un metodo de Funciones:
+     contenedorTicketRecibidos  (estado 1) -- SOLO en ticket_admin_v2.php
+     contenedorTicketAsignados  (estado 2)
+     contenedorTicketEnProceso  (estado 3)
+     contenedorTicketTerminados (estado 5)
+     contenedorTicketDemorados  (estado 7)   (titulo visible: "Tickets Atrasados")
+
+  Que hace cada metodo (mismo esqueleto):
+     1. $bdato = new MySQL("","","")
+     2. Segun $idPagActual arma 2 consultas:
+          - $sql      = COUNT de tickets EN ESE ESTADO (con el filtro del rol)
+          - $sqlTotal = COUNT de tickets del rol (sin filtro de estado)
+        idPag 4 -> sin filtro de propietario (admin ve todo)
+        idPag 5 -> AND id_tecnico = sesion
+        idPag 3 / 8 -> AND id_usuario = sesion
+     3. $porcentaje = round(contador / max(1,total) * 100)
+     4. SELECT color_degradado, descripcion_estado FROM estados_ticket WHERE id = <estado>
+        (si viene vacio usa un degradado por defecto)
+     5. Pinta:
+          <div class="tarjeta-ticket-estado fade-in [estado-atencion]"
+               style="background: <degradado>">
+             titulo + "contador (porcentaje%)" con tooltip "X de Y"
+             icono (bootstrap-icon) con popover = descripcion_estado
+             barra de progreso Bootstrap con width = porcentaje%
+             footer con  <i class="bi bi-search" onclick="filtrarTickets(<estado>)">
+     6. La clase 'estado-atencion' solo la agrega contenedorTicketRecibidos
+        cuando contador >= 1 (resalta que hay tickets sin asignar).
+
+  Interaccion:
+     - Click en la lupa -> window.filtrarTickets(idEstado).
+       filtrarTickets es un TOGGLE: si el filtro ya estaba en ese estado, lo
+       apaga (vuelve a "todos"); si no, lo enciende.
+     - Cuando el filtro esta activo, el parametro 'estado' viaja en el $.post
+       del refresco de la tabla -> el backend (ticketUsuario /
+       obtenerTicketsTecnico / ticketAdministrador) agrega
+       "AND t.id_estado = <estado>" a su SQL. Es un filtro SERVER-SIDE.
+     - No hay boton visible de "mostrar todos": se consigue volviendo a pulsar
+       la misma lupa (toggle) o llamando window.mostrarTodosLosTickets().
+
+--------------------------------------------------------------------------------
+6.2  Contenedor de la TABLA  (card + <div id="contenedorTabla*">)
+--------------------------------------------------------------------------------
+  ticket.php            -> <div id="contenedorTablaUsuario">   include bloque_tabla_usuario.php
+  ticket_asignados.php  -> <div id="contenedorTablaTecnico">   include bloque_tabla_tecnico.php
+  ticket_admin_v2.php   -> <div id="contenedorTablaAdmin">     include bloque_tabla_adminn.php
+
+  Estos DIV son el "contenedor" donde:
+     - en la carga inicial PHP escribe la tabla completa (filtros + <table>).
+     - en el refresco AJAX el JS reemplaza SOLO el <tbody> del DataTable
+       (no reemplaza el div entero, para no perder la instancia de DataTable
+       ni el foco de los filtros).
+
+  Estructura interna de cada tabla:
+     - Un bloque de filtros (div.ticket-admin-filtros) con <select>/<input date>.
+     - <table id="..."> con <thead class="table-dark"> y <tbody> generado en un
+       while ($row = $resultado->fetch_array()).
+     - Cada <tr> lleva data-attributes que consumen los filtros client-side:
+          data-estado, data-fecha-creacion (Y-m-d), data-tecnico-id,
+          data-fecha-respuesta (Y-m-d).
+     - Cada <tr> tiene una clase estado-ticket-<id_estado> y (en modo admin
+       compacto / usuario) la clase fila-ticket-admin-compacta.
+     - El color del estado se muestra como:
+          * modo normal admin  -> toda la fila/celdas con background-color del estado
+          * modo compacto (ticketAdminColorColumn=true, y siempre en usuario/tecnico)
+            -> un puntito <span class="estado-indicador-dot"> en la celda ID.
+
+--------------------------------------------------------------------------------
+6.3  Contenedor del CHAT
+--------------------------------------------------------------------------------
+  <div id="offcanvasContainerTicket"></div>  (vacio en el HTML)
+  chat_ticket.js -> cargarTicketConversacion() inyecta ahi un
+  <div class="offcanvas offcanvas-end" id="offcanvasTicket"> con
+  #chatContainerTicket y (si el ticket no esta cerrado) el input + boton
+  adjuntar + boton enviar.
+
+--------------------------------------------------------------------------------
+6.4  Contenedor del DETALLE DE ASUNTO
+--------------------------------------------------------------------------------
+  <div class="offcanvas offcanvas-start" id="offcanvasAsunto"> con
+  #contenidoOffcanvasAsunto (se llena por AJAX desde asunto_del_ticket.php).
+
+
+================================================================================
+7. FILTROS Y BUSQUEDAS
+================================================================================
+
+--------------------------------------------------------------------------------
+7.1  Filtro por KPI (server-side)  -- las 3 vistas
+--------------------------------------------------------------------------------
+  Disparador : lupa <i class="bi bi-search" onclick="filtrarTickets(N)"> en el
+               footer de cada tarjeta de estado.
+  N          : 1 Recibido, 2 Asignado, 3 En proceso, 5 Terminado, 7 Demorado.
+  Mecanismo  : window.filtrarTickets(estado) hace toggle de {filtroActivo,
+               estadoFiltrado} y dispara el refresco de tabla. El estado viaja
+               como parametro POST 'estado' -> el metodo SQL agrega
+               AND t.id_estado = <estado>.
+  Quitar     : volver a pulsar la misma lupa, o window.mostrarTodosLosTickets().
+  Persistencia: NO (se pierde al recargar).
+
+--------------------------------------------------------------------------------
+7.2  Filtros de cabecera de tabla (client-side, DataTables ext.search)
+--------------------------------------------------------------------------------
+  Se registra UNA vez por vista un callback en
+  $.fn.dataTable.ext.search.push(function(settings,data,dataIndex){...})
+  que solo actua sobre su tabla (comprueba settings.nTable.id) y decide
+  mostrar/ocultar cada fila comparando los <select>/<input> con los
+  data-attributes del <tr>. Al cambiar cualquier filtro se llama tabla.draw().
+
+  ticket.php  (#tablaUsuario) -- controles:
+     #filtroEstadoUsuario  (Todos / Asignado / En proceso / Terminado /
+                            Borrador / "Atrasado" -> se normaliza a "demorado")
+     #filtroFechaUsuario   (input date, compara con data-fecha-creacion)
+     #filtroFechaRespuestaUsuario (input date, vs data-fecha-respuesta)
+     #filtroTecnicoUsuario (referenciado en el JS del filtro pero el <select>
+                            NO se pinta en bloque_tabla_usuario.php -> filtro
+                            de tecnico inactivo en la vista usuario)
+     Helper: configurarFiltrosTablaUsuario(dt); flag data('usuario-filters-bound').
+
+  ticket_asignados.php  (#tablaTecnicoTicketAsignados) -- controles:
+     #filtroEstadoTecnico  (Todos / Asignado / En proceso / Terminado /
+                            "Atrasado"->demorado / Cerrado)
+     #filtroFechaTecnico            (vs data-fecha-creacion)
+     #filtroFechaRespuestaTecnico   (vs data-fecha-respuesta)
+     Persistencia: SI, en sessionStorage clave 'filtrosTablaTecnico'
+        (guardarFiltrosTecnico / restaurarFiltrosTecnico).
+     Al cambiar filtros se llama guardarFiltrosTecnico() + dt.draw().
+
+  ticket_admin_v2.php  (#dataTableAdministrador) -- controles:
+     #filtroEstadoAdmin    (Todos / Recibido / Asignado / En proceso /
+                            Terminado / "Atrasado"->demorado / Cerrado)
+     #filtroFechaAdmin             (vs data-fecha-creacion)
+     #filtroTecnicoAdmin   (Todos / "Sin asignar" = valor __sin_asignar__ /
+                            uno por cada tecnico id in [6,7,8,42]);
+                            compara con data-tecnico-id de la fila
+                            ('' = sin asignar)
+     #filtroFechaRespuestaAdmin    (vs data-fecha-respuesta)
+     Helper: configurarFiltrosTablaAdmin(); flag data('admin-filters-bound').
+     Registro unico: window.adminTableFiltersSearchRegistered.
+
+  Normalizacion comun: la opcion mostrada como "Atrasado" tiene value
+  "Demorado"; el JS baja a minusculas y convierte "atrasado" -> "demorado"
+  para casar con data-estado (que trae et.nombre = "Demorado").
+
+--------------------------------------------------------------------------------
+7.3  Buscador de texto libre (js/buscadores.js)
+--------------------------------------------------------------------------------
+  Escucha input en #idBuscarmensaje, #idBuscarTicket,
+  #buscar_ticketAdministrador, #buscarUsuario y oculta filas cuyo texto
+  concatenado no contenga el termino. En estas 3 vistas practicamente no se
+  usa porque las tablas tienen el buscador propio de DataTables; queda cargado
+  por herencia de otras pantallas.
+
+--------------------------------------------------------------------------------
+7.4  Buscador nativo de DataTables
+--------------------------------------------------------------------------------
+  Cada tabla se inicializa con DataTable({ language: es-ES, responsive:true,
+  pageLength:10 }) -> aporta su propio input "Buscar:", ordenamiento por
+  columna y paginacion. En admin ademas pagingType:'simple_numbers'.
+  El refresco usa draw(false) para no perder la pagina activa.
+
+--------------------------------------------------------------------------------
+7.5  Filtro fijo por rol (siempre activo, en el SQL)
+--------------------------------------------------------------------------------
+  usuario  : WHERE t.id_usuario = sesion
+  tecnico  : WHERE t.id_tecnico = sesion AND t.id_estado != 4
+  admin    : WHERE t.id_estado != 4         (todos menos borradores)
+  Ademas todas ORDER BY pt.fecha_creacion_inicio DESC, pt.hora_creacion_inicio DESC
+  y GROUP BY t.id_ticket.
+
+
+================================================================================
+8. VALIDACIONES
+================================================================================
+
+--------------------------------------------------------------------------------
+8.1  Validaciones de sesion / acceso
+--------------------------------------------------------------------------------
+  - Las 3 vistas asumen sesion iniciada: usan htmlspecialchars($_SESSION['id']).
+    Si $_SESSION['id'] no existe -> warning/fatal PHP (no hay redireccion a
+    login en el propio archivo; se delega en el include de conexion/funciones o
+    en el .htaccess del proyecto).
+  - bloque_tabla_tecnico.php SI valida: si !$idUsuarioSession hace
+    session_start() y, si sigue vacio, imprime
+    "<tr><td colspan='8'>ID del tecnico no definido.</td></tr>" y return.
+  - Endpoints AJAX (componentes/ajax/bloque_tabla_*.php): si no llega
+    $_POST['idUsuarioSession'] -> echo "ID de usuario no recibido." ; exit.
+  - El control de QUE puede ver cada rol es por el WHERE del SQL (id_usuario /
+    id_tecnico / todos), no por comprobacion de perfil. El acceso al archivo
+    en si depende del menu/permisos (permisos_menu_1) y del idPagActual.
+
+--------------------------------------------------------------------------------
+8.2  Saneo de entrada / salida (server-side)
+--------------------------------------------------------------------------------
+  - htmlspecialchars() sobre id, nombre, apellido, id_area_trabajo de sesion.
+  - En los bloques: (int)$row['id_ticket'], (int)$row['id_estado'],
+    intval($idUsuarioSession) antes de interpolar en SQL de los contenedores.
+  - htmlspecialchars() en casi todos los ecos de datos de fila (asunto,
+    nombreEstado, colorEstado, fechas formateadas, textos de estado).
+  - Filtro de tecnicos: implode(',', array_map('intval', $tecnicosFiltroIds)).
+  - OJO: ticketUsuario / obtenerTicketsTecnico / ticketAdministrador
+    interpolan directamente "$idUsuarioSession" y "$estado" en el SQL
+    (concatenacion de strings, sin prepared statements). Los endpoints AJAX
+    los pasan por intval() antes, pero la ruta por carga directa de pagina
+    depende de que $_SESSION['id'] sea confiable. -> ver seccion 8.6.
+
+--------------------------------------------------------------------------------
+8.3  Validaciones al CREAR ticket  (crearTicketGuadalupe / enviarDatosTicket, ticket.js)
+--------------------------------------------------------------------------------
+  preConfirm del modal:
+     - 'asunto' obligatorio (trim != "") -> si no, clase .input-error.
+     - 'categoria' obligatoria (select con value) -> .input-error.
+     - 'descripcion': se valida el TEXTO plano del editor Quill
+       (editorDescripcion.getText().trim()); si vacio -> .input-error y borde
+       rojo en .ql-container.
+     - Si algo falla -> Swal.showValidationMessage('Debes completar todos los
+       campos obligatorios') y no se envia.
+  didOpen: al escribir/cambiar en asuntoTicket / descripcionTicket /
+     selectCategoria se quita la clase .input-error (feedback en vivo).
+  Ruteo por categoria: si selectCategoria === "10" el endpoint es
+     guardar_ticket_sin_tecnico.php (regla de negocio, no validacion de forma).
+  Estado resultante: Confirm -> 1 ; Deny -> 4 (borrador, se guarda igual pero
+     el borrador NO exige las mismas validaciones estrictas -> se envia con lo
+     que haya, ojo).
+  Adjuntos: validandoFormatoDeAdjunto("archivoTicket","contenedorArchivos",
+     "badgeArchivos") valida extension/tamano y arma la lista visual;
+     actualizarListaArchivos() sincroniza el input con un DataTransfer.
+
+--------------------------------------------------------------------------------
+8.4  Validaciones al ASIGNAR tecnico  (asignacionTecnico, ticket_admin_v2.php)
+--------------------------------------------------------------------------------
+  preConfirm:
+     - 'tecnicoSeleccionado' (hidden) obligatorio.
+     - 'categoriaTicket' obligatoria.
+     - Si falta alguno -> Swal.showValidationMessage('Debe seleccionar tecnico
+       y categoria') y return false.
+  El comentario al tecnico es opcional.
+  sanitizarDescripcionHtml(): antes de mostrar la descripcion del ticket en el
+     modal, recorre el DOM y elimina toda etiqueta que no este en la whitelist
+     {BR,P,OL,UL,LI,B,STRONG,I,EM,U} y borra TODOS los atributos -> proteccion
+     XSS basica del contenido rich-text.
+
+--------------------------------------------------------------------------------
+8.5  Validaciones al CALIFICAR  (validacionTicketPorUsuario, validacionTicket.js)
+--------------------------------------------------------------------------------
+  - Debe haberse seleccionado una estrella: si !calificacionId ->
+    se muestra #mensajeError y se pone borde rojo
+    (.contenedor-estrellas-error) en #estrellasWrapper; resolve(false)
+    para que SweetAlert2 no cierre ni bloquee el boton.
+  - El comentario es OPCIONAL (el bloque que lo exigia esta comentado).
+  - allowOutsideClick:false y allowEscapeKey:false -> el usuario no puede
+    esquivar la calificacion cerrando el modal.
+  - Respuesta del backend: si response.success -> mostrarModalNegativo(),
+    si no -> Swal error; el .error del ajax hace fallback a
+    mostrarModalPositivo(). Ambos modales terminan en location.reload().
+  Visibilidad del boton: solo aparece si id_estado === 5 && empty(tieneCalificacion)
+  (se controla en PHP en bloque_tabla_usuario.php).
+
+--------------------------------------------------------------------------------
+8.6  Validaciones al REPROGRAMAR fecha (ticket demorado)
+--------------------------------------------------------------------------------
+  reprogramarFechaTicketDemorado(id, fechaActualIso): el modal exige elegir una
+  fecha nueva; si fechaActual viene vacia se muestra "Sin fecha definida".
+  El backend recalcula dias_estimada_admin como diferencia entre
+  proceso_tickets.fecha_creacion_inicio y la nueva fecha_estimada_admin
+  (regla del CLAUDE.md: no viene del JS).
+
+--------------------------------------------------------------------------------
+8.7  Validaciones del refresco AJAX (anti-parpadeo / anti-solape)
+--------------------------------------------------------------------------------
+  - Comparacion de "huella" del <tbody> normalizada: si no cambio, no se
+    redibuja (evita perder seleccion/scroll y reduce carga).
+  - typeof nuevoTbody === 'undefined' -> return (respuesta invalida/parcial).
+  - admin: flag actualizacionTablaEnCurso (+ .always) para que no se solapen
+    dos peticiones de 3 s.
+  - Registro unico de plugins de filtro con banderas window.*Registered y
+    data('*-filters-bound') para no duplicar listeners en cada refresco.
+
+--------------------------------------------------------------------------------
+8.8  Observaciones / riesgos (no son validaciones, pero conviene documentarlos)
+--------------------------------------------------------------------------------
+  (a) ticket_admin_v2.php pide 'componentes/ajax/bloque_tabla_adminn.php'
+      (doble n) pero el archivo es 'bloque_tabla_admin.php' (una n) ->
+      el auto-refresco de la tabla admin probablemente falla (404).
+  (b) header() carga Bootstrap 5.1.3 y SweetAlert2, y ademas cada vista vuelve
+      a cargar Bootstrap 5.3.3 + 5.3.2 bundle y SweetAlert2 -> multiples
+      versiones de Bootstrap conviviendo (posibles inconsistencias de JS/CSS).
+  (c) Las consultas ticketUsuario / obtenerTicketsTecnico / ticketAdministrador
+      concatenan valores en el SQL (sin binding). Mitigado en la ruta AJAX por
+      intval(), pero no es defensa en profundidad.
+  (d) js/chat_ticket.js hace una llamada AJAX sincrona (async:false) por cada
+      mensaje para resolver el nombre del emisor -> puede congelar la UI en
+      conversaciones largas.
+  (e) asignacionTecnico() esta definida dos veces (inline en ticket_admin_v2.php
+      y dentro de bloque_tabla_adminn.php) -> la ultima cargada gana.
+  (f) calificarTicket() en ticket.js muestra fecha/hora HARDCODEADAS
+      ("2025-06-11" / "14:32:00") en el modal de solo lectura, en lugar de
+      data.data.fecha / data.data.hora.
+  (g) El link "Historial del Ticket" del menu de 3 puntos apunta a
+      estadistica/vida_ticket.php sin el ?id_ticket=... (la version con el
+      parametro esta comentada).
+  (h) El buscador de js/buscadores.js y los data-intro de Intro.js siguen en
+      el HTML aunque sus botones esten comentados.
+
+
+================================================================================
+9. MAPA RAPIDO (cheat-sheet)
+================================================================================
+
+  ROL        idPag  TABLA (id)                     INCLUDE                       ENDPOINT AJAX                              METODO SQL
+  --------------------------------------------------------------------------------------------------------------------------------------------------
+  Usuario    3      #tablaUsuario                  bloque_tabla_usuario.php      componentes/ajax/bloque_tabla_usuario.php  ticketUsuario()
+  Admin      4      #dataTableAdministrador        bloque_tabla_adminn.php       componentes/ajax/bloque_tabla_admin.php    ticketAdministrador()
+  Tecnico    5      #tablaTecnicoTicketAsignados   bloque_tabla_tecnico.php      componentes/ajax/bloque_tabla_tecnico.php  obtenerTicketsTecnico()
+
+  KPIs por vista:
+  Usuario  : Asignados(2)  EnProceso(3)  Terminados(5)  Demorados(7)
+  Tecnico  : Asignados(2)  EnProceso(3)  Terminados(5)  Demorados(7)
+  Admin    : Recibidos(1)  Asignados(2)  EnProceso(3)   Terminados(5)  Demorados(7)
+
+  Estados: 1 Recibido | 2 Asignado | 3 En proceso | 4 Borrador | 5 Terminado | 6 Cerrado | 7 Demorado
+
+  Refresco: setInterval 3000 ms -> POST -> reemplaza solo <tbody> si cambio la huella.
+  Filtro KPI  = server-side (param 'estado' en el POST).
+  Filtro cabecera = client-side (DataTables ext.search + data-attributes del <tr>).
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================

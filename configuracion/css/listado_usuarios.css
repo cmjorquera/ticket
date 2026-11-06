@@ -42,6 +42,30 @@
     flex-wrap: wrap;
 }
 
+.lu-btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    border: 1px solid #d8b4b0;
+    background: #fff;
+    color: #a52d22;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background .15s, border-color .15s, color .15s, transform .15s;
+}
+.lu-btn-pdf:hover,
+.lu-btn-pdf:focus-visible {
+    border-color: #a52d22;
+    background: #a52d22;
+    color: #fff;
+    transform: translateY(-1px);
+}
+.lu-btn-pdf:focus-visible {
+    outline: 3px solid rgba(165, 45, 34, .2);
+    outline-offset: 2px;
+}
+
 /* Buscador esquina superior derecha */
 .lu-search-top-right {
     position: relative;
@@ -443,5 +467,6 @@ div.dataTables_wrapper .dataTables_paginate .paginate_button.disabled { opacity:
     .lu-filter-tabs { flex-wrap: wrap; }
     .lu-search-top-right input { width: 100%; max-width: none; }
     .lu-card-header__actions { width: 100%; }
+    .lu-btn-pdf { flex: 1 1 auto; }
     .lu-select { max-width: none; flex: 1 1 45%; }
 }
