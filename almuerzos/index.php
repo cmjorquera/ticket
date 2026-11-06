@@ -7,15 +7,20 @@
  */
 header('Content-Type: text/html; charset=UTF-8');
 require_once __DIR__ . '/../validar_sesion.php';
-require_once __DIR__ . '/../helpers/tickets.php';
+require_once __DIR__ . '/class/AlmuerzosDemo.php';
 
 $idUsuario = (int) ($_SESSION['id'] ?? 0);
 $nombreUsuario = trim((string) ($_SESSION['nombre'] ?? 'Usuario'));
-$esAdmin = false;
-try {
-    $esAdmin = es_administrador_global($idUsuario, Conexion::getInstance('sistema_panel_central'));
-} catch (Throwable $e) {
-    error_log('[almuerzos] perfil: ' . $e->getMessage());
+// Solo el encargado (usuario 8) carga el menú y descarga el PDF de pedidos
+$esAdmin = AlmuerzosDemo::esEncargado($idUsuario);
+$hoyChile = new DateTimeImmutable('today', new DateTimeZone('America/Santiago'));
+$cocinaHoy = null;
+if ($esAdmin && AlmuerzosDemo::esDiaHabil($hoyChile)) {
+    try {
+        $cocinaHoy = AlmuerzosDemo::conteo(AlmuerzosDemo::pedidosDelDia(Conexion::getInstance('sistema_panel_central'), $hoyChile));
+    } catch (Throwable $e) {
+        error_log('[almuerzos] cocina: ' . $e->getMessage());
+    }
 }
 
 function alm_v(string $ruta): string
@@ -39,6 +44,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="alm-head__acciones">
             <a href="#almMes" class="btn btn-outline"><i class="bi bi-calendar3"></i> Menú del mes</a>
             <?php if ($esAdmin): ?>
+                <a href="pdf_pedidos.php" class="btn btn-outline" target="_blank" rel="noopener" id="btnPdfHoy"><i class="bi bi-file-earmark-pdf"></i> Pedidos de hoy (PDF)</a>
                 <button type="button" class="btn btn-primary" id="btnCargarMes"><i class="bi bi-upload"></i> Cargar almuerzos del mes</button>
             <?php endif; ?>
         </div>
@@ -89,8 +95,15 @@ require_once __DIR__ . '/../includes/header.php';
             </section>
             <?php if ($esAdmin): ?>
             <section class="card alm-resumen">
-                <div class="alm-card-head"><div><h2>Para cocina · hoy</h2><p>Pedidos recibidos hasta ahora (ejemplo).</p></div></div>
+                <div class="alm-card-head"><div><h2>Para cocina · hoy</h2><p>Pedidos de todos los usuarios (ejemplo).</p></div></div>
                 <ul class="alm-conteo" id="almCocina"></ul>
+                <form class="alm-pdf" action="pdf_pedidos.php" method="get" target="_blank">
+                    <label for="pdfFecha">Lista por persona</label>
+                    <div>
+                        <input type="date" name="fecha" id="pdfFecha" class="alm-input" value="<?= htmlspecialchars($hoyChile->format('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-pdf"></i> Descargar PDF</button>
+                    </div>
+                </form>
             </section>
             <?php endif; ?>
         </aside>
@@ -175,5 +188,5 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div class="alm-toast" id="almToast" role="status" hidden></div>
 </div>
-<script>window.ALM_CONFIG = <?= json_encode(['usuario' => $idUsuario, 'nombre' => $nombreUsuario, 'admin' => $esAdmin], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
+<script>window.ALM_CONFIG = <?= json_encode(['usuario' => $idUsuario, 'nombre' => $nombreUsuario, 'admin' => $esAdmin, 'cocina' => $cocinaHoy], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

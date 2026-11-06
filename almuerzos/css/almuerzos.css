@@ -170,3 +170,10 @@
 /* El reset global (margin:0) descentra <dialog>; y la tarjeta de hoy no se estira */
 .alm-dialog{margin:auto}
 .alm-grid{align-items:start}
+
+/* Descarga del PDF de pedidos (encargado) */
+.alm-pdf{padding:4px 18px 16px;border-top:1px solid var(--border)}
+.alm-pdf label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:10px 0 6px}
+.alm-pdf div{display:flex;gap:8px;flex-wrap:wrap}
+.alm-pdf .alm-input{flex:1;min-width:140px}
+.alm-head__acciones a.btn{color:var(--fg)}

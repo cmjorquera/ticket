@@ -10,7 +10,14 @@ Qué hace la pantalla (almuerzos/index.php)
 - "Mis pedidos del mes": cuántas veces eligió cada opción y los próximos días.
 - "Menú del mes": calendario de días hábiles con los tres menús; al tocar un
   día se ve el detalle (entrada + fondo + postre) y lo que pidió.
-- Administración (es_administrador_global): botón "Cargar almuerzos del mes"
+- Encargado de almuerzos: SOLO el usuario 8 (AlmuerzosDemo::ENCARGADO_ID en
+  almuerzos/class/AlmuerzosDemo.php). Ve "Pedidos de hoy (PDF)", el panel
+  "Para cocina" con selector de fecha y "Cargar almuerzos del mes".
+  pdf_pedidos.php responde 403 a cualquier otro usuario.
+- PDF de pedidos (pdf_pedidos.php?fecha=AAAA-MM-DD, FPDF): resumen por opción,
+  total a preparar y la lista de cada usuario activo con su pedido, ordenada
+  por opción y nombre. Fin de semana: "No hay servicio".
+- Botón "Cargar almuerzos del mes"
   1) elegir mes, 2) descargar plantilla .csv (una fila por día hábil,
   separada por ";" para Excel), 3) subir el archivo, ver vista previa con
   validaciones (fecha del mes, día hábil, tres menús) y publicar.
@@ -20,8 +27,9 @@ Por ahora (sin base de datos)
 -----------------------------
 - Los menús se generan de ejemplo (siempre los mismos para cada fecha).
 - La elección y el menú publicado se guardan solo en el navegador
-  (localStorage). Los pedidos de días pasados y los números de cocina son
-  inventados. "Simular horario abierto" permite probar fuera de 09:00–12:00.
+  (localStorage). Los pedidos de días pasados son inventados. Los pedidos de
+  todos los usuarios (panel de cocina y PDF) también son inventados, pero
+  siempre iguales para la misma persona y fecha (AlmuerzosDemo::pedidoEjemplo). "Simular horario abierto" permite probar fuera de 09:00–12:00.
 
 Propuesta para la etapa 2 (base de datos)
 -----------------------------------------

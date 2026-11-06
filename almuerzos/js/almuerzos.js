@@ -211,14 +211,17 @@
         }).join('') || '<li class="is-muted">Sin menús publicados.</li>';
 
         if ($('#almCocina')) {
-            const k = clave(hoy);
-            const base = { menu: 18 + semilla(k + 'cm', 12), hipo: 6 + semilla(k + 'ch', 6), picnic: 3 + semilla(k + 'cp', 5) };
-            const mio = (store.get('pedidos', {}))[k];
-            if (mio && base[mio] !== undefined) { base[mio]++; }
-            const total = base.menu + base.hipo + base.picnic;
-            $('#almCocina').innerHTML = Object.entries(OPCIONES).map(([id, o]) =>
-                `<li><span><i class="alm-ico alm-ico--${o.clase}"></i>${esc(o.nombre)}</span><strong>${base[id]}</strong></li>`).join('')
-                + `<li class="is-total"><span>Total</span><strong>${total}</strong></li>`;
+            // Mismos números que el PDF (calculados en el servidor)
+            const base = CFG.cocina;
+            if (!base) {
+                $('#almCocina').innerHTML = '<li class="is-muted">Hoy no hay servicio de almuerzo.</li>';
+            } else {
+                const total = base.menu + base.hipo + base.picnic;
+                $('#almCocina').innerHTML = Object.entries(OPCIONES).map(([id, o]) =>
+                    `<li><span><i class="alm-ico alm-ico--${o.clase}"></i>${esc(o.nombre)}</span><strong>${base[id]}</strong></li>`).join('')
+                    + `<li class="is-muted"><span><i class="alm-ico"></i>No almuerzan / sin pedido</span><strong>${base.no + base['']}</strong></li>`
+                    + `<li class="is-total"><span>Total a preparar</span><strong>${total}</strong></li>`;
+            }
         }
     }
 
