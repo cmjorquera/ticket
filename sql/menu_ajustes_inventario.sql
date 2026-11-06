@@ -4,6 +4,11 @@
 --  no existe en el sistema nuevo. El dashboard del módulo está en
 --  inventario/dashboard.php.
 -- =====================================================================
+
+-- Base de datos donde se ejecuta (QA). En PRODUCCIÓN cambiar este nombre.
+-- Va explícita para que phpMyAdmin no la ejecute en otra base por error.
+USE `crist668_sistema_panel_central`;
+
 UPDATE menu_1_sub
    SET archivo = 'inventario/dashboard.php'
  WHERE id_submenu = 23

@@ -4,6 +4,11 @@
 --  La usa Colaboradores para enviar mensajes. Seguro: no borra nada y se
 --  puede ejecutar más de una vez.
 -- =====================================================================
+
+-- Base de datos donde se ejecuta (QA). En PRODUCCIÓN cambiar este nombre.
+-- Va explícita para que phpMyAdmin no la ejecute en otra base por error.
+USE `crist668_sistema_panel_central`;
+
 CREATE TABLE IF NOT EXISTS `mensajes_chat` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_padre` int(11) DEFAULT NULL,

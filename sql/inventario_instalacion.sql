@@ -7,6 +7,11 @@
 --  puede ejecutar más de una vez.
 -- =====================================================================
 
+-- Base de datos donde se ejecuta (QA). En PRODUCCIÓN cambiar este nombre.
+-- Va explícita para que phpMyAdmin no la ejecute en otra base por error.
+USE `crist668_sistema_panel_central`;
+
+
 SET NAMES utf8mb4;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 

@@ -4,6 +4,11 @@
 --  así todos ven todo el inventario. Ejecutar DESPUÉS de
 --  inventario_instalacion.sql. Se puede ejecutar varias veces sin duplicar.
 -- =====================================================================
+
+-- Base de datos donde se ejecuta (QA). En PRODUCCIÓN cambiar este nombre.
+-- Va explícita para que phpMyAdmin no la ejecute en otra base por error.
+USE `crist668_sistema_panel_central`;
+
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_perfil, estado)
 SELECT u.id, 15, 3, 1
   FROM usuarios u
