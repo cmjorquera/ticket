@@ -8,7 +8,8 @@ declare(strict_types=1);
  *
  * Los mensajes se guardan en mensajes_chat con el mismo formato que usaba
  * el sistema antiguo (un registro por destinatario, cada uno con su propia
- * conversación). El remitente siempre es el usuario de la sesión.
+ * conversación: se inserta con id_conversacion = 0 y luego se iguala a su id,
+ * porque la columna es NOT NULL). Tabla: sql/mensajes_chat.sql. El remitente siempre es el usuario de la sesión.
  */
 
 require_once __DIR__ . '/_bootstrap.php';
@@ -148,6 +149,10 @@ try {
         responder_json(['ok' => false, 'mensaje' => 'Uno o más destinatarios no están disponibles.'], 422);
     }
 
+    if (!tabla_existe($db, 'mensajes_chat')) {
+        responder_json(['ok' => false, 'mensaje' => 'La mensajería aún no está instalada en este servidor (falta la tabla mensajes_chat).'], 503);
+    }
+
     $pdo = $db->getPDO();
     $pdo->beginTransaction();
     try {
@@ -156,7 +161,7 @@ try {
             $db->execute(
                 "INSERT INTO mensajes_chat
                     (id_conversacion, mensaje, de, para, fecha_hora, leido, urgente, eliminado, prioridad)
-                 VALUES (NULL, ?, ?, ?, ?, 0, ?, 0, ?)",
+                 VALUES (0, ?, ?, ?, ?, 0, ?, 0, ?)",
                 [$mensaje, $usuarioId, $idDestino, $fecha, $urgente, 'NORMAL']
             );
             $idMensaje = (int) $db->lastInsertId();
