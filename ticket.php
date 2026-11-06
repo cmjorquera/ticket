@@ -92,7 +92,7 @@ $versionTicketJs = @filemtime(__DIR__ . '/js/ticket.js') ?: time();
                         <div class="card-header py-3 d-flex justify-content-between align-items-center">
                             <h6 class="m-0 font-weight-bold text-primary" data-intro="Aca puedes ver la tabla de tickets creados y agregar uno nuevo.">
                                 <a href="#" class="btn btn-primary btn-icon-split" id="buttonAgregarTicket" onclick="crearTicketGuadalupe(<?php echo (int) $idUsuarioSession; ?>)">
-                                    <span class="text">Agregar ticket</span>
+                                    <span class="text">Agregar tieeeeeeecket</span>
                                 </a>
                             </h6>
                         </div>
