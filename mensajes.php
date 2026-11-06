@@ -1,8 +1,4 @@
 <?php
-require_once __DIR__ . '/validar_sesion.php';
-$pagina_titulo = 'Mensajes';
-require_once __DIR__ . '/includes/header.php';
-?>
-<div class="page-header"><h2>Mensajes</h2></div>
-<div class="card"><p>Módulo en construcción.</p></div>
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+// Página antigua: Mensajes ahora vive en la carpeta mensajes/
+header('Location: mensajes/index.php');
+exit;

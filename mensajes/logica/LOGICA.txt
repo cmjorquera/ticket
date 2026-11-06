@@ -1,0 +1,40 @@
+MENSAJES – sistema nuevo (rama qa)
+==================================
+
+Antes: mensaje.php, mensaje_enviados.php y men_archivados.php sueltos en la
+raíz del sistema antiguo, mezclando dos tablas (mensajes y mensajes_chat),
+con consultas armadas con texto del usuario y llamadas a acceso.seduc.cl.
+Ahora: carpeta mensajes/. Los archivos de la raíz quedan como redirección
+para que los enlaces viejos sigan funcionando.
+
+Páginas
+-------
+- mensajes/index.php       Recibidos (submenú 2)
+- mensajes/enviados.php    Enviados (submenú 1)
+- mensajes/archivados.php  Archivados (submenú 3)
+- mensajes/ajax/mensajes.php  Acciones (JSON): conversación, responder,
+  mensaje nuevo, archivar, desarchivar, eliminar, destinatarios, resumen.
+
+Tablas
+------
+- mensajes_chat (la misma que usa Colaboradores para enviar mensajes).
+  Conversación = mensajes con el mismo id_conversacion; el primero tiene
+  id_conversacion = su id; las respuestas llevan id_padre = conversación.
+- mensajes_chat_carpeta (nueva): archivado / eliminado POR USUARIO.
+  Archivar o eliminar no afecta a la otra persona.
+  Si llega una respuesta, la conversación vuelve a Recibidos de ambos.
+
+Reglas
+------
+- Solo se puede abrir o responder una conversación en la que participas.
+- Al abrir una conversación se marcan como leídos los mensajes para ti.
+- Mensajes de hasta 1000 caracteres; hasta 200 destinatarios por envío
+  (una conversación por destinatario, igual que Colaboradores).
+- Destinatarios: usuarios con estado Activo.
+- Acciones POST con token CSRF; el texto se muestra escapado (sin HTML).
+
+Instalación
+-----------
+sql/mensajes_instalacion.sql: crea mensajes_chat si falta, crea
+mensajes_chat_carpeta y apunta el menú Mensajes a mensajes/. Se puede
+ejecutar más de una vez.
