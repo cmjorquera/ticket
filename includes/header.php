@@ -81,45 +81,53 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
     <!-- Contenido principal -->
     <div id="main">
 
-        <!-- Topbar -->
-        <header id="topbar" class="topbar">
-            <div class="topbar-left">
-                <button id="mobile-menu-btn" class="topbar-toggle" onclick="toggleMobileSidebar()">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <span class="mobile-brand"><i class="fa-solid fa-graduation-cap"></i> SEDUC</span>
-                <span class="breadcrumb">
-                    SEDUC <i class="fa-solid fa-chevron-right"></i>
-                    <?= htmlspecialchars($breadcrumb_grupo) ?> <i class="fa-solid fa-chevron-right"></i>
-                    <strong><?= htmlspecialchars($breadcrumb_label) ?></strong>
-                </span>
+        <!-- Topbar: mismo diseño que componentes/topbar.php -->
+        <?php
+        $topbar_nombre = trim((string) $usuario_nombre . ' ' . (string) $usuario_apellido);
+        $topbar_iniciales = '';
+        foreach (preg_split('/\s+/u', $topbar_nombre, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $parte) {
+            $topbar_iniciales .= mb_strtoupper(mb_substr($parte, 0, 1));
+            if (mb_strlen($topbar_iniciales) >= 2) {
+                break;
+            }
+        }
+        ?>
+        <header id="topbar">
+            <button id="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Abrir menú">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div class="breadcrumb">
+                <span>SEDUC</span>
+                <span class="sep">›</span>
+                <span class="current"><?= htmlspecialchars((string) $breadcrumb_label) ?></span>
+            </div>
+            <div class="search-wrap">
+                <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" placeholder="Buscar usuarios, colegios, módulos..."/>
             </div>
             <div class="topbar-right">
-                <button class="topbar-icon" onclick="toggleTheme()" title="Modo claro/oscuro">
-                    <i class="fa-solid fa-moon" id="theme-icon"></i>
+                <button class="notif-btn" type="button" aria-label="Notificaciones">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span class="notif-badge">3</span>
                 </button>
-                <div class="topbar-dd">
-                    <button class="topbar-icon notification-btn" onclick="toggleDD(this)" title="Notificaciones">
-                        <i class="fa-solid fa-bell"></i>
-                        <span class="notification-dot" id="notification-dot"></span>
-                    </button>
-                    <div class="dropdown-menu notification-menu">
-                        <div class="notification-head">
-                            <strong>Notificaciones</strong>
-                            <button type="button" onclick="markAllRead(event)">Marcar todas como leídas</button>
+                <div class="dropdown">
+                    <button class="user-chip" type="button" onclick="toggleDropdown(this)">
+                        <div class="avatar"><?= htmlspecialchars($topbar_iniciales !== '' ? $topbar_iniciales : 'U') ?></div>
+                        <div class="user-info">
+                            <strong><?= htmlspecialchars($topbar_nombre) ?></strong>
+                            <span><?= htmlspecialchars((string) $usuario_rol) ?></span>
                         </div>
-                        <div id="notification-list"></div>
-                    </div>
-                </div>
-                <div class="topbar-dd">
-                    <button class="topbar-user" onclick="toggleDD(this)">
-                        <i class="fa-solid fa-user-circle"></i>
-                        <span><?= htmlspecialchars($usuario_nombre . ' ' . $usuario_apellido) ?></span>
-                        <i class="fa-solid fa-chevron-down"></i>
                     </button>
-                    <div class="dropdown-menu">
-                        <a href="<?= $depth ?>pages/perfil.php"><i class="fa-solid fa-user"></i> Perfil</a>
-                        <a href="<?= $depth ?>cerrar_sesion.php"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
+                    <div class="dropdown-menu" style="right:0;min-width:180px">
+                        <a class="dropdown-item" href="<?= $depth ?>pages/perfil.php">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                            Perfil
+                        </a>
+                        <div style="height:1px;background:var(--border);margin:4px 8px"></div>
+                        <a class="dropdown-item danger" href="<?= $depth ?>cerrar_sesion.php">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Salir
+                        </a>
                     </div>
                 </div>
             </div>
