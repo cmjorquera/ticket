@@ -1,15 +1,12 @@
-/* Almuerzos – interfaz con datos de ejemplo (todavía sin base de datos).
- * - Pedido del día entre 09:00 y 12:00: Menú del día, Hipocalórico o Picnic.
- * - Calendario del mes con los tres menús por día hábil.
- * - Administración: plantilla CSV, carga y vista previa del menú del mes.
- * La elección y el menú cargado se guardan solo en este navegador (localStorage).
+/* Almuerzos: pedido del día, menú del mes (modal + PDF) y carga mensual del menú.
+ * Todo se guarda en la base de datos a través de ajax/almuerzos.php.
+ * El horario (09:00–12:00) lo valida el servidor; aquí solo se muestra.
  */
 (function () {
     'use strict';
 
     const CFG = window.ALM_CONFIG || {};
-    const HORA_INICIO = 9 * 60;   // 09:00
-    const HORA_FIN = 12 * 60;     // 12:00
+    const API = 'ajax/almuerzos.php';
     const OPCIONES = {
         menu:   { nombre: 'Menú del día', icono: 'bi-egg-fried', clase: 'menu' },
         hipo:   { nombre: 'Hipocalórico', icono: 'bi-heart-pulse', clase: 'hipo' },
@@ -18,7 +15,7 @@
     const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
     const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-    // ---------------------------------------------------------- utilidades
+    // ------------------------------------------------------------ utilidades
     const $ = sel => document.querySelector(sel);
     const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const dos = n => String(n).padStart(2, '0');
@@ -28,147 +25,104 @@
     const habil = d => d.getDay() >= 1 && d.getDay() <= 5;
     const titulo = t => t.charAt(0).toUpperCase() + t.slice(1);
     const fechaLarga = d => titulo(DIAS[d.getDay()]) + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
-    const store = {
-        get(k, def) { try { const v = localStorage.getItem('alm_' + CFG.usuario + '_' + k); return v ? JSON.parse(v) : def; } catch (e) { return def; } },
-        set(k, v) { try { localStorage.setItem('alm_' + CFG.usuario + '_' + k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
-    };
+    const platos = texto => String(texto).split('+').map(t => t.trim()).filter(Boolean);
+    const platoPrincipal = (id, texto) => { const p = platos(texto); return (id === 'picnic' ? p[0] : (p[1] || p[0])) || ''; };
+    const platosHtml = texto => '<ul class="alm-platos">' + platos(texto).map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>';
 
-    // ---------------------------------------------------------- datos de ejemplo
-    const PLATOS = {
-        menu: [
-            ['Crema de zapallo', 'Pollo arvejado con arroz', 'Fruta de la estación'],
-            ['Ensalada chilena', 'Porotos granados', 'Mote con huesillo'],
-            ['Sopa de verduras', 'Carne mechada con puré', 'Leche asada'],
-            ['Ensalada de repollo', 'Pastel de choclo', 'Fruta picada'],
-            ['Consomé', 'Lentejas con arroz', 'Sémola con leche'],
-            ['Ensalada surtida', 'Merluza frita con papas cocidas', 'Gelatina'],
-            ['Crema de espárragos', 'Charquicán con huevo', 'Manzana asada'],
-            ['Ensalada de betarraga', 'Tallarines con salsa bolognesa', 'Fruta de la estación'],
-            ['Sopa de pollo', 'Cazuela de vacuno', 'Arroz con leche'],
-            ['Ensalada mixta', 'Pollo al jugo con papas doradas', 'Flan'],
-        ],
-        hipo: [
-            ['Ensalada verde', 'Pechuga a la plancha con quínoa', 'Yogur natural'],
-            ['Crema de zapallo italiano', 'Reineta al vapor con verduras', 'Fruta'],
-            ['Ensalada de tomate', 'Omelette de espinaca con ensalada', 'Gelatina light'],
-            ['Caldo de verduras', 'Pavo al horno con puré de coliflor', 'Fruta picada'],
-            ['Ensalada de pepino', 'Salteado de verduras con tofu', 'Manzana'],
-            ['Ensalada de lechuga', 'Atún con garbanzos y verduras', 'Fruta'],
-        ],
-        picnic: [
-            ['Sándwich de ave pimiento', 'Jugo natural', 'Barra de cereal'],
-            ['Wrap de pollo y verduras', 'Agua saborizada', 'Fruta'],
-            ['Sándwich de jamón queso', 'Yogur', 'Galletas de avena'],
-            ['Ensalada César para llevar', 'Jugo natural', 'Fruta'],
-            ['Empanada de horno', 'Agua mineral', 'Manzana'],
-        ],
-    };
-    // Número pseudoaleatorio estable por fecha (mismo menú cada vez que se abre)
-    const semilla = (k, n) => { let h = 7; for (const c of k) { h = (h * 31 + c.charCodeAt(0)) % 100003; } return h % n; };
-    const unir = p => p.join(' + ');
-    // Plato que se muestra en el calendario: el fondo (o lo primero, en picnic)
-    const platoPrincipal = (id, texto) => { const p = String(texto).split('+').map(t => t.trim()); return (id === 'picnic' ? p[0] : (p[1] || p[0])) || ''; };
-
-    function menuEjemplo(año, mes) {
-        const dias = {};
-        for (let d = new Date(año, mes, 1); d.getMonth() === mes; d.setDate(d.getDate() + 1)) {
-            if (!habil(d)) { continue; }
-            const k = clave(d);
-            dias[k] = {
-                menu: unir(PLATOS.menu[semilla(k + 'm', PLATOS.menu.length)]),
-                hipo: unir(PLATOS.hipo[semilla(k + 'h', PLATOS.hipo.length)]),
-                picnic: unir(PLATOS.picnic[semilla(k + 'p', PLATOS.picnic.length)]),
-            };
-        }
-        return dias;
-    }
-
-    // Menú publicado (cargado por administración) o de ejemplo
-    function menuDelMes(año, mes) {
-        const cargados = store.get('menus', {});
-        const k = año + '-' + dos(mes + 1);
-        return cargados[k] || menuEjemplo(año, mes);
-    }
-    const menuDe = d => menuDelMes(d.getFullYear(), d.getMonth())[clave(d)] || null;
-
-    // Pedidos: los de hoy los elige la persona; los días pasados se inventan
-    function pedidos() {
-        const guardados = store.get('pedidos', {});
-        const hoy = clave(new Date());
-        const res = Object.assign({}, guardados);
-        const inicio = new Date(); inicio.setDate(1);
-        for (let d = new Date(inicio); clave(d) < hoy; d.setDate(d.getDate() + 1)) {
-            const k = clave(d);
-            if (!habil(d) || k in res) { continue; }
-            res[k] = ['menu', 'menu', 'hipo', 'picnic', 'menu', 'no'][semilla(k + CFG.usuario, 6)];
-        }
-        return res;
-    }
-    function guardarPedido(k, opcion) {
-        const g = store.get('pedidos', {});
-        if (opcion === null) { delete g[k]; } else { g[k] = opcion; }
-        store.set('pedidos', g);
-    }
-
-    // ---------------------------------------------------------- horario
-    function horarioAbierto(ahora) {
-        if ($('#chkSimular') && $('#chkSimular').checked) { return true; }
-        if (!habil(ahora)) { return false; }
-        const min = ahora.getHours() * 60 + ahora.getMinutes();
-        return min >= HORA_INICIO && min < HORA_FIN;
-    }
-    function textoRestante(min) {
-        const h = Math.floor(min / 60), m = min % 60;
-        return (h ? h + ' h ' : '') + m + ' min';
-    }
-    function pintarEstado() {
-        const ahora = new Date();
-        const min = ahora.getHours() * 60 + ahora.getMinutes();
-        const abierto = horarioAbierto(ahora);
-        const $e = $('#almEstado');
-        $e.classList.toggle('is-abierto', abierto);
-        $e.classList.toggle('is-cerrado', !abierto);
-        $('#almReloj').textContent = dos(ahora.getHours()) + ':' + dos(ahora.getMinutes());
-        if (abierto) {
-            $('#almEstadoTitulo').textContent = 'Pedidos abiertos';
-            $('#almEstadoDetalle').textContent = $('#chkSimular').checked && !(habil(ahora) && min >= HORA_INICIO && min < HORA_FIN)
-                ? 'Horario simulado para probar la pantalla.'
-                : 'Puedes elegir o cambiar tu almuerzo. Cierra a las 12:00 (quedan ' + textoRestante(HORA_FIN - min) + ').';
-        } else if (habil(ahora) && min < HORA_INICIO) {
-            $('#almEstadoTitulo').textContent = 'Aún no abre';
-            $('#almEstadoDetalle').textContent = 'Los pedidos de hoy se abren a las 09:00 (en ' + textoRestante(HORA_INICIO - min) + ').';
+    async function api(params, metodo) {
+        const opciones = { credentials: 'same-origin', headers: { Accept: 'application/json' } };
+        let url = API;
+        if (metodo === 'POST') {
+            opciones.method = 'POST';
+            opciones.body = new URLSearchParams(Object.assign({ csrf: CFG.csrf }, params));
         } else {
-            const sig = new Date(ahora); do { sig.setDate(sig.getDate() + 1); } while (!habil(sig));
-            $('#almEstadoTitulo').textContent = 'Pedidos cerrados';
-            $('#almEstadoDetalle').textContent = 'Vuelve a abrir el ' + fechaLarga(sig).toLowerCase() + ' a las 09:00.';
+            url += '?' + new URLSearchParams(params);
         }
-        return abierto;
+        const r = await fetch(url, opciones);
+        let datos = {};
+        try { datos = await r.json(); } catch (e) { datos = { ok: false, mensaje: 'Respuesta no válida del servidor.' }; }
+        if (!r.ok || !datos.ok) { throw new Error(datos.mensaje || 'No fue posible completar la acción.'); }
+        return datos;
     }
 
-    // ---------------------------------------------------------- hoy
-    function platosHtml(texto) {
-        return '<ul class="alm-platos">' + String(texto).split('+').map(p => '<li>' + esc(p.trim()) + '</li>').join('') + '</ul>';
+    let toastTimer;
+    function toast(texto, tipo) {
+        const t = $('#almToast');
+        t.textContent = texto;
+        t.className = 'alm-toast' + (tipo ? ' alm-toast--' + tipo : '');
+        t.hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { t.hidden = true; }, 3000);
     }
+    function aviso(texto) {
+        const a = $('#almAviso');
+        a.hidden = !texto;
+        a.textContent = texto || '';
+    }
+
+    // ------------------------------------------------------------ estado de hoy
+    let estado = null;
+    let relojBase = null; // diferencia entre la hora del servidor (Chile) y la del navegador
+
+    function horaServidor() {
+        return relojBase === null ? new Date() : new Date(Date.now() + relojBase);
+    }
+    const textoRestante = min => (Math.floor(min / 60) ? Math.floor(min / 60) + ' h ' : '') + (min % 60) + ' min';
+    const aMin = hm => { const [h, m] = hm.split(':').map(Number); return h * 60 + m; };
+
+    function pintarEstado() {
+        if (!estado) { return; }
+        const h = estado.horario;
+        const ahora = horaServidor();
+        const min = ahora.getHours() * 60 + ahora.getMinutes();
+        $('#almReloj').textContent = dos(ahora.getHours()) + ':' + dos(ahora.getMinutes());
+        // Si cambia de tramo (abre o cierra) se vuelve a consultar al servidor
+        const tramo = h.simulado ? 'abierto' : (!habil(ahora) ? 'cerrado' : (min < aMin(h.inicio) ? 'antes' : (min < aMin(h.fin) ? 'abierto' : 'cerrado')));
+        if (tramo !== h.estado && clave(ahora) === h.hoy) { cargarEstado(); return; }
+
+        const e = $('#almEstado');
+        e.classList.toggle('is-abierto', h.estado === 'abierto');
+        e.classList.toggle('is-cerrado', h.estado !== 'abierto');
+        if (h.estado === 'abierto') {
+            $('#almEstadoTitulo').textContent = 'Pedidos abiertos';
+            $('#almEstadoDetalle').textContent = h.simulado
+                ? 'Horario simulado (solo para pruebas).'
+                : 'Puedes elegir o cambiar tu almuerzo hasta las ' + h.fin + ' (quedan ' + textoRestante(Math.max(0, aMin(h.fin) - min)) + ').';
+        } else if (h.estado === 'antes') {
+            $('#almEstadoTitulo').textContent = 'Aún no abre';
+            $('#almEstadoDetalle').textContent = 'Los pedidos de hoy se abren a las ' + h.inicio + ' (en ' + textoRestante(Math.max(0, aMin(h.inicio) - min)) + ').';
+        } else {
+            $('#almEstadoTitulo').textContent = 'Pedidos cerrados';
+            $('#almEstadoDetalle').textContent = 'Vuelve a abrir el ' + fechaLarga(desdeClave(h.siguiente_habil)).toLowerCase() + ' a las ' + h.inicio + '.';
+        }
+    }
+
     function pintarHoy() {
-        const hoy = new Date();
-        const k = clave(hoy);
-        const menu = menuDe(hoy);
-        const abierto = pintarEstado();
-        const elegido = (store.get('pedidos', {}))[k];
+        const h = estado.horario;
+        const hoy = desdeClave(h.hoy);
+        const abierto = h.estado === 'abierto';
+        const menu = estado.menu_hoy;
+        const elegido = estado.mi_pedido;
         $('#almHoyTitulo').textContent = 'Almuerzo de hoy · ' + fechaLarga(hoy);
 
-        const $pill = $('#almMiPedido');
-        $pill.className = 'alm-pill' + (elegido && elegido !== 'no' ? ' alm-pill--' + OPCIONES[elegido].clase : '');
-        $pill.textContent = elegido === 'no' ? 'No almorzarás hoy' : (elegido ? 'Tu pedido: ' + OPCIONES[elegido].nombre : 'Sin elegir');
+        const pill = $('#almMiPedido');
+        pill.className = 'alm-pill' + (elegido && OPCIONES[elegido] ? ' alm-pill--' + OPCIONES[elegido].clase : '');
+        pill.textContent = elegido === 'no' ? 'No almorzarás hoy' : (elegido ? 'Tu pedido: ' + OPCIONES[elegido].nombre : 'Sin elegir');
 
+        const btnNo = $('#btnNoAlmuerzo');
         if (!menu) {
-            $('#almOpciones').innerHTML = '<div class="alm-vacio"><i class="bi bi-calendar-x"></i><p>Hoy no hay servicio de almuerzo.</p></div>';
-            $('#almHoySub').textContent = 'Revisa el menú del mes más abajo.';
-            $('#btnNoAlmuerzo').hidden = true;
+            $('#almOpciones').innerHTML = '<div class="alm-vacio"><i class="bi bi-calendar-x"></i><p>'
+                + (habil(hoy) ? 'Todavía no se publica el menú de hoy.' : 'Hoy no hay servicio de almuerzo.') + '</p></div>';
+            $('#almHoySub').textContent = 'Revisa el menú del mes.';
+            btnNo.hidden = true;
+            $('#almNota').textContent = '';
             return;
         }
-        $('#btnNoAlmuerzo').hidden = false;
-        $('#almHoySub').textContent = abierto ? 'Elige una opción. Puedes cambiarla hasta las 12:00.' : 'El horario de pedidos está cerrado: solo puedes ver el menú.';
+        btnNo.hidden = false;
+        btnNo.disabled = !abierto || elegido === 'no';
+        $('#almHoySub').textContent = abierto
+            ? 'Elige una opción. Puedes cambiarla hasta las ' + h.fin + '.'
+            : 'El horario de pedidos está cerrado: solo puedes ver el menú.';
         $('#almOpciones').innerHTML = Object.entries(OPCIONES).map(([id, o]) => `
             <article class="alm-opcion alm-opcion--${o.clase}${elegido === id ? ' is-elegida' : ''}">
                 <div class="alm-opcion__top">
@@ -177,65 +131,84 @@
                     ${elegido === id ? '<i class="bi bi-check-circle-fill alm-opcion__check" aria-label="Elegido"></i>' : ''}
                 </div>
                 ${platosHtml(menu[id])}
-                <button type="button" class="btn ${elegido === id ? 'btn-outline' : 'btn-primary'} btn-sm alm-opcion__btn" data-opcion="${id}" ${abierto ? '' : 'disabled'}>
+                <button type="button" class="btn ${elegido === id ? 'btn-outline' : 'btn-primary'} btn-sm alm-opcion__btn" data-opcion="${id}" ${abierto && elegido !== id ? '' : 'disabled'}>
                     ${elegido === id ? '<i class="bi bi-check2"></i> Elegido' : 'Elegir'}
                 </button>
             </article>`).join('');
-        $('#btnNoAlmuerzo').disabled = !abierto;
-        $('#almNota').textContent = elegido ? '' : (abierto ? 'Si no eliges antes de las 12:00 quedas sin almuerzo.' : '');
+        $('#almNota').textContent = !elegido && abierto ? 'Si no eliges antes de las ' + h.fin + ' quedas sin almuerzo.' : '';
     }
 
-    // ---------------------------------------------------------- resumen y calendario
-    let mesVista = new Date(); mesVista.setDate(1);
-
     function pintarResumen() {
-        const hoy = new Date();
-        const p = pedidos();
-        const prefijo = claveMes(hoy);
+        const hoy = desdeClave(estado.horario.hoy);
         const conteo = { menu: 0, hipo: 0, picnic: 0, no: 0 };
-        Object.entries(p).forEach(([k, v]) => { if (k.startsWith(prefijo) && v in conteo) { conteo[v]++; } });
+        Object.values(estado.mis_pedidos_mes || {}).forEach(v => { if (v in conteo) { conteo[v]++; } });
         $('#almMesNombre').textContent = titulo(MESES[hoy.getMonth()]) + ' ' + hoy.getFullYear();
         $('#almConteo').innerHTML = Object.entries(OPCIONES).map(([id, o]) =>
             `<li><span><i class="alm-ico alm-ico--${o.clase}"></i>${esc(o.nombre)}</span><strong>${conteo[id]}</strong></li>`).join('')
             + `<li class="is-muted"><span><i class="alm-ico"></i>Sin almuerzo</span><strong>${conteo.no}</strong></li>`;
-
-        const proximos = [];
-        for (let d = new Date(hoy); proximos.length < 4;) {
-            d.setDate(d.getDate() + 1);
-            if (habil(d) && menuDe(d)) { proximos.push(new Date(d)); }
-            if (d - hoy > 1000 * 60 * 60 * 24 * 40) { break; }
-        }
-        $('#almProximos').innerHTML = proximos.map(d => {
-            const m = menuDe(d);
-            return `<li><button type="button" data-dia="${clave(d)}"><span>${esc(titulo(DIAS[d.getDay()]).slice(0, 3))} ${d.getDate()}</span><em>${esc(platoPrincipal('menu', m.menu))}</em></button></li>`;
-        }).join('') || '<li class="is-muted">Sin menús publicados.</li>';
+        $('#almProximos').innerHTML = (estado.proximos || []).map(m => {
+            const d = desdeClave(m.fecha);
+            return `<li><button type="button" data-dia="${m.fecha}"><span>${esc(titulo(DIAS[d.getDay()]).slice(0, 3))} ${d.getDate()}</span><em>${esc(platoPrincipal('menu', m.menu))}</em></button></li>`;
+        }).join('') || '<li class="is-muted alm-nota">Aún no hay menús publicados para los próximos días.</li>';
 
         if ($('#almCocina')) {
-            // Mismos números que el PDF (calculados en el servidor)
-            const base = CFG.cocina;
-            if (!base) {
-                $('#almCocina').innerHTML = '<li class="is-muted">Hoy no hay servicio de almuerzo.</li>';
-            } else {
-                const total = base.menu + base.hipo + base.picnic;
-                $('#almCocina').innerHTML = Object.entries(OPCIONES).map(([id, o]) =>
-                    `<li><span><i class="alm-ico alm-ico--${o.clase}"></i>${esc(o.nombre)}</span><strong>${base[id]}</strong></li>`).join('')
-                    + `<li class="is-muted"><span><i class="alm-ico"></i>No almuerzan / sin pedido</span><strong>${base.no + base['']}</strong></li>`
-                    + `<li class="is-total"><span>Total a preparar</span><strong>${total}</strong></li>`;
-            }
+            const c = estado.cocina;
+            $('#almCocina').innerHTML = !c ? '<li class="is-muted">Hoy no hay servicio de almuerzo.</li>'
+                : Object.entries(OPCIONES).map(([id, o]) =>
+                    `<li><span><i class="alm-ico alm-ico--${o.clase}"></i>${esc(o.nombre)}</span><strong>${c[id]}</strong></li>`).join('')
+                + `<li class="is-muted"><span><i class="alm-ico"></i>No almuerzan</span><strong>${c.no}</strong></li>`
+                + `<li class="is-muted"><span><i class="alm-ico"></i>Sin respuesta</span><strong>${c.sin}</strong></li>`
+                + `<li class="is-total"><span>Total a preparar</span><strong>${c.menu + c.hipo + c.picnic}</strong></li>`;
+        }
+    }
+
+    async function cargarEstado() {
+        try {
+            estado = await api({ accion: 'estado' });
+            const [f, hm] = estado.horario.ahora.split(' ');
+            relojBase = desdeClave(f).getTime() + aMin(hm.slice(0, 5)) * 60000 + (+hm.slice(6, 8) * 1000) - Date.now();
+            aviso('');
+            pintarEstado(); pintarHoy(); pintarResumen();
+        } catch (e) {
+            aviso(e.message);
+            $('#almEstadoTitulo').textContent = 'Sin conexión con el servidor';
+            $('#almEstadoDetalle').textContent = '';
+        }
+    }
+
+    // ------------------------------------------------------------ menú del mes (modal)
+    let mesVista = new Date(); mesVista.setDate(1);
+    let datosMes = null;
+
+    async function cargarMes() {
+        const k = claveMes(mesVista);
+        $('#almMesTitulo').textContent = titulo(MESES[mesVista.getMonth()]) + ' ' + mesVista.getFullYear();
+        $('#btnPdfMes').href = 'pdf_menu_mes.php?mes=' + k;
+        $('#almCalendario').innerHTML = '<div class="alm-vacio"><p>Cargando…</p></div>';
+        try {
+            datosMes = await api({ accion: 'mes', mes: k });
+            pintarCalendario();
+        } catch (e) {
+            $('#almCalendario').innerHTML = '<div class="alm-vacio"><p>' + esc(e.message) + '</p></div>';
         }
     }
 
     function pintarCalendario() {
         const año = mesVista.getFullYear(), mes = mesVista.getMonth();
-        const menus = menuDelMes(año, mes);
-        const p = pedidos();
-        const hoy = clave(new Date());
-        $('#almMesTitulo').textContent = titulo(MESES[mes]) + ' ' + año;
-
+        const menus = datosMes.menu.dias || {};
+        const p = datosMes.pedidos || {};
+        const hoy = estado ? estado.horario.hoy : clave(new Date());
+        const publicado = Object.keys(menus).length > 0;
+        $('#almMesInfo').textContent = publicado && datosMes.menu.publicado_por ? 'Publicado por ' + datosMes.menu.publicado_por : '';
+        $('#btnPdfMes').classList.toggle('is-off', !publicado);
+        if (!publicado) {
+            $('#almCalendario').innerHTML = '<div class="alm-vacio"><i class="bi bi-calendar-x"></i><p>Todavía no se publica el menú de ' + esc(MESES[mes]) + '.</p></div>';
+            return;
+        }
         let html = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'].map(d => `<div class="alm-cal__dow">${d}</div>`).join('');
         const primero = new Date(año, mes, 1);
-        let desfase = (primero.getDay() + 6) % 7; // lunes = 0
-        if (desfase > 4) { desfase = 0; }        // si el mes parte en fin de semana
+        let desfase = (primero.getDay() + 6) % 7;
+        if (desfase > 4) { desfase = 0; }
         html += '<div class="alm-cal__vacio"></div>'.repeat(desfase);
         for (let d = new Date(primero); d.getMonth() === mes; d.setDate(d.getDate() + 1)) {
             if (!habil(d)) { continue; }
@@ -255,78 +228,143 @@
         $('#almCalendario').innerHTML = html;
     }
 
-    function abrirDia(k) {
-        const d = desdeClave(k), m = menuDe(d);
+    async function abrirDia(k) {
+        const d = desdeClave(k);
+        // El día puede ser de otro mes que el cargado en el modal
+        if (!datosMes || claveMes(d) !== claveMes(mesVista)) {
+            mesVista = new Date(d.getFullYear(), d.getMonth(), 1);
+            await cargarMes();
+        }
+        const m = (datosMes.menu.dias || {})[k];
         if (!m) { return; }
-        const elegido = pedidos()[k];
+        const elegido = (datosMes.pedidos || {})[k];
         $('#dlgDiaTitulo').textContent = fechaLarga(d);
         $('#dlgDiaCuerpo').innerHTML = Object.entries(OPCIONES).map(([id, o]) => `
             <div class="alm-detalle alm-detalle--${o.clase}${elegido === id ? ' is-elegida' : ''}">
                 <h3><i class="bi ${o.icono}"></i> ${esc(o.nombre)} ${elegido === id ? '<span class="alm-pill alm-pill--' + o.clase + '">Tu pedido</span>' : ''}</h3>
                 ${platosHtml(m[id])}
             </div>`).join('')
-            + (k > clave(new Date()) ? '<p class="alm-nota mt">Podrás elegir este almuerzo ese día entre las 09:00 y las 12:00.</p>' : '')
+            + (estado && k > estado.horario.hoy ? '<p class="alm-nota mt">Podrás elegir este almuerzo ese día entre las ' + esc(CFG.inicio) + ' y las ' + esc(CFG.fin) + '.</p>' : '')
             + (elegido === 'no' ? '<p class="alm-nota mt">Ese día indicaste que no almorzabas.</p>' : '');
         $('#dlgDia').showModal();
     }
 
-    // ---------------------------------------------------------- avisos
-    let toastTimer;
-    function toast(texto, tipo) {
-        const $t = $('#almToast');
-        $t.textContent = texto;
-        $t.className = 'alm-toast' + (tipo ? ' alm-toast--' + tipo : '');
-        $t.hidden = false;
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { $t.hidden = true; }, 2600);
-    }
+    // ------------------------------------------------------------ eventos generales
+    document.addEventListener('click', async e => {
+        const cerrar = e.target.closest('[data-cerrar]');
+        if (cerrar) { cerrar.closest('dialog').close(); return; }
+        if (e.target.tagName === 'DIALOG') { e.target.close(); return; } // clic en el fondo
 
-    function refrescar() { pintarHoy(); pintarResumen(); pintarCalendario(); }
-
-    // ---------------------------------------------------------- eventos
-    document.addEventListener('click', e => {
         const elegir = e.target.closest('[data-opcion]');
         if (elegir && !elegir.disabled) {
-            if (!horarioAbierto(new Date())) { toast('El horario de pedidos está cerrado.', 'error'); return; }
             const id = elegir.dataset.opcion;
-            guardarPedido(clave(new Date()), id);
-            toast('Listo: pediste ' + OPCIONES[id].nombre + ' para hoy.', 'ok');
-            refrescar();
+            elegir.disabled = true;
+            try {
+                await api({ accion: 'pedir', opcion: id }, 'POST');
+                toast(id === 'no' ? 'Anotado: hoy no almorzarás.' : 'Listo: pediste ' + OPCIONES[id].nombre + ' para hoy.', 'ok');
+                await cargarEstado();
+                if ($('#dlgMes').open) { cargarMes(); }
+            } catch (err) {
+                toast(err.message, 'error');
+                cargarEstado();
+            }
             return;
         }
         const dia = e.target.closest('[data-dia]');
         if (dia) { abrirDia(dia.dataset.dia); }
     });
-    $('#btnNoAlmuerzo').addEventListener('click', () => {
-        if (!horarioAbierto(new Date())) { return; }
-        guardarPedido(clave(new Date()), 'no');
-        toast('Anotado: hoy no almorzarás.', 'ok');
-        refrescar();
-    });
-    $('#chkSimular').addEventListener('change', pintarHoy);
-    $('#btnMesAnterior').addEventListener('click', () => { mesVista.setMonth(mesVista.getMonth() - 1); pintarCalendario(); });
-    $('#btnMesSiguiente').addEventListener('click', () => { mesVista.setMonth(mesVista.getMonth() + 1); pintarCalendario(); });
-    $('#dlgDia').addEventListener('click', e => { if (e.target === $('#dlgDia')) { $('#dlgDia').close(); } });
 
-    // ---------------------------------------------------------- cargar menú del mes (administración)
+    $('#btnVerMes').addEventListener('click', () => {
+        const hoy = estado ? desdeClave(estado.horario.hoy) : new Date();
+        mesVista = new Date(hoy.getFullYear(), hoy.getMonth(), 1); // siempre abre en el mes actual
+        if (!$('#dlgMes').open) { $('#dlgMes').showModal(); }
+        cargarMes();
+    });
+    $('#btnMesAnterior').addEventListener('click', () => { mesVista.setMonth(mesVista.getMonth() - 1); cargarMes(); });
+    $('#btnMesSiguiente').addEventListener('click', () => { mesVista.setMonth(mesVista.getMonth() + 1); cargarMes(); });
+    $('#btnPdfMes').addEventListener('click', e => {
+        if (e.currentTarget.classList.contains('is-off')) { e.preventDefault(); toast('Este mes todavía no tiene menú publicado.', 'error'); }
+    });
+
+    const chkSimular = $('#chkSimular');
+    if (chkSimular) {
+        chkSimular.addEventListener('change', async () => {
+            try { await api({ accion: 'simular', valor: chkSimular.checked ? '1' : '0' }, 'POST'); } catch (err) { toast(err.message, 'error'); }
+            cargarEstado();
+        });
+    }
+
+    // ------------------------------------------------------------ cargar menú del mes (encargado)
     const dlgCargar = $('#dlgCargar');
     if (dlgCargar) {
         let filasCargadas = null;
         const mesSiguiente = () => { const d = new Date(); d.setMonth(d.getMonth() + 1, 1); return claveMes(d); };
         const mesElegido = () => ($('#cargarMes').value || mesSiguiente()).split('-').map(Number);
 
+        const PLATOS = {
+            menu: [
+                ['Crema de zapallo', 'Pollo arvejado con arroz', 'Fruta de la estación'],
+                ['Ensalada chilena', 'Porotos granados', 'Mote con huesillo'],
+                ['Sopa de verduras', 'Carne mechada con puré', 'Leche asada'],
+                ['Ensalada de repollo', 'Pastel de choclo', 'Fruta picada'],
+                ['Consomé', 'Lentejas con arroz', 'Sémola con leche'],
+                ['Ensalada surtida', 'Merluza frita con papas cocidas', 'Gelatina'],
+                ['Crema de espárragos', 'Charquicán con huevo', 'Manzana asada'],
+                ['Ensalada de betarraga', 'Tallarines con salsa bolognesa', 'Fruta de la estación'],
+                ['Sopa de pollo', 'Cazuela de vacuno', 'Arroz con leche'],
+                ['Ensalada mixta', 'Pollo al jugo con papas doradas', 'Flan'],
+            ],
+            hipo: [
+                ['Ensalada verde', 'Pechuga a la plancha con quínoa', 'Yogur natural'],
+                ['Crema de zapallo italiano', 'Reineta al vapor con verduras', 'Fruta'],
+                ['Ensalada de tomate', 'Omelette de espinaca con ensalada', 'Gelatina light'],
+                ['Caldo de verduras', 'Pavo al horno con puré de coliflor', 'Fruta picada'],
+                ['Ensalada de pepino', 'Salteado de verduras con tofu', 'Manzana'],
+                ['Ensalada de lechuga', 'Atún con garbanzos y verduras', 'Fruta'],
+            ],
+            picnic: [
+                ['Sándwich de ave pimiento', 'Jugo natural', 'Barra de cereal'],
+                ['Wrap de pollo y verduras', 'Agua saborizada', 'Fruta'],
+                ['Sándwich de jamón queso', 'Yogur', 'Galletas de avena'],
+                ['Ensalada César para llevar', 'Jugo natural', 'Fruta'],
+                ['Empanada de horno', 'Agua mineral', 'Manzana'],
+            ],
+        };
+        const semilla = (k, n) => { let h = 7; for (const c of k) { h = (h * 31 + c.charCodeAt(0)) % 100003; } return h % n; };
+        function menuEjemplo(año, mes) {
+            const dias = {};
+            for (let d = new Date(año, mes, 1); d.getMonth() === mes; d.setDate(d.getDate() + 1)) {
+                if (!habil(d)) { continue; }
+                const k = clave(d);
+                dias[k] = {};
+                Object.keys(PLATOS).forEach(op => { dias[k][op] = PLATOS[op][semilla(k + op, PLATOS[op].length)].join(' + '); });
+            }
+            return dias;
+        }
+
+        async function revisarMesElegido() {
+            const [y, m] = mesElegido();
+            $('#cargarMesEstado').textContent = '';
+            try {
+                const r = await api({ accion: 'mes', mes: y + '-' + dos(m) });
+                const n = Object.keys(r.menu.dias || {}).length;
+                $('#cargarMesEstado').textContent = n ? 'Este mes ya tiene ' + n + ' días publicados: al publicar se reemplazan.' : 'Este mes aún no tiene menú.';
+            } catch (e) { /* solo informativo */ }
+        }
+
         $('#btnCargarMes').addEventListener('click', () => {
             $('#cargarMes').value = $('#cargarMes').value || mesSiguiente();
+            revisarMesElegido();
             dlgCargar.showModal();
         });
-        dlgCargar.querySelectorAll('[data-cerrar]').forEach(b => b.addEventListener('click', () => dlgCargar.close()));
 
-        // Plantilla: una fila por día hábil del mes, separada por ; (Excel en español)
+        // Plantilla: una fila por día hábil, separada por ; (Excel en español)
         $('#btnPlantilla').addEventListener('click', () => {
             const [y, m] = mesElegido();
             const ej = menuEjemplo(y, m - 1);
             const lineas = ['fecha;menu_del_dia;hipocalorico;picnic'];
-            Object.keys(ej).forEach(k => lineas.push([k.split('-').reverse().join('-'), ej[k].menu, ej[k].hipo, ej[k].picnic].map(v => '"' + v.replace(/"/g, '""') + '"').join(';')));
+            Object.keys(ej).forEach(k => lineas.push([k.split('-').reverse().join('-'), ej[k].menu, ej[k].hipo, ej[k].picnic]
+                .map(v => '"' + v.replace(/"/g, '""') + '"').join(';')));
             const blob = new Blob(['﻿' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
@@ -337,7 +375,8 @@
 
         function parsearCsv(texto) {
             texto = texto.replace(/^﻿/, '');
-            const sep = (texto.split('\n')[0].match(/;/g) || []).length >= (texto.split('\n')[0].match(/,/g) || []).length ? ';' : ',';
+            const primera = texto.split('\n')[0];
+            const sep = (primera.match(/;/g) || []).length >= (primera.match(/,/g) || []).length ? ';' : ',';
             const filas = []; let fila = [], campo = '', comillas = false;
             for (let i = 0; i < texto.length; i++) {
                 const c = texto[i];
@@ -358,7 +397,6 @@
             if (fila.some(v => v.trim() !== '')) { filas.push(fila); }
             return filas;
         }
-
         function leerFecha(t) {
             t = String(t).trim();
             let m = t.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
@@ -375,26 +413,27 @@
             filas.forEach((f, i) => {
                 if (i === 0 && /fecha/i.test(f[0])) { return; }
                 const d = leerFecha(f[0] || '');
-                const fila = i + 1;
-                if (!d || isNaN(d)) { errores.push('Fila ' + fila + ': fecha no válida'); return; }
-                if (d.getFullYear() !== y || d.getMonth() !== m - 1) { errores.push('Fila ' + fila + ': la fecha no es del mes elegido'); return; }
-                if (!habil(d)) { errores.push('Fila ' + fila + ': ' + clave(d) + ' es fin de semana'); return; }
+                const n = i + 1;
+                if (!d || isNaN(d)) { errores.push('Fila ' + n + ': fecha no válida'); return; }
+                if (d.getFullYear() !== y || d.getMonth() !== m - 1) { errores.push('Fila ' + n + ': la fecha no es del mes elegido'); return; }
+                if (!habil(d)) { errores.push('Fila ' + n + ': ' + d.getDate() + '/' + (d.getMonth() + 1) + ' es fin de semana'); return; }
                 const [menu, hipo, picnic] = [f[1], f[2], f[3]].map(v => String(v || '').trim());
-                if (!menu || !hipo || !picnic) { errores.push('Fila ' + fila + ': faltan menús'); return; }
+                if (!menu || !hipo || !picnic) { errores.push('Fila ' + n + ': faltan menús'); return; }
+                if ([menu, hipo, picnic].some(v => v.length > 255)) { errores.push('Fila ' + n + ': un menú supera 255 caracteres'); return; }
                 validas[clave(d)] = { menu, hipo, picnic };
             });
-            filasCargadas = validas;
+            filasCargadas = errores.length ? null : validas;
             const claves = Object.keys(validas).sort();
             $('#almPreviewTitulo').textContent = 'Vista previa · ' + titulo(MESES[m - 1]) + ' ' + y + ' (' + claves.length + ' días)' + (origen ? ' · ' + origen : '');
             $('#almPreviewAviso').innerHTML = errores.length
-                ? '<span class="alm-error">' + errores.length + ' fila(s) con problemas: ' + esc(errores.slice(0, 3).join('; ')) + (errores.length > 3 ? '…' : '') + '</span>'
+                ? '<span class="alm-error">Corrige ' + errores.length + ' fila(s) antes de publicar: ' + esc(errores.slice(0, 3).join('; ')) + (errores.length > 3 ? '…' : '') + '</span>'
                 : '<span class="alm-ok"><i class="bi bi-check-circle"></i> Todo correcto</span>';
             $('#almPreviewFilas').innerHTML = claves.map(k => {
                 const v = validas[k], d = desdeClave(k);
                 return `<tr><td class="nowrap">${esc(titulo(DIAS[d.getDay()]).slice(0, 3))} ${d.getDate()}</td><td>${esc(v.menu)}</td><td>${esc(v.hipo)}</td><td>${esc(v.picnic)}</td></tr>`;
             }).join('') || '<tr><td colspan="4" class="alm-error">No se encontraron días válidos.</td></tr>';
             $('#almPreview').hidden = false;
-            $('#btnPublicar').disabled = claves.length === 0;
+            $('#btnPublicar').disabled = !filasCargadas || claves.length === 0;
         }
 
         function leerArchivo(archivo) {
@@ -404,12 +443,12 @@
             r.onload = () => mostrarPreview(parsearCsv(String(r.result)), archivo.name);
             r.readAsText(archivo, 'utf-8');
         }
-        $('#cargarArchivo').addEventListener('change', e => leerArchivo(e.target.files[0]));
+        $('#cargarArchivo').addEventListener('change', e => { leerArchivo(e.target.files[0]); e.target.value = ''; });
         const drop = $('#almDrop');
         ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('is-sobre'); }));
         ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('is-sobre'); }));
         drop.addEventListener('drop', e => leerArchivo(e.dataTransfer.files[0]));
-        $('#cargarMes').addEventListener('change', () => { $('#almPreview').hidden = true; $('#btnPublicar').disabled = true; filasCargadas = null; });
+        $('#cargarMes').addEventListener('change', () => { $('#almPreview').hidden = true; $('#btnPublicar').disabled = true; filasCargadas = null; revisarMesElegido(); });
 
         $('#btnEjemplo').addEventListener('click', () => {
             const [y, m] = mesElegido();
@@ -417,20 +456,26 @@
             mostrarPreview([['fecha']].concat(Object.keys(ej).map(k => [k, ej[k].menu, ej[k].hipo, ej[k].picnic])), 'ejemplo');
         });
 
-        $('#btnPublicar').addEventListener('click', () => {
+        $('#btnPublicar').addEventListener('click', async () => {
             if (!filasCargadas) { return; }
             const [y, m] = mesElegido();
-            const menus = store.get('menus', {});
-            menus[y + '-' + dos(m)] = filasCargadas;
-            store.set('menus', menus);
-            dlgCargar.close();
-            mesVista = new Date(y, m - 1, 1);
-            refrescar();
-            document.getElementById('almMes').scrollIntoView({ behavior: 'smooth' });
-            toast('Menú de ' + MESES[m - 1] + ' publicado (solo en este navegador por ahora).', 'ok');
+            const btn = $('#btnPublicar');
+            btn.disabled = true;
+            try {
+                const r = await api({ accion: 'publicar', mes: y + '-' + dos(m), dias: JSON.stringify(filasCargadas) }, 'POST');
+                dlgCargar.close();
+                toast(r.mensaje, 'ok');
+                await cargarEstado();
+                mesVista = new Date(y, m - 1, 1);
+                $('#dlgMes').showModal();
+                cargarMes();
+            } catch (err) {
+                toast(err.message, 'error');
+                btn.disabled = false;
+            }
         });
     }
 
-    refrescar();
-    setInterval(pintarHoy, 30000); // el estado del horario se actualiza solo
+    cargarEstado();
+    setInterval(pintarEstado, 20000);
 }());

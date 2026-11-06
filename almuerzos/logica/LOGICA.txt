@@ -1,43 +1,41 @@
-ALMUERZOS – etapa 1: interfaz (datos de ejemplo)
-================================================
+ALMUERZOS – módulo almuerzos/
+=============================
 
-Qué hace la pantalla (almuerzos/index.php)
------------------------------------------
-- Cada persona elige su almuerzo del día entre 09:00 y 12:00 (lunes a viernes):
-  Menú del día, Hipocalórico o Picnic. También puede marcar "Hoy no almorzaré".
-  Puede cambiar su elección hasta las 12:00; después solo ve el menú.
-- Barra de estado: abierto / aún no abre / cerrado, con el tiempo que queda.
-- "Mis pedidos del mes": cuántas veces eligió cada opción y los próximos días.
-- "Menú del mes": calendario de días hábiles con los tres menús; al tocar un
-  día se ve el detalle (entrada + fondo + postre) y lo que pidió.
-- Encargado de almuerzos: SOLO el usuario 8 (AlmuerzosDemo::ENCARGADO_ID en
-  almuerzos/class/AlmuerzosDemo.php). Ve "Pedidos de hoy (PDF)", el panel
-  "Para cocina" con selector de fecha y "Cargar almuerzos del mes".
-  pdf_pedidos.php responde 403 a cualquier otro usuario.
-- PDF de pedidos (pdf_pedidos.php?fecha=AAAA-MM-DD, FPDF): resumen por opción,
-  total a preparar y la lista de cada usuario activo con su pedido, ordenada
-  por opción y nombre. Fin de semana: "No hay servicio".
-- Botón "Cargar almuerzos del mes"
-  1) elegir mes, 2) descargar plantilla .csv (una fila por día hábil,
-  separada por ";" para Excel), 3) subir el archivo, ver vista previa con
-  validaciones (fecha del mes, día hábil, tres menús) y publicar.
-  Panel "Para cocina · hoy" con los pedidos por opción.
+Qué hace
+--------
+- Cada persona elige su almuerzo del día entre 09:00 y 12:00 (lunes a viernes,
+  hora de Chile): Menú del día, Hipocalórico o Picnic, o "Hoy no almorzaré".
+  Puede cambiarlo hasta las 12:00. El servidor valida el horario
+  (Almuerzos::pedir); el navegador solo lo muestra.
+- "Menú del mes" se abre en un modal: calendario de días hábiles con los tres
+  menús, la elección de la persona marcada, navegación entre meses y
+  "Descargar PDF" (pdf_menu_mes.php?mes=AAAA-MM, cualquier usuario).
+- Encargado de almuerzos: SOLO el usuario 8 (Almuerzos::ENCARGADO_ID en
+  class/Almuerzos.php). Puede:
+    * Cargar almuerzos del mes: plantilla .csv → subir → vista previa con
+      validaciones → Publicar. Los menús son MENSUALES: publicar un mes que
+      ya existía reemplaza sus días (los pedidos hechos se conservan).
+    * Ver "Para cocina · hoy" y descargar pdf_pedidos.php?fecha=AAAA-MM-DD:
+      cada usuario activo con su respuesta y la hora en que pidió.
+    * (Solo QA) "Simular horario abierto": Almuerzos::PERMITIR_SIMULAR_HORARIO.
+      En PRODUCCIÓN dejarlo en false.
 
-Por ahora (sin base de datos)
------------------------------
-- Los menús se generan de ejemplo (siempre los mismos para cada fecha).
-- La elección y el menú publicado se guardan solo en el navegador
-  (localStorage). Los pedidos de días pasados son inventados. Los pedidos de
-  todos los usuarios (panel de cocina y PDF) también son inventados, pero
-  siempre iguales para la misma persona y fecha (AlmuerzosDemo::pedidoEjemplo). "Simular horario abierto" permite probar fuera de 09:00–12:00.
+Archivos
+--------
+index.php                 Pantalla
+ajax/almuerzos.php        API JSON: estado, mes, pedir, publicar, simular (POST con CSRF)
+class/Almuerzos.php       Reglas y acceso a datos (PDO, consultas preparadas)
+class/AlmuerzosPdf.php    Base de los PDF (FPDF de clases/PDF)
+pdf_menu_mes.php          PDF del menú del mes
+pdf_pedidos.php           PDF de pedidos por persona (solo encargado)
+sql/01_almuerzos_instalacion.sql   Tablas (se puede ejecutar varias veces)
+sql/02_consultas_utiles.sql        Consultas de revisión (solo lectura)
 
-Propuesta para la etapa 2 (base de datos)
------------------------------------------
-almuerzo_menu      (fecha DATE PK, menu_dia TEXT, hipocalorico TEXT, picnic TEXT,
-                    publicado_por INT, publicado_en DATETIME)
-almuerzo_pedido    (id_usuario INT, fecha DATE, opcion ENUM('menu','hipo','picnic','no'),
-                    actualizado_en DATETIME, PRIMARY KEY (id_usuario, fecha))
-almuerzo_config    (hora_inicio TIME '09:00', hora_fin TIME '12:00')
-- El servidor valida el horario (no el navegador) con la hora de Chile.
-- Cocina: SELECT opcion, COUNT(*) FROM almuerzo_pedido WHERE fecha = CURDATE() GROUP BY opcion.
-- Exportar a Excel/PDF la lista del día para cocina.
+Tablas
+------
+almuerzo_menu_mes  (id_menu_mes, anio, mes, publicado_por, publicado_en, actualizado_en)  UNIQUE(anio, mes)
+almuerzo_menu_dia  (fecha PK, id_menu_mes FK, menu_dia, hipocalorico, picnic)
+                   Platos separados por " + " (entrada + fondo + postre)
+almuerzo_pedido    (id_usuario, fecha, opcion ENUM('menu','hipo','picnic','no'),
+                    creado_en, actualizado_en)  PK(id_usuario, fecha)
+Las fechas y horas se guardan con la hora de Chile calculada en PHP.

@@ -1,27 +1,19 @@
 <?php
 /**
- * Almuerzos – interfaz (etapa 1, con datos de ejemplo).
- * Cada persona elige su almuerzo del día entre 09:00 y 12:00:
- * Menú del día, Hipocalórico o Picnic. Administración carga el menú del mes.
- * Todavía no se guarda en base de datos: ver almuerzos/logica/LOGICA.txt.
+ * Almuerzos: cada persona elige su almuerzo del día entre 09:00 y 12:00
+ * (Menú del día, Hipocalórico o Picnic). El encargado publica el menú de
+ * cada mes y descarga los pedidos en PDF. Tablas en almuerzos/sql/.
  */
 header('Content-Type: text/html; charset=UTF-8');
 require_once __DIR__ . '/../validar_sesion.php';
-require_once __DIR__ . '/class/AlmuerzosDemo.php';
+require_once __DIR__ . '/class/Almuerzos.php';
 
 $idUsuario = (int) ($_SESSION['id'] ?? 0);
-$nombreUsuario = trim((string) ($_SESSION['nombre'] ?? 'Usuario'));
-// Solo el encargado (usuario 8) carga el menú y descarga el PDF de pedidos
-$esAdmin = AlmuerzosDemo::esEncargado($idUsuario);
-$hoyChile = new DateTimeImmutable('today', new DateTimeZone('America/Santiago'));
-$cocinaHoy = null;
-if ($esAdmin && AlmuerzosDemo::esDiaHabil($hoyChile)) {
-    try {
-        $cocinaHoy = AlmuerzosDemo::conteo(AlmuerzosDemo::pedidosDelDia(Conexion::getInstance('sistema_panel_central'), $hoyChile));
-    } catch (Throwable $e) {
-        error_log('[almuerzos] cocina: ' . $e->getMessage());
-    }
+$esEncargado = Almuerzos::esEncargado($idUsuario);
+if (empty($_SESSION['csrf_almuerzos'])) {
+    $_SESSION['csrf_almuerzos'] = bin2hex(random_bytes(32));
 }
+$hoyChile = new DateTimeImmutable('today', new DateTimeZone('America/Santiago'));
 
 function alm_v(string $ruta): string
 {
@@ -39,22 +31,25 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="page-header alm-head">
         <div>
             <h1><i class="bi bi-cup-hot" aria-hidden="true"></i> Almuerzos</h1>
-            <p>Elige tu almuerzo de cada día entre las <strong>09:00</strong> y las <strong>12:00</strong>.</p>
+            <p>Elige tu almuerzo de cada día entre las <strong><?= Almuerzos::HORA_INICIO ?></strong> y las <strong><?= Almuerzos::HORA_FIN ?></strong>.</p>
         </div>
         <div class="alm-head__acciones">
-            <a href="#almMes" class="btn btn-outline"><i class="bi bi-calendar3"></i> Menú del mes</a>
-            <?php if ($esAdmin): ?>
-                <a href="pdf_pedidos.php" class="btn btn-outline" target="_blank" rel="noopener" id="btnPdfHoy"><i class="bi bi-file-earmark-pdf"></i> Pedidos de hoy (PDF)</a>
+            <button type="button" class="btn btn-outline" id="btnVerMes"><i class="bi bi-calendar3"></i> Menú del mes</button>
+            <?php if ($esEncargado): ?>
                 <button type="button" class="btn btn-primary" id="btnCargarMes"><i class="bi bi-upload"></i> Cargar almuerzos del mes</button>
             <?php endif; ?>
         </div>
     </div>
 
+    <div class="alm-aviso" id="almAviso" hidden></div>
+
+    <?php if ($esEncargado && Almuerzos::PERMITIR_SIMULAR_HORARIO): ?>
     <div class="alm-demo" role="note">
-        <i class="bi bi-info-circle"></i>
-        <span>Vista de prueba: los menús son de ejemplo y tu elección se guarda solo en este navegador.</span>
-        <label class="alm-demo__switch"><input type="checkbox" id="chkSimular"> Simular horario abierto</label>
+        <i class="bi bi-tools"></i>
+        <span>Solo para pruebas en QA: permite pedir fuera del horario (solo para ti).</span>
+        <label class="alm-demo__switch"><input type="checkbox" id="chkSimular" <?= !empty($_SESSION['alm_simular']) ? 'checked' : '' ?>> Simular horario abierto</label>
     </div>
+    <?php endif; ?>
 
     <!-- Estado del horario de pedidos -->
     <div class="alm-estado" id="almEstado" aria-live="polite">
@@ -72,13 +67,13 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="alm-card-head">
                 <div>
                     <h2 id="almHoyTitulo">Almuerzo de hoy</h2>
-                    <p id="almHoySub">Elige una opción. Puedes cambiarla hasta las 12:00.</p>
+                    <p id="almHoySub"></p>
                 </div>
                 <span class="alm-pill" id="almMiPedido">Sin elegir</span>
             </div>
-            <div class="alm-opciones" id="almOpciones"></div>
+            <div class="alm-opciones" id="almOpciones"><div class="alm-vacio"><p>Cargando…</p></div></div>
             <div class="alm-hoy__pie">
-                <button type="button" class="btn btn-ghost btn-sm" id="btnNoAlmuerzo"><i class="bi bi-x-circle"></i> Hoy no almorzaré</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btnNoAlmuerzo" data-opcion="no" hidden><i class="bi bi-x-circle"></i> Hoy no almorzaré</button>
                 <span class="alm-nota" id="almNota"></span>
             </div>
         </section>
@@ -93,9 +88,9 @@ require_once __DIR__ . '/../includes/header.php';
                     <ul id="almProximos"></ul>
                 </div>
             </section>
-            <?php if ($esAdmin): ?>
+            <?php if ($esEncargado): ?>
             <section class="card alm-resumen">
-                <div class="alm-card-head"><div><h2>Para cocina · hoy</h2><p>Pedidos de todos los usuarios (ejemplo).</p></div></div>
+                <div class="alm-card-head"><div><h2>Para cocina · hoy</h2><p>Respuestas de todos los usuarios.</p></div></div>
                 <ul class="alm-conteo" id="almCocina"></ul>
                 <form class="alm-pdf" action="pdf_pedidos.php" method="get" target="_blank">
                     <label for="pdfFecha">Lista por persona</label>
@@ -109,39 +104,44 @@ require_once __DIR__ . '/../includes/header.php';
         </aside>
     </div>
 
-    <!-- Menú del mes -->
-    <section class="card alm-mes" id="almMes">
-        <div class="alm-card-head">
-            <div>
-                <h2>Menú del mes</h2>
-                <p>Toca un día para ver el detalle. Tu elección aparece marcada.</p>
+    <!-- Menú del mes (modal) -->
+    <dialog class="alm-dialog alm-dialog--xl" id="dlgMes" aria-labelledby="almMesTitulo">
+        <div class="alm-dialog__box">
+            <div class="alm-dialog__head">
+                <div class="alm-mes__nav">
+                    <button type="button" class="btn-icon" id="btnMesAnterior" aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></button>
+                    <h2 id="almMesTitulo">Menú del mes</h2>
+                    <button type="button" class="btn-icon" id="btnMesSiguiente" aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></button>
+                </div>
+                <div class="alm-mes__acciones">
+                    <a href="pdf_menu_mes.php" class="btn btn-primary btn-sm" id="btnPdfMes" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> Descargar PDF</a>
+                    <button type="button" class="btn-icon" data-cerrar aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+                </div>
             </div>
-            <div class="alm-mes__nav">
-                <button type="button" class="btn-icon" id="btnMesAnterior" aria-label="Mes anterior"><i class="bi bi-chevron-left"></i></button>
-                <strong id="almMesTitulo"></strong>
-                <button type="button" class="btn-icon" id="btnMesSiguiente" aria-label="Mes siguiente"><i class="bi bi-chevron-right"></i></button>
+            <div class="alm-dialog__cuerpo">
+                <div class="alm-leyenda">
+                    <span><i class="alm-ico alm-ico--menu"></i>Menú del día</span>
+                    <span><i class="alm-ico alm-ico--hipo"></i>Hipocalórico</span>
+                    <span><i class="alm-ico alm-ico--picnic"></i>Picnic</span>
+                    <span class="alm-leyenda__info" id="almMesInfo"></span>
+                </div>
+                <div class="alm-cal" id="almCalendario"></div>
             </div>
         </div>
-        <div class="alm-leyenda">
-            <span><i class="alm-ico alm-ico--menu"></i>Menú del día</span>
-            <span><i class="alm-ico alm-ico--hipo"></i>Hipocalórico</span>
-            <span><i class="alm-ico alm-ico--picnic"></i>Picnic</span>
-        </div>
-        <div class="alm-cal" id="almCalendario"></div>
-    </section>
+    </dialog>
 
     <!-- Detalle de un día -->
     <dialog class="alm-dialog" id="dlgDia">
-        <form method="dialog" class="alm-dialog__box">
+        <div class="alm-dialog__box">
             <div class="alm-dialog__head">
                 <h2 id="dlgDiaTitulo">Día</h2>
-                <button class="btn-icon" value="cerrar" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+                <button type="button" class="btn-icon" data-cerrar aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
             </div>
-            <div id="dlgDiaCuerpo"></div>
-        </form>
+            <div class="alm-dialog__cuerpo" id="dlgDiaCuerpo"></div>
+        </div>
     </dialog>
 
-    <?php if ($esAdmin): ?>
+    <?php if ($esEncargado): ?>
     <!-- Cargar almuerzos del mes -->
     <dialog class="alm-dialog alm-dialog--lg" id="dlgCargar">
         <div class="alm-dialog__box">
@@ -149,33 +149,36 @@ require_once __DIR__ . '/../includes/header.php';
                 <h2>Cargar almuerzos del mes</h2>
                 <button type="button" class="btn-icon" data-cerrar aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
             </div>
-            <ol class="alm-pasos">
-                <li>
-                    <strong>Elige el mes</strong>
-                    <input type="month" id="cargarMes" class="alm-input">
-                </li>
-                <li>
-                    <strong>Descarga la plantilla</strong>
-                    <p>Una fila por día hábil, con los tres menús. Ábrela en Excel y complétala.</p>
-                    <button type="button" class="btn btn-outline btn-sm" id="btnPlantilla"><i class="bi bi-download"></i> Plantilla (.csv)</button>
-                </li>
-                <li>
-                    <strong>Sube el archivo</strong>
-                    <label class="alm-drop" id="almDrop">
-                        <input type="file" id="cargarArchivo" accept=".csv,text/csv">
-                        <i class="bi bi-cloud-arrow-up"></i>
-                        <span>Arrastra el archivo aquí o haz clic para elegirlo (.csv)</span>
-                    </label>
-                    <button type="button" class="btn btn-ghost btn-sm" id="btnEjemplo"><i class="bi bi-magic"></i> Usar menú de ejemplo</button>
-                </li>
-            </ol>
-            <div class="alm-preview" id="almPreview" hidden>
-                <div class="alm-preview__head"><strong id="almPreviewTitulo">Vista previa</strong><span id="almPreviewAviso"></span></div>
-                <div class="alm-tabla-wrap">
-                    <table class="alm-tabla">
-                        <thead><tr><th>Fecha</th><th>Menú del día</th><th>Hipocalórico</th><th>Picnic</th></tr></thead>
-                        <tbody id="almPreviewFilas"></tbody>
-                    </table>
+            <div class="alm-dialog__cuerpo">
+                <ol class="alm-pasos">
+                    <li>
+                        <strong>Elige el mes</strong>
+                        <input type="month" id="cargarMes" class="alm-input">
+                        <span class="alm-nota" id="cargarMesEstado"></span>
+                    </li>
+                    <li>
+                        <strong>Descarga la plantilla</strong>
+                        <p>Una fila por día hábil, con los tres menús. Separa los platos con “+”. Ábrela en Excel y complétala.</p>
+                        <button type="button" class="btn btn-outline btn-sm" id="btnPlantilla"><i class="bi bi-download"></i> Plantilla (.csv)</button>
+                    </li>
+                    <li>
+                        <strong>Sube el archivo</strong>
+                        <label class="alm-drop" id="almDrop">
+                            <input type="file" id="cargarArchivo" accept=".csv,text/csv">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            <span>Arrastra el archivo aquí o haz clic para elegirlo (.csv)</span>
+                        </label>
+                        <button type="button" class="btn btn-ghost btn-sm" id="btnEjemplo"><i class="bi bi-magic"></i> Usar menú de ejemplo</button>
+                    </li>
+                </ol>
+                <div class="alm-preview" id="almPreview" hidden>
+                    <div class="alm-preview__head"><strong id="almPreviewTitulo">Vista previa</strong><span id="almPreviewAviso"></span></div>
+                    <div class="alm-tabla-wrap">
+                        <table class="alm-tabla">
+                            <thead><tr><th>Fecha</th><th>Menú del día</th><th>Hipocalórico</th><th>Picnic</th></tr></thead>
+                            <tbody id="almPreviewFilas"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="alm-dialog__pie">
@@ -188,5 +191,10 @@ require_once __DIR__ . '/../includes/header.php';
 
     <div class="alm-toast" id="almToast" role="status" hidden></div>
 </div>
-<script>window.ALM_CONFIG = <?= json_encode(['usuario' => $idUsuario, 'nombre' => $nombreUsuario, 'admin' => $esAdmin, 'cocina' => $cocinaHoy], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
+<script>window.ALM_CONFIG = <?= json_encode([
+    'csrf' => $_SESSION['csrf_almuerzos'],
+    'encargado' => $esEncargado,
+    'inicio' => Almuerzos::HORA_INICIO,
+    'fin' => Almuerzos::HORA_FIN,
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

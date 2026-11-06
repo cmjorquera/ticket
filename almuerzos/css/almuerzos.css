@@ -121,7 +121,6 @@
 .alm-dialog__box{display:flex;flex-direction:column;max-height:calc(100vh - 64px)}
 .alm-dialog__head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
 .alm-dialog__head h2{font-size:16px;font-weight:600;margin:0}
-.alm-dialog__box > div:not(.alm-dialog__head):not(.alm-dialog__pie),#dlgDiaCuerpo{padding:16px 20px;overflow:auto}
 .alm-dialog__pie{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)}
 .alm-detalle{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px}
 .alm-detalle h3{font-size:14px;font-weight:600;margin:0 0 6px;display:flex;align-items:center;gap:8px}
@@ -132,7 +131,7 @@
 .alm-detalle.is-elegida{border-width:2px}
 
 /* Carga del mes */
-.alm-pasos{margin:0;padding:16px 20px 4px 44px;display:grid;gap:14px;overflow:visible}
+.alm-pasos{margin:0;padding:0 0 4px 24px;display:grid;gap:14px;overflow:visible}
 .alm-pasos li{font-size:13px}
 .alm-pasos li strong{display:block;font-size:14px;margin-bottom:4px}
 .alm-pasos li p{color:var(--muted);margin:0 0 8px}
@@ -141,7 +140,7 @@
 .alm-drop i{font-size:22px;color:var(--blue)}
 .alm-drop input{display:none}
 .alm-drop:hover,.alm-drop.is-sobre{border-color:var(--blue);background:var(--blue-light)}
-.alm-preview{padding:0 20px 8px!important}
+.alm-preview{padding:8px 0 0}
 .alm-preview__head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin:6px 0 8px}
 .alm-tabla-wrap{max-height:300px;overflow:auto;border:1px solid var(--border);border-radius:8px}
 .alm-tabla{width:100%;border-collapse:collapse;font-size:12px}
@@ -177,3 +176,16 @@
 .alm-pdf div{display:flex;gap:8px;flex-wrap:wrap}
 .alm-pdf .alm-input{flex:1;min-width:140px}
 .alm-head__acciones a.btn{color:var(--fg)}
+
+/* Etapa 2: menú del mes en modal, avisos */
+.alm-dialog--xl{width:min(1180px,calc(100vw - 32px))}
+.alm-dialog__cuerpo{padding:16px 20px;overflow:auto}
+.alm-dialog--xl .alm-dialog__cuerpo{padding:0}
+.alm-dialog--xl .alm-leyenda{padding:12px 18px 0}
+.alm-leyenda__info{margin-left:auto;font-style:italic}
+.alm-mes__acciones{display:flex;align-items:center;gap:8px}
+.alm-mes__nav h2{min-width:170px;text-align:center}
+.alm-dialog__head a.btn{text-decoration:none;color:#fff}
+.alm .btn.is-off{opacity:.5}
+.alm-aviso{margin:0 0 14px;padding:10px 14px;border-radius:var(--radius);background:var(--danger-light);color:var(--danger);font-size:13px}
+.alm-cal .alm-vacio{grid-column:1/-1}
