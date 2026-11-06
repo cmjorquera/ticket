@@ -29,5 +29,6 @@
 <?php foreach (($pagina_scripts ?? []) as $scriptPagina): ?>
 <script src="<?= (preg_match('#^(https?:)?//#', (string) $scriptPagina) ? '' : $depth) . htmlspecialchars((string) $scriptPagina, ENT_QUOTES, 'UTF-8') ?>"></script>
 <?php endforeach; ?>
+<?php require __DIR__ . '/../componentes/chat_flotante.php'; ?>
 </body>
 </html>

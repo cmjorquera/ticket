@@ -1,0 +1,49 @@
+/* Burbuja y panel de chat flotante (componentes/chat_flotante.php) */
+.chatf{position:fixed;right:24px;bottom:24px;z-index:1900;font-family:'DM Sans',sans-serif}
+.chatf-burbuja{position:relative;width:58px;height:58px;border-radius:50%;border:0;background:var(--blue,#005B96);color:#fff;font-size:24px;display:grid;place-items:center;cursor:pointer;box-shadow:0 10px 26px rgba(0,40,80,.32);transition:transform .18s ease,background .18s ease}
+.chatf-burbuja:hover{transform:scale(1.06);background:#004d80}
+.chatf-burbuja:focus-visible{outline:3px solid var(--yellow,#F4B000);outline-offset:3px}
+.chatf-burbuja::after{content:'';position:absolute;top:3px;right:3px;width:12px;height:12px;border-radius:50%;background:var(--yellow,#F4B000);border:2px solid #fff}
+.chatf.is-abierto .chatf-burbuja::after,.chatf.is-visto .chatf-burbuja::after{display:none}
+.chatf-burbuja i{position:absolute;transition:opacity .18s ease,transform .18s ease}
+.chatf-burbuja__cerrar{opacity:0;transform:rotate(-90deg);font-size:20px}
+.chatf.is-abierto .chatf-burbuja__abrir{opacity:0;transform:rotate(90deg)}
+.chatf.is-abierto .chatf-burbuja__cerrar{opacity:1;transform:none}
+
+.chatf-panel{position:absolute;right:0;bottom:74px;width:360px;max-width:calc(100vw - 32px);height:min(520px,calc(100vh - 140px));display:flex;flex-direction:column;background:var(--card,#fff);border:1px solid var(--border,#E5E7EB);border-radius:16px;box-shadow:0 20px 50px rgba(15,23,42,.25);overflow:hidden;opacity:0;visibility:hidden;transform:translateY(12px) scale(.98);transform-origin:bottom right;transition:opacity .2s ease,transform .2s ease,visibility .2s}
+.chatf.is-abierto .chatf-panel{opacity:1;visibility:visible;transform:none}
+
+.chatf-head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 14px;background:var(--blue,#005B96);color:#fff}
+.chatf-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.chatf-head__texto{flex:1;min-width:0;line-height:1.25}
+.chatf-head__texto strong{display:block;font-size:14px}
+.chatf-head__texto span{font-size:12px;opacity:.85}
+.chatf-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--yellow,#F4B000);margin-right:3px;vertical-align:1px}
+.chatf-icono{border:0;background:transparent;color:#fff;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;cursor:pointer;opacity:.85}
+.chatf-icono:hover{background:rgba(255,255,255,.15);opacity:1}
+
+.chatf-mensajes{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;background:var(--bg,#F4F5F7)}
+.chatf-msg{max-width:85%;padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-break:break-word;color:var(--fg,#3F424A)}
+.chatf-msg--bot{align-self:flex-start;background:var(--card,#fff);border:1px solid var(--border,#E5E7EB);border-bottom-left-radius:4px}
+.chatf-msg--yo{align-self:flex-end;background:var(--blue,#005B96);color:#fff;border-bottom-right-radius:4px}
+.chatf-msg small{display:block;margin-top:3px;font-size:10.5px;opacity:.65}
+.chatf-sugerencias{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start;max-width:100%}
+.chatf-sugerencias button{border:1px solid var(--blue-mid,rgba(0,91,150,.25));background:var(--card,#fff);color:var(--blue,#005B96);border-radius:99px;padding:5px 11px;font-size:12px;cursor:pointer}
+.chatf-sugerencias button:hover{background:var(--blue-light,rgba(0,91,150,.1))}
+.chatf-escribiendo{align-self:flex-start;display:flex;gap:4px;padding:11px 14px;background:var(--card,#fff);border:1px solid var(--border,#E5E7EB);border-radius:14px}
+.chatf-escribiendo i{width:6px;height:6px;border-radius:50%;background:var(--muted,#6B7280);animation:chatf-salto 1s infinite}
+.chatf-escribiendo i:nth-child(2){animation-delay:.15s}
+.chatf-escribiendo i:nth-child(3){animation-delay:.3s}
+@keyframes chatf-salto{0%,60%,100%{transform:none;opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+
+.chatf-form{display:flex;align-items:flex-end;gap:8px;padding:10px;border-top:1px solid var(--border,#E5E7EB);background:var(--card,#fff)}
+.chatf-form textarea{flex:1;resize:none;border:1px solid var(--border,#E5E7EB);border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;max-height:110px;color:var(--fg,#3F424A);background:var(--card,#fff)}
+.chatf-form textarea:focus{outline:none;border-color:var(--blue,#005B96);box-shadow:0 0 0 3px var(--blue-light,rgba(0,91,150,.1))}
+.chatf-enviar{width:38px;height:38px;border:0;border-radius:10px;background:var(--blue,#005B96);color:#fff;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.chatf-enviar:disabled{opacity:.45;cursor:default}
+
+@media (max-width:575.98px){
+  .chatf{right:16px;bottom:16px}
+  .chatf-panel{position:fixed;right:12px;left:12px;bottom:86px;width:auto;max-width:none;height:min(70vh,520px)}
+}
+@media print{.chatf{display:none}}
