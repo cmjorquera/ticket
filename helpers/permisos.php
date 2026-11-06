@@ -97,19 +97,19 @@ function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $d
         } else {
             $configuracion = [
                 'usuario' => [
-                    'menus'    => [['inicio', 'dashboard'], ['colaboradores']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['almuerzos']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets']],
                 ],
                 'tecnico' => [
-                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion'], ['almuerzos']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets'], ['tickets asignados', 'ticket asignado'], ['admin categorias', 'categorias y tecnicos']],
                 ],
                 'admin_colegio' => [
-                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion'], ['almuerzos']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets'], ['listado usuarios', 'usuarios'], ['admin categorias', 'categorias y tecnicos'], ['permisos']],
                 ],
                 'admin_area' => [
-                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion']],
+                    'menus'    => [['inicio', 'dashboard'], ['colaboradores'], ['administracion'], ['almuerzos']],
                     'submenus' => [['crear ticket', 'nuevo ticket'], ['mis tickets'], ['admin categorias', 'categorias y tecnicos']],
                 ],
             ][$tipoPerfil];

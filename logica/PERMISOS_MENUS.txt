@@ -119,3 +119,19 @@ ERRORES RESUELTOS (2026-09-22)
         con permiso=1 para submenús asignados y permiso=0 para el resto.
 
 ===============================================================================
+
+===============================================================================
+CÓMO AGREGAR UN MENÚ NUEVO (ejemplo real: Almuerzos, 2026-11-06)
+===============================================================================
+
+1. Crear la carpeta del módulo con su index.php (ej: almuerzos/index.php).
+2. INSERT en menu_1 con un id_menu explícito (ver sql/menu_almuerzos.sql).
+3. INSERT en permisos_menu_1 para los usuarios que deben verlo.
+4. IMPORTANTE: agregar el id_menu en $secciones_por_menu de
+   clases/menu_lateral.php. Un menú que no esté en esa lista NO aparece
+   en el menú lateral aunque tenga permisos.
+5. Si los usuarios nuevos también deben verlo, agregar su alias en
+   asignar_permisos_por_defecto() de helpers/permisos.php.
+
+Menú 19 = Almuerzos (sección PRINCIPAL, todos los usuarios).
+===============================================================================

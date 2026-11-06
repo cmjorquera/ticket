@@ -8,6 +8,8 @@ config_privada/
 # Respaldos, volcados y logs
 *.zip
 *.sql
+# ...excepto los scripts de cambios de estructura, que sí se versionan
+!sql/*.sql
 *.log
 logica/logs/
 
