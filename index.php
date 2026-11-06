@@ -132,21 +132,26 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
         .panel-info {
             position: relative;
             color: #e5e7eb;
-            background:
-                radial-gradient(120% 80% at 100% 100%, rgba(232,163,61,.18) 0%, transparent 55%),
-                linear-gradient(160deg, var(--navy-800) 0%, var(--navy-900) 55%, #2b2a2a 100%);
+            background: linear-gradient(180deg, #15335a 0%, var(--navy-900) 100%);
             padding: 48px 56px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
+        .panel-info::after {
+            content: ""; position: absolute; pointer-events: none;
+            width: 560px; height: 536px; right: -200px; bottom: -190px;
+            background: url('imagenes/logo_seduc_blanco.png') no-repeat center / contain;
+            opacity: .06;
+        }
+        .panel-info > * { position: relative; z-index: 1; }
         .marca { display: flex; align-items: center; gap: 14px; }
         .marca-icono {
-            width: 46px; height: 46px; border-radius: 12px;
-            background: rgba(255,255,255,.08);
+            width: 48px; height: 48px; border-radius: 50%;
+            background: #fff;
             display: grid; place-items: center;
         }
-        .marca-icono img { width: 30px; height: 30px; object-fit: contain; filter: brightness(1.6) saturate(1.1); }
+        .marca-icono img { width: 34px; height: 34px; object-fit: contain; }
         .marca strong { display: block; color: #fff; font-size: 16px; font-weight: 700; }
         .marca span { font-size: 13px; color: #cbd5e1; }
 
@@ -158,20 +163,13 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
         }
         .contenido p.desc { font-size: 15px; line-height: 1.65; color: #cbd5e1; margin-bottom: 28px; }
 
-        .modulos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin-bottom: 30px; }
+        .modulos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; margin-bottom: 34px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.1); }
         .modulo { display: flex; align-items: flex-start; gap: 10px; font-size: 13.5px; color: #e2e8f0; line-height: 1.35; }
-        .modulo i {
-            flex: 0 0 28px; height: 28px; border-radius: 8px;
-            background: rgba(232,163,61,.14); color: var(--ambar);
-            display: grid; place-items: center; font-size: 14px;
-        }
+        .modulo i { flex: 0 0 auto; color: #8fa8c8; font-size: 16px; line-height: 1.2; }
         .modulo small { display: block; color: #94a3b8; font-size: 12px; margin-top: 1px; }
 
-        .lema { color: var(--ambar); font-style: italic; font-weight: 600; font-size: 14px; margin-bottom: 18px; }
-        .institucion { display: flex; align-items: center; gap: 12px; }
-        .institucion img { width: 44px; height: 44px; object-fit: contain; opacity: .9; }
-        .institucion strong { color: #fff; font-size: 14px; display: block; }
-        .institucion span { color: #94a3b8; font-size: 12px; }
+        .lema { color: #cbd5e1; font-style: italic; font-size: 14px; }
+        .lema b { color: var(--ambar); font-weight: 600; }
         .copy { font-size: 12px; color: #64748b; }
 
         /* ---------- Panel derecho ---------- */
@@ -182,14 +180,15 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
         .indicadores {
             width: 100%; max-width: 480px;
             border-radius: 16px; color: #fff;
-            background: linear-gradient(110deg, var(--navy-800) 0%, var(--navy-700) 55%, var(--ambar) 130%);
-            box-shadow: 0 12px 30px rgba(15,36,64,.18);
+            background: var(--navy-800);
+            border-top: 3px solid var(--ambar);
+            box-shadow: 0 10px 24px rgba(15,36,64,.14);
             padding: 20px 8px 14px;
         }
         .indicadores-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
         .indicador { text-align: center; padding: 4px 6px; }
         .indicador + .indicador { border-left: 1px solid rgba(255,255,255,.15); }
-        .indicador i { font-size: 20px; color: #7dd3fc; display: block; margin-bottom: 6px; }
+        .indicador i { font-size: 18px; color: #9fb7d6; display: block; margin-bottom: 6px; }
         .indicador .nombre { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #dbeafe; }
         .indicador .valor { font-size: 15px; font-weight: 700; margin-top: 4px; min-height: 20px; font-variant-numeric: tabular-nums; }
         .indicadores-pie { text-align: center; font-size: 11px; color: rgba(255,255,255,.65); margin-top: 10px; }
@@ -248,7 +247,7 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
             .panel-info { padding: 28px 24px; }
             .contenido { padding: 24px 0 8px; }
             .contenido h1 { font-size: 26px; }
-            .modulos, .lema, .institucion, .copy { display: none; }
+            .modulos, .lema, .copy { display: none; }
             .panel-acceso { padding: 24px 16px 40px; }
         }
         @media (max-width: 480px) {
@@ -289,14 +288,7 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
                 <div class="modulo"><i class="bi bi-grid-1x2"></i><div>Contenedores<small>Accesos directos a tus sistemas</small></div></div>
             </div>
 
-            <p class="lema">"Educar para servir."</p>
-            <div class="institucion">
-                <img src="imagenes/logo_seduc.png" alt="Logo SEDUC">
-                <div>
-                    <strong>SEDUC SpA</strong>
-                    <span>Corporación educacional</span>
-                </div>
-            </div>
+            <p class="lema">SEDUC SpA · <b>"Educar para servir."</b></p>
         </div>
 
         <p class="copy">&copy; <?= date('Y') ?> SEDUC SpA · Panel Central</p>
