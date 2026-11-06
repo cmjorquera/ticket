@@ -10,6 +10,8 @@ config_privada/
 *.sql
 # ...excepto los scripts de cambios de estructura, que sí se versionan
 !sql/*.sql
+# ...y los de cada módulo (ej: almuerzos/sql/)
+!*/sql/*.sql
 *.log
 logica/logs/
 
