@@ -52,9 +52,8 @@
 # Complementa max_execution_time de PHP a nivel de Apache,
 # util para cargas masivas de Excel que tardan en procesarse.
 
-<IfModule mod_reqtimeout.c>
-    RequestReadTimeout header=40-60,MinRate=500 body=20-300,MinRate=500
-</IfModule>
+# (Se quitó RequestReadTimeout: Apache solo lo permite en la configuración
+#  del servidor, no en .htaccess, y en HostGator causaba error 500.)
 
 <IfModule mod_env.c>
     SetEnv TZ America/Santiago

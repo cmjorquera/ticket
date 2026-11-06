@@ -27,6 +27,7 @@ EXCLUIR_SIEMPRE=(
   'config_privada/' 'config_privada.local.php' '*.local.php'
   'clases/version_desplegada.json'
   '*.log' 'error.log' 'error_log'
+  '*.sql' 'sql/'
 )
 
 ARCHIVO_VERSION_REL="clases/version_desplegada.json"
