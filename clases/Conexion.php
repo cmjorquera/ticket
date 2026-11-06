@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/ConfigPrivada.php';
+
 class Conexion
 {
     private static array $instancias = [];
@@ -7,8 +9,18 @@ class Conexion
 
     public function __construct(string $bd)
     {
-        $dsn = "mysql:host=localhost;dbname=crist668_" . $bd . ";charset=utf8";
-        $this->pdo = new \PDO($dsn, 'crist668_jorquera', 'Ingeniero86#', [
+        // Credenciales desde la configuración privada (fuera del repositorio).
+        // Ver clases/ConfigPrivada.php y config_privada.example.php
+        $cfg = ConfigPrivada::get('db');
+
+        $dsn = sprintf(
+            'mysql:host=%s;dbname=%s;charset=%s',
+            $cfg['host'] ?? 'localhost',
+            ($cfg['prefijo'] ?? '') . $bd,
+            $cfg['charset'] ?? 'utf8'
+        );
+
+        $this->pdo = new \PDO($dsn, (string)($cfg['usuario'] ?? ''), (string)($cfg['password'] ?? ''), [
             \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
             \PDO::ATTR_EMULATE_PREPARES   => false,

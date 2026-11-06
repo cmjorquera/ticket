@@ -3,7 +3,14 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // Conectar - USUARIO CORRECTO
-$db = new mysqli('localhost', 'crist668_jorquera', 'Ingeniero86#', 'crist668_logica_permisos');
+require_once __DIR__ . '/clases/ConfigPrivada.php';
+$cfgPermisos = ConfigPrivada::get('db_permisos');
+$db = new mysqli(
+    $cfgPermisos['host'] ?? 'localhost',
+    (string)($cfgPermisos['usuario'] ?? ''),
+    (string)($cfgPermisos['password'] ?? ''),
+    (string)($cfgPermisos['nombre'] ?? '')
+);
 if ($db->connect_error) die("Error BD: " . $db->connect_error);
 $db->set_charset("utf8");
 

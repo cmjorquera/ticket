@@ -1,1 +1,12 @@
 sistema_base.zip
+
+# Configuración privada (credenciales). Nunca versionar.
+config_privada.local.php
+config_privada/
+*.local.php
+
+# Respaldos, volcados y logs
+*.zip
+*.sql
+*.log
+logica/logs/

@@ -32,7 +32,7 @@ final class PermisosManager
     
     private int $idUsuario = 0;
     private ?Conexion $dbPrincipal = null;        // BD Principal: crisf668_sistema_panel_central
-    private ?\PDO $dbPermisos = null;             // BD Permisos: crisf668_logica_permisos (CREDENCIALES PROPIAS)
+    private ?\PDO $dbPermisos = null;             // BD Permisos (credenciales en config privada: db_permisos)
     private ?array $usuario = null;
     private array $perfiles = [];
     private string $rolPrincipal = self::ROL_USUARIO;
@@ -45,10 +45,8 @@ final class PermisosManager
     // CAMBIAR AQUÍ SI LAS CREDENCIALES SON DIFERENTES
     // ============================================================
     
-    private const DB_PERMISOS_HOST = 'localhost';
-    private const DB_PERMISOS_USER = 'crisf668_jorquera';
-    private const DB_PERMISOS_PASS = 'Ingeniero86#';
-    private const DB_PERMISOS_NAME = 'crisf668_logica_permisos';
+    // Las credenciales de la BD de permisos se leen desde la configuración
+    // privada, sección 'db_permisos' (ver clases/ConfigPrivada.php).
 
     // ============================================================
     // CONSTRUCTOR
@@ -102,7 +100,6 @@ final class PermisosManager
     private function conectarBDs(array $credencialesPermisos = []): void
     {
         // Conexión BD Principal usando Conexion.php existente
-        // Mantiene las credenciales actuales: crist668_jorquera / Ingeniero86#
         $this->dbPrincipal = Conexion::getInstance('sistema_panel_central');
         
         if (!$this->dbPrincipal) {
@@ -122,14 +119,17 @@ final class PermisosManager
      */
     private function conectarBDPermisos(array $credenciales = []): void
     {
-        // Usar credenciales proporcionadas O las del constantes
-        $user = $credenciales['user'] ?? self::DB_PERMISOS_USER;
-        $pass = $credenciales['password'] ?? self::DB_PERMISOS_PASS;
-        
+        // Usar credenciales proporcionadas O las de la configuración privada
+        $cfg  = ConfigPrivada::get('db_permisos');
+        $user = $credenciales['user'] ?? (string)($cfg['usuario'] ?? '');
+        $pass = $credenciales['password'] ?? (string)($cfg['password'] ?? '');
+        $nombreBD = (string)($cfg['nombre'] ?? '');
+
         $dsn = sprintf(
-            "mysql:host=%s;dbname=%s;charset=utf8mb4",
-            self::DB_PERMISOS_HOST,
-            self::DB_PERMISOS_NAME
+            "mysql:host=%s;dbname=%s;charset=%s",
+            $cfg['host'] ?? 'localhost',
+            $nombreBD,
+            $cfg['charset'] ?? 'utf8mb4'
         );
 
         try {
@@ -140,7 +140,7 @@ final class PermisosManager
             ]);
         } catch (\PDOException $e) {
             throw new \PDOException(
-                "Error conectando a BD Permisos (" . self::DB_PERMISOS_NAME . "): " . $e->getMessage()
+                "Error conectando a BD Permisos (" . $nombreBD . "): " . $e->getMessage()
             );
         }
     }

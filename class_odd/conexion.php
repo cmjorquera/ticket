@@ -9,14 +9,17 @@ class MySQL
 
     function __construct($bd, $usuario, $pass)
     {
-        // $this->conexion = mysqli_connect('localhost', 'qaseduc_ucomun', 'jorquera86;', "qaseduc_ticket_prueba");        
-        //QA
-   //
-            // $this->conexion = mysqli_connect('172.28.0.2', 'root', 'seduc2024', "qaseduc_panel");
-            //PRODUCCION
-        // $this->conexion = mysqli_connect('localhost', 'qaseduc_ucomun', 'jorquera86;', "qaseduc_panel");
 
-        $this->conexion = mysqli_connect('localhost','acceso_comun','jorquera86;','acceso_sistema_panel');
+        // Clase antigua, no usada por el sistema actual. Credenciales desde la
+        // configuración privada, sección 'db_antigua' (ver clases/ConfigPrivada.php).
+        require_once __DIR__ . '/../clases/ConfigPrivada.php';
+        $cfg = ConfigPrivada::get('db_antigua');
+        $this->conexion = mysqli_connect(
+            $cfg['host'] ?? 'localhost',
+            (string)($cfg['usuario'] ?? ''),
+            (string)($cfg['password'] ?? ''),
+            (string)($cfg['nombre'] ?? '')
+        );
 
 if (!$this->conexion) {
     die("Error de conexión: " . mysqli_connect_error());

@@ -28,6 +28,20 @@ DirectoryIndex index.php
     </IfModule>
 </FilesMatch>
 
+# Bloquear acceso web a configuración, documentación interna y respaldos
+<IfModule mod_rewrite.c>
+    RewriteRule ^(logica|class_odd)(/.*)?$ - [F,L]
+</IfModule>
+<FilesMatch "(^config_privada.*\.php$|^ConfigPrivada\.php$|\.(md|sql|zip|log|bak)$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 # Cabeceras de seguridad
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
