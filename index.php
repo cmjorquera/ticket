@@ -241,6 +241,20 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
         .ayuda { display: none; margin-top: 14px; font-size: 13px; color: #374151; background: #f1f5f9; border-radius: 10px; padding: 12px 14px; }
         .ayuda.visible { display: block; }
 
+        .red-colegios { width: 100%; max-width: 480px; text-align: center; }
+        .red-colegios h3 {
+            font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+            color: #9ca3af; margin-bottom: 14px;
+        }
+        .escudos { list-style: none; display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+        .escudos li { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .escudos img {
+            height: 38px; width: auto; max-width: 46px; object-fit: contain;
+            filter: grayscale(35%); opacity: .9; transition: filter .2s, opacity .2s, transform .2s;
+        }
+        .escudos li:hover img { filter: none; opacity: 1; transform: translateY(-2px); }
+        .escudos span { font-size: 9.5px; line-height: 1.2; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: .02em; }
+
         /* ---------- Responsive ---------- */
         @media (max-width: 960px) {
             body { grid-template-columns: 1fr; }
@@ -251,6 +265,7 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
             .panel-acceso { padding: 24px 16px 40px; }
         }
         @media (max-width: 480px) {
+            .escudos { grid-template-columns: repeat(4, 1fr); row-gap: 14px; }
             .tarjeta-login { padding: 28px 22px; }
             .indicador .valor { font-size: 13px; }
             .indicador i { font-size: 17px; }
@@ -344,6 +359,19 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
             </div>
 
             <p class="legal">Al continuar aceptas los términos de uso y la política de privacidad institucional.</p>
+        </section>
+        <section class="red-colegios" aria-label="Colegios de la red SEDUC">
+            <h3>Colegios de la red SEDUC</h3>
+            <ul class="escudos">
+                <li><img src="assets/images/escudo/9.png" alt="Escudo Los Andes" loading="lazy"><span>Los Andes</span></li>
+                <li><img src="assets/images/escudo/8.png" alt="Escudo Tabancura" loading="lazy"><span>Tabancura</span></li>
+                <li><img src="assets/images/escudo/11.png" alt="Escudo Huelén" loading="lazy"><span>Huelén</span></li>
+                <li><img src="assets/images/escudo/1.png" alt="Escudo Cordillera" loading="lazy"><span>Cordillera</span></li>
+                <li><img src="assets/images/escudo/10.png" alt="Escudo Los Alerces" loading="lazy"><span>Los Alerces</span></li>
+                <li><img src="assets/images/escudo/13.png" alt="Escudo Huinganal" loading="lazy"><span>Huinganal</span></li>
+                <li><img src="assets/images/escudo/12.png" alt="Escudo Cantagallo" loading="lazy"><span>Cantagallo</span></li>
+                <li><img src="assets/images/escudo/17.jpg" alt="Escudo Valle Alegre" loading="lazy"><span>Valle Alegre</span></li>
+            </ul>
         </section>
     </main>
 
