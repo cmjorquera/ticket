@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3306
--- Tiempo de generación: 06-11-2026 a las 13:14:27
+-- Tiempo de generación: 07-11-2026 a las 11:19:10
 -- Versión del servidor: 5.7.44-48
 -- Versión de PHP: 8.4.27
 
@@ -20,6 +20,207 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `crist668_sistema_panel_central`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_cierre`
+--
+
+CREATE TABLE `almuerzo_cierre` (
+  `id_cierre` int(10) UNSIGNED NOT NULL,
+  `id_dia_menu` int(10) UNSIGNED NOT NULL,
+  `cerrado_en` datetime NOT NULL,
+  `total_menu` smallint(5) UNSIGNED NOT NULL DEFAULT '0',
+  `total_hipocalorico` smallint(5) UNSIGNED NOT NULL DEFAULT '0',
+  `total_picnic` smallint(5) UNSIGNED NOT NULL DEFAULT '0',
+  `total_no_almuerza` smallint(5) UNSIGNED NOT NULL DEFAULT '0',
+  `total_sin_respuesta` smallint(5) UNSIGNED NOT NULL DEFAULT '0',
+  `archivo_pdf` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `enviado_a` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `enviado_en` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_configuracion`
+--
+
+CREATE TABLE `almuerzo_configuracion` (
+  `clave` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `valor` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `actualizado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `almuerzo_configuracion`
+--
+
+INSERT INTO `almuerzo_configuracion` (`clave`, `valor`, `descripcion`, `actualizado_en`) VALUES
+('dias_anticipacion', '31', 'Hasta cuántos días hacia adelante se puede dejar elegido', '2026-11-07 11:17:07'),
+('hora_cierre', '10:00', 'A esta hora se cierra la elección y se genera el PDF', '2026-11-07 11:17:07'),
+('hora_inicio', '08:00', 'Desde qué hora se puede elegir el almuerzo del día', '2026-11-07 11:17:07'),
+('id_colegio_pdf', '15', 'El PDF incluye solo usuarios de este colegio (15 = Seduc SpA)', '2026-11-07 11:17:07'),
+('id_usuario_encargado', '8', 'Usuario que publica los menús y recibe el PDF (usuarios.id)', '2026-11-07 11:17:07');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_dia`
+--
+
+CREATE TABLE `almuerzo_dia` (
+  `id_dia_menu` int(10) UNSIGNED NOT NULL,
+  `id_mes` int(10) UNSIGNED NOT NULL,
+  `fecha` date NOT NULL,
+  `id_dia` tinyint(3) UNSIGNED NOT NULL,
+  `hay_servicio` tinyint(1) NOT NULL DEFAULT '1',
+  `observacion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_dia_semana`
+--
+
+CREATE TABLE `almuerzo_dia_semana` (
+  `id_dia` tinyint(3) UNSIGNED NOT NULL,
+  `nombre` varchar(15) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `abreviatura` char(3) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `almuerzo_dia_semana`
+--
+
+INSERT INTO `almuerzo_dia_semana` (`id_dia`, `nombre`, `abreviatura`, `activo`) VALUES
+(1, 'Lunes', 'Lun', 1),
+(2, 'Martes', 'Mar', 1),
+(3, 'Miércoles', 'Mié', 1),
+(4, 'Jueves', 'Jue', 1),
+(5, 'Viernes', 'Vie', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_eleccion`
+--
+
+CREATE TABLE `almuerzo_eleccion` (
+  `id_eleccion` int(10) UNSIGNED NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `id_dia_menu` int(10) UNSIGNED NOT NULL,
+  `id_menu` int(10) UNSIGNED DEFAULT NULL,
+  `origen` enum('diaria','anticipada') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'diaria',
+  `creado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_menu`
+--
+
+CREATE TABLE `almuerzo_menu` (
+  `id_menu` int(10) UNSIGNED NOT NULL,
+  `id_dia_menu` int(10) UNSIGNED NOT NULL,
+  `id_tipo` tinyint(3) UNSIGNED NOT NULL,
+  `entrada` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `plato_fondo` varchar(160) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `postre` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `observacion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_menu_dia`
+--
+
+CREATE TABLE `almuerzo_menu_dia` (
+  `fecha` date NOT NULL,
+  `id_menu_mes` int(11) NOT NULL,
+  `menu_dia` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hipocalorico` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `picnic` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_menu_mes`
+--
+
+CREATE TABLE `almuerzo_menu_mes` (
+  `id_menu_mes` int(11) NOT NULL,
+  `anio` smallint(6) NOT NULL,
+  `mes` tinyint(4) NOT NULL,
+  `publicado_por` int(11) NOT NULL,
+  `publicado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_mes`
+--
+
+CREATE TABLE `almuerzo_mes` (
+  `id_mes` int(10) UNSIGNED NOT NULL,
+  `anio` smallint(5) UNSIGNED NOT NULL,
+  `mes` tinyint(3) UNSIGNED NOT NULL,
+  `estado` enum('borrador','publicado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'borrador',
+  `id_usuario` int(11) NOT NULL,
+  `publicado_en` datetime DEFAULT NULL,
+  `creado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_pedido`
+--
+
+CREATE TABLE `almuerzo_pedido` (
+  `id_usuario` int(11) NOT NULL,
+  `fecha` date NOT NULL,
+  `opcion` enum('menu','hipo','picnic','no') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `creado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `almuerzo_tipo`
+--
+
+CREATE TABLE `almuerzo_tipo` (
+  `id_tipo` tinyint(3) UNSIGNED NOT NULL,
+  `codigo` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `icono` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `color` char(7) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `orden` tinyint(3) UNSIGNED NOT NULL DEFAULT '1',
+  `activo` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `almuerzo_tipo`
+--
+
+INSERT INTO `almuerzo_tipo` (`id_tipo`, `codigo`, `nombre`, `descripcion`, `icono`, `color`, `orden`, `activo`) VALUES
+(1, 'menu', 'Menú del día', 'Almuerzo tradicional: entrada, plato de fondo y postre.', 'bi-egg-fried', '#005B96', 1, 1),
+(2, 'hipocalorico', 'Hipocalórico', 'Opción liviana, baja en calorías.', 'bi-heart-pulse', '#3C8D2F', 2, 1),
+(3, 'picnic', 'Picnic', 'Para llevar: sándwich o similar, bebida y fruta.', 'bi-basket', '#C98A00', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -96,6 +297,111 @@ INSERT INTO `area_trabajo` (`id_area`, `nombre_area`, `encargado_area`, `sigla_a
 (9, 'PERIODISTAS', 'Antonip Valdes', 'PER', 'avaldes@seduc.cl'),
 (10, 'ADMINISTADOR COLEGIO', 'CCCC', 'RWE', ''),
 (11, 'INFORMATICA-COLEGIO', '', 'info-colegio', 'manuel@seduc.cl');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `aseo_categoria_catalogo`
+--
+
+CREATE TABLE `aseo_categoria_catalogo` (
+  `id_categoria` int(11) NOT NULL,
+  `nombre_categoria` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `aseo_categoria_catalogo`
+--
+
+INSERT INTO `aseo_categoria_catalogo` (`id_categoria`, `nombre_categoria`, `activo`) VALUES
+(1, 'Desinfectantes', 1),
+(2, 'Limpieza general', 1),
+(3, 'Pisos', 1),
+(4, 'Baños', 1),
+(5, 'Vidrios', 1),
+(6, 'Lavandería', 1),
+(7, 'Consumibles', 1),
+(8, 'Otro', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `aseo_historial`
+--
+
+CREATE TABLE `aseo_historial` (
+  `id_historial` int(11) NOT NULL,
+  `id_producto` int(11) NOT NULL,
+  `accion` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `fecha` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `aseo_movimientos`
+--
+
+CREATE TABLE `aseo_movimientos` (
+  `id_movimiento` int(11) NOT NULL,
+  `id_producto` int(11) NOT NULL,
+  `tipo_movimiento` enum('ingreso','salida') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cantidad` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `fecha_movimiento` datetime NOT NULL,
+  `responsable` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `observacion` text COLLATE utf8mb4_unicode_ci,
+  `id_usuario` int(11) NOT NULL,
+  `creado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `aseo_productos`
+--
+
+CREATE TABLE `aseo_productos` (
+  `id_producto` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `nombre_producto` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `categoria` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `unidad_medida` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci,
+  `stock_minimo` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `creado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `aseo_unidad_catalogo`
+--
+
+CREATE TABLE `aseo_unidad_catalogo` (
+  `id_unidad` int(11) NOT NULL,
+  `nombre_unidad` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `aseo_unidad_catalogo`
+--
+
+INSERT INTO `aseo_unidad_catalogo` (`id_unidad`, `nombre_unidad`, `activo`) VALUES
+(1, 'Litro', 1),
+(2, 'Botella', 1),
+(3, 'Bidón', 1),
+(4, 'Unidad', 1),
+(5, 'Caja', 1),
+(6, 'Bolsa', 1),
+(7, 'Paquete', 1),
+(8, 'Galón', 1);
 
 -- --------------------------------------------------------
 
@@ -197,6 +503,32 @@ INSERT INTO `categoria_de_ticket` (`id_categoria`, `nombre_categoria`, `abreviac
 (17, 'BUK', 'buk', 'bi-people-fill', 14, 1, NULL),
 (18, 'Envio Mail', 'EMail', 'bi-envelope-fill', 15, 1, NULL),
 (19, 'Colexia', 'cla', 'bi-wifi', 16, 1, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `categoria_herramienta_catalogo`
+--
+
+CREATE TABLE `categoria_herramienta_catalogo` (
+  `id_categoria` int(11) NOT NULL,
+  `nombre_categoria` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `categoria_herramienta_catalogo`
+--
+
+INSERT INTO `categoria_herramienta_catalogo` (`id_categoria`, `nombre_categoria`, `activo`) VALUES
+(1, 'Manual', 1),
+(2, 'Electrica', 1),
+(3, 'Medicion', 1),
+(4, 'Seguridad', 1),
+(5, 'Mantencion', 1),
+(6, 'Jardineria', 1),
+(7, 'Limpieza', 1),
+(8, 'Otro', 1);
 
 -- --------------------------------------------------------
 
@@ -522,6 +854,202 @@ INSERT INTO `departamentos_colegio` (`id`, `id_colegio`, `nombre_departamento`, 
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `equipos`
+--
+
+CREATE TABLE `equipos` (
+  `id_equipo` int(11) NOT NULL,
+  `id_usuario` int(11) DEFAULT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `id_ubicacion` int(11) DEFAULT NULL,
+  `id_usuario_asignado` int(11) DEFAULT NULL,
+  `id_usuario_registra` int(11) DEFAULT NULL,
+  `nombre_equipo` varchar(255) DEFAULT NULL,
+  `nombre_personalizado` varchar(150) DEFAULT NULL,
+  `fabricante` varchar(255) DEFAULT NULL,
+  `producto` varchar(255) DEFAULT NULL,
+  `numero_serie` varchar(255) DEFAULT NULL,
+  `tipo_pc` varchar(255) DEFAULT NULL,
+  `qr_code` varchar(255) DEFAULT NULL,
+  `id_estado` int(11) NOT NULL DEFAULT '1',
+  `eliminado` tinyint(4) NOT NULL DEFAULT '0',
+  `fecha_eliminado` datetime DEFAULT NULL,
+  `id_usuario_elimina` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipos_compra`
+--
+
+CREATE TABLE `equipos_compra` (
+  `id_equipo` int(11) NOT NULL,
+  `valor_equipo` int(10) DEFAULT NULL,
+  `proveedor` varchar(255) DEFAULT NULL,
+  `numero_factura` varchar(255) DEFAULT NULL,
+  `fecha_compra` date DEFAULT '0000-00-00',
+  `observacion` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_almacenamiento`
+--
+
+CREATE TABLE `equipo_almacenamiento` (
+  `id_equipo` int(11) NOT NULL,
+  `equipo_modelo` varchar(100) DEFAULT NULL,
+  `equipo_capacidad` varchar(50) DEFAULT NULL,
+  `equipo_tamano` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_asignacion_historial`
+--
+
+CREATE TABLE `equipo_asignacion_historial` (
+  `id_asignacion` int(11) NOT NULL,
+  `id_equipo` int(11) NOT NULL,
+  `id_usuario_anterior` int(11) DEFAULT NULL,
+  `id_usuario_nuevo` int(11) DEFAULT NULL,
+  `id_usuario_accion` int(11) NOT NULL,
+  `fecha_accion` datetime DEFAULT CURRENT_TIMESTAMP,
+  `motivo` varchar(255) DEFAULT NULL,
+  `observacion` text
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_estado_historial`
+--
+
+CREATE TABLE `equipo_estado_historial` (
+  `id_historial` int(11) NOT NULL,
+  `id_equipo` int(11) NOT NULL,
+  `id_estado_anterior` int(11) DEFAULT NULL,
+  `id_estado_nuevo` int(11) NOT NULL,
+  `id_usuario_accion` int(11) NOT NULL,
+  `fecha_accion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `observacion` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_fotos`
+--
+
+CREATE TABLE `equipo_fotos` (
+  `id_foto` int(11) NOT NULL,
+  `id_equipo` int(11) NOT NULL,
+  `ruta_foto` varchar(255) NOT NULL,
+  `tipo_foto` enum('normal','otro') NOT NULL DEFAULT 'normal',
+  `principal` tinyint(1) NOT NULL DEFAULT '0',
+  `orden_foto` int(11) NOT NULL DEFAULT '1',
+  `fecha_subida` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_memoria`
+--
+
+CREATE TABLE `equipo_memoria` (
+  `id_memoria` int(11) NOT NULL,
+  `id_equipo` int(11) DEFAULT NULL,
+  `designacion_memoria` varchar(255) DEFAULT NULL,
+  `formato_memoria` varchar(255) DEFAULT NULL,
+  `tipo_memoria` varchar(255) DEFAULT NULL,
+  `tamano_memoria` int(11) DEFAULT NULL,
+  `frecuencia_memoria` int(11) DEFAULT NULL,
+  `marca_memoria` varchar(255) DEFAULT NULL,
+  `orden_memoria` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_monitor`
+--
+
+CREATE TABLE `equipo_monitor` (
+  `id_monitor` int(11) NOT NULL,
+  `id_equipo` int(11) DEFAULT NULL,
+  `modelo_monitor` varchar(255) DEFAULT NULL,
+  `codigo_monitor` varchar(255) DEFAULT NULL,
+  `serie_monitor` varchar(11) DEFAULT NULL,
+  `tamano_monitor` int(10) DEFAULT NULL,
+  `resolucion_monitor` varchar(50) DEFAULT NULL,
+  `orden_monitor` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_movimiento`
+--
+
+CREATE TABLE `equipo_movimiento` (
+  `id_movimiento` int(11) NOT NULL,
+  `id_equipo` int(11) NOT NULL,
+  `id_ubicacion_origen` int(11) DEFAULT NULL,
+  `id_ubicacion_destino` int(11) NOT NULL,
+  `id_usuario_movimiento` int(11) NOT NULL,
+  `fecha_movimiento` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `motivo` varchar(255) DEFAULT NULL,
+  `observacion` text
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_procesador`
+--
+
+CREATE TABLE `equipo_procesador` (
+  `id_equipo` int(11) NOT NULL,
+  `equipo_fabricante` varchar(100) DEFAULT NULL,
+  `equipo_modelo` varchar(100) DEFAULT NULL,
+  `equipo_velocidad` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_software`
+--
+
+CREATE TABLE `equipo_software` (
+  `id_equipo` int(11) NOT NULL,
+  `windows` varchar(50) DEFAULT NULL,
+  `office` varchar(100) DEFAULT NULL,
+  `antivirus` varchar(50) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `equipo_ubicacion`
+--
+
+CREATE TABLE `equipo_ubicacion` (
+  `id_ubicacion` int(11) NOT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `nombre_ubicacion` varchar(150) NOT NULL,
+  `tipo_ubicacion` varchar(80) DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `estado` tinyint(4) DEFAULT '1'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `estados_ticket`
 --
 
@@ -546,6 +1074,54 @@ INSERT INTO `estados_ticket` (`id`, `nombre`, `orden`, `color`, `color_degradado
 (4, 'Borrador', 4, '#F3E5F5', 'linear-gradient(135deg, #F3E5F5, #FFFFFF)', 'El ticket ha sido creado pero aun no ha sido activado. Esta en etapa de preparacion y no sera visibl'),
 (6, 'Cerrado', 6, '#E0E0E0', 'linear-gradient(135deg, #E0E0E0, #F7F7F7)', 'El ticket fue resuelto y cerrado definitivamente por el sistema o un administrador.\n'),
 (7, 'Demorado', 7, '#FFD6A5', 'linear-gradient(135deg, #FFD6A5, #FFF0E0)', 'El ticket esta atrasado respecto a su fecha limite de resolucion. Se requiere atencion urgente.\n\n');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `estado_equipo`
+--
+
+CREATE TABLE `estado_equipo` (
+  `id_estado` int(11) NOT NULL,
+  `nombre_estado` varchar(100) NOT NULL,
+  `color_badge` varchar(50) NOT NULL,
+  `estado` tinyint(4) DEFAULT '1'
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `estado_equipo`
+--
+
+INSERT INTO `estado_equipo` (`id_estado`, `nombre_estado`, `color_badge`, `estado`) VALUES
+(1, 'Activo', 'success', 1),
+(2, 'Bodega', 'secondary', 1),
+(3, 'Reparación', 'warning', 1),
+(4, 'Baja', 'danger', 1),
+(5, 'Prestado', 'info', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `estado_herramienta`
+--
+
+CREATE TABLE `estado_herramienta` (
+  `id_estado` int(11) NOT NULL,
+  `nombre_estado` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `color_badge` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'secondary'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `estado_herramienta`
+--
+
+INSERT INTO `estado_herramienta` (`id_estado`, `nombre_estado`, `color_badge`) VALUES
+(1, 'Disponible', 'success'),
+(2, 'En bodega', 'secondary'),
+(3, 'En reparacion', 'warning'),
+(4, 'Baja', 'danger'),
+(5, 'Prestada', 'info'),
+(6, 'Extraviada', 'dark');
 
 -- --------------------------------------------------------
 
@@ -604,6 +1180,188 @@ INSERT INTO `eventos` (`id`, `titulo`, `descripcion`, `fecha_inicio`, `fecha_fin
 (29, 'prueba', 'evento d eprueba', '2026-05-24', '2026-05-24', '08:33:00', '18:34:00', '08:33:00', 0, 0, 0, 123, '', 'capacitacion', 'programado', '#940505', '', 1, '2026-05-11 16:34:21', '2026-05-11 12:34:33', 8, '0', 1),
 (30, 'EVENTO DE PRUEBA', '123213', '2026-05-29', '2026-05-29', '12:40:00', '12:41:00', '12:40:00', 0, 0, 0, 0, '', 'reunion', 'programado', '#24ebc3', '213123', 1, '2026-05-11 16:35:51', '2026-05-11 12:36:16', 8, '0', 10),
 (31, 'EVENTO DE PRUEBA', '123', '2026-05-11', '2026-05-11', '14:38:00', '16:40:00', '14:38:00', 1, 1, 1, 22, '', 'celebracion', 'programado', '#d97706', '', 1, '2026-05-11 16:36:55', '2026-05-11 12:36:57', 8, '0', 15);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `herramientas`
+--
+
+CREATE TABLE `herramientas` (
+  `id_herramienta` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `id_usuario_asignado` int(11) DEFAULT NULL,
+  `nombre_herramienta` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `marca` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `modelo` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `numero_serie` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `categoria` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `qr_code` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_estado` int(11) NOT NULL DEFAULT '1',
+  `cantidad` int(11) NOT NULL DEFAULT '1',
+  `stock_minimo` int(11) NOT NULL DEFAULT '0',
+  `ubicacion` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `observaciones` text COLLATE utf8mb4_unicode_ci,
+  `creado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `actualizado_en` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `herramienta_compra`
+--
+
+CREATE TABLE `herramienta_compra` (
+  `id_compra` int(11) NOT NULL,
+  `id_herramienta` int(11) NOT NULL,
+  `valor_herramienta` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `proveedor` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `numero_factura` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `fecha_compra` date DEFAULT NULL,
+  `observacion` text COLLATE utf8mb4_unicode_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `herramienta_detalle`
+--
+
+CREATE TABLE `herramienta_detalle` (
+  `id_detalle` int(11) NOT NULL,
+  `id_herramienta` int(11) NOT NULL,
+  `tipo_energia` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `medida` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `capacidad` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `requiere_mantencion` tinyint(1) NOT NULL DEFAULT '0',
+  `frecuencia_mantencion_dias` int(11) NOT NULL DEFAULT '0',
+  `fecha_ultima_mantencion` date DEFAULT NULL,
+  `fecha_proxima_mantencion` date DEFAULT NULL,
+  `garantia_hasta` date DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `herramienta_fotos`
+--
+
+CREATE TABLE `herramienta_fotos` (
+  `id_foto` int(11) NOT NULL,
+  `id_herramienta` int(11) NOT NULL,
+  `ruta_foto` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `principal` tinyint(1) NOT NULL DEFAULT '0',
+  `orden_foto` int(11) NOT NULL DEFAULT '1',
+  `fecha_subida` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `herramienta_historial`
+--
+
+CREATE TABLE `herramienta_historial` (
+  `id_historial` int(11) NOT NULL,
+  `id_herramienta` int(11) NOT NULL,
+  `accion` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `fecha` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `herramienta_mantenciones`
+--
+
+CREATE TABLE `herramienta_mantenciones` (
+  `id_mantencion` int(11) NOT NULL,
+  `id_herramienta` int(11) NOT NULL,
+  `fecha_mantencion` date DEFAULT NULL,
+  `tipo_mantencion` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `proveedor` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `costo` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `proxima_fecha` date DEFAULT NULL,
+  `observacion` text COLLATE utf8mb4_unicode_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `herramienta_prestamos`
+--
+
+CREATE TABLE `herramienta_prestamos` (
+  `id_prestamo` int(11) NOT NULL,
+  `id_herramienta` int(11) NOT NULL,
+  `responsable_entrega` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `responsable_recibe` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `fecha_salida` date DEFAULT NULL,
+  `fecha_devolucion_prevista` date DEFAULT NULL,
+  `fecha_devolucion_real` date DEFAULT NULL,
+  `estado_prestamo` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT '',
+  `observacion` text COLLATE utf8mb4_unicode_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `inventario_software_datos_sensibles`
+--
+
+CREATE TABLE `inventario_software_datos_sensibles` (
+  `id_dato_sensible` int(11) NOT NULL,
+  `nombre` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `inventario_software_datos_sensibles`
+--
+
+INSERT INTO `inventario_software_datos_sensibles` (`id_dato_sensible`, `nombre`, `descripcion`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 'RUT', 'Identificador tributario o de identidad', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(2, 'Nombre', 'Nombre completo de personas', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(3, 'Nombre completo', 'Nombre y apellidos de una persona', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(4, 'Email', 'Correo electrónico personal o institucional', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(5, 'Teléfono', 'Número de contacto', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(6, 'Dirección', 'Dirección física o de despacho', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(7, 'Tarjeta de crédito', 'Números o información de pago', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(8, 'Curso', 'Curso o nivel del alumno', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(9, 'Calificaciones', 'Notas y evaluaciones', 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16');
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `inventario_software_tipo_usuario`
+--
+
+CREATE TABLE `inventario_software_tipo_usuario` (
+  `id_tipo_usuario` int(11) NOT NULL,
+  `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `inventario_software_tipo_usuario`
+--
+
+INSERT INTO `inventario_software_tipo_usuario` (`id_tipo_usuario`, `nombre`, `descripcion`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 'Colaborador', NULL, 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(2, 'Alumno', NULL, 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(3, 'Apoderado', NULL, 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(4, 'Proveedor', NULL, 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16'),
+(5, 'Otro', NULL, 1, '2026-11-06 15:38:16', '2026-11-06 15:38:16');
 
 -- --------------------------------------------------------
 
@@ -671,6 +1429,26 @@ INSERT INTO `jefatura_departamento` (`id`, `id_usuario`, `id_departamento_colegi
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `mensajes_chat`
+--
+
+CREATE TABLE `mensajes_chat` (
+  `id` int(11) NOT NULL,
+  `id_padre` int(11) DEFAULT NULL,
+  `id_conversacion` int(11) NOT NULL,
+  `mensaje` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `de` int(11) NOT NULL,
+  `para` int(11) NOT NULL,
+  `fecha_hora` datetime DEFAULT CURRENT_TIMESTAMP,
+  `leido` tinyint(1) DEFAULT '0',
+  `urgente` tinyint(1) DEFAULT '0',
+  `eliminado` tinyint(1) DEFAULT '0',
+  `prioridad` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `menu_1`
 --
 
@@ -724,9 +1502,7 @@ CREATE TABLE `menu_1_sub` (
 --
 
 INSERT INTO `menu_1_sub` (`id_submenu`, `id_menu`, `nombre`, `archivo`, `icono`, `orden`) VALUES
-(1, 2, 'Enviados', 'mensaje_enviados.php', '<i class=\"bi bi-send-fill\" style=\"color:black;\"></i>', 1),
 (2, 2, 'Recibidos', 'mensaje.php', '<i class=\"bi bi-inbox-fill\" style=\"color:black;\"></i>', 2),
-(3, 2, 'Archivados', 'men_archivados.php', '<i class=\"bi bi-archive-fill\" style=\"color:black;\"></i>', 3),
 (4, 7, 'Perrmisos', 'permisos.php', '<i class=\"bi bi-shield-lock-fill\" style=\"color:black;\"></i>', 3),
 (8, 9, 'Inventario Aseo', 'inventario_aseo/index.php', '<i class=\"bi bi-droplet-fill\" style=\"color:black;\"></i>', 3),
 (9, 9, 'Inventario Herramientas', 'inventario_herramintas/index.php', '<i class=\"bi bi-tools\" style=\"color:black;\"></i>', 2),
@@ -742,10 +1518,103 @@ INSERT INTO `menu_1_sub` (`id_submenu`, `id_menu`, `nombre`, `archivo`, `icono`,
 (20, 15, 'Sofware', 'licenciamiento/sofware_licenciamiento.php', '<i class=\"bi bi-pc-display\" style=\"color:black;\"></i>', 0),
 (21, 15, 'Sitios web  App', 'licenciamiento/sitios_web_apps.php', '<i class=\"bi bi-globe2\" style=\"color:black;\"></i>', 0),
 (22, 11, 'Estadística General version 2', 'estadistica/probando.php', '<i class=\"bi bi-graph-up-arrow\" style=\"color:black;\"></i>', 3),
-(23, 11, 'Dashboard Inventario PC', 'estadistica/dashboard_inventario.php', '<i class=\"bi bi-diagram-3-fill\" style=\"color:black;\"></i>', 4),
+(23, 11, 'Dashboard Inventario PC', 'inventario/dashboard.php', '<i class=\"bi bi-diagram-3-fill\" style=\"color:black;\"></i>', 4),
 (24, 18, 'Ticket Nuevo', 'ticket/ticket.php', '<i class=\"bi bi-plus-circle-fill\" style=\"color:black;\"></i>', 1),
 (25, 18, 'Ticket Administrador', 'ticket/ticket_admin_v2.php', '<i class=\"bi bi-clipboard-data-fill\" style=\"color:black;\"></i>', 2),
 (26, 18, 'Ticket Asignados', 'ticket/ticket_asignados.php', '<i class=\"bi bi-person-workspace\" style=\"color:black;\"></i>', 3);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `monitores`
+--
+
+CREATE TABLE `monitores` (
+  `id_monitor` int(11) NOT NULL,
+  `id_monitor_legacy` int(11) DEFAULT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `id_ubicacion` int(11) DEFAULT NULL,
+  `id_usuario_asignado` int(11) DEFAULT NULL,
+  `id_usuario_registra` int(11) DEFAULT NULL,
+  `id_estado` int(11) NOT NULL DEFAULT '1',
+  `nombre_monitor` varchar(150) DEFAULT NULL,
+  `marca` varchar(100) DEFAULT NULL,
+  `modelo` varchar(150) DEFAULT NULL,
+  `numero_serie` varchar(150) DEFAULT NULL,
+  `codigo_interno` varchar(100) DEFAULT NULL,
+  `tamano_monitor` varchar(50) DEFAULT NULL,
+  `resolucion_monitor` varchar(100) DEFAULT NULL,
+  `tipo_panel` varchar(100) DEFAULT NULL,
+  `tipo_conexion` varchar(150) DEFAULT NULL,
+  `observacion` text,
+  `eliminado` tinyint(1) NOT NULL DEFAULT '0',
+  `fecha_registro` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `monitor_asignacion_historial`
+--
+
+CREATE TABLE `monitor_asignacion_historial` (
+  `id_asignacion` int(11) NOT NULL,
+  `id_monitor` int(11) NOT NULL,
+  `id_usuario_anterior` int(11) DEFAULT NULL,
+  `id_usuario_nuevo` int(11) DEFAULT NULL,
+  `id_usuario_accion` int(11) NOT NULL,
+  `fecha_accion` datetime DEFAULT CURRENT_TIMESTAMP,
+  `motivo` varchar(255) DEFAULT NULL,
+  `observacion` text
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `monitor_compra`
+--
+
+CREATE TABLE `monitor_compra` (
+  `id_monitor` int(11) NOT NULL,
+  `valor_monitor` int(11) DEFAULT NULL,
+  `proveedor` varchar(150) DEFAULT NULL,
+  `numero_factura` varchar(100) DEFAULT NULL,
+  `fecha_compra` date DEFAULT NULL,
+  `observacion` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `monitor_fotos`
+--
+
+CREATE TABLE `monitor_fotos` (
+  `id_foto` int(11) NOT NULL,
+  `id_monitor` int(11) NOT NULL,
+  `ruta_foto` varchar(255) NOT NULL,
+  `tipo_foto` enum('normal','panoramica') NOT NULL DEFAULT 'normal',
+  `principal` tinyint(4) NOT NULL DEFAULT '0',
+  `orden_foto` int(11) NOT NULL DEFAULT '0',
+  `fecha_subida` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `monitor_movimiento`
+--
+
+CREATE TABLE `monitor_movimiento` (
+  `id_movimiento` int(11) NOT NULL,
+  `id_monitor` int(11) NOT NULL,
+  `id_ubicacion_origen` int(11) DEFAULT NULL,
+  `id_ubicacion_destino` int(11) DEFAULT NULL,
+  `id_usuario_movimiento` int(11) NOT NULL,
+  `fecha_movimiento` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `motivo` varchar(255) DEFAULT NULL,
+  `observacion` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -1207,9 +2076,7 @@ CREATE TABLE `permiso_sub_menu` (
 --
 
 INSERT INTO `permiso_sub_menu` (`id_permiso_sub`, `id_usuario`, `id_submenu`, `permiso`, `fecha_creacion`) VALUES
-(1, 2495, 1, 0, '2026-09-22 12:22:44'),
 (2, 2495, 2, 0, '2026-09-22 12:22:44'),
-(3, 2495, 3, 0, '2026-09-22 12:22:44'),
 (4, 2495, 4, 0, '2026-09-22 12:22:44'),
 (5, 2495, 13, 1, '2026-09-22 12:22:44'),
 (6, 2495, 14, 0, '2026-09-22 12:22:44'),
@@ -1229,9 +2096,7 @@ INSERT INTO `permiso_sub_menu` (`id_permiso_sub`, `id_usuario`, `id_submenu`, `p
 (20, 2495, 24, 1, '2026-09-22 12:22:44'),
 (21, 2495, 25, 0, '2026-09-22 12:22:44'),
 (22, 2495, 26, 1, '2026-09-22 12:22:44'),
-(23, 2, 1, 1, '2026-09-22 12:23:45'),
 (24, 2, 2, 1, '2026-09-22 12:23:45'),
-(25, 2, 3, 1, '2026-09-22 12:23:45'),
 (26, 2, 4, 0, '2026-09-22 12:23:45'),
 (27, 2, 13, 1, '2026-09-22 12:23:45'),
 (28, 2, 14, 0, '2026-09-22 12:23:45'),
@@ -1251,9 +2116,7 @@ INSERT INTO `permiso_sub_menu` (`id_permiso_sub`, `id_usuario`, `id_submenu`, `p
 (42, 2, 24, 1, '2026-09-22 12:23:45'),
 (43, 2, 25, 0, '2026-09-22 12:23:45'),
 (44, 2, 26, 0, '2026-09-22 12:23:45'),
-(221, 3, 1, 1, '2026-09-23 00:17:53'),
 (222, 3, 2, 1, '2026-09-23 00:17:53'),
-(223, 3, 3, 1, '2026-09-23 00:17:53'),
 (224, 3, 4, 0, '2026-09-23 00:17:53'),
 (225, 3, 8, 1, '2026-09-23 00:17:53'),
 (226, 3, 9, 0, '2026-09-23 00:17:53'),
@@ -1445,6 +2308,114 @@ INSERT INTO `proceso_tickets` (`id_proceso`, `id_ticket`, `fecha_creacion_inicio
 (579, 596, '2026-09-09', '08:03:13', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (580, 597, '2026-09-09', '09:34:03', NULL, NULL, '2026-09-09', '09:34:03', NULL, NULL, NULL, NULL, NULL, NULL),
 (581, 598, '2026-09-09', '09:34:29', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `sitios_web_catalogo`
+--
+
+CREATE TABLE `sitios_web_catalogo` (
+  `id_sitio` int(11) NOT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `id_usuario_responsable` int(11) NOT NULL DEFAULT '0',
+  `nombre_sitio` varchar(180) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_sitio` enum('Web','App','Cliente') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Web',
+  `url_sitio` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `proveedor_hosting` varchar(180) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estado_sitio` enum('Activo','Mantenimiento','En desarrollo','Inactivo') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Activo',
+  `observaciones` text COLLATE utf8mb4_unicode_ci,
+  `id_usuario` int(11) NOT NULL DEFAULT '0',
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `software_catalogo`
+--
+
+CREATE TABLE `software_catalogo` (
+  `id_software` int(11) NOT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `id_usuario_responsable` int(11) NOT NULL DEFAULT '0',
+  `id_tipo_usuario` int(11) NOT NULL DEFAULT '0',
+  `nombre_software` varchar(180) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `version_software` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cantidad_licencias` int(11) NOT NULL DEFAULT '1',
+  `tipo_licenciamiento` enum('Suscripcion','Licencia perpetua','Gratuita') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Suscripcion',
+  `fecha_inicio_licencia` date DEFAULT NULL,
+  `fecha_fin_licencia` date DEFAULT NULL,
+  `pagado_por` enum('Colegio','Seduc','Persona') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Colegio',
+  `costo` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `moneda` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'USD',
+  `proveedor` varchar(180) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `url_referencia` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `observaciones` text COLLATE utf8mb4_unicode_ci,
+  `id_usuario` int(11) NOT NULL DEFAULT '0',
+  `activo` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `software_datos_almacenamiento`
+--
+
+CREATE TABLE `software_datos_almacenamiento` (
+  `id_dato` int(11) NOT NULL,
+  `id_software` int(11) NOT NULL,
+  `nombre_contacto` varchar(180) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rut_contacto` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email_contacto` varchar(180) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `otros_datos` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `orden_dato` int(11) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `software_datos_sensibles_rel`
+--
+
+CREATE TABLE `software_datos_sensibles_rel` (
+  `id_relacion` int(11) NOT NULL,
+  `id_software` int(11) NOT NULL,
+  `id_dato_sensible` int(11) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `software_historial`
+--
+
+CREATE TABLE `software_historial` (
+  `id_historial` int(11) NOT NULL,
+  `id_software` int(11) NOT NULL,
+  `accion` varchar(60) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `detalle` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_usuario` int(11) NOT NULL DEFAULT '0',
+  `fecha_registro` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `software_tipo_usuario_rel`
+--
+
+CREATE TABLE `software_tipo_usuario_rel` (
+  `id_relacion` int(11) NOT NULL,
+  `id_software` int(11) NOT NULL,
+  `id_tipo_usuario` int(11) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1679,6 +2650,28 @@ INSERT INTO `ticket_conversaciones` (`id`, `id_ticket`, `emisor`, `receptor`, `m
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `tipo_pc_catalogo`
+--
+
+CREATE TABLE `tipo_pc_catalogo` (
+  `id_tipo_pc` int(11) NOT NULL,
+  `nombre_tipo` varchar(100) NOT NULL,
+  `activo` tinyint(4) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `tipo_pc_catalogo`
+--
+
+INSERT INTO `tipo_pc_catalogo` (`id_tipo_pc`, `nombre_tipo`, `activo`) VALUES
+(1, 'Desktop', 1),
+(2, 'Notebook', 1),
+(3, 'Tablet', 1),
+(4, 'Otro', 1);
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `usuarios`
 --
 
@@ -1748,6 +2741,66 @@ INSERT INTO `usuarios` (`id`, `nombre`, `apellido_paterno`, `apellido_materno`, 
 (2495, 'Francisco', 'Salazar', '', '0000-00-00', 'fsalazar@tabancura.cl', '', 1, '$2y$10$KkRQRQ6rgG/r0.VEXEI5w.WAmm3squrTFuxQiFvZdg.J5I/6qFAKy', NULL, 0, 4, NULL, 'Activo', '', '2026-06-11 20:17:39', '', NULL, 0),
 (2496, 'katrin', 'Pendergrast', '', '0000-00-00', 'kprendergast@colegiolosalerces.cl', '', 2, '$2y$10$KkRQRQ6rgG/r0.VEXEI5w.WAmm3squrTFuxQiFvZdg.J5I/6qFAKy', NULL, 0, 11, NULL, 'Activo', '', '2026-06-18 19:02:21', '', NULL, 0),
 (2497, 'Claudio', 'Ortega', '', '0000-00-00', 'cortega@colegiolosalerces.cl', '', 1, '$2y$10$KkRQRQ6rgG/r0.VEXEI5w.WAmm3squrTFuxQiFvZdg.J5I/6qFAKy', NULL, 0, 11, NULL, 'Activo', '', '2026-06-18 19:03:01', '', NULL, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuario_colegio`
+--
+
+CREATE TABLE `usuario_colegio` (
+  `id` int(11) NOT NULL,
+  `id_usuario` int(11) NOT NULL,
+  `id_colegio` int(11) NOT NULL,
+  `id_perfil` int(11) NOT NULL,
+  `estado` int(11) NOT NULL DEFAULT '1' COMMENT '1 = activo | 0 = inactivo',
+  `fecha_asignacion` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Volcado de datos para la tabla `usuario_colegio`
+--
+
+INSERT INTO `usuario_colegio` (`id`, `id_usuario`, `id_colegio`, `id_perfil`, `estado`, `fecha_asignacion`) VALUES
+(1, 6, 15, 3, 1, '2026-11-06 13:36:37'),
+(2, 7, 15, 3, 1, '2026-11-06 13:36:37'),
+(3, 8, 15, 3, 1, '2026-11-06 13:36:37'),
+(4, 42, 15, 3, 1, '2026-11-06 13:36:37'),
+(5, 49, 15, 3, 1, '2026-11-06 13:36:37'),
+(6, 2492, 15, 3, 1, '2026-11-06 13:36:37'),
+(7, 2493, 15, 3, 1, '2026-11-06 13:36:37'),
+(8, 2, 15, 3, 1, '2026-11-06 13:36:37'),
+(9, 3, 15, 3, 1, '2026-11-06 13:36:37'),
+(10, 4, 15, 3, 1, '2026-11-06 13:36:37'),
+(11, 5, 15, 3, 1, '2026-11-06 13:36:37'),
+(12, 39, 15, 3, 1, '2026-11-06 13:36:37'),
+(13, 12, 15, 3, 1, '2026-11-06 13:36:37'),
+(14, 16, 15, 3, 1, '2026-11-06 13:36:37'),
+(15, 17, 15, 3, 1, '2026-11-06 13:36:37'),
+(16, 18, 15, 3, 1, '2026-11-06 13:36:37'),
+(17, 20, 15, 3, 1, '2026-11-06 13:36:37'),
+(18, 41, 15, 3, 1, '2026-11-06 13:36:37'),
+(19, 2488, 15, 3, 1, '2026-11-06 13:36:37'),
+(20, 2495, 15, 3, 1, '2026-11-06 13:36:37'),
+(21, 9, 15, 3, 1, '2026-11-06 13:36:37'),
+(22, 15, 15, 3, 1, '2026-11-06 13:36:37'),
+(23, 44, 15, 3, 1, '2026-11-06 13:36:37'),
+(24, 14, 15, 3, 1, '2026-11-06 13:36:37'),
+(25, 24, 15, 3, 1, '2026-11-06 13:36:37'),
+(26, 43, 15, 3, 1, '2026-11-06 13:36:37'),
+(27, 1, 15, 3, 1, '2026-11-06 13:36:37'),
+(28, 25, 15, 3, 1, '2026-11-06 13:36:37'),
+(29, 26, 15, 3, 1, '2026-11-06 13:36:37'),
+(30, 10, 15, 3, 1, '2026-11-06 13:36:37'),
+(31, 31, 15, 3, 1, '2026-11-06 13:36:37'),
+(32, 33, 15, 3, 1, '2026-11-06 13:36:37'),
+(33, 35, 15, 3, 1, '2026-11-06 13:36:37'),
+(34, 46, 15, 3, 1, '2026-11-06 13:36:37'),
+(35, 2476, 15, 3, 1, '2026-11-06 13:36:37'),
+(36, 45, 15, 3, 1, '2026-11-06 13:36:37'),
+(37, 48, 15, 3, 1, '2026-11-06 13:36:37'),
+(38, 2496, 15, 3, 1, '2026-11-06 13:36:37'),
+(39, 2497, 15, 3, 1, '2026-11-06 13:36:37');
 
 -- --------------------------------------------------------
 
@@ -1866,6 +2919,86 @@ INSERT INTO `usuario_perfil` (`id_usuario`, `id_perfil`) VALUES
 --
 
 --
+-- Indices de la tabla `almuerzo_cierre`
+--
+ALTER TABLE `almuerzo_cierre`
+  ADD PRIMARY KEY (`id_cierre`),
+  ADD UNIQUE KEY `ux_almuerzo_cierre_dia` (`id_dia_menu`);
+
+--
+-- Indices de la tabla `almuerzo_configuracion`
+--
+ALTER TABLE `almuerzo_configuracion`
+  ADD PRIMARY KEY (`clave`);
+
+--
+-- Indices de la tabla `almuerzo_dia`
+--
+ALTER TABLE `almuerzo_dia`
+  ADD PRIMARY KEY (`id_dia_menu`),
+  ADD UNIQUE KEY `ux_almuerzo_dia_fecha` (`fecha`),
+  ADD KEY `idx_almuerzo_dia_mes` (`id_mes`),
+  ADD KEY `idx_almuerzo_dia_semana` (`id_dia`);
+
+--
+-- Indices de la tabla `almuerzo_dia_semana`
+--
+ALTER TABLE `almuerzo_dia_semana`
+  ADD PRIMARY KEY (`id_dia`);
+
+--
+-- Indices de la tabla `almuerzo_eleccion`
+--
+ALTER TABLE `almuerzo_eleccion`
+  ADD PRIMARY KEY (`id_eleccion`),
+  ADD UNIQUE KEY `ux_almuerzo_eleccion` (`id_usuario`,`id_dia_menu`),
+  ADD KEY `idx_almuerzo_eleccion_dia` (`id_dia_menu`,`id_menu`),
+  ADD KEY `fk_almeleccion_menu` (`id_menu`);
+
+--
+-- Indices de la tabla `almuerzo_menu`
+--
+ALTER TABLE `almuerzo_menu`
+  ADD PRIMARY KEY (`id_menu`),
+  ADD UNIQUE KEY `ux_almuerzo_menu_dia_tipo` (`id_dia_menu`,`id_tipo`),
+  ADD KEY `idx_almuerzo_menu_tipo` (`id_tipo`);
+
+--
+-- Indices de la tabla `almuerzo_menu_dia`
+--
+ALTER TABLE `almuerzo_menu_dia`
+  ADD PRIMARY KEY (`fecha`),
+  ADD KEY `idx_almuerzo_dia_mes` (`id_menu_mes`);
+
+--
+-- Indices de la tabla `almuerzo_menu_mes`
+--
+ALTER TABLE `almuerzo_menu_mes`
+  ADD PRIMARY KEY (`id_menu_mes`),
+  ADD UNIQUE KEY `ux_almuerzo_menu_mes` (`anio`,`mes`);
+
+--
+-- Indices de la tabla `almuerzo_mes`
+--
+ALTER TABLE `almuerzo_mes`
+  ADD PRIMARY KEY (`id_mes`),
+  ADD UNIQUE KEY `ux_almuerzo_mes` (`anio`,`mes`);
+
+--
+-- Indices de la tabla `almuerzo_pedido`
+--
+ALTER TABLE `almuerzo_pedido`
+  ADD PRIMARY KEY (`id_usuario`,`fecha`),
+  ADD KEY `idx_almuerzo_pedido_fecha` (`fecha`,`opcion`);
+
+--
+-- Indices de la tabla `almuerzo_tipo`
+--
+ALTER TABLE `almuerzo_tipo`
+  ADD PRIMARY KEY (`id_tipo`),
+  ADD UNIQUE KEY `ux_almuerzo_tipo_codigo` (`codigo`);
+
+--
 -- Indices de la tabla `archivos_adjuntos_ticket`
 --
 ALTER TABLE `archivos_adjuntos_ticket`
@@ -1877,6 +3010,47 @@ ALTER TABLE `archivos_adjuntos_ticket`
 --
 ALTER TABLE `area_trabajo`
   ADD PRIMARY KEY (`id_area`);
+
+--
+-- Indices de la tabla `aseo_categoria_catalogo`
+--
+ALTER TABLE `aseo_categoria_catalogo`
+  ADD PRIMARY KEY (`id_categoria`),
+  ADD UNIQUE KEY `ux_aseo_categoria_nombre` (`nombre_categoria`);
+
+--
+-- Indices de la tabla `aseo_historial`
+--
+ALTER TABLE `aseo_historial`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD KEY `idx_aseo_historial_producto` (`id_producto`),
+  ADD KEY `idx_aseo_historial_usuario` (`id_usuario`);
+
+--
+-- Indices de la tabla `aseo_movimientos`
+--
+ALTER TABLE `aseo_movimientos`
+  ADD PRIMARY KEY (`id_movimiento`),
+  ADD KEY `idx_aseo_mov_producto` (`id_producto`),
+  ADD KEY `idx_aseo_mov_fecha` (`fecha_movimiento`),
+  ADD KEY `idx_aseo_mov_usuario` (`id_usuario`);
+
+--
+-- Indices de la tabla `aseo_productos`
+--
+ALTER TABLE `aseo_productos`
+  ADD PRIMARY KEY (`id_producto`),
+  ADD KEY `idx_aseo_producto_colegio` (`id_colegio`),
+  ADD KEY `idx_aseo_producto_usuario` (`id_usuario`),
+  ADD KEY `idx_aseo_producto_activo` (`activo`),
+  ADD KEY `idx_aseo_producto_categoria` (`categoria`);
+
+--
+-- Indices de la tabla `aseo_unidad_catalogo`
+--
+ALTER TABLE `aseo_unidad_catalogo`
+  ADD PRIMARY KEY (`id_unidad`),
+  ADD UNIQUE KEY `ux_aseo_unidad_nombre` (`nombre_unidad`);
 
 --
 -- Indices de la tabla `calificacion_tickett`
@@ -1891,6 +3065,13 @@ ALTER TABLE `calificacion_tickett`
 ALTER TABLE `categoria_de_ticket`
   ADD PRIMARY KEY (`id_categoria`),
   ADD KEY `idx_colegio_categoria` (`id_colegio`);
+
+--
+-- Indices de la tabla `categoria_herramienta_catalogo`
+--
+ALTER TABLE `categoria_herramienta_catalogo`
+  ADD PRIMARY KEY (`id_categoria`),
+  ADD UNIQUE KEY `uq_categoria_herramienta_nombre` (`nombre_categoria`);
 
 --
 -- Indices de la tabla `categoria_tecnico`
@@ -1935,10 +3116,105 @@ ALTER TABLE `departamentos_colegio`
   ADD KEY `id_colegio` (`id_colegio`);
 
 --
+-- Indices de la tabla `equipos`
+--
+ALTER TABLE `equipos`
+  ADD PRIMARY KEY (`id_equipo`),
+  ADD UNIQUE KEY `ux_equipos_numero_serie` (`numero_serie`),
+  ADD KEY `idx_equipos_asignado` (`id_usuario_asignado`),
+  ADD KEY `idx_equipos_colegio` (`id_colegio`),
+  ADD KEY `idx_equipos_creado_por` (`id_usuario`);
+
+--
+-- Indices de la tabla `equipos_compra`
+--
+ALTER TABLE `equipos_compra`
+  ADD PRIMARY KEY (`id_equipo`);
+
+--
+-- Indices de la tabla `equipo_almacenamiento`
+--
+ALTER TABLE `equipo_almacenamiento`
+  ADD PRIMARY KEY (`id_equipo`);
+
+--
+-- Indices de la tabla `equipo_asignacion_historial`
+--
+ALTER TABLE `equipo_asignacion_historial`
+  ADD PRIMARY KEY (`id_asignacion`);
+
+--
+-- Indices de la tabla `equipo_estado_historial`
+--
+ALTER TABLE `equipo_estado_historial`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD KEY `idx_equipo_estado_equipo` (`id_equipo`),
+  ADD KEY `idx_equipo_estado_anterior` (`id_estado_anterior`),
+  ADD KEY `idx_equipo_estado_nuevo` (`id_estado_nuevo`);
+
+--
+-- Indices de la tabla `equipo_fotos`
+--
+ALTER TABLE `equipo_fotos`
+  ADD PRIMARY KEY (`id_foto`),
+  ADD KEY `idx_equipo_fotos_equipo` (`id_equipo`);
+
+--
+-- Indices de la tabla `equipo_memoria`
+--
+ALTER TABLE `equipo_memoria`
+  ADD PRIMARY KEY (`id_memoria`),
+  ADD KEY `id_equipo` (`id_equipo`);
+
+--
+-- Indices de la tabla `equipo_monitor`
+--
+ALTER TABLE `equipo_monitor`
+  ADD PRIMARY KEY (`id_monitor`),
+  ADD KEY `id_equipo` (`id_equipo`);
+
+--
+-- Indices de la tabla `equipo_movimiento`
+--
+ALTER TABLE `equipo_movimiento`
+  ADD PRIMARY KEY (`id_movimiento`);
+
+--
+-- Indices de la tabla `equipo_procesador`
+--
+ALTER TABLE `equipo_procesador`
+  ADD PRIMARY KEY (`id_equipo`);
+
+--
+-- Indices de la tabla `equipo_software`
+--
+ALTER TABLE `equipo_software`
+  ADD PRIMARY KEY (`id_equipo`);
+
+--
+-- Indices de la tabla `equipo_ubicacion`
+--
+ALTER TABLE `equipo_ubicacion`
+  ADD PRIMARY KEY (`id_ubicacion`),
+  ADD UNIQUE KEY `uq_ubicacion_colegio_nombre` (`id_colegio`,`nombre_ubicacion`);
+
+--
 -- Indices de la tabla `estados_ticket`
 --
 ALTER TABLE `estados_ticket`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `estado_equipo`
+--
+ALTER TABLE `estado_equipo`
+  ADD PRIMARY KEY (`id_estado`);
+
+--
+-- Indices de la tabla `estado_herramienta`
+--
+ALTER TABLE `estado_herramienta`
+  ADD PRIMARY KEY (`id_estado`);
 
 --
 -- Indices de la tabla `eventos`
@@ -1954,11 +3230,97 @@ ALTER TABLE `eventos`
   ADD KEY `idx_eventos_colegio` (`id_colegio`);
 
 --
+-- Indices de la tabla `herramientas`
+--
+ALTER TABLE `herramientas`
+  ADD PRIMARY KEY (`id_herramienta`),
+  ADD UNIQUE KEY `uq_herramientas_numero_serie` (`numero_serie`),
+  ADD UNIQUE KEY `uq_herramientas_qr_code` (`qr_code`),
+  ADD KEY `idx_herramientas_colegio` (`id_colegio`),
+  ADD KEY `idx_herramientas_usuario` (`id_usuario`),
+  ADD KEY `idx_herramientas_usuario_asignado` (`id_usuario_asignado`),
+  ADD KEY `idx_herramientas_estado` (`id_estado`),
+  ADD KEY `idx_herramientas_categoria` (`categoria`);
+
+--
+-- Indices de la tabla `herramienta_compra`
+--
+ALTER TABLE `herramienta_compra`
+  ADD PRIMARY KEY (`id_compra`),
+  ADD UNIQUE KEY `uq_herramienta_compra_herramienta` (`id_herramienta`),
+  ADD KEY `idx_herramienta_compra_fecha` (`fecha_compra`);
+
+--
+-- Indices de la tabla `herramienta_detalle`
+--
+ALTER TABLE `herramienta_detalle`
+  ADD PRIMARY KEY (`id_detalle`),
+  ADD UNIQUE KEY `uq_herramienta_detalle_herramienta` (`id_herramienta`);
+
+--
+-- Indices de la tabla `herramienta_fotos`
+--
+ALTER TABLE `herramienta_fotos`
+  ADD PRIMARY KEY (`id_foto`),
+  ADD KEY `idx_herramienta_fotos_herramienta` (`id_herramienta`),
+  ADD KEY `idx_herramienta_fotos_principal` (`id_herramienta`,`principal`);
+
+--
+-- Indices de la tabla `herramienta_historial`
+--
+ALTER TABLE `herramienta_historial`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD KEY `idx_herramienta_historial_herramienta` (`id_herramienta`),
+  ADD KEY `idx_herramienta_historial_usuario` (`id_usuario`),
+  ADD KEY `idx_herramienta_historial_fecha` (`fecha`);
+
+--
+-- Indices de la tabla `herramienta_mantenciones`
+--
+ALTER TABLE `herramienta_mantenciones`
+  ADD PRIMARY KEY (`id_mantencion`),
+  ADD KEY `idx_herramienta_mantenciones_herramienta` (`id_herramienta`),
+  ADD KEY `idx_herramienta_mantenciones_fecha` (`fecha_mantencion`),
+  ADD KEY `idx_herramienta_mantenciones_proxima` (`proxima_fecha`);
+
+--
+-- Indices de la tabla `herramienta_prestamos`
+--
+ALTER TABLE `herramienta_prestamos`
+  ADD PRIMARY KEY (`id_prestamo`),
+  ADD KEY `idx_herramienta_prestamos_herramienta` (`id_herramienta`),
+  ADD KEY `idx_herramienta_prestamos_salida` (`fecha_salida`),
+  ADD KEY `idx_herramienta_prestamos_estado` (`estado_prestamo`);
+
+--
+-- Indices de la tabla `inventario_software_datos_sensibles`
+--
+ALTER TABLE `inventario_software_datos_sensibles`
+  ADD PRIMARY KEY (`id_dato_sensible`),
+  ADD UNIQUE KEY `uq_dato_sensible_nombre` (`nombre`);
+
+--
+-- Indices de la tabla `inventario_software_tipo_usuario`
+--
+ALTER TABLE `inventario_software_tipo_usuario`
+  ADD PRIMARY KEY (`id_tipo_usuario`),
+  ADD UNIQUE KEY `uq_tipo_usuario_nombre` (`nombre`);
+
+--
 -- Indices de la tabla `jefatura_departamento`
 --
 ALTER TABLE `jefatura_departamento`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `id_usuario` (`id_usuario`,`id_departamento_colegio`,`id_colegio`);
+
+--
+-- Indices de la tabla `mensajes_chat`
+--
+ALTER TABLE `mensajes_chat`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_mensajes_para` (`para`,`leido`,`eliminado`),
+  ADD KEY `idx_mensajes_de` (`de`),
+  ADD KEY `idx_mensajes_conversacion` (`id_conversacion`);
 
 --
 -- Indices de la tabla `menu_1`
@@ -1972,6 +3334,46 @@ ALTER TABLE `menu_1`
 ALTER TABLE `menu_1_sub`
   ADD PRIMARY KEY (`id_submenu`),
   ADD KEY `idx_menu_1_sub_id_menu` (`id_menu`);
+
+--
+-- Indices de la tabla `monitores`
+--
+ALTER TABLE `monitores`
+  ADD PRIMARY KEY (`id_monitor`),
+  ADD UNIQUE KEY `uq_monitores_legacy` (`id_monitor_legacy`),
+  ADD KEY `idx_monitor_colegio` (`id_colegio`),
+  ADD KEY `idx_monitor_ubicacion` (`id_ubicacion`),
+  ADD KEY `idx_monitor_usuario` (`id_usuario_asignado`),
+  ADD KEY `idx_monitor_estado` (`id_estado`),
+  ADD KEY `idx_monitor_eliminado` (`eliminado`);
+
+--
+-- Indices de la tabla `monitor_asignacion_historial`
+--
+ALTER TABLE `monitor_asignacion_historial`
+  ADD PRIMARY KEY (`id_asignacion`);
+
+--
+-- Indices de la tabla `monitor_compra`
+--
+ALTER TABLE `monitor_compra`
+  ADD PRIMARY KEY (`id_monitor`);
+
+--
+-- Indices de la tabla `monitor_fotos`
+--
+ALTER TABLE `monitor_fotos`
+  ADD PRIMARY KEY (`id_foto`),
+  ADD KEY `idx_monitor_fotos_monitor` (`id_monitor`);
+
+--
+-- Indices de la tabla `monitor_movimiento`
+--
+ALTER TABLE `monitor_movimiento`
+  ADD PRIMARY KEY (`id_movimiento`),
+  ADD KEY `idx_monitor_mov_monitor` (`id_monitor`),
+  ADD KEY `idx_monitor_mov_origen` (`id_ubicacion_origen`),
+  ADD KEY `idx_monitor_mov_destino` (`id_ubicacion_destino`);
 
 --
 -- Indices de la tabla `perfiles`
@@ -2015,6 +3417,55 @@ ALTER TABLE `proceso_tickets`
   ADD KEY `id_ticket` (`id_ticket`);
 
 --
+-- Indices de la tabla `sitios_web_catalogo`
+--
+ALTER TABLE `sitios_web_catalogo`
+  ADD PRIMARY KEY (`id_sitio`),
+  ADD KEY `idx_sitio_colegio` (`id_colegio`),
+  ADD KEY `idx_sitio_responsable` (`id_usuario_responsable`),
+  ADD KEY `idx_sitio_activo` (`activo`);
+
+--
+-- Indices de la tabla `software_catalogo`
+--
+ALTER TABLE `software_catalogo`
+  ADD PRIMARY KEY (`id_software`),
+  ADD KEY `idx_software_colegio` (`id_colegio`),
+  ADD KEY `idx_software_responsable` (`id_usuario_responsable`),
+  ADD KEY `idx_software_activo` (`activo`);
+
+--
+-- Indices de la tabla `software_datos_almacenamiento`
+--
+ALTER TABLE `software_datos_almacenamiento`
+  ADD PRIMARY KEY (`id_dato`),
+  ADD KEY `idx_dato_software` (`id_software`);
+
+--
+-- Indices de la tabla `software_datos_sensibles_rel`
+--
+ALTER TABLE `software_datos_sensibles_rel`
+  ADD PRIMARY KEY (`id_relacion`),
+  ADD UNIQUE KEY `uq_software_dato_sensible` (`id_software`,`id_dato_sensible`),
+  ADD KEY `idx_rel_dato_sensible` (`id_dato_sensible`);
+
+--
+-- Indices de la tabla `software_historial`
+--
+ALTER TABLE `software_historial`
+  ADD PRIMARY KEY (`id_historial`),
+  ADD KEY `idx_historial_software` (`id_software`);
+
+--
+-- Indices de la tabla `software_tipo_usuario_rel`
+--
+ALTER TABLE `software_tipo_usuario_rel`
+  ADD PRIMARY KEY (`id_relacion`),
+  ADD UNIQUE KEY `uq_software_tipo_usuario` (`id_software`,`id_tipo_usuario`),
+  ADD KEY `idx_rel_tipo_usuario` (`id_tipo_usuario`),
+  ADD KEY `idx_rel_tipo_software` (`id_software`);
+
+--
 -- Indices de la tabla `tecnicos`
 --
 ALTER TABLE `tecnicos`
@@ -2039,12 +3490,31 @@ ALTER TABLE `ticket_conversaciones`
   ADD KEY `id_ticket` (`id_ticket`);
 
 --
+-- Indices de la tabla `tipo_pc_catalogo`
+--
+ALTER TABLE `tipo_pc_catalogo`
+  ADD PRIMARY KEY (`id_tipo_pc`),
+  ADD UNIQUE KEY `uq_tipo_pc_nombre` (`nombre_tipo`);
+
+--
 -- Indices de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `idx_usuarios_id_area_trabajo` (`id_area_trabajo`);
+
+--
+-- Indices de la tabla `usuario_colegio`
+--
+ALTER TABLE `usuario_colegio`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_usuario_colegio` (`id_usuario`,`id_colegio`,`id_perfil`),
+  ADD KEY `idx_usuario` (`id_usuario`),
+  ADD KEY `idx_colegio` (`id_colegio`),
+  ADD KEY `idx_estado` (`estado`),
+  ADD KEY `idx_usuario_colegio_id_usuario` (`id_usuario`),
+  ADD KEY `idx_usuario_colegio_id_colegio` (`id_colegio`);
 
 --
 -- Indices de la tabla `usuario_perfil`
@@ -2059,6 +3529,48 @@ ALTER TABLE `usuario_perfil`
 --
 
 --
+-- AUTO_INCREMENT de la tabla `almuerzo_cierre`
+--
+ALTER TABLE `almuerzo_cierre`
+  MODIFY `id_cierre` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `almuerzo_dia`
+--
+ALTER TABLE `almuerzo_dia`
+  MODIFY `id_dia_menu` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `almuerzo_eleccion`
+--
+ALTER TABLE `almuerzo_eleccion`
+  MODIFY `id_eleccion` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `almuerzo_menu`
+--
+ALTER TABLE `almuerzo_menu`
+  MODIFY `id_menu` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `almuerzo_menu_mes`
+--
+ALTER TABLE `almuerzo_menu_mes`
+  MODIFY `id_menu_mes` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `almuerzo_mes`
+--
+ALTER TABLE `almuerzo_mes`
+  MODIFY `id_mes` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `almuerzo_tipo`
+--
+ALTER TABLE `almuerzo_tipo`
+  MODIFY `id_tipo` tinyint(3) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT de la tabla `archivos_adjuntos_ticket`
 --
 ALTER TABLE `archivos_adjuntos_ticket`
@@ -2071,6 +3583,36 @@ ALTER TABLE `area_trabajo`
   MODIFY `id_area` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
+-- AUTO_INCREMENT de la tabla `aseo_categoria_catalogo`
+--
+ALTER TABLE `aseo_categoria_catalogo`
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `aseo_historial`
+--
+ALTER TABLE `aseo_historial`
+  MODIFY `id_historial` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `aseo_movimientos`
+--
+ALTER TABLE `aseo_movimientos`
+  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `aseo_productos`
+--
+ALTER TABLE `aseo_productos`
+  MODIFY `id_producto` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `aseo_unidad_catalogo`
+--
+ALTER TABLE `aseo_unidad_catalogo`
+  MODIFY `id_unidad` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT de la tabla `calificacion_tickett`
 --
 ALTER TABLE `calificacion_tickett`
@@ -2081,6 +3623,12 @@ ALTER TABLE `calificacion_tickett`
 --
 ALTER TABLE `categoria_de_ticket`
   MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT de la tabla `categoria_herramienta_catalogo`
+--
+ALTER TABLE `categoria_herramienta_catalogo`
+  MODIFY `id_categoria` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT de la tabla `categoria_tecnico`
@@ -2119,10 +3667,88 @@ ALTER TABLE `departamentos_colegio`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT de la tabla `equipos`
+--
+ALTER TABLE `equipos`
+  MODIFY `id_equipo` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipos_compra`
+--
+ALTER TABLE `equipos_compra`
+  MODIFY `id_equipo` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_almacenamiento`
+--
+ALTER TABLE `equipo_almacenamiento`
+  MODIFY `id_equipo` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_asignacion_historial`
+--
+ALTER TABLE `equipo_asignacion_historial`
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_estado_historial`
+--
+ALTER TABLE `equipo_estado_historial`
+  MODIFY `id_historial` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_fotos`
+--
+ALTER TABLE `equipo_fotos`
+  MODIFY `id_foto` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_memoria`
+--
+ALTER TABLE `equipo_memoria`
+  MODIFY `id_memoria` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_monitor`
+--
+ALTER TABLE `equipo_monitor`
+  MODIFY `id_monitor` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_movimiento`
+--
+ALTER TABLE `equipo_movimiento`
+  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_procesador`
+--
+ALTER TABLE `equipo_procesador`
+  MODIFY `id_equipo` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_software`
+--
+ALTER TABLE `equipo_software`
+  MODIFY `id_equipo` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `equipo_ubicacion`
+--
+ALTER TABLE `equipo_ubicacion`
+  MODIFY `id_ubicacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `estados_ticket`
 --
 ALTER TABLE `estados_ticket`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de la tabla `estado_equipo`
+--
+ALTER TABLE `estado_equipo`
+  MODIFY `id_estado` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `eventos`
@@ -2131,10 +3757,70 @@ ALTER TABLE `eventos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
+-- AUTO_INCREMENT de la tabla `herramientas`
+--
+ALTER TABLE `herramientas`
+  MODIFY `id_herramienta` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `herramienta_compra`
+--
+ALTER TABLE `herramienta_compra`
+  MODIFY `id_compra` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `herramienta_detalle`
+--
+ALTER TABLE `herramienta_detalle`
+  MODIFY `id_detalle` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `herramienta_fotos`
+--
+ALTER TABLE `herramienta_fotos`
+  MODIFY `id_foto` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `herramienta_historial`
+--
+ALTER TABLE `herramienta_historial`
+  MODIFY `id_historial` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `herramienta_mantenciones`
+--
+ALTER TABLE `herramienta_mantenciones`
+  MODIFY `id_mantencion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `herramienta_prestamos`
+--
+ALTER TABLE `herramienta_prestamos`
+  MODIFY `id_prestamo` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `inventario_software_datos_sensibles`
+--
+ALTER TABLE `inventario_software_datos_sensibles`
+  MODIFY `id_dato_sensible` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT de la tabla `inventario_software_tipo_usuario`
+--
+ALTER TABLE `inventario_software_tipo_usuario`
+  MODIFY `id_tipo_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT de la tabla `jefatura_departamento`
 --
 ALTER TABLE `jefatura_departamento`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+
+--
+-- AUTO_INCREMENT de la tabla `mensajes_chat`
+--
+ALTER TABLE `mensajes_chat`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de la tabla `menu_1`
@@ -2149,10 +3835,34 @@ ALTER TABLE `menu_1_sub`
   MODIFY `id_submenu` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
+-- AUTO_INCREMENT de la tabla `monitores`
+--
+ALTER TABLE `monitores`
+  MODIFY `id_monitor` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `monitor_asignacion_historial`
+--
+ALTER TABLE `monitor_asignacion_historial`
+  MODIFY `id_asignacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `monitor_fotos`
+--
+ALTER TABLE `monitor_fotos`
+  MODIFY `id_foto` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `monitor_movimiento`
+--
+ALTER TABLE `monitor_movimiento`
+  MODIFY `id_movimiento` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `permisos_menu_1`
 --
 ALTER TABLE `permisos_menu_1`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1201;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1177;
 
 --
 -- AUTO_INCREMENT de la tabla `permiso_sub_menu`
@@ -2173,6 +3883,42 @@ ALTER TABLE `proceso_tickets`
   MODIFY `id_proceso` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=582;
 
 --
+-- AUTO_INCREMENT de la tabla `sitios_web_catalogo`
+--
+ALTER TABLE `sitios_web_catalogo`
+  MODIFY `id_sitio` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `software_catalogo`
+--
+ALTER TABLE `software_catalogo`
+  MODIFY `id_software` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `software_datos_almacenamiento`
+--
+ALTER TABLE `software_datos_almacenamiento`
+  MODIFY `id_dato` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `software_datos_sensibles_rel`
+--
+ALTER TABLE `software_datos_sensibles_rel`
+  MODIFY `id_relacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `software_historial`
+--
+ALTER TABLE `software_historial`
+  MODIFY `id_historial` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `software_tipo_usuario_rel`
+--
+ALTER TABLE `software_tipo_usuario_rel`
+  MODIFY `id_relacion` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `tecnicos`
 --
 ALTER TABLE `tecnicos`
@@ -2191,14 +3937,71 @@ ALTER TABLE `ticket_conversaciones`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=255;
 
 --
+-- AUTO_INCREMENT de la tabla `tipo_pc_catalogo`
+--
+ALTER TABLE `tipo_pc_catalogo`
+  MODIFY `id_tipo_pc` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2498;
 
 --
+-- AUTO_INCREMENT de la tabla `usuario_colegio`
+--
+ALTER TABLE `usuario_colegio`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+
+--
 -- Restricciones para tablas volcadas
 --
+
+--
+-- Filtros para la tabla `almuerzo_cierre`
+--
+ALTER TABLE `almuerzo_cierre`
+  ADD CONSTRAINT `fk_almcierre_dia` FOREIGN KEY (`id_dia_menu`) REFERENCES `almuerzo_dia` (`id_dia_menu`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `almuerzo_dia`
+--
+ALTER TABLE `almuerzo_dia`
+  ADD CONSTRAINT `fk_almdia_mes` FOREIGN KEY (`id_mes`) REFERENCES `almuerzo_mes` (`id_mes`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_almdia_semana` FOREIGN KEY (`id_dia`) REFERENCES `almuerzo_dia_semana` (`id_dia`);
+
+--
+-- Filtros para la tabla `almuerzo_eleccion`
+--
+ALTER TABLE `almuerzo_eleccion`
+  ADD CONSTRAINT `fk_almeleccion_dia` FOREIGN KEY (`id_dia_menu`) REFERENCES `almuerzo_dia` (`id_dia_menu`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_almeleccion_menu` FOREIGN KEY (`id_menu`) REFERENCES `almuerzo_menu` (`id_menu`) ON DELETE SET NULL;
+
+--
+-- Filtros para la tabla `almuerzo_menu`
+--
+ALTER TABLE `almuerzo_menu`
+  ADD CONSTRAINT `fk_almmenu_dia` FOREIGN KEY (`id_dia_menu`) REFERENCES `almuerzo_dia` (`id_dia_menu`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_almmenu_tipo` FOREIGN KEY (`id_tipo`) REFERENCES `almuerzo_tipo` (`id_tipo`);
+
+--
+-- Filtros para la tabla `almuerzo_menu_dia`
+--
+ALTER TABLE `almuerzo_menu_dia`
+  ADD CONSTRAINT `fk_almuerzo_dia_mes` FOREIGN KEY (`id_menu_mes`) REFERENCES `almuerzo_menu_mes` (`id_menu_mes`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `aseo_historial`
+--
+ALTER TABLE `aseo_historial`
+  ADD CONSTRAINT `fk_aseo_historial_producto` FOREIGN KEY (`id_producto`) REFERENCES `aseo_productos` (`id_producto`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `aseo_movimientos`
+--
+ALTER TABLE `aseo_movimientos`
+  ADD CONSTRAINT `fk_aseo_movimiento_producto` FOREIGN KEY (`id_producto`) REFERENCES `aseo_productos` (`id_producto`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `departamentos_colegio`
@@ -2207,11 +4010,65 @@ ALTER TABLE `departamentos_colegio`
   ADD CONSTRAINT `departamentos_colegio_ibfk_1` FOREIGN KEY (`id_colegio`) REFERENCES `colegio` (`id_colegio`);
 
 --
+-- Filtros para la tabla `equipos_compra`
+--
+ALTER TABLE `equipos_compra`
+  ADD CONSTRAINT `equipos_compra_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipo`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `equipo_memoria`
+--
+ALTER TABLE `equipo_memoria`
+  ADD CONSTRAINT `equipo_memoria_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipo`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `equipo_monitor`
+--
+ALTER TABLE `equipo_monitor`
+  ADD CONSTRAINT `equipo_monitor_ibfk_1` FOREIGN KEY (`id_equipo`) REFERENCES `equipos` (`id_equipo`) ON DELETE CASCADE;
+
+--
 -- Filtros para la tabla `eventos`
 --
 ALTER TABLE `eventos`
   ADD CONSTRAINT `fk_eventos_colegio` FOREIGN KEY (`id_colegio`) REFERENCES `colegio` (`id_colegio`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_eventos_responsable` FOREIGN KEY (`responsable_id`) REFERENCES `usuarios` (`id`);
+
+--
+-- Filtros para la tabla `herramienta_compra`
+--
+ALTER TABLE `herramienta_compra`
+  ADD CONSTRAINT `fk_herramienta_compra` FOREIGN KEY (`id_herramienta`) REFERENCES `herramientas` (`id_herramienta`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `herramienta_detalle`
+--
+ALTER TABLE `herramienta_detalle`
+  ADD CONSTRAINT `fk_herramienta_detalle` FOREIGN KEY (`id_herramienta`) REFERENCES `herramientas` (`id_herramienta`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `herramienta_fotos`
+--
+ALTER TABLE `herramienta_fotos`
+  ADD CONSTRAINT `fk_herramienta_fotos` FOREIGN KEY (`id_herramienta`) REFERENCES `herramientas` (`id_herramienta`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `herramienta_historial`
+--
+ALTER TABLE `herramienta_historial`
+  ADD CONSTRAINT `fk_herramienta_historial` FOREIGN KEY (`id_herramienta`) REFERENCES `herramientas` (`id_herramienta`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `herramienta_mantenciones`
+--
+ALTER TABLE `herramienta_mantenciones`
+  ADD CONSTRAINT `fk_herramienta_mantenciones` FOREIGN KEY (`id_herramienta`) REFERENCES `herramientas` (`id_herramienta`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `herramienta_prestamos`
+--
+ALTER TABLE `herramienta_prestamos`
+  ADD CONSTRAINT `fk_herramienta_prestamos` FOREIGN KEY (`id_herramienta`) REFERENCES `herramientas` (`id_herramienta`) ON DELETE CASCADE;
 
 --
 -- Filtros para la tabla `menu_1_sub`
