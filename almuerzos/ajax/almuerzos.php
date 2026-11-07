@@ -28,14 +28,13 @@ $idUsuario = (int) ($_SESSION['id'] ?? 0);
 if ($idUsuario <= 0) {
     alm_json(['ok' => false, 'mensaje' => 'Sesión expirada. Vuelve a iniciar sesión.'], 401);
 }
-$encargado = Almuerzos::esEncargado($idUsuario);
-$simular = $encargado && Almuerzos::PERMITIR_SIMULAR_HORARIO && !empty($_SESSION['alm_simular']);
-
 try {
     $alm = new Almuerzos(Conexion::getInstance('sistema_panel_central'));
     if (!$alm->instalado()) {
-        alm_json(['ok' => false, 'mensaje' => 'Faltan las tablas de almuerzos. Ejecuta almuerzos/sql/01_almuerzos_instalacion.sql.'], 503);
+        alm_json(['ok' => false, 'mensaje' => 'Faltan las tablas de almuerzos. Ejecuta almuerzos/sql/03_modelo_almuerzos.sql.'], 503);
     }
+    $encargado = $alm->esEncargado($idUsuario);
+    $simular = $encargado && Almuerzos::PERMITIR_SIMULAR_HORARIO && !empty($_SESSION['alm_simular']);
 
     $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
     if ($metodo === 'GET') {

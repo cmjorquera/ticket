@@ -1,6 +1,6 @@
 <?php
 /**
- * Almuerzos: cada persona elige su almuerzo del día entre 09:00 y 12:00
+ * Almuerzos: cada persona elige su almuerzo del día (horario en almuerzo_configuracion)
  * (Menú del día, Hipocalórico o Picnic). El encargado publica el menú de
  * cada mes y descarga los pedidos en PDF. Tablas en almuerzos/sql/.
  */
@@ -9,7 +9,8 @@ require_once __DIR__ . '/../validar_sesion.php';
 require_once __DIR__ . '/class/Almuerzos.php';
 
 $idUsuario = (int) ($_SESSION['id'] ?? 0);
-$esEncargado = Almuerzos::esEncargado($idUsuario);
+$alm = new Almuerzos(Conexion::getInstance('sistema_panel_central'));
+$esEncargado = $alm->esEncargado($idUsuario);   // almuerzo_configuracion.id_usuario_encargado
 if (empty($_SESSION['csrf_almuerzos'])) {
     $_SESSION['csrf_almuerzos'] = bin2hex(random_bytes(32));
 }
@@ -31,7 +32,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="page-header alm-head">
         <div>
             <h1><i class="bi bi-cup-hot" aria-hidden="true"></i> Almuerzos</h1>
-            <p>Elige tu almuerzo de cada día entre las <strong><?= Almuerzos::HORA_INICIO ?></strong> y las <strong><?= Almuerzos::HORA_FIN ?></strong>.</p>
+            <p>Elige tu almuerzo de cada día entre las <strong><?= htmlspecialchars($alm->horaInicio(), ENT_QUOTES, 'UTF-8') ?></strong> y las <strong><?= htmlspecialchars($alm->horaFin(), ENT_QUOTES, 'UTF-8') ?></strong>.</p>
         </div>
         <div class="alm-head__acciones">
             <button type="button" class="btn btn-outline" id="btnVerMes"><i class="bi bi-calendar3"></i> Menú del mes</button>
@@ -194,7 +195,7 @@ require_once __DIR__ . '/../includes/header.php';
 <script>window.ALM_CONFIG = <?= json_encode([
     'csrf' => $_SESSION['csrf_almuerzos'],
     'encargado' => $esEncargado,
-    'inicio' => Almuerzos::HORA_INICIO,
-    'fin' => Almuerzos::HORA_FIN,
+    'inicio' => $alm->horaInicio(),
+    'fin' => $alm->horaFin(),
 ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>;</script>
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

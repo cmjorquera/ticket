@@ -3,20 +3,20 @@ ALMUERZOS – módulo almuerzos/
 
 Qué hace
 --------
-- Cada persona elige su almuerzo del día entre 09:00 y 12:00 (lunes a viernes,
-  hora de Chile): Menú del día, Hipocalórico o Picnic, o "Hoy no almorzaré".
+- Cada persona elige su almuerzo del día entre hora_inicio y hora_cierre de
+  almuerzo_configuracion (08:00–10:00, lunes a viernes, hora de Chile): Menú del día, Hipocalórico o Picnic, o "Hoy no almorzaré".
   Puede cambiarlo hasta las 12:00. El servidor valida el horario
   (Almuerzos::pedir); el navegador solo lo muestra.
 - "Menú del mes" se abre en un modal: calendario de días hábiles con los tres
   menús, la elección de la persona marcada, navegación entre meses y
   "Descargar PDF" (pdf_menu_mes.php?mes=AAAA-MM, cualquier usuario).
-- Encargado de almuerzos: SOLO el usuario 8 (Almuerzos::ENCARGADO_ID en
-  class/Almuerzos.php). Puede:
+- Encargado de almuerzos: almuerzo_configuracion.id_usuario_encargado (8). Puede:
     * Cargar almuerzos del mes: plantilla .csv → subir → vista previa con
       validaciones → Publicar. Los menús son MENSUALES: publicar un mes que
       ya existía reemplaza sus días (los pedidos hechos se conservan).
     * Ver "Para cocina · hoy" y descargar pdf_pedidos.php?fecha=AAAA-MM-DD:
-      cada usuario activo con su respuesta y la hora en que pidió.
+      cada usuario activo del colegio id_colegio_pdf (15 = Seduc SpA) con su
+      respuesta y la hora en que eligió.
     * (Solo QA) "Simular horario abierto": Almuerzos::PERMITIR_SIMULAR_HORARIO.
       En PRODUCCIÓN dejarlo en false.
 
@@ -28,14 +28,14 @@ class/Almuerzos.php       Reglas y acceso a datos (PDO, consultas preparadas)
 class/AlmuerzosPdf.php    Base de los PDF (FPDF de clases/PDF)
 pdf_menu_mes.php          PDF del menú del mes
 pdf_pedidos.php           PDF de pedidos por persona (solo encargado)
-sql/01_almuerzos_instalacion.sql   Tablas (se puede ejecutar varias veces)
+sql/03_modelo_almuerzos.sql        Tablas del modelo v2 (se puede ejecutar varias veces)
 sql/02_consultas_utiles.sql        Consultas de revisión (solo lectura)
 
-Tablas
-------
-almuerzo_menu_mes  (id_menu_mes, anio, mes, publicado_por, publicado_en, actualizado_en)  UNIQUE(anio, mes)
-almuerzo_menu_dia  (fecha PK, id_menu_mes FK, menu_dia, hipocalorico, picnic)
-                   Platos separados por " + " (entrada + fondo + postre)
-almuerzo_pedido    (id_usuario, fecha, opcion ENUM('menu','hipo','picnic','no'),
-                    creado_en, actualizado_en)  PK(id_usuario, fecha)
-Las fechas y horas se guardan con la hora de Chile calculada en PHP.
+Tablas (modelo v2)
+------------------
+Ver sql/LEEME.txt y el diagrama sql/modelo_almuerzos.png.
+Los menús se cargan una vez al mes: almuerzo_mes → almuerzo_dia → almuerzo_menu
+(entrada, plato de fondo y postre por tipo). La pantalla los muestra como
+"entrada + fondo + postre". Las elecciones van en almuerzo_eleccion
+(id_menu NULL = no almuerza). Las horas se guardan con la hora de Chile
+calculada en PHP (el reloj del MySQL de QA está en otra zona).

@@ -33,7 +33,7 @@ try {
     } else {
         $pdf->SetFont('Arial', '', 8.5);
         $pdf->SetTextColor(107, 114, 128);
-        $pdf->Cell(0, 5, AlmuerzosPdf::t('Pedidos de lunes a viernes entre ' . Almuerzos::HORA_INICIO . ' y ' . Almuerzos::HORA_FIN . '. El punto • y el fondo de color indican tu pedido.'), 0, 1);
+        $pdf->Cell(0, 5, AlmuerzosPdf::t('Elección de lunes a viernes entre ' . $alm->horaInicio() . ' y ' . $alm->horaFin() . '. El punto • y el fondo de color indican tu pedido.'), 0, 1);
         $pdf->Ln(1);
 
         $w = [34, 81, 81, 77];

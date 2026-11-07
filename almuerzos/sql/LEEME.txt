@@ -7,8 +7,9 @@ modelo_almuerzos.mmd       Fuente del diagrama (Mermaid). Para regenerar la imag
 03_modelo_almuerzos.sql    Crea las tablas del modelo v2 y carga los catálogos
 04_menu_ejemplo_noviembre_2026.sql  Menú de ejemplo para noviembre 2026 (21 días, 63 menús)
 
-01_almuerzos_instalacion.sql  Versión 1 (la que usa el código hoy). Se elimina
-02_consultas_utiles.sql       cuando el código pase al modelo v2.
+02_consultas_utiles.sql    Consultas de revisión (solo lectura): menú del mes, totales de hoy,
+                           quién eligió qué, meses cargados
+05_borrar_tablas_v1.sql    Borra las tablas de la versión 1 (ya no se usan). Ejecutar una vez.
 
 Modelo v2 (8 tablas)
 --------------------
@@ -31,7 +32,12 @@ Elecciones y cierre
 Tablas existentes que se usan (no se modifican)
   usuarios, usuario_colegio (para filtrar solo Seduc)
 
-Cómo instalar
--------------
-En phpMyAdmin importar 03_modelo_almuerzos.sql. Se puede ejecutar más de una vez.
-Al final muestra cuántas filas tiene cada tabla: tipos 3, días 5, configuración 5.
+Cómo instalar (en orden)
+------------------------
+1. 03_modelo_almuerzos.sql        tablas + catálogos (se puede repetir)
+2. 04_menu_ejemplo_noviembre_2026.sql  opcional: menú de ejemplo
+3. 05_borrar_tablas_v1.sql        una vez, para quitar las tablas antiguas
+
+Cambiar horario, encargado o colegio del PDF: editar almuerzo_configuracion
+(no hace falta tocar código). Ej:
+  UPDATE almuerzo_configuracion SET valor = '10:30' WHERE clave = 'hora_cierre';

@@ -1,7 +1,7 @@
 <?php
 /**
  * PDF de pedidos de almuerzo de un día: cada usuario y lo que pidió.
- * Solo el encargado (Almuerzos::ENCARGADO_ID). Parámetro opcional ?fecha=AAAA-MM-DD.
+ * Solo el encargado (almuerzo_configuracion.id_usuario_encargado). Lista solo el colegio id_colegio_pdf. Parámetro opcional ?fecha=AAAA-MM-DD.
  */
 declare(strict_types=1);
 
@@ -10,7 +10,7 @@ require_once __DIR__ . '/../validar_sesion.php';
 require_once __DIR__ . '/class/Almuerzos.php';
 require_once __DIR__ . '/class/AlmuerzosPdf.php';
 
-if (!Almuerzos::esEncargado((int) ($_SESSION['id'] ?? 0))) {
+if (!(new Almuerzos(Conexion::getInstance('sistema_panel_central')))->esEncargado((int) ($_SESSION['id'] ?? 0))) {
     ob_end_clean();
     http_response_code(403);
     header('Content-Type: text/plain; charset=utf-8');
