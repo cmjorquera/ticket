@@ -1,6 +1,6 @@
 /* Almuerzos: pedido del día, menú del mes (modal + PDF) y carga mensual del menú.
  * Todo se guarda en la base de datos a través de ajax/almuerzos.php.
- * El horario (09:00–12:00) lo valida el servidor; aquí solo se muestra.
+ * El horario (almuerzo_configuracion) lo valida el servidor; aquí solo se muestra.
  */
 (function () {
     'use strict';
@@ -27,6 +27,8 @@
     const fechaLarga = d => titulo(DIAS[d.getDay()]) + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
     const platos = texto => String(texto).split('+').map(t => t.trim()).filter(Boolean);
     const platoPrincipal = (id, texto) => { const p = platos(texto); return (id === 'picnic' ? p[0] : (p[1] || p[0])) || ''; };
+    // Foto del menú (almuerzo_menu.imagen) o, si no hay, la imagen referencial del tipo
+    const imagenMenu = (dia, id) => (dia.img && dia.img[id]) || ('img/ref_' + id + '.svg');
     const platosHtml = texto => '<ul class="alm-platos">' + platos(texto).map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>';
 
     async function api(params, metodo) {
@@ -241,8 +243,14 @@
         $('#dlgDiaTitulo').textContent = fechaLarga(d);
         $('#dlgDiaCuerpo').innerHTML = Object.entries(OPCIONES).map(([id, o]) => `
             <div class="alm-detalle alm-detalle--${o.clase}${elegido === id ? ' is-elegida' : ''}">
-                <h3><i class="bi ${o.icono}"></i> ${esc(o.nombre)} ${elegido === id ? '<span class="alm-pill alm-pill--' + o.clase + '">Tu pedido</span>' : ''}</h3>
-                ${platosHtml(m[id])}
+                <figure class="alm-detalle__foto">
+                    <img src="${esc(imagenMenu(m, id))}" alt="${esc(o.nombre + ': ' + platoPrincipal(id, m[id]))}" loading="lazy" onerror="this.onerror=null;this.src='img/ref_${id}.svg'">
+                    ${m.img && m.img[id] ? '' : '<figcaption>Imagen referencial</figcaption>'}
+                </figure>
+                <div class="alm-detalle__texto">
+                    <h3><i class="bi ${o.icono}"></i> ${esc(o.nombre)} ${elegido === id ? '<span class="alm-pill alm-pill--' + o.clase + '">Tu pedido</span>' : ''}</h3>
+                    ${platosHtml(m[id])}
+                </div>
             </div>`).join('')
             + (estado && k > estado.horario.hoy ? '<p class="alm-nota mt">Podrás elegir este almuerzo ese día entre las ' + esc(CFG.inicio) + ' y las ' + esc(CFG.fin) + '.</p>' : '')
             + (elegido === 'no' ? '<p class="alm-nota mt">Ese día indicaste que no almorzabas.</p>' : '');
@@ -322,14 +330,13 @@
                 ['Ensalada de pepino', 'Salteado de verduras con tofu', 'Manzana'],
                 ['Ensalada de lechuga', 'Atún con garbanzos y verduras', 'Fruta'],
             ],
-            picnic: [
-                ['Sándwich de ave pimiento', 'Jugo natural', 'Barra de cereal'],
-                ['Wrap de pollo y verduras', 'Agua saborizada', 'Fruta'],
-                ['Sándwich de jamón queso', 'Yogur', 'Galletas de avena'],
-                ['Ensalada César para llevar', 'Jugo natural', 'Fruta'],
-                ['Empanada de horno', 'Agua mineral', 'Manzana'],
-            ],
-        };
+            picnic: [  // el picnic es siempre un sándwich
+                ['Sándwich de ave pimiento'],
+                ['Sándwich de pollo y verduras'],
+                ['Sándwich de jamón queso'],
+                ['Sándwich de pollo César'],
+                ['Sándwich de queso y tomate'],
+            ],        };
         const semilla = (k, n) => { let h = 7; for (const c of k) { h = (h * 31 + c.charCodeAt(0)) % 100003; } return h % n; };
         function menuEjemplo(año, mes) {
             const dias = {};

@@ -1,0 +1,13 @@
+Fotos reales de los menús
+=========================
+Sube aquí las fotos (jpg, png o webp, idealmente 640x480 o menos de 300 KB)
+y anota la ruta en almuerzo_menu.imagen, relativa a la carpeta almuerzos/:
+
+  UPDATE almuerzo_menu m
+    JOIN almuerzo_dia d  ON d.id_dia_menu = m.id_dia_menu
+    JOIN almuerzo_tipo t ON t.id_tipo = m.id_tipo
+     SET m.imagen = 'img/menus/2026-11-02_menu.jpg'
+   WHERE d.fecha = '2026-11-02' AND t.codigo = 'menu';
+
+También se acepta una dirección https:// completa.
+Si un menú no tiene foto se muestra la imagen referencial (img/ref_*.svg).

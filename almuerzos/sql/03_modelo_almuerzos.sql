@@ -125,7 +125,8 @@ CREATE TABLE IF NOT EXISTS almuerzo_menu (
     id_tipo        TINYINT UNSIGNED NOT NULL,
     entrada        VARCHAR(120) NULL,
     plato_fondo    VARCHAR(160) NOT NULL,
-    postre         VARCHAR(120) NULL,
+    postre         VARCHAR(120) NULL,            -- picnic: solo plato_fondo (el sándwich)
+    imagen         VARCHAR(255) NULL,            -- foto: img/menus/archivo.jpg o https://...
     observacion    VARCHAR(255) NULL,            -- ej: "sin gluten", "contiene maní"
     PRIMARY KEY (id_menu),
     UNIQUE KEY ux_almuerzo_menu_dia_tipo (id_dia_menu, id_tipo),

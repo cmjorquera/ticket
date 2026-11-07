@@ -10,6 +10,7 @@ modelo_almuerzos.mmd       Fuente del diagrama (Mermaid). Para regenerar la imag
 02_consultas_utiles.sql    Consultas de revisión (solo lectura): menú del mes, totales de hoy,
                            quién eligió qué, meses cargados
 05_borrar_tablas_v1.sql    Borra las tablas de la versión 1 (ya no se usan). Ejecutar una vez.
+06_picnic_e_imagen.sql     Columna imagen (foto del menú) y picnic = solo sándwich.
 
 Modelo v2 (8 tablas)
 --------------------
@@ -37,6 +38,9 @@ Cómo instalar (en orden)
 1. 03_modelo_almuerzos.sql        tablas + catálogos (se puede repetir)
 2. 04_menu_ejemplo_noviembre_2026.sql  opcional: menú de ejemplo
 3. 05_borrar_tablas_v1.sql        una vez, para quitar las tablas antiguas
+4. 06_picnic_e_imagen.sql         columna imagen + picnic solo sándwich (se puede repetir)
+
+Fotos de los menús: ver img/menus/LEEME.txt
 
 Cambiar horario, encargado o colegio del PDF: editar almuerzo_configuracion
 (no hace falta tocar código). Ej:

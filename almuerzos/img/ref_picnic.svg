@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-label="Imagen referencial: sándwich">
+  <rect width="160" height="120" fill="#FCF3DC"/>
+  <ellipse cx="80" cy="96" rx="54" ry="7" fill="#EFDDAE"/>
+  <path d="M26 82h108a6 6 0 0 1-6 10H32a6 6 0 0 1-6-10z" fill="#D9A55A"/>
+  <path d="M30 76h100v7H30z" fill="#F4D35E"/>
+  <path d="M28 70c10 6 18-4 28 2s18-4 28 2 18-4 28 2 14-2 20 0v6H28z" fill="#6BAF4E"/>
+  <path d="M30 64h100v8H30z" fill="#E8A0A0"/>
+  <circle cx="52" cy="66" r="5" fill="#E5533D"/><circle cx="84" cy="66" r="5" fill="#E5533D"/><circle cx="114" cy="66" r="5" fill="#E5533D"/>
+  <path d="M26 64c0-20 22-32 54-32s54 12 54 32z" fill="#E3B26A"/>
+  <path d="M34 60c2-14 20-22 46-22" stroke="#F0CC8E" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="62" cy="46" rx="2" ry="1.2" fill="#FFF3DA"/><ellipse cx="82" cy="42" rx="2" ry="1.2" fill="#FFF3DA"/><ellipse cx="100" cy="48" rx="2" ry="1.2" fill="#FFF3DA"/>
+</svg>

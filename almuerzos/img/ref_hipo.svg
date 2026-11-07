@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120" role="img" aria-label="Imagen referencial: hipocalórico">
+  <rect width="160" height="120" fill="#E9F3E6"/>
+  <path d="M28 60h104c0 26-23 44-52 44S28 86 28 60z" fill="#fff" stroke="#CFE3C8" stroke-width="2"/>
+  <ellipse cx="80" cy="60" rx="52" ry="9" fill="#F4FAF2" stroke="#CFE3C8" stroke-width="2"/>
+  <path d="M42 58c4-14 20-20 30-12-8 2-14 7-17 14z" fill="#6BAF4E"/>
+  <path d="M60 56c6-16 26-18 32-6-10 0-18 3-22 8z" fill="#4E9A3A"/>
+  <path d="M88 57c6-12 24-12 28 0-10-3-18-2-28 0z" fill="#7BBE5C"/>
+  <circle cx="98" cy="50" r="7" fill="#E5533D"/><circle cx="96" cy="48" r="2" fill="#F08A78"/>
+  <circle cx="70" cy="50" r="6" fill="#E5533D"/><circle cx="68" cy="48" r="1.8" fill="#F08A78"/>
+  <ellipse cx="84" cy="54" rx="9" ry="4" fill="#F2E3B3"/>
+  <path d="M108 30l10-12M114 34l12-10" stroke="#3C8D2F" stroke-width="3" stroke-linecap="round"/>
+</svg>

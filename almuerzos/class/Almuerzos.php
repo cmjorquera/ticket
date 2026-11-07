@@ -40,6 +40,7 @@ final class Almuerzos
     public const MAX_PLATO = 160;
 
     private Conexion $db;
+    private ?bool $colImagen = null;
     private DateTimeZone $zona;
     private ?array $config = null;
 
@@ -133,9 +134,12 @@ final class Almuerzos
 
     // ------------------------------------------------------------ menús
 
-    /** "entrada + fondo + postre" (omite las partes vacías). */
+    /** "entrada + fondo + postre" (omite las partes vacías). El picnic es solo el sándwich. */
     private static function textoMenu(array $f): string
     {
+        if (($f['codigo'] ?? '') === 'picnic') {
+            return trim((string) ($f['plato_fondo'] ?? ''));
+        }
         return implode(' + ', array_filter([
             trim((string) ($f['entrada'] ?? '')),
             trim((string) ($f['plato_fondo'] ?? '')),
@@ -149,12 +153,26 @@ final class Almuerzos
         return (string) (array_search($codigo, self::CODIGOS, true) ?: $codigo);
     }
 
-    /** Menús de un rango de fechas: ['AAAA-MM-DD' => ['menu'=>…, 'hipo'=>…, 'picnic'=>…]] */
+    /** ¿Ya se ejecutó sql/06_picnic_e_imagen.sql? (columna almuerzo_menu.imagen) */
+    private function hayColumnaImagen(): bool
+    {
+        if ($this->colImagen === null) {
+            $this->colImagen = (bool) $this->db->fetchOne("SHOW COLUMNS FROM almuerzo_menu LIKE 'imagen'");
+        }
+        return $this->colImagen;
+    }
+
+    /**
+     * Menús de un rango de fechas:
+     * ['AAAA-MM-DD' => ['menu'=>…, 'hipo'=>…, 'picnic'=>…, 'img'=>['menu'=>ruta, …]]]
+     * 'img' solo trae las fotos cargadas; sin foto la pantalla usa la imagen referencial.
+     */
     private function menusEntre(string $desde, string $hasta): array
     {
         $dias = [];
+        $img = $this->hayColumnaImagen() ? 'm.imagen' : 'NULL AS imagen';
         foreach ($this->db->fetchAll(
-            "SELECT d.fecha, t.codigo, m.entrada, m.plato_fondo, m.postre
+            "SELECT d.fecha, t.codigo, m.entrada, m.plato_fondo, m.postre, $img
                FROM almuerzo_dia d
                JOIN almuerzo_mes ms  ON ms.id_mes = d.id_mes AND ms.estado = 'publicado'
                JOIN almuerzo_menu m  ON m.id_dia_menu = d.id_dia_menu
@@ -163,7 +181,12 @@ final class Almuerzos
            ORDER BY d.fecha, t.orden",
             [$desde, $hasta]
         ) as $f) {
-            $dias[$f['fecha']][self::clave($f['codigo'])] = self::textoMenu($f);
+            $k = self::clave($f['codigo']);
+            $dias[$f['fecha']][$k] = self::textoMenu($f);
+            $ruta = trim((string) ($f['imagen'] ?? ''));
+            if ($ruta !== '' && preg_match('~^(https://|img/)[^"\'<>\s]+$~', $ruta)) {
+                $dias[$f['fecha']]['img'][$k] = $ruta;
+            }
         }
         // Solo días con los tres menús completos
         return array_filter($dias, static fn (array $m): bool => isset($m['menu'], $m['hipo'], $m['picnic']));
@@ -230,7 +253,8 @@ final class Almuerzos
             }
             foreach (self::CODIGOS as $clave => $codigo) {
                 $t = trim((string) preg_replace('/\s+/u', ' ', (string) ($m[$clave] ?? '')));
-                [$entrada, $fondo, $postre] = self::partes($t);
+                // El picnic es siempre un sándwich: todo el texto va como plato principal
+                [$entrada, $fondo, $postre] = $codigo === 'picnic' ? [null, $t, null] : self::partes($t);
                 if ($fondo === '') {
                     throw new RuntimeException('Falta un menú el ' . $d->format('d-m-Y') . '.');
                 }

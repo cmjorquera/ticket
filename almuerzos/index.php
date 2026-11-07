@@ -159,7 +159,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </li>
                     <li>
                         <strong>Descarga la plantilla</strong>
-                        <p>Una fila por día hábil, con los tres menús. Separa los platos con “+”. Ábrela en Excel y complétala.</p>
+                        <p>Una fila por día hábil, con los tres menús. Separa los platos con “+” (entrada + fondo + postre). En picnic escribe solo el sándwich. Ábrela en Excel y complétala.</p>
                         <button type="button" class="btn btn-outline btn-sm" id="btnPlantilla"><i class="bi bi-download"></i> Plantilla (.csv)</button>
                     </li>
                     <li>
