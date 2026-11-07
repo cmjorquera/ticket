@@ -1,0 +1,95 @@
+%% Modelo de base de datos – módulo Almuerzos (fuente del diagrama modelo_almuerzos.png)
+%% Para regenerar la imagen: mmdc -i modelo_almuerzos.mmd -o modelo_almuerzos.png -b white -w 2200
+erDiagram
+    almuerzo_tipo {
+        TINYINT id_tipo PK
+        VARCHAR codigo UK "menu | hipocalorico | picnic"
+        VARCHAR nombre
+        VARCHAR descripcion
+        VARCHAR icono
+        CHAR color
+        TINYINT orden
+        TINYINT activo
+    }
+    almuerzo_dia_semana {
+        TINYINT id_dia PK "1 lunes ... 5 viernes"
+        VARCHAR nombre
+        CHAR abreviatura
+        TINYINT activo
+    }
+    almuerzo_configuracion {
+        VARCHAR clave PK "hora_inicio, hora_cierre, ..."
+        VARCHAR valor
+        VARCHAR descripcion
+        DATETIME actualizado_en
+    }
+    almuerzo_mes {
+        INT id_mes PK
+        SMALLINT anio UK
+        TINYINT mes UK
+        ENUM estado "borrador | publicado"
+        INT id_usuario "quien lo cargo"
+        DATETIME publicado_en
+        DATETIME creado_en
+        DATETIME actualizado_en
+    }
+    almuerzo_dia {
+        INT id_dia_menu PK
+        INT id_mes FK
+        DATE fecha UK
+        TINYINT id_dia FK
+        TINYINT hay_servicio "0 = feriado"
+        VARCHAR observacion
+    }
+    almuerzo_menu {
+        INT id_menu PK
+        INT id_dia_menu FK
+        TINYINT id_tipo FK
+        VARCHAR entrada
+        VARCHAR plato_fondo
+        VARCHAR postre
+        VARCHAR observacion
+    }
+    almuerzo_eleccion {
+        INT id_eleccion PK
+        INT id_usuario "usuarios.id"
+        INT id_dia_menu FK
+        INT id_menu FK "NULL = no almuerza"
+        ENUM origen "diaria | anticipada"
+        DATETIME creado_en
+        DATETIME actualizado_en
+    }
+    almuerzo_cierre {
+        INT id_cierre PK
+        INT id_dia_menu FK
+        DATETIME cerrado_en "10:00"
+        SMALLINT total_menu
+        SMALLINT total_hipocalorico
+        SMALLINT total_picnic
+        SMALLINT total_no_almuerza
+        SMALLINT total_sin_respuesta
+        VARCHAR archivo_pdf
+        VARCHAR enviado_a
+        DATETIME enviado_en
+    }
+    usuarios {
+        INT id PK
+        VARCHAR nombre
+        VARCHAR apellido_paterno
+        VARCHAR estado
+    }
+    usuario_colegio {
+        INT id_usuario
+        INT id_colegio "15 = Seduc SpA"
+        TINYINT estado
+    }
+
+    almuerzo_mes ||--|{ almuerzo_dia : "tiene dias habiles"
+    almuerzo_dia_semana ||--o{ almuerzo_dia : "lunes a viernes"
+    almuerzo_dia ||--|{ almuerzo_menu : "3 menus por dia"
+    almuerzo_tipo ||--o{ almuerzo_menu : "tipo de menu"
+    almuerzo_dia ||--o{ almuerzo_eleccion : "elecciones del dia"
+    almuerzo_menu |o--o{ almuerzo_eleccion : "menu elegido"
+    almuerzo_dia ||--o| almuerzo_cierre : "cierre 10:00"
+    usuarios ||--o{ almuerzo_eleccion : "elige"
+    usuarios ||--o{ usuario_colegio : "pertenece"

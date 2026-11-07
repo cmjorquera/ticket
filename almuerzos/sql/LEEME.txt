@@ -1,0 +1,36 @@
+ALMUERZOS – carpeta sql/
+========================
+
+modelo_almuerzos.png       Diagrama del modelo de base de datos (versión 2)
+modelo_almuerzos.mmd       Fuente del diagrama (Mermaid). Para regenerar la imagen:
+                           mmdc -i modelo_almuerzos.mmd -o modelo_almuerzos.png -b white -w 2200
+03_modelo_almuerzos.sql    Crea las tablas del modelo v2 y carga los catálogos
+
+01_almuerzos_instalacion.sql  Versión 1 (la que usa el código hoy). Se elimina
+02_consultas_utiles.sql       cuando el código pase al modelo v2.
+
+Modelo v2 (8 tablas)
+--------------------
+Catálogos
+  almuerzo_tipo            Tipos de menú: Menú del día, Hipocalórico, Picnic
+  almuerzo_dia_semana      Días con servicio: lunes (1) a viernes (5)
+  almuerzo_configuracion   hora_inicio 08:00, hora_cierre 10:00, encargado (usuario 8),
+                           colegio del PDF (15 = Seduc SpA), días de anticipación
+
+Menú (se carga mes a mes)
+  almuerzo_mes             Un registro por mes (borrador / publicado)
+  almuerzo_dia             Cada fecha hábil del mes (con opción de feriado)
+  almuerzo_menu            Menú de cada tipo en cada día: entrada, plato de fondo, postre
+
+Elecciones y cierre
+  almuerzo_eleccion        Lo que eligió cada persona cada día (NULL = no almuerza);
+                           origen "diaria" o "anticipada" (programada para varios días)
+  almuerzo_cierre          Cierre de las 10:00: totales del día y PDF enviado al encargado
+
+Tablas existentes que se usan (no se modifican)
+  usuarios, usuario_colegio (para filtrar solo Seduc)
+
+Cómo instalar
+-------------
+En phpMyAdmin importar 03_modelo_almuerzos.sql. Se puede ejecutar más de una vez.
+Al final muestra cuántas filas tiene cada tabla: tipos 3, días 5, configuración 5.
