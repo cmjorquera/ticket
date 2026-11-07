@@ -20,6 +20,7 @@
 
 -- Base de datos donde se ejecuta (QA). En PRODUCCIÓN cambiar este nombre.
 USE `crist668_sistema_panel_central`;
+SET NAMES utf8mb4;  -- tildes y ñ se guardan bien aunque el cliente use otro juego de caracteres
 
 -- ---------------------------------------------------------------------
 -- 1. CATÁLOGO: tipos de menú (Menú del día, Hipocalórico, Picnic)

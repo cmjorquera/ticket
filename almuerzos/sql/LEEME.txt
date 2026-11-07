@@ -5,6 +5,7 @@ modelo_almuerzos.png       Diagrama del modelo de base de datos (versión 2)
 modelo_almuerzos.mmd       Fuente del diagrama (Mermaid). Para regenerar la imagen:
                            mmdc -i modelo_almuerzos.mmd -o modelo_almuerzos.png -b white -w 2200
 03_modelo_almuerzos.sql    Crea las tablas del modelo v2 y carga los catálogos
+04_menu_ejemplo_noviembre_2026.sql  Menú de ejemplo para noviembre 2026 (21 días, 63 menús)
 
 01_almuerzos_instalacion.sql  Versión 1 (la que usa el código hoy). Se elimina
 02_consultas_utiles.sql       cuando el código pase al modelo v2.
