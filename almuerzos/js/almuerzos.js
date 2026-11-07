@@ -80,7 +80,7 @@
         $('#almReloj').textContent = dos(ahora.getHours()) + ':' + dos(ahora.getMinutes());
         // Si cambia de tramo (abre o cierra) se vuelve a consultar al servidor
         const tramo = h.simulado ? 'abierto' : (!habil(ahora) ? 'cerrado' : (min < aMin(h.inicio) ? 'antes' : (min < aMin(h.fin) ? 'abierto' : 'cerrado')));
-        if (tramo !== h.estado && clave(ahora) === h.hoy) { cargarEstado(); return; }
+        if (clave(ahora) !== h.hoy || tramo !== h.estado) { cargarEstado(); return; } // cambió el día o el tramo
 
         const e = $('#almEstado');
         e.classList.toggle('is-abierto', h.estado === 'abierto');
@@ -93,10 +93,59 @@
         } else if (h.estado === 'antes') {
             $('#almEstadoTitulo').textContent = 'Aún no abre';
             $('#almEstadoDetalle').textContent = 'Los pedidos de hoy se abren a las ' + h.inicio + ' (en ' + textoRestante(Math.max(0, aMin(h.inicio) - min)) + ').';
+        } else if (estado.semana && estado.semana.abierta) {
+            e.classList.add('is-abierto'); e.classList.remove('is-cerrado');
+            $('#almEstadoTitulo').textContent = 'Planificación semanal abierta';
+            $('#almEstadoDetalle').textContent = 'Deja elegidos tus almuerzos ' + rangoSemana(estado.semana) + '.';
         } else {
             $('#almEstadoTitulo').textContent = 'Pedidos cerrados';
             $('#almEstadoDetalle').textContent = 'Vuelve a abrir el ' + fechaLarga(desdeClave(h.siguiente_habil)).toLowerCase() + ' a las ' + h.inicio + '.';
         }
+    }
+
+    // ------------------------------------------------------------ planificación semanal
+    const OPCION_NO = { nombre: 'No almuerzo', icono: 'bi-x-circle', clase: 'no' };
+    function rangoSemana(s) {
+        const a = desdeClave(s.desde), b = desdeClave(s.hasta);
+        return 'del lunes ' + a.getDate() + (a.getMonth() !== b.getMonth() ? ' de ' + MESES[a.getMonth()] : '')
+            + ' al viernes ' + b.getDate() + ' de ' + MESES[b.getMonth()];
+    }
+
+    function pintarSemana() {
+        const s = estado.semana;
+        const sec = $('#almSemana');
+        if (!s || !s.abierta) { sec.hidden = true; return; }
+        sec.hidden = false;
+        const conMenu = s.dias.filter(d => d.menu);
+        const listos = conMenu.filter(d => d.pedido).length;
+        $('#almSemanaSub').textContent = 'Elige tu almuerzo ' + rangoSemana(s) + '. Puedes cambiarlo hasta el domingo'
+            + ' y, durante la semana, cada día entre las ' + estado.horario.inicio + ' y las ' + estado.horario.fin + '.'
+            + (s.simulada ? ' (Simulado: solo para pruebas.)' : '');
+        const prog = $('#almSemanaProgreso');
+        prog.textContent = conMenu.length ? listos + ' de ' + conMenu.length + ' días elegidos' : 'Sin menús publicados';
+        prog.className = 'alm-pill' + (conMenu.length && listos === conMenu.length ? ' alm-pill--hipo' : '');
+
+        const ops = Object.entries(OPCIONES).concat([['no', OPCION_NO]]);
+        $('#almSemanaDias').innerHTML = s.dias.map(dia => {
+            const d = desdeClave(dia.fecha);
+            const fecha = `<span class="alm-sdia__dow">${esc(titulo(DIAS[d.getDay()]))}</span><strong>${d.getDate()}</strong><small>${esc(MESES[d.getMonth()].slice(0, 3))}</small>`;
+            if (!dia.menu) {
+                return `<div class="alm-sdia is-sin"><div class="alm-sdia__fecha">${fecha}</div><p class="alm-sdia__sin">Todavía no se publica el menú de este día.</p></div>`;
+            }
+            return `<div class="alm-sdia${dia.pedido ? ' is-listo' : ''}">
+                <button type="button" class="alm-sdia__fecha" data-dia="${dia.fecha}" title="Ver el detalle del día">${fecha}</button>
+                <div class="alm-sdia__ops" role="group" aria-label="${esc(fechaLarga(d))}">
+                    ${ops.map(([id, o]) => {
+                        const on = dia.pedido === id;
+                        const plato = id === 'no' ? 'Ese día no almuerzo' : platoPrincipal(id, dia.menu[id]);
+                        return `<button type="button" class="alm-chip alm-chip--${o.clase}${on ? ' is-on' : ''}" data-opcion="${id}" data-fecha="${dia.fecha}" aria-pressed="${on}" ${on ? 'disabled' : ''}>
+                            <span class="alm-chip__nombre"><i class="bi ${on ? 'bi-check-circle-fill' : o.icono}"></i> ${esc(o.nombre)}</span>
+                            <span class="alm-chip__plato">${esc(plato)}</span>
+                        </button>`;
+                    }).join('')}
+                </div>
+            </div>`;
+        }).join('');
     }
 
     function pintarHoy() {
@@ -170,7 +219,7 @@
             const [f, hm] = estado.horario.ahora.split(' ');
             relojBase = desdeClave(f).getTime() + aMin(hm.slice(0, 5)) * 60000 + (+hm.slice(6, 8) * 1000) - Date.now();
             aviso('');
-            pintarEstado(); pintarHoy(); pintarResumen();
+            pintarEstado(); pintarHoy(); pintarSemana(); pintarResumen();
         } catch (e) {
             aviso(e.message);
             $('#almEstadoTitulo').textContent = 'Sin conexión con el servidor';
@@ -252,7 +301,9 @@
                     ${platosHtml(m[id])}
                 </div>
             </div>`).join('')
-            + (estado && k > estado.horario.hoy ? '<p class="alm-nota mt">Podrás elegir este almuerzo ese día entre las ' + esc(CFG.inicio) + ' y las ' + esc(CFG.fin) + '.</p>' : '')
+            + (estado && estado.semana && estado.semana.abierta && estado.semana.fechas.includes(k)
+                ? '<p class="alm-nota mt">Puedes dejarlo elegido ahora en «Planifica tu semana».</p>'
+                : estado && k > estado.horario.hoy ? '<p class="alm-nota mt">Podrás elegir este almuerzo ese día entre las ' + esc(CFG.inicio) + ' y las ' + esc(CFG.fin) + '.</p>' : '')
             + (elegido === 'no' ? '<p class="alm-nota mt">Ese día indicaste que no almorzabas.</p>' : '');
         $('#dlgDia').showModal();
     }
@@ -266,10 +317,13 @@
         const elegir = e.target.closest('[data-opcion]');
         if (elegir && !elegir.disabled) {
             const id = elegir.dataset.opcion;
+            const fecha = elegir.dataset.fecha || '';
             elegir.disabled = true;
             try {
-                await api({ accion: 'pedir', opcion: id }, 'POST');
-                toast(id === 'no' ? 'Anotado: hoy no almorzarás.' : 'Listo: pediste ' + OPCIONES[id].nombre + ' para hoy.', 'ok');
+                await api(Object.assign({ accion: 'pedir', opcion: id }, fecha ? { fecha } : {}), 'POST');
+                const cuando = fecha ? 'el ' + fechaLarga(desdeClave(fecha)).toLowerCase() : 'hoy';
+                toast(id === 'no' ? 'Anotado: ' + cuando + ' no almorzarás.'
+                    : 'Listo: ' + OPCIONES[id].nombre + ' para ' + cuando + '.', 'ok');
                 await cargarEstado();
                 if ($('#dlgMes').open) { cargarMes(); }
             } catch (err) {

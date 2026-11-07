@@ -194,3 +194,33 @@
 .alm .btn.is-off{opacity:.5}
 .alm-aviso{margin:0 0 14px;padding:10px 14px;border-radius:var(--radius);background:var(--danger-light);color:var(--danger);font-size:13px}
 .alm-cal .alm-vacio{grid-column:1/-1}
+
+/* Planificación semanal (sábado y domingo) */
+.alm-semana{margin-bottom:18px}
+.alm-semana .alm-card-head h2 i{color:var(--blue)}
+.alm-semana__dias{display:flex;flex-direction:column;gap:8px;padding:0 18px 18px}
+.alm-sdia{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;align-items:stretch;border:1px solid var(--border);border-radius:10px;padding:8px;background:var(--card)}
+.alm-sdia.is-listo{border-color:rgba(60,141,47,.45);background:linear-gradient(90deg,var(--alm-hipo-l),transparent 30%)}
+.alm-sdia__fecha{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:0;border-radius:8px;background:var(--bg);color:var(--fg);padding:6px 4px;line-height:1.15}
+button.alm-sdia__fecha:hover{background:var(--alm-menu-l)}
+.alm-sdia__fecha strong{font-size:22px;font-weight:700}
+.alm-sdia__dow,.alm-sdia__fecha small{font-size:11px;color:var(--muted);text-transform:capitalize}
+.alm-sdia__ops{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.alm-sdia__sin{margin:0;align-self:center;color:var(--muted);font-size:13px}
+.alm-chip{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;text-align:left;border:1px solid var(--border);border-radius:8px;background:var(--card);padding:8px 10px;color:var(--fg);cursor:pointer;transition:border-color var(--transition),background var(--transition)}
+.alm-chip:hover{border-color:currentColor}
+.alm-chip__nombre{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.alm-chip__plato{font-size:12px;color:var(--muted);width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alm-chip--menu .alm-chip__nombre i{color:var(--alm-menu)}
+.alm-chip--hipo .alm-chip__nombre i{color:var(--alm-hipo)}
+.alm-chip--picnic .alm-chip__nombre i{color:var(--alm-picnic)}
+.alm-chip--no .alm-chip__nombre i{color:var(--muted)}
+.alm-chip.is-on{cursor:default}
+.alm-chip--menu.is-on{border-color:var(--alm-menu);background:var(--alm-menu-l)}
+.alm-chip--hipo.is-on{border-color:var(--alm-hipo);background:var(--alm-hipo-l)}
+.alm-chip--picnic.is-on{border-color:var(--alm-picnic);background:var(--alm-picnic-l)}
+.alm-chip--no.is-on{border-color:var(--muted);background:var(--bg)}
+.alm-chip:disabled{opacity:1}
+@media (max-width:767.98px){.alm-sdia{grid-template-columns:1fr}.alm-sdia__fecha{flex-direction:row;gap:6px;justify-content:flex-start;padding:6px 10px}.alm-sdia__ops{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.alm [hidden]{display:none!important}
+@media (max-width:767.98px){.alm-semana .alm-card-head{flex-wrap:wrap}.alm-semana .alm-card-head>div{flex:1 1 100%}.alm-chip__plato{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}

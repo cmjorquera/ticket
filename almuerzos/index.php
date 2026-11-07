@@ -62,6 +62,18 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="alm-estado__reloj" id="almReloj">--:--</div>
     </div>
 
+    <!-- Planificación semanal (sábado y domingo: almuerzos de lunes a viernes siguientes) -->
+    <section class="card alm-semana" id="almSemana" hidden>
+        <div class="alm-card-head">
+            <div>
+                <h2><i class="bi bi-calendar-week" aria-hidden="true"></i> Planifica tu semana</h2>
+                <p id="almSemanaSub"></p>
+            </div>
+            <span class="alm-pill" id="almSemanaProgreso"></span>
+        </div>
+        <div class="alm-semana__dias" id="almSemanaDias"></div>
+    </section>
+
     <div class="alm-grid">
         <!-- Almuerzo de hoy -->
         <section class="card alm-hoy">

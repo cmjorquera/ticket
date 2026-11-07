@@ -3,7 +3,8 @@
  * Almuerzos (JSON)
  *   GET  accion=estado                → horario, menú y pedido de hoy, resumen del mes, cocina (encargado)
  *   GET  accion=mes&mes=AAAA-MM       → menú del mes y mis pedidos de ese mes
- *   POST accion=pedir&opcion=…        → guarda mi pedido de hoy (valida horario en el servidor)
+ *   POST accion=pedir&opcion=…[&fecha=AAAA-MM-DD] → guarda mi pedido de hoy, o de un día de la
+ *                                        semana siguiente si la planificación (sáb-dom) está abierta
  *   POST accion=publicar&mes=…&dias=… → publica el menú del mes (solo encargado)
  *   POST accion=simular&valor=0|1     → simular horario abierto (solo encargado, solo QA)
  */
@@ -58,6 +59,7 @@ try {
                 'mi_pedido' => $pedidosMes[$h['hoy']] ?? null,
                 'mis_pedidos_mes' => $pedidosMes,
                 'proximos' => $proximos,
+                'semana' => $alm->semana($idUsuario, $simular),
                 'encargado' => $encargado,
             ];
             if ($encargado) {
@@ -86,7 +88,11 @@ try {
 
     switch ((string) ($_POST['accion'] ?? '')) {
         case 'pedir':
-            $r = $alm->pedir($idUsuario, (string) ($_POST['opcion'] ?? ''), $simular);
+            $fecha = (string) ($_POST['fecha'] ?? '');
+            if ($fecha !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+                alm_json(['ok' => false, 'mensaje' => 'Fecha no válida.'], 422);
+            }
+            $r = $alm->pedir($idUsuario, (string) ($_POST['opcion'] ?? ''), $simular, $fecha);
             alm_json(['ok' => true, 'pedido' => $r]);
 
         case 'publicar':

@@ -36,6 +36,7 @@ final class Almuerzos
         'id_usuario_encargado' => '8',
         'id_colegio_pdf' => '15',
         'dias_anticipacion' => '31',
+        'dias_planificacion' => '6,7',   // N de ISO: 6 = sábado, 7 = domingo
     ];
     public const MAX_PLATO = 160;
 
@@ -130,6 +131,48 @@ final class Almuerzos
             'fin' => $this->horaFin(),
             'siguiente_habil' => $siguiente->format('Y-m-d'),
         ];
+    }
+
+    /**
+     * Planificación semanal: los días de 'dias_planificacion' (sábado y domingo)
+     * cada persona deja elegido el almuerzo de lunes a viernes de la semana siguiente.
+     */
+    public function planificacion(bool $simular = false): array
+    {
+        $ahora = $this->ahora();
+        $dias = array_values(array_filter(array_map('intval', explode(',', $this->config('dias_planificacion'))),
+            static fn (int $n): bool => $n >= 1 && $n <= 7));
+        $abierta = $simular || in_array((int) $ahora->format('N'), $dias, true);
+        $lunes = $ahora->modify('monday next week')->setTime(0, 0);
+        $fechas = [];
+        for ($i = 0; $i < 5; $i++) {
+            $fechas[] = $lunes->modify("+$i day")->format('Y-m-d');
+        }
+        // Próximo día en que se abre (para avisar cuando está cerrada)
+        $abre = null;
+        if ($dias) {
+            $d = $ahora;
+            do {
+                $d = $d->modify('+1 day');
+            } while (!in_array((int) $d->format('N'), $dias, true));
+            $abre = $d->format('Y-m-d');
+        }
+        return ['abierta' => $abierta, 'simulada' => $simular && !in_array((int) $ahora->format('N'), $dias, true),
+                'fechas' => $fechas, 'desde' => $fechas[0], 'hasta' => $fechas[4], 'abre' => $abre];
+    }
+
+    /** Semana a planificar: menús de cada día y lo que ya eligió la persona. */
+    public function semana(int $idUsuario, bool $simular = false): array
+    {
+        $p = $this->planificacion($simular);
+        $menus = $this->menusEntre($p['desde'], $p['hasta']);
+        $pedidos = $this->pedidosUsuarioEntre($idUsuario, $p['desde'], $p['hasta']);
+        $p['dias'] = array_map(static fn (string $f): array => [
+            'fecha' => $f,
+            'menu' => $menus[$f] ?? null,
+            'pedido' => $pedidos[$f] ?? null,
+        ], $p['fechas']);
+        return $p;
     }
 
     // ------------------------------------------------------------ menús
@@ -329,6 +372,13 @@ final class Almuerzos
     public function pedidosUsuarioMes(int $idUsuario, int $anio, int $mes): array
     {
         $desde = sprintf('%04d-%02d-01', $anio, $mes);
+        $hasta = (new DateTimeImmutable($desde))->modify('last day of this month')->format('Y-m-d');
+        return $this->pedidosUsuarioEntre($idUsuario, $desde, $hasta);
+    }
+
+    /** Elecciones de una persona entre dos fechas (inclusive). */
+    public function pedidosUsuarioEntre(int $idUsuario, string $desde, string $hasta): array
+    {
         $res = [];
         foreach ($this->db->fetchAll(
             "SELECT d.fecha, t.codigo
@@ -336,32 +386,50 @@ final class Almuerzos
                JOIN almuerzo_dia d       ON d.id_dia_menu = e.id_dia_menu
           LEFT JOIN almuerzo_menu m      ON m.id_menu = e.id_menu
           LEFT JOIN almuerzo_tipo t      ON t.id_tipo = m.id_tipo
-              WHERE e.id_usuario = ? AND d.fecha >= ? AND d.fecha < DATE_ADD(?, INTERVAL 1 MONTH)",
-            [$idUsuario, $desde, $desde]
+              WHERE e.id_usuario = ? AND d.fecha BETWEEN ? AND ?",
+            [$idUsuario, $desde, $hasta]
         ) as $f) {
             $res[$f['fecha']] = $f['codigo'] === null ? 'no' : self::clave((string) $f['codigo']);
         }
         return $res;
     }
 
-    /** Guarda la elección de HOY. El horario se valida aquí, no en el navegador. */
-    public function pedir(int $idUsuario, string $opcion, bool $simular = false): array
+    /**
+     * Guarda una elección. El horario se valida aquí, no en el navegador.
+     *  - Hoy: dentro del horario diario (hora_inicio a hora_cierre) → origen 'diaria'.
+     *  - Un día de la semana siguiente: solo con la planificación abierta
+     *    (sábado y domingo) → origen 'anticipada'.
+     */
+    public function pedir(int $idUsuario, string $opcion, bool $simular = false, ?string $fecha = null): array
     {
         if (!isset(self::OPCIONES[$opcion])) {
             throw new RuntimeException('Opción no válida.');
         }
         $h = $this->horario($simular);
-        if ($h['estado'] !== 'abierto') {
-            throw new RuntimeException('El horario para elegir es de ' . $h['inicio'] . ' a ' . $h['fin'] . ' (lunes a viernes).');
+        $fecha = ($fecha === null || $fecha === '') ? $h['hoy'] : $fecha;
+        if ($fecha === $h['hoy']) {
+            if ($h['estado'] !== 'abierto') {
+                throw new RuntimeException('El horario para elegir el almuerzo de hoy es de ' . $h['inicio'] . ' a ' . $h['fin'] . ' (lunes a viernes).');
+            }
+            $origen = 'diaria';
+        } else {
+            $p = $this->planificacion($simular);
+            if (!in_array($fecha, $p['fechas'], true)) {
+                throw new RuntimeException('Solo puedes dejar elegidos los almuerzos de la próxima semana.');
+            }
+            if (!$p['abierta']) {
+                throw new RuntimeException('La semana se planifica el sábado y el domingo. Durante la semana eliges el almuerzo del día entre las ' . $h['inicio'] . ' y las ' . $h['fin'] . '.');
+            }
+            $origen = 'anticipada';
         }
         $dia = $this->db->fetchOne(
             "SELECT d.id_dia_menu FROM almuerzo_dia d
                JOIN almuerzo_mes ms ON ms.id_mes = d.id_mes AND ms.estado = 'publicado'
               WHERE d.fecha = ? AND d.hay_servicio = 1",
-            [$h['hoy']]
+            [$fecha]
         );
         if (!$dia) {
-            throw new RuntimeException('Hoy no hay menú publicado.');
+            throw new RuntimeException($fecha === $h['hoy'] ? 'Hoy no hay menú publicado.' : 'Ese día todavía no tiene menú publicado.');
         }
         $idMenu = null;
         if ($opcion !== 'no') {
@@ -371,18 +439,18 @@ final class Almuerzos
                 [(int) $dia['id_dia_menu'], self::CODIGOS[$opcion]]
             );
             if (!$m) {
-                throw new RuntimeException('Esa opción no está disponible hoy.');
+                throw new RuntimeException('Esa opción no está disponible ese día.');
             }
             $idMenu = (int) $m['id_menu'];
         }
         // Hora de Chile desde PHP (el reloj del MySQL de QA está en otra zona)
         $this->db->execute(
             "INSERT INTO almuerzo_eleccion (id_usuario, id_dia_menu, id_menu, origen, creado_en, actualizado_en)
-             VALUES (?, ?, ?, 'diaria', ?, ?)
-             ON DUPLICATE KEY UPDATE id_menu = VALUES(id_menu), origen = 'diaria', actualizado_en = VALUES(actualizado_en)",
-            [$idUsuario, (int) $dia['id_dia_menu'], $idMenu, $h['ahora'], $h['ahora']]
+             VALUES (?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE id_menu = VALUES(id_menu), origen = VALUES(origen), actualizado_en = VALUES(actualizado_en)",
+            [$idUsuario, (int) $dia['id_dia_menu'], $idMenu, $origen, $h['ahora'], $h['ahora']]
         );
-        return ['fecha' => $h['hoy'], 'opcion' => $opcion];
+        return ['fecha' => $fecha, 'opcion' => $opcion, 'origen' => $origen];
     }
 
     /**

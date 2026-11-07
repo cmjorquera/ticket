@@ -4,7 +4,14 @@ ALMUERZOS – módulo almuerzos/
 Qué hace
 --------
 - Cada persona elige su almuerzo del día entre hora_inicio y hora_cierre de
-  almuerzo_configuracion (08:00–10:00, lunes a viernes, hora de Chile): Menú del día, Hipocalórico o Picnic, o "Hoy no almorzaré".
+  almuerzo_configuracion (08:00–10:00, lunes a viernes, hora de Chile)
+- Planificación semanal: los días de dias_planificacion (sábado y domingo)
+  aparece "Planifica tu semana" y cada persona deja elegido su almuerzo de
+  lunes a viernes de la semana siguiente (origen 'anticipada'). Durante la
+  semana puede cambiar el del día dentro del horario diario (origen 'diaria').
+- El picnic es siempre un sándwich: solo se guarda plato_fondo.
+- Cada menú puede tener foto (almuerzo_menu.imagen); si no, se muestra una
+  imagen referencial (img/ref_*.svg).: Menú del día, Hipocalórico o Picnic, o "Hoy no almorzaré".
   Puede cambiarlo hasta las 12:00. El servidor valida el horario
   (Almuerzos::pedir); el navegador solo lo muestra.
 - "Menú del mes" se abre en un modal: calendario de días hábiles con los tres

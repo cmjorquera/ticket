@@ -79,7 +79,8 @@ INSERT IGNORE INTO almuerzo_configuracion (clave, valor, descripcion) VALUES
 ('hora_cierre',          '10:00', 'A esta hora se cierra la elección y se genera el PDF'),
 ('id_usuario_encargado', '8',     'Usuario que publica los menús y recibe el PDF (usuarios.id)'),
 ('id_colegio_pdf',       '15',    'El PDF incluye solo usuarios de este colegio (15 = Seduc SpA)'),
-('dias_anticipacion',    '31',    'Hasta cuántos días hacia adelante se puede dejar elegido');
+('dias_anticipacion',    '31',    'Hasta cuántos días hacia adelante se puede dejar elegido'),
+('dias_planificacion',   '6,7',   'Días en que se planifica la semana siguiente (6 = sábado, 7 = domingo)');
 
 -- ---------------------------------------------------------------------
 -- 4. MENÚ DEL MES (cabecera): los menús se cargan mes a mes
