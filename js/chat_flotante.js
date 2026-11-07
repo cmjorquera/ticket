@@ -14,7 +14,15 @@
     const form = document.getElementById('chatfForm');
     const texto = document.getElementById('chatfTexto');
     const nombre = (raiz.dataset.nombre || '').split(' ')[0];
-    const CLAVE = 'chatf_conversacion';
+    // La conversación se guarda por usuario: si en la misma pestaña cierra
+    // sesión uno y entra otro, no se muestra la conversación del anterior.
+    const PREFIJO = 'chatf_conversacion_';
+    const CLAVE = PREFIJO + (raiz.dataset.usuario || '0');
+    try {
+        Object.keys(sessionStorage)
+            .filter(k => (k.startsWith(PREFIJO) && k !== CLAVE) || k === 'chatf_conversacion')
+            .forEach(k => sessionStorage.removeItem(k));
+    } catch (e) { /* sin almacenamiento */ }
     const SUGERENCIAS = ['¿Cómo creo un ticket?', '¿En qué va mi ticket?', '¿Qué hay de almuerzo hoy?'];
 
     const guardar = msgs => { try { sessionStorage.setItem(CLAVE, JSON.stringify(msgs)); } catch (e) { /* sin almacenamiento */ } };

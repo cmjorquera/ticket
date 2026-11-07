@@ -16,7 +16,7 @@ $chatVersion = static function (string $ruta) {
 };
 ?>
 <link rel="stylesheet" href="<?= $chatDepth ?>css/chat_flotante.css?v=<?= $chatVersion('css/chat_flotante.css') ?>">
-<div class="chatf" id="chatFlotante" data-nombre="<?= htmlspecialchars($chatNombre, ENT_QUOTES, 'UTF-8') ?>">
+<div class="chatf" id="chatFlotante" data-usuario="<?= (int) $_SESSION['id'] ?>" data-nombre="<?= htmlspecialchars($chatNombre, ENT_QUOTES, 'UTF-8') ?>">
     <section class="chatf-panel" id="chatfPanel" role="dialog" aria-labelledby="chatfTitulo" aria-hidden="true">
         <header class="chatf-head">
             <div class="chatf-avatar"><i class="bi bi-robot" aria-hidden="true"></i></div>
