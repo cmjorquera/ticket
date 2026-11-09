@@ -231,7 +231,7 @@ function ticket_boton_abrir(int $ticketId, int $bitacoraNoLeidos = 0, string $vi
 {
     $n = max(0, $bitacoraNoLeidos);
     $titulo = $n === 0 ? 'Abrir el detalle' : ($n === 1 ? '1 avance nuevo en la bitácora' : $n . ' avances nuevos en la bitácora');
-    return '<a class="btn btn-outline btn-sm ticket-open-button js-ticket-open js-ticket-ver' . ($n ? ' has-unread' : '') . '" href="ticket_detalle.php?id=' . $ticketId . '&amp;vista=' . rawurlencode($vista) . '#bitacora"'
+    return '<a class="btn btn-outline btn-sm ticket-open-button js-ticket-open js-ticket-ver' . ($n ? ' has-unread' : '') . '" href="ticket_detalle.php?id=' . $ticketId . '&amp;vista=' . rawurlencode($vista) . ($n ? '#bitacora' : '') . '"'
         . ' data-ticket-id="' . $ticketId . '" title="' . $titulo . '"><i class="bi bi-eye" aria-hidden="true"></i> Abrir'
         . '<span class="ticket-bitacora-unread"' . ($n ? '' : ' hidden') . '><i class="bi bi-journal-text" aria-hidden="true"></i>' . ($n > 99 ? '99+' : $n) . '</span></a>';
 }
@@ -692,4 +692,62 @@ function ticket_enlace_seguimiento(string $codigo): string
         $base = ($https ? 'https' : 'http') . '://' . $host . '/';
     }
     return $base . 'ticket/seguimiento.php?c=' . rawurlencode($codigo);
+}
+
+/**
+ * Avance visual del ticket (como la barra "2 de 4 completados" del sistema antiguo):
+ * 4 pasos Recibido → Asignado → En proceso → Terminado + qué falta o para cuándo está.
+ * Usa id_estado, fecha_estimada_admin y fecha_termino_ticket.
+ * Lógica: ticket/logica/LOGICA_COMENZAR_TICKET.txt
+ */
+function ticket_avance(array $t): string
+{
+    $estado = (int) ($t['id_estado'] ?? 0);
+    $pasos = match ($estado) { 1 => 1, 2 => 2, 3, 7 => 3, 5, 6 => 4, default => 0 };
+    $fechaOk = static fn ($f): ?DateTimeImmutable => ($f && strtotime((string) $f) > 0 && !str_starts_with((string) $f, '0000'))
+        ? new DateTimeImmutable(substr((string) $f, 0, 10)) : null;
+    $estimada = $fechaOk($t['fecha_estimada_admin'] ?? null);
+    $hoy = new DateTimeImmutable('today');
+    $tono = 'normal';
+    $icono = 'bi-hourglass-split';
+    switch ($estado) {
+        case 1:
+            [$texto, $tono, $icono] = ['Sin técnico asignado', 'aviso', 'bi-person-dash'];
+            break;
+        case 2:
+            [$texto, $tono, $icono] = ['Falta comenzar', 'aviso', 'bi-play-circle'];
+            break;
+        case 3:
+        case 7:
+            if (!$estimada) {
+                [$texto, $icono] = ['En proceso · sin fecha estimada', 'bi-gear'];
+                break;
+            }
+            $dias = (int) $hoy->diff($estimada)->format('%r%a');
+            $fecha = $estimada->format('d/m');
+            if ($dias < 0) {
+                $texto = 'Atrasado ' . abs($dias) . ' día' . (abs($dias) === 1 ? '' : 's') . ' · era el ' . $fecha;
+                [$tono, $icono] = ['atraso', 'bi-exclamation-triangle-fill'];
+            } elseif ($dias === 0) {
+                [$texto, $tono, $icono] = ['Listo para hoy (' . $fecha . ')', 'hoy', 'bi-calendar-check'];
+            } else {
+                $texto = 'Listo el ' . $fecha . ' · en ' . $dias . ' día' . ($dias === 1 ? '' : 's');
+                $icono = 'bi-calendar-event';
+            }
+            break;
+        case 5:
+        case 6:
+            $termino = $fechaOk($t['fecha_termino_ticket'] ?? null);
+            [$texto, $tono, $icono] = ['Terminado' . ($termino ? ' el ' . $termino->format('d/m') : ''), 'ok', 'bi-check-circle-fill'];
+            break;
+        default:
+            [$texto, $icono] = ['Borrador', 'bi-pencil'];
+    }
+    $html = '<div class="tk-av tk-av--' . $tono . '" title="' . $pasos . ' de 4 etapas">'
+        . '<div class="tk-av__pasos" aria-hidden="true">';
+    for ($i = 1; $i <= 4; $i++) {
+        $html .= '<span' . ($i <= $pasos ? ' class="is-on"' : '') . '></span>';
+    }
+    return $html . '</div><small><strong>' . $pasos . '/4</strong> <i class="bi ' . $icono . '" aria-hidden="true"></i> '
+        . htmlspecialchars($texto, ENT_QUOTES, 'UTF-8') . '</small></div>';
 }

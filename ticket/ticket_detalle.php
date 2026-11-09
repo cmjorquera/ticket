@@ -127,6 +127,10 @@ if ($autorizado) {
 $volver = ['usuario' => 'ticket.php', 'tecnico' => 'ticket_asignados.php', 'admin' => 'ticket_admin_v2.php'][$vista] ?? 'ticket.php';
 $csrf = ticket_csrf_token();
 $rolBitacora = $rolBitacora ?? null;
+$tecnicoNombre = $ticket ? trim((string) ($ticket['tecnico_nombre'] ?? '')) : '';
+$textoChat = !$ticket ? 'Abrir chat' : (ticket_estado_sin_escritura((int) $ticket['id_estado']) ? 'Ver conversación'
+    : ($vista === 'usuario' ? ($tecnicoNombre !== '' ? 'Abrir chat con el técnico' : 'Escribir al equipo de soporte')
+    : ($vista === 'tecnico' ? 'Abrir chat con el solicitante' : 'Abrir chat')));
 $enlaceSeguimiento = '';
 if ($ticket && $autorizado && (int) $ticket['id_estado'] !== 4) {
     try {   // QR para seguir el ticket desde el celular (ticket/seguimiento.php)
@@ -142,7 +146,10 @@ $pasosCiclo = $ticket ? [
     ['Creado', 'bi-plus-lg', $fechaCorta((string) $ticket['fecha_creacion']), true],
     ['Asignado', 'bi-person-check', $fechaCorta((string) $ticket['fecha_respuesta']), (int) $ticket['id_estado'] !== 1 && (int) $ticket['id_estado'] !== 4],
     ['En proceso', 'bi-gear', $fechaCorta((string) ($ticket['fecha_comienzo'] ?? '')), in_array((int) $ticket['id_estado'], [3, 5, 6, 7], true)],
-    ['Terminado', 'bi-flag', $fechaCorta((string) ($ticket['fecha_termino'] ?? '')), in_array((int) $ticket['id_estado'], [5, 6], true)],
+    ['Terminado', 'bi-flag', in_array((int) $ticket['id_estado'], [5, 6], true)
+        ? $fechaCorta((string) ($ticket['fecha_termino'] ?? ''))
+        : (!empty($ticket['fecha_estimada']) && strtotime((string) $ticket['fecha_estimada']) > 0 ? 'Estimado: ' . date('d/m/Y', strtotime((string) $ticket['fecha_estimada'])) : ''),
+        in_array((int) $ticket['id_estado'], [5, 6], true)],
 ] : [];
 $estado = $ticket ? strtolower((string) $ticket['estado']) : '';
 $estadoTexto = $ticket ? (string) $ticket['estado_nombre'] : '';
@@ -163,7 +170,10 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <?php if (!$layout_embebido): ?><a class="ticket-detail-back" href="<?= e($volver) ?>"><i class="bi bi-arrow-left"></i> Volver a la bandeja</a><?php endif; ?>
       <div class="ticket-detail-titleline">
         <div><span class="ticket-detail-kicker">Solicitud #<?= (int) $ticket['id_ticket'] ?></span><h1><?= e($ticket['asunto']) ?></h1></div>
-        <?= ticket_badge_estado($ticket) ?>
+        <div class="tb-cabecera-acciones">
+          <?php if ($vista === 'usuario'): ?><button class="btn btn-primary btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" title="<?= e($tecnicoNombre !== '' ? 'Técnico: ' . $tecnicoNombre : 'Aún sin técnico') ?>"><i class="bi bi-chat-dots"></i> <?= e($textoChat) ?></button><?php endif; ?>
+          <?= ticket_badge_estado($ticket) ?>
+        </div>
       </div>
     </div>
 
@@ -189,7 +199,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
             <?php endforeach; ?>
           </div>
           <div class="ticket-reply" style="display:flex;justify-content:flex-end">
-            <button class="btn btn-primary js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticketId ?>"><i class="bi bi-chat-dots"></i> <?= ticket_estado_sin_escritura((int) $ticket['id_estado']) ? 'Ver conversación' : 'Abrir chat' ?></button>
+            <button class="btn btn-primary js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticketId ?>"><i class="bi bi-chat-dots"></i> <?= e($textoChat) ?></button>
           </div>
         </section>
 
@@ -224,6 +234,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <aside class="ticket-detail-side">
         <section class="card tb-ciclo">
           <h2>Ciclo del ticket</h2>
+          <?= ticket_avance(['id_estado' => $ticket['id_estado'], 'fecha_estimada_admin' => $ticket['fecha_estimada'] ?? null, 'fecha_termino_ticket' => $ticket['fecha_termino'] ?? null]) ?>
           <ol>
             <?php foreach ($pasosCiclo as [$nombrePaso, $iconoPaso, $fechaPaso, $hecho]): ?>
               <li class="<?= $hecho ? 'is-done' : '' ?>"><span><i class="bi <?= $hecho ? 'bi-check-lg' : $iconoPaso ?>"></i></span><div><strong><?= e($nombrePaso) ?></strong><small><?= e($fechaPaso ?: '—') ?></small></div></li>

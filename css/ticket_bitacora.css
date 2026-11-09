@@ -49,3 +49,6 @@
 .tb-qr p{margin:10px 0 12px;font-size:12px;color:var(--muted)}
 .tb-qr__botones{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .tb-ciclo__ayuda{display:block;margin-top:6px;text-align:center;color:var(--muted);font-size:11px}
+.tb-cabecera-acciones{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.tb-ciclo .tk-av{margin:-2px 0 16px}
+.tb-ciclo .tk-av small{font:500 11px Inter,system-ui,sans-serif}.tb-ciclo .tk-av small strong{font:600 10.5px 'DM Mono',monospace}

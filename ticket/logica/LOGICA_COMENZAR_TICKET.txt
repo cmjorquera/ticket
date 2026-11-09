@@ -45,6 +45,19 @@ COMENZAR UN TICKET: PRIORIDAD Y FECHA ESTIMADA LAS DEFINE EL TÉCNICO
   Baja. Corregido en helpers/tickets.php (ticket_prioridades). 0 o NULL =
   "Sin definir" (ticket aún no comenzado).
 
+5. AVANCE VISIBLE (como la barra "2 de 4 completados" del sistema antiguo)
+-------------------------------------------------------------------------
+helpers/tickets.php → ticket_avance(): 4 pasos + qué falta o para cuándo está.
+  Recibido    1/4  "Sin técnico asignado"           (ámbar)
+  Asignado    2/4  "Falta comenzar"                 (ámbar)
+  En proceso  3/4  "Listo el 16/11 · en 7 días"     (azul)
+                   "Listo para hoy (09/11)"         (ámbar)
+                   "Atrasado 2 días · era el 07/11" (rojo)
+  Terminado   4/4  "Terminado el 07/11"             (verde)
+Se ve en la columna "Avance" de Tickets Asignados (reemplaza a "Técnico", que
+ahí siempre es uno mismo) y arriba del "Ciclo del ticket" en el detalle, donde
+el paso Terminado muestra "Estimado: dd/mm/aaaa" mientras no termine.
+
 Código:
   ajax/guardar_ticket.php                  accion=comenzar + bloqueo en actualizar_estado
   ticket/componentes/modal_comenzar_ticket.php  el modal (prioridad + fecha)

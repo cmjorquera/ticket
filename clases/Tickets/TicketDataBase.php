@@ -87,7 +87,7 @@ abstract class TicketDataBase
                        uc_ticket.id_colegio,
                        COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                        COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
-                       pt.fecha_creacion_inicio, pt.fecha_estimada_admin,
+                       pt.fecha_creacion_inicio, pt.fecha_estimada_admin, pt.fecha_termino_ticket,
                        {$idCalificacion} AS id_calificacion,
                        {$tieneCalificacion} AS tiene_calificacion,
                        {$tieneCalificacion} AS tieneCalificacion,
