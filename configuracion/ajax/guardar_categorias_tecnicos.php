@@ -4,6 +4,7 @@ declare(strict_types=1);
 /** AJAX: guarda asignaciones de categorías a técnicos. */
 
 require_once __DIR__ . '/../../ajax/_bootstrap.php';
+require_once __DIR__ . '/../../clases/RolesUsuario.php';
 Sesion::requerir();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -24,6 +25,15 @@ if (!is_array($cambios) || !$cambios) {
 
 try {
     $db = Conexion::getInstance('sistema_panel_central');
+    $roles = new RolesUsuario($db);
+    $actor = (int) ($_SESSION['id'] ?? 0);
+    // Solo el super admin o Informática de Seduc asignan categorías
+    if ($roles->modeloActivo() && !$roles->esSuperAdmin($actor) && !$roles->esDeInformaticaSeduc($actor)) {
+        responder_json(['success' => false, 'ok' => false, 'message' => 'No tienes permiso para asignar categorías.'], 403);
+    }
+    [$condTecnicos, $paramTecnicos] = $roles->modeloActivo()
+        ? RolesUsuario::condicionDepartamento('u')
+        : ['u.id_area_trabajo = 1 AND u.id <> 27', []];
     $pdo = $db->getPDO();
     $pdo->beginTransaction();
     $procesados = 0;
@@ -40,10 +50,10 @@ try {
             }
 
             $tecnicoValido = $db->fetchOne(
-                "SELECT id FROM usuarios
-                  WHERE id = ? AND id_area_trabajo = 1 AND id <> 27
-                    AND LOWER(estado) = 'activo' LIMIT 1",
-                [$idTecnico]
+                "SELECT u.id FROM usuarios u
+                  WHERE u.id = ? AND {$condTecnicos}
+                    AND LOWER(u.estado) = 'activo' LIMIT 1",
+                array_merge([$idTecnico], $paramTecnicos)
             );
             if (!$tecnicoValido) {
                 throw new RuntimeException('Uno de los técnicos ya no está disponible.');

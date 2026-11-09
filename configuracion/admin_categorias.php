@@ -4,6 +4,7 @@ declare(strict_types=1);
 /** CONFIGURACIÓN → CATEGORÍAS Y TÉCNICOS */
 
 require_once __DIR__ . '/_inicio.php';
+require_once __DIR__ . '/../clases/RolesUsuario.php';
 
 $depth = '../';
 $error = null;
@@ -55,15 +56,21 @@ try {
         ];
     }
 
+    // Técnicos = funcionarios de Seduc del departamento Informática (modelo de roles,
+    // configuracion/logica/LOGICA_ROLES.txt). Antes de la migración: área antigua 1.
+    [$condTecnicos, $paramTecnicos] = (new RolesUsuario($db))->modeloActivo()
+        ? RolesUsuario::condicionDepartamento('u')
+        : ['u.id_area_trabajo = 1 AND u.id <> 27', []];
     $tecnicosFilas = $db->fetchAll(
         "SELECT u.id, u.nombre, u.apellido_paterno,
                 GROUP_CONCAT(CONCAT(ct.id_categoria, ':', ct.id_categoria_tecnico)
                              ORDER BY ct.id_categoria SEPARATOR ',') AS asignaciones
            FROM usuarios u
       LEFT JOIN categoria_tecnico ct ON ct.id_tecnico = u.id
-          WHERE u.id_area_trabajo = 1 AND u.id <> 27 AND LOWER(u.estado) = 'activo'
+          WHERE {$condTecnicos} AND LOWER(u.estado) = 'activo'
        GROUP BY u.id, u.nombre, u.apellido_paterno
-       ORDER BY u.nombre ASC, u.apellido_paterno ASC"
+       ORDER BY u.nombre ASC, u.apellido_paterno ASC",
+        $paramTecnicos
     );
     foreach ($tecnicosFilas as $fila) {
         $asignaciones = [];
@@ -91,7 +98,7 @@ iniciar_layout_configuracion('Categorías y técnicos', 'Categorías', 'admin_ca
 ?>
 
 <div class="page-header">
-  <div><h1><i class="bi bi-person-gear" aria-hidden="true"></i> Categorías y técnicos</h1><p>Define qué tipo de tickets puede recibir cada técnico.</p></div>
+  <div><h1><i class="bi bi-person-gear" aria-hidden="true"></i> Categorías y técnicos</h1><p>Define qué tipo de tickets puede recibir cada técnico (funcionarios del departamento de Informática de Seduc).</p></div>
 </div>
 
 <?php if ($error): ?>

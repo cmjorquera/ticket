@@ -24,6 +24,8 @@ require_once __DIR__ . '/Conexion.php';
 final class RolesUsuario
 {
     public const ID_SEDUC = 15;
+    /** Departamento de Seduc que atiende los tickets (Configuración → Categorías). */
+    public const DEPTO_TECNICOS = 'INFORMATICA';
     public const PERFIL_USUARIO = 1;
     public const PERFIL_TECNICO = 2;
     public const PERFIL_SUPER = 3;
@@ -108,6 +110,30 @@ final class RolesUsuario
            ORDER BY FIELD(uc.rol, 'admin_colegio', 'jefe_departamento', 'trabajador'), c.nom_colegio",
             [$idUsuario]
         );
+    }
+
+    /**
+     * Condición SQL sobre usuarios.id: personas activas en un departamento de un
+     * colegio (por defecto, Informática de Seduc = quienes atienden tickets).
+     * @return array{0:string,1:array} [condición, parámetros]
+     */
+    public static function condicionDepartamento(string $alias = 'u', int $idColegio = self::ID_SEDUC, string $departamento = self::DEPTO_TECNICOS): array
+    {
+        $alias = preg_replace('/\W/', '', $alias) ?: 'u';
+        return ["{$alias}.id IN (SELECT uc.id_usuario FROM usuario_colegio uc
+                                  JOIN departamentos_colegio d ON d.id = uc.id_departamento_colegio
+                                 WHERE uc.estado = 1 AND uc.id_colegio = ? AND d.id_colegio = uc.id_colegio
+                                   AND d.nombre_departamento = ?)", [$idColegio, $departamento]];
+    }
+
+    /** ¿Es funcionario de Informática de Seduc? */
+    public function esDeInformaticaSeduc(int $idUsuario): bool
+    {
+        if (!$this->modeloActivo()) {
+            return false;
+        }
+        [$cond, $p] = self::condicionDepartamento('u');
+        return (bool) $this->db->fetchOne("SELECT 1 FROM usuarios u WHERE u.id = ? AND {$cond}", array_merge([$idUsuario], $p));
     }
 
     /** ¿Puede crear usuarios (o administrar a alguien)? */
