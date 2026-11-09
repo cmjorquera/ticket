@@ -11,7 +11,7 @@
   const csrf = app.dataset.csrf;
 
   /* --- botones rápidos del ciclo: Comenzar / Terminar ticket --- */
-  document.querySelectorAll('.tb-accion').forEach((b) => b.addEventListener('click', async () => {
+  document.querySelectorAll('.tb-accion[data-estado]').forEach((b) => b.addEventListener('click', async () => {
     if (b.dataset.confirmar && !window.confirm(b.dataset.confirmar)) return;
     b.disabled = true;
     try {

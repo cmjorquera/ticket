@@ -1,0 +1,54 @@
+COMENZAR UN TICKET: PRIORIDAD Y FECHA ESTIMADA LAS DEFINE EL TÉCNICO
+====================================================================
+(09-11-2026, igual que el "COMENZAR TICKET" del modal antiguo:
+ modelos/guardar/guardar_ticket.php → case 'comenzar_proceso')
+
+1. FLUJO
+--------
+  Crear ticket  → Recibido (1) sin técnico, o Asignado (2) al técnico de esa
+                  categoría (configuracion/logica/LOGICA_CATEGORIAS.txt).
+                  NACE SIN PRIORIDAD (id_prioridad NULL → "Sin definir")
+                  y sin fecha estimada.
+  Comenzar      → SOLO el técnico asignado, desde Tickets Asignados
+                  (botón "Comenzar" de la fila) o desde el detalle en vista
+                  técnico. Elige:
+                    · prioridad: Alta / Media / Baja (tabla prioridad)
+                    · fecha estimada de término (desde hoy, máx. 1 año), con
+                      atajos Hoy / Mañana / 3 días / 1 semana / 2 semanas
+                  → En proceso (3).
+  Terminar      → el técnico (Terminado, 5).
+
+2. QUÉ SE GUARDA AL COMENZAR (ajax/guardar_ticket.php, accion=comenzar)
+-----------------------------------------------------------------------
+  tickets.id_estado = 3, tickets.id_prioridad = 1|2|3
+  proceso_tickets.fecha_estimada_admin = fecha elegida
+  proceso_tickets.dias_estimada_admin  = días desde hoy
+  proceso_tickets.fecha/hora_comienzo_ticket = ahora
+  Bitácora (sistema): "X comenzó el ticket · prioridad Alta · fecha
+  estimada 12/11/2026 (3 días)."
+  (Los nombres *_admin vienen del sistema antiguo; hoy los llena el técnico.)
+
+3. REGLAS
+---------
+- Pasar a "En proceso" desde Recibido/Asignado SIEMPRE es "Comenzar": si se
+  intenta con "Actualizar estado" (bandeja o detalle) se abre el modal de
+  Comenzar, y el servidor lo rechaza si llega sin prioridad y fecha.
+- El solicitante no puede comenzar (403); un ticket ya comenzado no se vuelve
+  a comenzar (409).
+- Administración puede seguir corrigiendo estado y técnico desde
+  "Ticket Administrador → Gestionar".
+
+4. PRIORIDADES (corrección)
+---------------------------
+  La tabla prioridad es: 1 Alta, 2 Media, 3 Baja. El código nuevo las mostraba
+  AL REVÉS (1 = Baja, 3 = Alta): los tickets de prioridad Alta aparecían como
+  Baja. Corregido en helpers/tickets.php (ticket_prioridades). 0 o NULL =
+  "Sin definir" (ticket aún no comenzado).
+
+Código:
+  ajax/guardar_ticket.php                  accion=comenzar + bloqueo en actualizar_estado
+  ticket/componentes/modal_comenzar_ticket.php  el modal (prioridad + fecha)
+  ticket/js/comenzar_ticket.js             abre el modal, valida y envía
+  ticket/componentes/bloque_tabla_tecnico.php   botón "Comenzar" en la fila
+  ticket/ticket_detalle.php                botón "Comenzar ticket" (vista técnico) y "Fecha estimada"
+  css/ticket_chat.css                      estilos del modal

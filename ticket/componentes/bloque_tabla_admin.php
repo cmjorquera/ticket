@@ -39,7 +39,7 @@ $esGlobal = !empty($esGlobal);
       <div class="table-wrap"><table id="admin-tabla"><thead><tr><th>Folio / fecha</th><th>Caso</th><th>Técnico</th><th>Usuario</th><th>Estado</th><th>Prioridad</th><th></th></tr></thead><tbody>
       <?php foreach ($ticketsPagina as $indice => $ticket):
         $estado = strtolower((string) $ticket['estado']);
-        $prioridad = str_replace('í', 'i', strtolower((string) $ticket['prioridad']));
+        $prioridad = ticket_prioridad_clase((string) $ticket['prioridad']);
         $json = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         $fechaTicket = strtotime((string) $ticket['fecha_creacion']);
         $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));

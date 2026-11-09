@@ -5,6 +5,7 @@ Cómo funciona hoy la carpeta ticket/, comparada con el sistema antiguo
 Mensajería (chat): ver LOGICA_MENSAJERIA.txt.
 Bitácora interna (técnico ↔ administración): ver LOGICA_BITACORA.txt.
 QR de seguimiento y qué muestra el detalle según la bandeja: ver LOGICA_SEGUIMIENTO_QR.txt.
+Comenzar ticket (prioridad y fecha estimada las define el técnico): ver LOGICA_COMENZAR_TICKET.txt.
 Categorías y a qué técnico llega cada ticket: configuracion/logica/LOGICA_CATEGORIAS.txt.
 
 1. PANTALLAS
@@ -70,6 +71,9 @@ Fechas del ciclo: proceso_tickets (creación, asignación, comienzo, término, c
      todas muestran el número real del ticket (id_ticket), igual que el chat y el detalle.
  [ARREGLADO 09-11] La bitácora de avances del técnico no existía en el sistema nuevo
      (la tabla avance_tecnicos no está en QA). Ver LOGICA_BITACORA.txt.
+ [ARREGLADO 09-11] Las prioridades se mostraban al revés (1 = Alta en la base, el
+     código decía Baja) y todo ticket nacía con prioridad Media. Ahora nace
+     "Sin definir" y la define el técnico al comenzar.
  [PENDIENTE] El colegio de un ticket se calcula distinto: las bandejas y los permisos
      usan jefatura_departamento; el detalle usa usuario_colegio. Con el modelo de
      roles nuevo debería salir de usuario_colegio (o guardarse en el ticket).

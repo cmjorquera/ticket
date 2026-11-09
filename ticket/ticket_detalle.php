@@ -24,6 +24,7 @@ try {
                 e.color_degradado AS estado_degradado, t.id_prioridad,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
+                pt.fecha_estimada_admin AS fecha_estimada,
                 COALESCE(CONCAT(pt.fecha_comienzo_ticket, ' ', COALESCE(pt.hora_comienzo_ticket, '00:00:00')), '') AS fecha_comienzo,
                 COALESCE(CONCAT(pt.fecha_termino_ticket, ' ', COALESCE(pt.hora_termino_ticket, '00:00:00')), '') AS fecha_termino,
                 c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
@@ -228,7 +229,8 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
             <?php endforeach; ?>
           </ol>
           <?php if ($vista === 'tecnico' && $esTecnico && in_array((int) $ticket['id_estado'], [1, 2], true)): ?>
-            <button class="btn btn-primary tb-accion" type="button" data-estado="3"><i class="bi bi-play-fill"></i> Comenzar ticket</button>
+            <button class="btn btn-primary tb-accion js-comenzar-ticket" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>"><i class="bi bi-play-fill"></i> Comenzar ticket</button>
+            <small class="tb-ciclo__ayuda">Al comenzar defines la prioridad y la fecha estimada.</small>
           <?php elseif ($vista === 'tecnico' && $esTecnico && in_array((int) $ticket['id_estado'], [3, 7], true)): ?>
             <button class="btn btn-primary tb-accion" type="button" data-estado="5" data-confirmar="¿Marcar el ticket como terminado? La conversación y la bitácora quedarán como registro."><i class="bi bi-flag-fill"></i> Terminar ticket</button>
           <?php endif; ?>
@@ -247,12 +249,12 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 
         <section class="card ticket-detail-facts">
           <h2>Datos del ticket</h2>
-          <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(str_replace('í','i',strtolower((string)$ticket['prioridad']))) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
+          <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Fecha estimada</dt><dd><?= !empty($ticket['fecha_estimada']) && strtotime((string) $ticket['fecha_estimada']) > 0 ? e(date('d/m/Y', strtotime((string) $ticket['fecha_estimada']))) : 'La define el técnico al comenzar' ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(ticket_prioridad_clase((string) $ticket['prioridad'])) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
         </section>
 
         <?php if ($adjuntos): ?><section class="card ticket-detail-files"><h2>Archivos adjuntos</h2><?php foreach ($adjuntos as $archivo): ?><a href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre']) ?><small><?= $archivo['tamano'] ? e(number_format($archivo['tamano'] / 1024, 0, ',', '.')) . ' KB' : e(strtoupper($archivo['extension'])) ?></small></span><i class="bi bi-box-arrow-up-right"></i></a><?php endforeach; ?></section><?php endif; ?>
 
-        <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
+        <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form" data-estado-actual="<?= (int) $ticket['id_estado'] ?>" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
         <?php if ($calificacionDisponible && $vista === 'usuario' && $esPropietario && in_array($estado, ['resuelto','cerrado'], true)): ?>
           <section class="card ticket-rating" id="calificacion">
@@ -288,6 +290,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
   <script src="js/chat_ticket.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="js/bitacora_ticket.js?v=<?= (int) @filemtime(__DIR__ . '/js/bitacora_ticket.js') ?>"></script>
+  <?php if ($vista === 'tecnico' && $esTecnico) { require __DIR__ . '/componentes/modal_comenzar_ticket.php'; } ?>
   <?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

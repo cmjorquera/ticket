@@ -48,3 +48,4 @@
 .tb-qr__codigo img,.tb-qr__codigo canvas{display:block}
 .tb-qr p{margin:10px 0 12px;font-size:12px;color:var(--muted)}
 .tb-qr__botones{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tb-ciclo__ayuda{display:block;margin-top:6px;text-align:center;color:var(--muted);font-size:11px}

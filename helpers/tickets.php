@@ -131,9 +131,25 @@ function ticket_estado_grupo_nombre(string $estado): string
     ][$estado] ?? '';
 }
 
+/**
+ * Prioridades = tabla `prioridad` (1 Alta, 2 Media, 3 Baja). 0 / NULL = sin definir:
+ * el ticket nace sin prioridad y la define el técnico al comenzarlo
+ * (ticket/logica/LOGICA_COMENZAR_TICKET.txt).
+ */
+function ticket_prioridades(): array
+{
+    return [1 => 'Alta', 2 => 'Media', 3 => 'Baja'];
+}
+
 function ticket_prioridad_nombre(int $id): string
 {
-    return [1 => 'Baja', 2 => 'Media', 3 => 'Alta', 4 => 'Crítica'][$id] ?? 'Media';
+    return ticket_prioridades()[$id] ?? 'Sin definir';
+}
+
+/** Clase CSS de la prioridad: alta | media | baja | sin-definir */
+function ticket_prioridad_clase(string $nombre): string
+{
+    return trim((string) preg_replace('/[^a-z]+/', '-', strtolower(strtr($nombre, ['í' => 'i', 'Í' => 'i']))), '-');
 }
 
 /** Convierte una fila de la BD histórica al contrato usado por las vistas actuales. */
@@ -146,7 +162,7 @@ function ticket_normalizar_fila(array $fila): array
     $fila['estado_color'] = (string) ($fila['estado_color'] ?? $fila['colorEstado'] ?? '');
     $fila['estado_degradado'] = (string) ($fila['estado_degradado'] ?? $fila['colorDegradado'] ?? '');
     $fila['cantidad_archivos'] = max(0, (int) ($fila['cantidad_archivos'] ?? $fila['cantidadArchivos'] ?? 0));
-    $fila['prioridad'] = ticket_prioridad_nombre((int) ($fila['id_prioridad'] ?? 2));
+    $fila['prioridad'] = ticket_prioridad_nombre((int) ($fila['id_prioridad'] ?? 0));
     $fila['descripcion'] = (string) ($fila['descripcion'] ?? $fila['descripcion_ticket'] ?? '');
     $fila['descripcion_texto'] = ticket_descripcion_texto($fila['descripcion']);
     $fila['id_tecnico_asignado'] = $fila['id_tecnico'] ?? null;

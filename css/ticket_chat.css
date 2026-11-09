@@ -74,3 +74,25 @@ body.ticket-chat-open .chatf{display:none!important}
 .tc-yo--tecnico{background:var(--success-light);color:var(--success)}
 .tc-yo--admin{background:var(--yellow-light,#FFF6D8);color:#8A6200}
 .tc-role{text-transform:capitalize}
+/* prioridad aún no definida (la define el técnico al comenzar) */
+.ticket-priority--sin-definir{color:var(--muted);font-style:italic;font-weight:500}
+/* Modal "Comenzar ticket" (ticket/componentes/modal_comenzar_ticket.php) */
+.tk-com{max-width:520px}
+.tk-com__kicker{font:500 10px 'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+.tk-com .modal-header p{margin-top:4px;color:var(--muted);font-size:13px}
+.tk-com__grupo{border:0;margin:0 0 18px;padding:0}
+.tk-com__grupo legend{font-size:12px;font-weight:600;margin-bottom:8px}
+.tk-com__prioridades{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tk-com__prio{position:relative;cursor:pointer}
+.tk-com__prio input{position:absolute;opacity:0;pointer-events:none}
+.tk-com__prio span{display:flex;justify-content:center;align-items:center;gap:6px;padding:12px 8px;border:1.5px solid var(--border);border-radius:10px;font-weight:600;font-size:13px;transition:all .15s}
+.tk-com__prio--alta span i{color:var(--danger)}.tk-com__prio--media span i{color:#E8A33D}.tk-com__prio--baja span i{color:var(--success)}
+.tk-com__prio input:checked+span{border-color:var(--blue);background:var(--blue-light);color:var(--blue);box-shadow:0 0 0 3px rgba(29,70,117,.1)}
+.tk-com__prio input:focus-visible+span{outline:2px solid var(--blue);outline-offset:2px}
+.tk-com__atajos{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.tk-com__atajos .is-active{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
+.tk-com__plazo{display:block;margin-top:6px;color:var(--muted);font-size:12px}
+.tk-com__plazo.is-error{color:var(--danger)}
+.tk-com__nota{display:flex;gap:8px;padding:10px 12px;border-radius:9px;background:var(--bg);color:var(--muted);font-size:12px;line-height:1.45}
+.tk-com__nota i{color:var(--blue)}
+@media(max-width:600px){.tk-com__prioridades{grid-template-columns:1fr}}

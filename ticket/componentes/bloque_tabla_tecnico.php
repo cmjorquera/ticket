@@ -38,7 +38,7 @@ $errorCarga = $errorCarga ?? null;
         <tbody>
         <?php foreach ($ticketsPagina as $indice => $ticket):
           $estado = strtolower((string) $ticket['estado']);
-          $prioridad = str_replace(['í', 'Í'], 'i', strtolower((string) $ticket['prioridad']));
+          $prioridad = ticket_prioridad_clase((string) $ticket['prioridad']);
           $datosTicket = json_encode($ticket, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
           $fechaTicket = strtotime((string) $ticket['fecha_creacion']);
           $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
@@ -50,7 +50,7 @@ $errorCarga = $errorCarga ?? null;
             <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>
             <td><?= ticket_badge_estado($ticket) ?></td>
             <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
-            <td><div class="ticket-actions"><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><?= ticket_boton_abrir((int) $ticket['id_ticket'], (int) ($ticket['bitacora_no_leidos'] ?? 0), 'tecnico') ?><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($datosTicket) ?>" onclick="abrirTicket(this)"><i class="bi bi-pencil"></i> Estado</button></div></td>
+            <td><div class="ticket-actions"><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><?php if (in_array((int) $ticket['id_estado'], [1, 2], true)): ?><button class="btn btn-primary btn-sm js-comenzar-ticket" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>" title="Definir prioridad y fecha estimada"><i class="bi bi-play-fill"></i> Comenzar</button><?php endif; ?><?= ticket_boton_abrir((int) $ticket['id_ticket'], (int) ($ticket['bitacora_no_leidos'] ?? 0), 'tecnico') ?><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($datosTicket) ?>" onclick="abrirTicket(this)"><i class="bi bi-pencil"></i> Estado</button></div></td>
           </tr>
         <?php endforeach; ?>
         </tbody>

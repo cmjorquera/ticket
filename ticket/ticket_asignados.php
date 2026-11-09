@@ -98,11 +98,17 @@ function abrirTicket(button) {
   document.getElementById('detalle-descripcion').textContent = ticket.descripcion_texto || ticket.descripcion;
   document.getElementById('detalle-estado').value = ticket.id_estado;
   document.getElementById('detalle-mensaje').className = 'ticket-message';
-  document.getElementById('detalle-guardar').onclick = () => guardarEstado(ticket.id_ticket);
+  document.getElementById('detalle-guardar').onclick = () => guardarEstado(ticket.id_ticket, ticket);
   openModal('modal-ticket');
 }
 
-async function guardarEstado(id) {
+async function guardarEstado(id, ticket) {
+  // Recibido/Asignado → En proceso es "Comenzar": pide prioridad y fecha estimada
+  if (document.getElementById('detalle-estado').value === '3' && [1, 2].includes(Number(ticket?.id_estado))) {
+    closeModal('modal-ticket');
+    window.ComenzarTicket?.abrir(id, ticket.asunto);
+    return;
+  }
   const button = document.getElementById('detalle-guardar');
   const message = document.getElementById('detalle-mensaje');
   button.disabled = true;
@@ -127,5 +133,6 @@ document.getElementById('ticket-buscar')?.addEventListener('input', filtrarTicke
 document.getElementById('ticket-estado')?.addEventListener('change', filtrarTickets);
 </script>
 
+<?php require __DIR__ . '/componentes/modal_comenzar_ticket.php'; ?>
 <?php $vistaChat = 'tecnico'; require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php finalizar_layout_configuracion(); ?>

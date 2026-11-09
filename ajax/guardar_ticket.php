@@ -120,7 +120,7 @@ try {
 
         $pdo = $db->getPDO();
         $guardados = [];
-        $prioridadId = 2;
+        $prioridadId = null;   // la define el técnico al comenzar (LOGICA_COMENZAR_TICKET.txt)
         $estadoNuevo = $db->fetchOne("SELECT id FROM estados_ticket WHERE LOWER(nombre) IN ('nuevo','recibido') ORDER BY id LIMIT 1");
         $estadoInicial = $esBorrador ? 4 : ($tecnicoId ? 2 : (int) ($estadoNuevo['id'] ?? 1));
         $identificador = bin2hex(random_bytes(8));
@@ -191,10 +191,71 @@ try {
         responder_json(['ok' => false, 'error' => 'Ticket no encontrado.'], 404);
     }
 
+    /*
+     * COMENZAR: solo el técnico asignado, con el ticket Recibido o Asignado.
+     * Define la prioridad y la fecha estimada de término (como el modal antiguo).
+     * Lógica: ticket/logica/LOGICA_COMENZAR_TICKET.txt
+     */
+    if ($accion === 'comenzar') {
+        if ((int) ($ticket['id_tecnico'] ?? 0) !== $usuarioId) {
+            responder_json(['ok' => false, 'error' => 'Solo el técnico asignado puede comenzar el ticket.'], 403);
+        }
+        if (!in_array((int) $ticket['id_estado'], [1, 2], true)) {
+            responder_json(['ok' => false, 'error' => 'El ticket ya fue comenzado.'], 409);
+        }
+        $prioridad = (int) ($datos['prioridad'] ?? 0);
+        if (!isset(ticket_prioridades()[$prioridad])) {
+            responder_json(['ok' => false, 'error' => 'Elige la prioridad del ticket.'], 422);
+        }
+        $fechaTxt = (string) ($datos['fecha_estimada'] ?? '');
+        $fecha = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaTxt);
+        $hoy = new DateTimeImmutable('today');
+        if (!$fecha || $fecha->format('Y-m-d') !== $fechaTxt) {
+            responder_json(['ok' => false, 'error' => 'Indica la fecha estimada de término.'], 422);
+        }
+        if ($fecha < $hoy || $fecha > $hoy->modify('+1 year')) {
+            responder_json(['ok' => false, 'error' => 'La fecha estimada debe ser desde hoy y dentro de un año.'], 422);
+        }
+        $dias = (int) $hoy->diff($fecha)->days;
+        $pdo = $db->getPDO();
+        $pdo->beginTransaction();
+        try {
+            $db->execute('UPDATE tickets SET id_estado = 3, id_prioridad = ? WHERE id_ticket = ?', [$prioridad, $ticketId]);
+            if (!$db->fetchOne('SELECT 1 FROM proceso_tickets WHERE id_ticket = ?', [$ticketId])) {
+                $db->execute('INSERT INTO proceso_tickets (id_ticket) VALUES (?)', [$ticketId]);
+            }
+            $db->execute(
+                'UPDATE proceso_tickets
+                    SET fecha_estimada_admin = ?, dias_estimada_admin = ?,
+                        fecha_comienzo_ticket = CURDATE(), hora_comienzo_ticket = CURTIME(),
+                        fecha_asignacion_tecnico = COALESCE(fecha_asignacion_tecnico, CURDATE()),
+                        hora_asignacion_tecnico = COALESCE(hora_asignacion_tecnico, CURTIME())
+                  WHERE id_ticket = ?',
+                [$fecha->format('Y-m-d'), $dias, $ticketId]
+            );
+            $pdo->commit();
+        } catch (Throwable $ex) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $ex;
+        }
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'comenzar', 'id_estado', (string) $ticket['id_estado'], '3');
+        $plazo = $dias === 0 ? 'hoy' : ($dias === 1 ? '1 día' : $dias . ' días');
+        (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, bitacora_nombre($db, $usuarioId)
+            . ' comenzó el ticket · prioridad ' . ticket_prioridad_nombre($prioridad)
+            . ' · fecha estimada ' . $fecha->format('d/m/Y') . ' (' . $plazo . ').');
+        responder_json(['ok' => true, 'mensaje' => 'Ticket comenzado.']);
+    }
+
     if ($accion === 'actualizar_estado') {
         $estadoId = ticket_estado_id($datos['estado'] ?? '');
         if ($estadoId <= 0) {
             responder_json(['ok' => false, 'error' => 'Estado no válido.'], 422);
+        }
+        // Pasar a "En proceso" desde Recibido/Asignado es COMENZAR: pide prioridad y fecha estimada
+        if ($estadoId === 3 && in_array((int) $ticket['id_estado'], [1, 2], true)) {
+            responder_json(['ok' => false, 'comenzar' => true, 'error' => 'Para pasarlo a "En proceso" usa «Comenzar ticket» e indica la prioridad y la fecha estimada.'], 422);
         }
         $esTecnicoAsignado = (int) ($ticket['id_tecnico'] ?? 0) === $usuarioId;
         if (!$esTecnicoAsignado && !puede_administrar_ticket($usuarioId, (int) $ticket['id_colegio'], $db)) {
