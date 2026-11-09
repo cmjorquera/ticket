@@ -25,7 +25,7 @@ $esGlobal = !empty($esGlobal);
     <div class="card-header"><div><h2 class="card-title">Control de casos</h2><p class="card-desc"><?= $esGlobal ? 'Vista general de todos los colegios.' : 'Vista limitada a tus colegios administrados.' ?></p></div></div>
     <form class="ticket-toolbar" method="get">
       <?php if ($resumenFiltro !== ''): ?><input type="hidden" name="resumen" value="<?= e($resumenFiltro) ?>"><?php endif; ?>
-      <div class="form-group ticket-search"><label class="form-label" for="admin-buscar">Buscar en resultados</label><input class="form-input" id="admin-buscar" type="search" placeholder="Folio, asunto, solicitante o técnico"></div>
+      <div class="form-group ticket-search"><label class="form-label" for="admin-buscar">Buscar en resultados</label><input class="form-input" id="admin-buscar" type="search" placeholder="N°, asunto, solicitante o técnico"></div>
       <div class="form-group"><label class="form-label" for="admin-estado">Estado</label><select class="form-input" id="admin-estado" name="estado"><option value="0">Todos</option><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= $estadoFiltro === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select></div>
       <div class="form-group"><label class="form-label" for="admin-colegio">Colegio</label><select class="form-input" id="admin-colegio" name="colegio"><option value="0">Todos</option><?php foreach ($colegios as $colegio): ?><option value="<?= (int) $colegio['id_colegio'] ?>" <?= $colegioFiltro === (int) $colegio['id_colegio'] ? 'selected' : '' ?>><?= e($colegio['nom_colegio']) ?></option><?php endforeach; ?></select></div>
       <div class="form-group"><label class="form-label" for="admin-tecnico">Técnico</label><select class="form-input" id="admin-tecnico" name="tecnico"><option value="0">Todos</option><?php foreach ($tecnicos as $tecnico): ?><option value="<?= (int) $tecnico['id'] ?>" <?= $tecnicoFiltro === (int) $tecnico['id'] ? 'selected' : '' ?>><?= e($tecnico['nombre']) ?></option><?php endforeach; ?></select></div>
@@ -36,7 +36,7 @@ $esGlobal = !empty($esGlobal);
     <?php elseif (!$tickets): ?>
       <div class="ticket-empty"><i class="bi bi-inbox"></i>No hay tickets que coincidan con los filtros.</div>
     <?php else: ?>
-      <div class="table-wrap"><table id="admin-tabla"><thead><tr><th>Folio / fecha</th><th>Caso</th><th>Técnico</th><th>Usuario</th><th>Estado</th><th>Avance</th><th>Prioridad</th><th></th></tr></thead><tbody>
+      <div class="table-wrap"><table id="admin-tabla"><thead><tr><th>N° / fecha</th><th>Caso</th><th>Técnico</th><th>Usuario</th><th>Estado</th><th>Avance</th><th>Prioridad</th><th></th></tr></thead><tbody>
       <?php foreach ($ticketsPagina as $indice => $ticket):
         $estado = strtolower((string) $ticket['estado']);
         $prioridad = ticket_prioridad_clase((string) $ticket['prioridad']);
@@ -45,7 +45,7 @@ $esGlobal = !empty($esGlobal);
         $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
       ?>
         <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string)$ticket['id_ticket'],$ticket['asunto'],$ticket['usuario_nombre'],$ticket['tecnico_nombre'],$ticket['colegio_nombre']]))) ?>">
-          <td><strong class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></strong><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
+          <td><div class="tk-num"><strong class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></strong><?= ticket_sobre((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?></div><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
           <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong><small><?= e($ticket['categoria_nombre']) ?> · <?= e($ticket['colegio_nombre']) ?></small></td>
           <td class="ticket-person"><strong><?= e($ticket['tecnico_nombre'] ?: 'Sin asignar') ?></strong></td>
           <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>

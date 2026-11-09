@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../helpers/tickets.php';
 require_once __DIR__ . '/../clases/Tickets/BitacoraTicket.php';
+require_once __DIR__ . '/../clases/Tickets/AvisosTicket.php';
 
 /** Nombre corto de un usuario para los registros automáticos de la bitácora. */
 function bitacora_nombre(Conexion $db, ?int $id): string
@@ -157,6 +158,9 @@ try {
             throw $ex;
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'crear');
+        if (!$esBorrador) {
+            (new AvisosTicket($db))->creado($ticketId, $usuarioId);   // campanita
+        }
         (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, $esBorrador
             ? 'Ticket guardado como borrador.'
             : ($tecnicoId ? 'Ticket creado y asignado automáticamente a ' . bitacora_nombre($db, $tecnicoId) . '.' : 'Ticket creado; queda pendiente de asignación.'));
@@ -245,6 +249,7 @@ try {
         (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, bitacora_nombre($db, $usuarioId)
             . ' comenzó el ticket · prioridad ' . ticket_prioridad_nombre($prioridad)
             . ' · fecha estimada ' . $fecha->format('d/m/Y') . ' (' . $plazo . ').');
+        (new AvisosTicket($db))->comenzado($ticketId, $usuarioId, ticket_prioridad_nombre($prioridad), $fecha->format('d/m/Y'));
         responder_json(['ok' => true, 'mensaje' => 'Ticket comenzado.']);
     }
 
@@ -268,6 +273,7 @@ try {
             $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'cambiar_estado', 'id_estado', (string) $ticket['id_estado'], (string) $estadoId);
+        (new AvisosTicket($db))->estado($ticketId, $usuarioId, (int) $ticket['id_estado'], $estadoId);
         if ($estadoId !== (int) $ticket['id_estado']) {
             (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, bitacora_nombre($db, $usuarioId) . ' cambió el estado: '
                 . bitacora_estado((int) $ticket['id_estado']) . ' → ' . bitacora_estado($estadoId) . '.');
@@ -287,6 +293,9 @@ try {
         $db->execute('UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?', [$tecnicoId ?: null, $estadoAsignacion, $ticketId]);
         if ($tecnicoId > 0) {
             $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = COALESCE(fecha_asignacion_tecnico, CURDATE()), hora_asignacion_tecnico = COALESCE(hora_asignacion_tecnico, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        }
+        if ($tecnicoId > 0 && $tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {
+            (new AvisosTicket($db))->asignado($ticketId, $usuarioId);
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'asignar', 'id_tecnico', (string) ($ticket['id_tecnico'] ?? ''), $tecnicoId > 0 ? (string) $tecnicoId : null);
         if ($tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {
@@ -322,6 +331,11 @@ try {
             $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'actualizar', 'id_estado', (string) $ticket['id_estado'], (string) $estadoId);
+        $avisos = new AvisosTicket($db);
+        if ($tecnicoId > 0 && $tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {
+            $avisos->asignado($ticketId, $usuarioId);
+        }
+        $avisos->estado($ticketId, $usuarioId, (int) $ticket['id_estado'], $estadoId);
         $cambios = [];
         if ($tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {
             $cambios[] = $tecnicoId ? 'asignó el ticket a ' . bitacora_nombre($db, $tecnicoId) : 'quitó la asignación del técnico';

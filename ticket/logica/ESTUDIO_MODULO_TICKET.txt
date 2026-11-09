@@ -6,6 +6,7 @@ Mensajería (chat): ver LOGICA_MENSAJERIA.txt.
 Bitácora interna (técnico ↔ administración): ver LOGICA_BITACORA.txt.
 QR de seguimiento y qué muestra el detalle según la bandeja: ver LOGICA_SEGUIMIENTO_QR.txt.
 Comenzar ticket (prioridad y fecha estimada las define el técnico): ver LOGICA_COMENZAR_TICKET.txt.
+Campanita de notificaciones y sobre de mensajes: ver LOGICA_NOTIFICACIONES.txt.
 Categorías y a qué técnico llega cada ticket: configuracion/logica/LOGICA_CATEGORIAS.txt.
 
 1. PANTALLAS

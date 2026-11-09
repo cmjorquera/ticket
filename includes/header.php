@@ -117,10 +117,7 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
                 <input type="text" placeholder="Buscar usuarios, colegios, módulos..."/>
             </div>
             <div class="topbar-right">
-                <button class="notif-btn" type="button" aria-label="Notificaciones">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    <span class="notif-badge">3</span>
-                </button>
+                <?php require __DIR__ . '/../componentes/campanita.php'; ?>
                 <div class="dropdown">
                     <button class="user-chip" type="button" onclick="toggleDropdown(this)">
                         <div class="avatar<?= $topbar_foto ? ' avatar--foto' : '' ?>"><?php if ($topbar_foto): ?><img src="<?= $depth ?>mi_cuenta/foto.php" alt=""><?php else: ?><?= htmlspecialchars($topbar_iniciales !== '' ? $topbar_iniciales : 'U') ?><?php endif; ?></div>

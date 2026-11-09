@@ -1,0 +1,56 @@
+NOTIFICACIONES (CAMPANITA) Y SOBRE DE MENSAJES
+==============================================
+(09-11-2026. Antes la campanita mostraba un "3" fijo escrito en el código.)
+
+1. LA CAMPANITA
+---------------
+- Muestra cuántos avisos sin leer tiene la persona (se actualiza cada 30 s y al
+  volver a la pestaña; la campana se sacude cuando llega uno nuevo).
+- Al apretarla: lista de los últimos 20 (los nuevos con fondo azul y punto),
+  "Marcar todas como leídas", y cada aviso lleva directo al ticket en la
+  bandeja que corresponde (solicitante → vista usuario, técnico → vista técnico).
+- Abrir el detalle de un ticket marca como leídos sus avisos; abrir su chat
+  marca como leídos los avisos de mensajes de ese ticket.
+- Sin la tabla (antes de ejecutar el SQL) no falla nada: la campanita queda
+  sin número y dice "Las notificaciones se activarán pronto".
+
+2. QUÉ AVISA Y A QUIÉN (clases/Tickets/AvisosTicket.php)
+--------------------------------------------------------
+  Evento                      Aviso                                      Recibe
+  Ticket creado               "Nuevo ticket asignado #N"                 técnico asignado
+                              "Se creó el ticket #N a tu nombre"         solicitante (si lo creó otro)
+  Asignado / reasignado       "Te asignaron el ticket #N"                técnico nuevo
+                              "Tu ticket #N fue asignado · Técnico: X"   solicitante
+  Comenzado                   "Tu ticket #N está en proceso · listo el
+                               dd/mm (prioridad alta)"                   solicitante
+  Cambio de estado            "Tu ticket #N cambió a Terminado ·
+                               ¡califica la atención!" (lleva a calificar) solicitante
+                              "El ticket #N cambió a …"                  técnico (si no lo cambió él)
+  Mensaje del chat / adjunto  "Nuevo mensaje en el ticket #N"            la otra parte
+                              (AGRUPADO: "3 mensajes nuevos en …")
+  Nota de administración      "Nota de administración en el ticket #N"   técnico (agrupado)
+- Nunca se avisa a quien hizo la acción. Excepción: en el chat, si la misma
+  persona es solicitante y técnico, escribir desde una bandeja avisa en la otra.
+- No se avisa a administración de cada avance del técnico (serían muchos
+  avisos); administración lo ve en el número ámbar del botón "Abrir".
+- Los borradores no avisan.
+
+3. TABLA notificaciones (ticket/sql/03_notificaciones.sql)
+----------------------------------------------------------
+  id, id_usuario (quién la recibe), tipo, titulo, texto, url (relativa a la
+  raíz), id_ticket, id_actor, cantidad (mensajes agrupados), leida, creada,
+  actualizada. Es general: otros módulos pueden usarla con
+  (new Notificaciones($db))->crear($idUsuario, 'tipo', 'Título', 'texto', 'url').
+
+4. SOBRE DE MENSAJES SIN LEER
+-----------------------------
+- En las tres bandejas, junto al N° del ticket aparece un sobre rojo con el
+  número de mensajes sin leer (lo mismo que el número del botón "Chat").
+  Sirve en el celular, donde el botón "Chat" queda fuera de la pantalla.
+  Al tocarlo se abre el chat. Se oculta cuando no hay mensajes nuevos.
+- La columna "Folio / fecha" ahora se llama "N° / fecha".
+
+Código: clases/Notificaciones.php, clases/Tickets/AvisosTicket.php,
+ajax/notificaciones.php, componentes/campanita.php (la incluyen
+componentes/topbar.php e includes/header.php), js/notificaciones.js,
+css/notificaciones.css, helpers/tickets.php → ticket_sobre().

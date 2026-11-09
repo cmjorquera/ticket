@@ -10,6 +10,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_ticket_chat.php';
+require_once __DIR__ . '/../clases/Tickets/AvisosTicket.php';
 
 $guardados = [];
 try {
@@ -38,6 +39,7 @@ try {
         $conv->enviar($ticket, $usuarioId, $vista, $archivo['original'], $ruta);
     }
     ticket_registrar_cambio($db, $ticketId, $usuarioId, 'adjuntar');
+    (new AvisosTicket($db))->mensaje($ticketId, $usuarioId, $vista, 'adjuntó ' . implode(', ', array_column($archivos, 'original')));
     $n = count($archivos);
     responder_json(['ok' => true, 'mensaje' => $n === 1 ? 'Archivo adjuntado.' : "{$n} archivos adjuntados."], 201);
 } catch (Throwable $ex) {

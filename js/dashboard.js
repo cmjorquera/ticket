@@ -247,7 +247,7 @@
     if (!state.data || typeof window.crearTabla !== 'function') return;
     const tickets = filteredTickets();
     const columns = [
-      { key: 'id_ticket', label: 'Folio / fecha', render: ticket => `<span class="dashboard-ticket-folio"><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=${({ usuario: 'usuario', tecnico: 'tecnico', administrador: 'admin' }[state.perfil] || 'usuario')}">#${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
+      { key: 'id_ticket', label: 'N° / fecha', render: ticket => `<span class="dashboard-ticket-folio"><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=${({ usuario: 'usuario', tecnico: 'tecnico', administrador: 'admin' }[state.perfil] || 'usuario')}">#${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
       { key: 'asunto', label: 'Caso', render: ticket => `<span class="dashboard-ticket-main"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.colegio)}</small></span>` },
     ];
     if (state.perfil !== 'usuario') columns.push({ key: 'usuario', label: 'Usuario' });

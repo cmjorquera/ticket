@@ -5,6 +5,7 @@ $depth = '../';
 require_once __DIR__ . '/../configuracion/_inicio.php';
 require_once __DIR__ . '/../clases/Tickets/ConversacionTicket.php';
 require_once __DIR__ . '/../clases/Tickets/BitacoraTicket.php';
+require_once __DIR__ . '/../clases/Notificaciones.php';
 
 $usuarioId = (int) Sesion::get('id', 0);
 $ticketId = (int) ($_GET['id'] ?? 0);
@@ -78,6 +79,9 @@ if ($autorizado) {
         error_log('Error al consultar conversación del ticket: ' . $ex->getMessage());
         $conversacionDisponible = false;
     }
+
+    // Abrir el detalle marca como leídos los avisos de la campanita de este ticket
+    (new Notificaciones($db))->leerPorTicket($usuarioId, $ticketId);
 
     // Bitácora interna técnico ↔ administración (ticket/logica/LOGICA_BITACORA.txt)
     $bitacora = new BitacoraTicket($db);

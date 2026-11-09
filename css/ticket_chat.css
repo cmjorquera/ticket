@@ -141,3 +141,9 @@ body.tk-panel-abierto .chatf{display:none!important}
 .tk-plazo--hoy strong{color:#8A6200}.tk-plazo--hoy .tk-plazo__barra span{background:#E8A33D}
 .tk-plazo--atraso strong{color:var(--danger,#C62828)}.tk-plazo--atraso .tk-plazo__barra span{background:var(--danger,#C62828)}
 .tk-plazo--espera strong{color:var(--muted);font-weight:600}
+/* N° del ticket + sobre de mensajes sin leer (helpers/tickets.php → ticket_sobre) */
+.tk-num{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tk-sobre{display:none;align-items:center;gap:3px;padding:2px 6px 2px 5px;border:0;border-radius:99px;background:var(--danger-light,#FDECEC);color:var(--danger,#C62828);font-size:12px;cursor:pointer;line-height:1}
+.tk-sobre.has-unread{display:inline-flex}
+.tk-sobre .ticket-chat-unread{margin:0;box-shadow:none;min-width:16px;height:16px;font-size:9.5px}
+.tk-sobre.is-new{animation:tc-pop .6s cubic-bezier(.3,1.6,.5,1)}

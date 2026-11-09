@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_ticket_chat.php';
+require_once __DIR__ . '/../clases/Notificaciones.php';
 
 $datos = entrada_ajax();
 try {
@@ -18,6 +19,7 @@ try {
     // (no si la pestaña está oculta: así el contador sigue avisando).
     if ((string) ($datos['marcar'] ?? '1') === '1') {
         $conv->marcarLeidos($ticketId, $vista);
+        (new Notificaciones($db))->leerPorTicket($usuarioId, $ticketId, ['ticket_mensaje']);
     }
 
     $partes = $db->fetchOne(

@@ -236,6 +236,19 @@ function ticket_boton_abrir(int $ticketId, int $bitacoraNoLeidos = 0, string $vi
         . '<span class="ticket-bitacora-unread"' . ($n ? '' : ' hidden') . '><i class="bi bi-journal-text" aria-hidden="true"></i>' . ($n > 99 ? '99+' : $n) . '</span></a>';
 }
 
+/**
+ * Sobre con el número de mensajes sin leer, junto al N° del ticket (se ve en el
+ * celular aunque el botón "Chat" quede fuera de la pantalla). Abre el chat.
+ * Oculto mientras no haya mensajes nuevos; chat_ticket_panel.js lo actualiza.
+ */
+function ticket_sobre(int $ticketId, int $noLeidos = 0): string
+{
+    $n = max(0, $noLeidos);
+    return '<button class="tk-sobre js-ticket-chat' . ($n ? ' has-unread' : '') . '" type="button" data-ticket-id="' . $ticketId . '"'
+        . ' title="Mensajes sin leer" aria-label="Abrir chat: mensajes sin leer"><i class="bi bi-envelope-fill" aria-hidden="true"></i>'
+        . '<span class="ticket-chat-unread"' . ($n ? '' : ' hidden') . '>' . ($n > 99 ? '99+' : $n) . '</span></button>';
+}
+
 /** Genera el botón de adjuntos solamente cuando el ticket tiene archivos. */
 function ticket_boton_archivos(int $ticketId, int $cantidad): string
 {

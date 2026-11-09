@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_ticket_chat.php';
+require_once __DIR__ . '/../clases/Tickets/AvisosTicket.php';
 
 $datos = entrada_ajax();
 $texto = trim(str_replace("\r\n", "\n", (string) ($datos['comentario'] ?? $datos['mensaje'] ?? '')));
@@ -22,6 +23,7 @@ try {
     }
     $id = $conv->enviar($ticket, $usuarioId, $vista, $texto);
     ticket_registrar_cambio($db, (int) $ticket['id_ticket'], $usuarioId, 'comentar');
+    (new AvisosTicket($db))->mensaje((int) $ticket['id_ticket'], $usuarioId, $vista, $texto);   // campanita
     responder_json(['ok' => true, 'id' => $id, 'mensaje' => 'Mensaje enviado.'], 201);
 } catch (Throwable $ex) {
     error_log('[guardar_comentario] ' . $ex->getMessage());

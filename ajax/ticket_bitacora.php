@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_ticket_chat.php';
 require_once __DIR__ . '/../clases/Tickets/BitacoraTicket.php';
+require_once __DIR__ . '/../clases/Tickets/AvisosTicket.php';
 
 $datos = entrada_ajax();
 try {
@@ -44,6 +45,9 @@ try {
             responder_json(['ok' => false, 'error' => 'El ticket está terminado: la bitácora queda como registro.'], 409);
         }
         $id = $bitacora->registrar($ticketId, $usuarioId, $rol, $texto);
+        if ($rol === 'admin') {
+            (new AvisosTicket($db))->notaAdministracion($ticketId, $usuarioId, $texto);   // campanita del técnico
+        }
         responder_json(['ok' => true, 'id' => $id, 'mensaje' => 'Avance registrado.'], 201);
     }
 
