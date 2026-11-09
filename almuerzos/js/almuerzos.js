@@ -130,10 +130,12 @@
             const d = desdeClave(dia.fecha);
             const fecha = `<span class="alm-sdia__dow">${esc(titulo(DIAS[d.getDay()]))}</span><strong>${d.getDate()}</strong><small>${esc(MESES[d.getMonth()].slice(0, 3))}</small>`;
             if (!dia.menu) {
-                return `<div class="alm-sdia is-sin"><div class="alm-sdia__fecha">${fecha}</div><p class="alm-sdia__sin">Todavía no se publica el menú de este día.</p></div>`;
+                return `<div class="alm-sdia is-sin"><div class="alm-sdia__fecha">${fecha}</div><p class="alm-sdia__sin">${dia.sin_servicio ? '<strong>' + esc(dia.sin_servicio) + '</strong> · sin servicio de almuerzo.' : 'Todavía no se publica el menú de este día.'}</p></div>`;
             }
             return `<div class="alm-sdia${dia.pedido ? ' is-listo' : ''}">
                 <button type="button" class="alm-sdia__fecha" data-dia="${dia.fecha}" title="Ver el detalle del día">${fecha}</button>
+                <div class="alm-sdia__cuerpo">
+                ${dia.menu.obs ? '<p class="alm-obs alm-sdia__obs"><i class="bi bi-info-circle"></i> ' + esc(dia.menu.obs) + '</p>' : ''}
                 <div class="alm-sdia__ops" role="group" aria-label="${esc(fechaLarga(d))}">
                     ${ops.map(([id, o]) => {
                         const on = dia.pedido === id;
@@ -143,6 +145,7 @@
                             <span class="alm-chip__plato">${esc(plato)}</span>
                         </button>`;
                     }).join('')}
+                </div>
                 </div>
             </div>`;
         }).join('');
@@ -272,7 +275,8 @@
                 <span class="alm-dia__num"><span class="alm-dia__dow">${esc(titulo(DIAS[d.getDay()]))} </span>${d.getDate()}${k === hoy ? ' <small>Hoy</small>' : ''}</span>
                 ${m ? Object.entries(OPCIONES).map(([id, o]) =>
                     `<span class="alm-dia__plato alm-dia__plato--${o.clase}${elegido === id ? ' is-elegido' : ''}" title="${esc(o.nombre)}">${esc(platoPrincipal(id, m[id]))}</span>`).join('')
-                    : '<span class="alm-dia__sin">Sin servicio</span>'}
+                    : '<span class="alm-dia__sin">' + esc((datosMes.menu.sin_servicio || {})[k] || 'Sin servicio') + '</span>'}
+                ${m && m.obs ? '<span class="alm-dia__obs" title="' + esc(m.obs) + '"><i class="bi bi-info-circle"></i> ' + esc(m.obs) + '</span>' : ''}
                 ${elegido === 'no' ? '<span class="alm-dia__no">Sin almuerzo</span>' : ''}
             </button>`;
         }
@@ -290,7 +294,8 @@
         if (!m) { return; }
         const elegido = (datosMes.pedidos || {})[k];
         $('#dlgDiaTitulo').textContent = fechaLarga(d);
-        $('#dlgDiaCuerpo').innerHTML = Object.entries(OPCIONES).map(([id, o]) => `
+        $('#dlgDiaCuerpo').innerHTML = (m.obs ? '<p class="alm-obs"><i class="bi bi-info-circle"></i> ' + esc(m.obs) + '</p>' : '')
+            + Object.entries(OPCIONES).map(([id, o]) => `
             <div class="alm-detalle alm-detalle--${o.clase}${elegido === id ? ' is-elegida' : ''}">
                 <figure class="alm-detalle__foto">
                     <img src="${esc(imagenMenu(m, id))}" alt="${esc(o.nombre + ': ' + platoPrincipal(id, m[id]))}" loading="lazy" onerror="this.onerror=null;this.src='img/ref_${id}.svg'">

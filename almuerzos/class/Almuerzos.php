@@ -167,10 +167,12 @@ final class Almuerzos
         $p = $this->planificacion($simular);
         $menus = $this->menusEntre($p['desde'], $p['hasta']);
         $pedidos = $this->pedidosUsuarioEntre($idUsuario, $p['desde'], $p['hasta']);
+        $sin = $this->sinServicioEntre($p['desde'], $p['hasta']);
         $p['dias'] = array_map(static fn (string $f): array => [
             'fecha' => $f,
             'menu' => $menus[$f] ?? null,
             'pedido' => $pedidos[$f] ?? null,
+            'sin_servicio' => $sin[$f] ?? null,   // ej: "Feriado"
         ], $p['fechas']);
         return $p;
     }
@@ -215,7 +217,7 @@ final class Almuerzos
         $dias = [];
         $img = $this->hayColumnaImagen() ? 'm.imagen' : 'NULL AS imagen';
         foreach ($this->db->fetchAll(
-            "SELECT d.fecha, t.codigo, m.entrada, m.plato_fondo, m.postre, $img
+            "SELECT d.fecha, d.observacion, t.codigo, m.entrada, m.plato_fondo, m.postre, $img
                FROM almuerzo_dia d
                JOIN almuerzo_mes ms  ON ms.id_mes = d.id_mes AND ms.estado = 'publicado'
                JOIN almuerzo_menu m  ON m.id_dia_menu = d.id_dia_menu
@@ -226,6 +228,9 @@ final class Almuerzos
         ) as $f) {
             $k = self::clave($f['codigo']);
             $dias[$f['fecha']][$k] = self::textoMenu($f);
+            if (trim((string) $f['observacion']) !== '') {
+                $dias[$f['fecha']]['obs'] = trim((string) $f['observacion']);   // ej: "Último almuerzo de 1° a 4° básico"
+            }
             $ruta = trim((string) ($f['imagen'] ?? ''));
             if ($ruta !== '' && preg_match('~^(https://|img/)[^"\'<>\s]+$~', $ruta)) {
                 $dias[$f['fecha']]['img'][$k] = $ruta;
@@ -233,6 +238,17 @@ final class Almuerzos
         }
         // Solo días con los tres menús completos
         return array_filter($dias, static fn (array $m): bool => isset($m['menu'], $m['hipo'], $m['picnic']));
+    }
+
+    /** Días sin servicio con motivo (ej: "Feriado"): ['AAAA-MM-DD' => motivo] */
+    public function sinServicioEntre(string $desde, string $hasta): array
+    {
+        return array_column($this->db->fetchAll(
+            "SELECT d.fecha, d.observacion FROM almuerzo_dia d
+               JOIN almuerzo_mes ms ON ms.id_mes = d.id_mes AND ms.estado = 'publicado'
+              WHERE d.fecha BETWEEN ? AND ? AND d.hay_servicio = 0 AND COALESCE(d.observacion, '') <> ''",
+            [$desde, $hasta]
+        ), 'observacion', 'fecha');
     }
 
     /** Menú de un día, o null si no hay servicio. */
@@ -259,6 +275,8 @@ final class Almuerzos
             'publicado_por' => $cab['publicado_por'] ?? null,
             'actualizado_en' => $cab['actualizado_en'] ?? null,
             'dias' => $this->menusEntre($desde, $hasta),
+            // Días sin servicio con motivo (ej: "Feriado"): ['AAAA-MM-DD' => motivo]
+            'sin_servicio' => $this->sinServicioEntre($desde, $hasta),
         ];
     }
 

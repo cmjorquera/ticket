@@ -12,6 +12,7 @@ modelo_almuerzos.mmd       Fuente del diagrama (Mermaid). Para regenerar la imag
 05_borrar_tablas_v1.sql    Borra las tablas de la versión 1 (ya no se usan). Ejecutar una vez.
 06_picnic_e_imagen.sql     Columna imagen (foto del menú) y picnic = solo sándwich.
 07_planificacion_semanal.sql  Configura los días de planificación semanal (sábado y domingo).
+08_menu_real_nov_dic_2026.sql Borra el menú de ejemplo y carga el menú real de nov. y dic. 2026.
 
 Modelo v2 (8 tablas)
 --------------------
@@ -41,6 +42,7 @@ Cómo instalar (en orden)
 3. 05_borrar_tablas_v1.sql        una vez, para quitar las tablas antiguas
 4. 06_picnic_e_imagen.sql         columna imagen + picnic solo sándwich (se puede repetir)
 5. 07_planificacion_semanal.sql   días de planificación semanal (se puede repetir)
+6. 08_menu_real_nov_dic_2026.sql  menú real (reemplaza al 04; borra las elecciones de nov/dic)
 
 Fotos de los menús: ver img/menus/LEEME.txt
 
