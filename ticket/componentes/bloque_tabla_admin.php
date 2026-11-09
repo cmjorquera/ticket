@@ -51,7 +51,7 @@ $esGlobal = !empty($esGlobal);
           <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>
           <td><?= ticket_badge_estado($ticket) ?></td>
           <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
-          <td><div class="ticket-actions"><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><?= ticket_boton_abrir((int) $ticket['id_ticket'], (int) ($ticket['bitacora_no_leidos'] ?? 0)) ?><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($json) ?>" onclick="administrarTicket(this)"><i class="bi bi-sliders"></i> Gestionar</button></div></td>
+          <td><div class="ticket-actions"><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><?= ticket_boton_abrir((int) $ticket['id_ticket'], (int) ($ticket['bitacora_no_leidos'] ?? 0), 'admin') ?><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($json) ?>" onclick="administrarTicket(this)"><i class="bi bi-sliders"></i> Gestionar</button></div></td>
         </tr>
       <?php endforeach; ?></tbody></table></div>
       <?php if ($totalPaginas > 1): ?>

@@ -247,7 +247,7 @@
     if (!state.data || typeof window.crearTabla !== 'function') return;
     const tickets = filteredTickets();
     const columns = [
-      { key: 'id_ticket', label: 'Folio / fecha', render: ticket => `<span class="dashboard-ticket-folio"><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}">#${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
+      { key: 'id_ticket', label: 'Folio / fecha', render: ticket => `<span class="dashboard-ticket-folio"><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=${({ usuario: 'usuario', tecnico: 'tecnico', administrador: 'admin' }[state.perfil] || 'usuario')}">#${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
       { key: 'asunto', label: 'Caso', render: ticket => `<span class="dashboard-ticket-main"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.colegio)}</small></span>` },
     ];
     if (state.perfil !== 'usuario') columns.push({ key: 'usuario', label: 'Usuario' });
@@ -274,12 +274,14 @@
 
   function renderActions(ticket) {
     const id = Number(ticket.id_ticket);
+    // el detalle muestra lo que corresponde a la bandeja (ticket/logica/ESTUDIO_MODULO_TICKET.txt)
+    const v = `&vista=${({ usuario: 'usuario', tecnico: 'tecnico', administrador: 'admin' }[state.perfil] || 'usuario')}`;
     const links = [
-      `<a href="ticket/ticket_detalle.php?id=${id}" title="Ver ticket" aria-label="Ver ticket ${id}"><i class="bi bi-eye" aria-hidden="true"></i><span>Ver</span></a>`,
-      `<a href="ticket/ticket_detalle.php?id=${id}#conversacion" title="Abrir conversación" aria-label="Abrir conversación del ticket ${id}"><i class="bi bi-chat-dots" aria-hidden="true"></i><span>Chat</span></a>`,
+      `<a href="ticket/ticket_detalle.php?id=${id}${v}" title="Ver ticket" aria-label="Ver ticket ${id}"><i class="bi bi-eye" aria-hidden="true"></i><span>Ver</span></a>`,
+      `<a href="ticket/ticket_detalle.php?id=${id}${v}#conversacion" title="Abrir conversación" aria-label="Abrir conversación del ticket ${id}"><i class="bi bi-chat-dots" aria-hidden="true"></i><span>Chat</span></a>`,
     ];
     if (ticket.puede_calificar) {
-      links.push(`<a class="is-rate" href="ticket/ticket_detalle.php?id=${id}#calificacion" title="Calificar atención" aria-label="Calificar ticket ${id}"><i class="bi bi-star-fill" aria-hidden="true"></i><span>Calificar</span></a>`);
+      links.push(`<a class="is-rate" href="ticket/ticket_detalle.php?id=${id}&vista=usuario#calificacion" title="Calificar atención" aria-label="Calificar ticket ${id}"><i class="bi bi-star-fill" aria-hidden="true"></i><span>Calificar</span></a>`);
     }
     if (state.perfil === 'tecnico') {
       links.push(`<a href="ticket/ticket_asignados.php" title="Gestionar estado" aria-label="Gestionar ticket ${id}"><i class="bi bi-pencil" aria-hidden="true"></i><span>Estado</span></a>`);

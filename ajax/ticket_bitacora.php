@@ -1,7 +1,7 @@
 <?php
 /**
  * Bitácora interna del ticket (técnico ↔ administración). El solicitante no tiene acceso.
- * POST: csrf, ticket_id, accion = listar | guardar (texto) | no_leidos (rol, ids[])
+ * POST: csrf, ticket_id, vista (tecnico|admin), accion = listar | guardar (texto) | no_leidos (rol, ids[])
  * Lógica: ticket/logica/LOGICA_BITACORA.txt
  */
 declare(strict_types=1);
@@ -24,7 +24,7 @@ try {
     if (!$ticket) {
         responder_json(['ok' => false, 'error' => 'Ticket no encontrado.'], 404);
     }
-    $rol = $bitacora->rol($usuarioId, $ticket);
+    $rol = $bitacora->rolPara($usuarioId, $ticket, (string) ($datos['vista'] ?? ''));
     if ($rol === null) {
         responder_json(['ok' => false, 'error' => 'La bitácora es solo para el técnico y administración.'], 403);
     }

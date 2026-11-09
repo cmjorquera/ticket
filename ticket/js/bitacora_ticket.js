@@ -28,6 +28,22 @@
     }
   }));
 
+  /* --- QR de seguimiento (ticket/seguimiento.php) --- */
+  const qr = document.getElementById('tb-qr');
+  if (qr && typeof window.QRCode === 'function') {
+    new window.QRCode(qr, {text: qr.dataset.enlace, width: 168, height: 168, correctLevel: window.QRCode.CorrectLevel.M});
+    qr.removeAttribute('title');
+  } else if (qr) {
+    qr.textContent = 'No se pudo dibujar el código QR. Usa "Copiar enlace".';
+  }
+  document.getElementById('tb-qr-copiar')?.addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    try { await navigator.clipboard.writeText(qr.dataset.enlace); } catch (_) { window.prompt('Copia el enlace:', qr.dataset.enlace); return; }
+    const antes = b.innerHTML;
+    b.innerHTML = '<i class="bi bi-check2"></i> Copiado';
+    window.setTimeout(() => { b.innerHTML = antes; }, 1600);
+  });
+
   const card = document.getElementById('bitacora');
   const lista = document.getElementById('tb-list');
   if (!card || !lista) return;
@@ -91,7 +107,7 @@
   async function post(datos) {
     const r = await fetch('../ajax/ticket_bitacora.php', {
       method: 'POST', credentials: 'same-origin',
-      body: new URLSearchParams({csrf, ticket_id: ticketId, ...datos}),
+      body: new URLSearchParams({csrf, ticket_id: ticketId, vista: card.dataset.rol, ...datos}),
     });
     const d = await r.json().catch(() => ({ok: false, error: 'Respuesta no válida del servidor.'}));
     if (!r.ok || !d.ok) throw new Error(d.error || 'No fue posible cargar la bitácora.');

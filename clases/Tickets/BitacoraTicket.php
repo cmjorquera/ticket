@@ -60,6 +60,21 @@ final class BitacoraTicket
         return puede_administrar_ticket($usuarioId, (int) ($ticket['id_colegio'] ?? 0), $this->db) ? 'admin' : null;
     }
 
+    /**
+     * Papel según la bandeja desde la que se abrió el detalle ('tecnico' | 'admin').
+     * Si la persona no cumple ese papel, se usa el que le corresponda (rol()).
+     */
+    public function rolPara(int $usuarioId, array $ticket, string $pedido): ?string
+    {
+        if ($pedido === 'tecnico' && (int) ($ticket['id_tecnico_asignado'] ?? $ticket['id_tecnico'] ?? 0) === $usuarioId) {
+            return 'tecnico';
+        }
+        if ($pedido === 'admin' && puede_administrar_ticket($usuarioId, (int) ($ticket['id_colegio'] ?? 0), $this->db)) {
+            return 'admin';
+        }
+        return $pedido === 'usuario' ? null : $this->rol($usuarioId, $ticket);
+    }
+
     private static function otroLado(string $rol): string
     {
         return $rol === 'tecnico' ? 'admin' : 'tecnico';

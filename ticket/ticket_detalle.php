@@ -57,13 +57,19 @@ $autorizado = $ticket && puede_ver_ticket($usuarioId, $ticket, $db);
 $esPropietario = $autorizado && (int) $ticket['id_usuario'] === $usuarioId;
 $esTecnico = $autorizado && (int) ($ticket['id_tecnico_asignado'] ?? 0) === $usuarioId;
 $esAdministrador = $autorizado && puede_administrar_ticket($usuarioId, (int) $ticket['id_colegio'], $db);
-$puedeCambiarEstado = $esTecnico || $esAdministrador;
+// Bandeja desde la que se abrió (?vista=usuario|tecnico|admin). Define qué se puede hacer:
+//   usuario → lo que ve quien pidió el ticket: chat, ciclo, QR y calificación (sin bitácora ni estados)
+//   tecnico → además bitácora, Comenzar / Terminar y cambiar estado
+//   admin   → bitácora como administración y cambiar estado
+$vistasPosibles = array_keys(array_filter(['usuario' => $esPropietario, 'tecnico' => $esTecnico, 'admin' => $esAdministrador]));
+$vista = in_array($_GET['vista'] ?? '', $vistasPosibles, true) ? (string) $_GET['vista'] : ($vistasPosibles[0] ?? 'usuario');
+$puedeCambiarEstado = ($vista === 'tecnico' && $esTecnico) || ($vista === 'admin' && $esAdministrador);
 
 if ($autorizado) {
     try {
         // Mensajería: ticket_conversaciones (ticket/logica/LOGICA_MENSAJERIA.txt)
         $conversacion = new ConversacionTicket($db);
-        $vistaChat = $conversacion->resolverVista($usuarioId, $ticket) ?? 'admin';
+        $vistaChat = $conversacion->resolverVista($usuarioId, $ticket, $vista) ?? 'admin';
         $conversacion->marcarLeidos($ticketId, $vistaChat);
         $comentarios = $conversacion->mensajes($ticketId, $vistaChat);
         $conversacionDisponible = true;
@@ -74,7 +80,7 @@ if ($autorizado) {
 
     // Bitácora interna técnico ↔ administración (ticket/logica/LOGICA_BITACORA.txt)
     $bitacora = new BitacoraTicket($db);
-    $rolBitacora = $bitacora->rol($usuarioId, $ticket);
+    $rolBitacora = $vista === 'usuario' ? null : $bitacora->rolPara($usuarioId, $ticket, $vista);
     $bitacoraLista = $rolBitacora !== null && $bitacora->disponible();
     $entradasBitacora = [];
     if ($bitacoraLista) {
@@ -117,9 +123,17 @@ if ($autorizado) {
     }
 }
 
-$volver = $esPropietario ? 'ticket.php' : ($esTecnico ? 'ticket_asignados.php' : 'ticket_admin_v2.php');
+$volver = ['usuario' => 'ticket.php', 'tecnico' => 'ticket_asignados.php', 'admin' => 'ticket_admin_v2.php'][$vista] ?? 'ticket.php';
 $csrf = ticket_csrf_token();
 $rolBitacora = $rolBitacora ?? null;
+$enlaceSeguimiento = '';
+if ($ticket && $autorizado && (int) $ticket['id_estado'] !== 4) {
+    try {   // QR para seguir el ticket desde el celular (ticket/seguimiento.php)
+        $enlaceSeguimiento = ticket_enlace_seguimiento(ticket_codigo_seguimiento($db, (int) $ticket['id_ticket']));
+    } catch (Throwable $ex) {
+        error_log('Error al preparar el QR del ticket: ' . $ex->getMessage());
+    }
+}
 $cerradoTicket = $ticket ? ticket_estado_sin_escritura((int) $ticket['id_estado']) : true;
 // Ciclo del ticket (como el modal del sistema antiguo)
 $fechaCorta = static fn (string $f): string => strtotime($f) ? date('d/m/Y H:i', strtotime($f)) : '';
@@ -213,12 +227,24 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
               <li class="<?= $hecho ? 'is-done' : '' ?>"><span><i class="bi <?= $hecho ? 'bi-check-lg' : $iconoPaso ?>"></i></span><div><strong><?= e($nombrePaso) ?></strong><small><?= e($fechaPaso ?: '—') ?></small></div></li>
             <?php endforeach; ?>
           </ol>
-          <?php if ($esTecnico && in_array((int) $ticket['id_estado'], [1, 2], true)): ?>
+          <?php if ($vista === 'tecnico' && $esTecnico && in_array((int) $ticket['id_estado'], [1, 2], true)): ?>
             <button class="btn btn-primary tb-accion" type="button" data-estado="3"><i class="bi bi-play-fill"></i> Comenzar ticket</button>
-          <?php elseif ($esTecnico && in_array((int) $ticket['id_estado'], [3, 7], true)): ?>
+          <?php elseif ($vista === 'tecnico' && $esTecnico && in_array((int) $ticket['id_estado'], [3, 7], true)): ?>
             <button class="btn btn-primary tb-accion" type="button" data-estado="5" data-confirmar="¿Marcar el ticket como terminado? La conversación y la bitácora quedarán como registro."><i class="bi bi-flag-fill"></i> Terminar ticket</button>
           <?php endif; ?>
         </section>
+        <?php if ($enlaceSeguimiento !== ''): ?>
+        <section class="card tb-qr">
+          <h2><i class="bi bi-qr-code"></i> Seguimiento en el celular</h2>
+          <div class="tb-qr__codigo" id="tb-qr" data-enlace="<?= e($enlaceSeguimiento) ?>" role="img" aria-label="Código QR para seguir el ticket #<?= (int) $ticket['id_ticket'] ?>"></div>
+          <p>Escanéalo con la cámara para ver en qué va el ticket, sin iniciar sesión.</p>
+          <div class="tb-qr__botones">
+            <button class="btn btn-outline btn-sm" type="button" id="tb-qr-copiar"><i class="bi bi-link-45deg"></i> Copiar enlace</button>
+            <a class="btn btn-outline btn-sm" href="<?= e($enlaceSeguimiento) ?>" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Abrir</a>
+          </div>
+        </section>
+        <?php endif; ?>
+
         <section class="card ticket-detail-facts">
           <h2>Datos del ticket</h2>
           <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(str_replace('í','i',strtolower((string)$ticket['prioridad']))) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
@@ -228,7 +254,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
-        <?php if ($calificacionDisponible && $esPropietario && in_array($estado, ['resuelto','cerrado'], true)): ?>
+        <?php if ($calificacionDisponible && $vista === 'usuario' && $esPropietario && in_array($estado, ['resuelto','cerrado'], true)): ?>
           <section class="card ticket-rating" id="calificacion">
             <h2>Califica la atención</h2>
             <?php if ($calificacion): ?>
@@ -260,6 +286,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
   </div>
   <link rel="stylesheet" href="../css/ticket_bitacora.css?v=<?= (int) @filemtime(__DIR__ . '/../css/ticket_bitacora.css') ?>">
   <script src="js/chat_ticket.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="js/bitacora_ticket.js?v=<?= (int) @filemtime(__DIR__ . '/js/bitacora_ticket.js') ?>"></script>
   <?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php endif; ?>

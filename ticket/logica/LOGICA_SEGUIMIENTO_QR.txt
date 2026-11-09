@@ -1,0 +1,43 @@
+SEGUIMIENTO DEL TICKET POR CÓDIGO QR + QUÉ MUESTRA EL DETALLE SEGÚN LA BANDEJA
+==============================================================================
+(09-11-2026)
+
+1. CÓDIGO QR (como el botón "QR Code" del sistema antiguo)
+----------------------------------------------------------
+- En el detalle del ticket (columna derecha) está "Seguimiento en el celular":
+  un QR, "Copiar enlace" y "Abrir". Se ve en todas las bandejas.
+- El QR abre ticket/seguimiento.php?c=<código>: página PÚBLICA (sin iniciar
+  sesión), pensada para celular. Reemplaza a
+  codigosQR/ticket/ticketQRinformacion.php?id=… del sistema antiguo.
+- Diferencia de seguridad con el antiguo: el antiguo entraba con ?id=598, y
+  cambiando el número se veía cualquier ticket. Ahora se entra con
+  tickets.identificador (16 letras/números al azar). Si un ticket no tiene
+  código, se genera al mostrar el QR (helpers/tickets.php →
+  ticket_codigo_seguimiento). Se distingue mayúsculas de minúsculas.
+- Qué muestra: número, asunto, estado, barra "x de 4 etapas", ciclo con fechas
+  (Recibido, Asignado, En proceso, Terminado), solicitante, técnico, categoría,
+  fecha estimada y los "Movimientos" automáticos (asignación, cambios de estado).
+- Qué NO muestra: la descripción, el chat ni la bitácora interna. Para eso está
+  el botón "Ingresar para conversar con el técnico" (pide iniciar sesión).
+- Borradores y tickets eliminados no se muestran (404).
+- Librería del QR: qrcode.js (la misma de Inventario), desde cdnjs.
+
+2. EL DETALLE MUESTRA LO QUE CORRESPONDE A LA BANDEJA
+-----------------------------------------------------
+ticket/ticket_detalle.php?id=…&vista=usuario|tecnico|admin
+  usuario (Mesa de ayuda → Ver)       descripción, chat como solicitante, ciclo,
+                                      QR, datos y calificación. SIN bitácora,
+                                      sin "Comenzar" y sin cambiar estado.
+  tecnico (Tickets Asignados → Abrir) además bitácora como técnico, botones
+                                      "Comenzar ticket" / "Terminar ticket" y
+                                      "Actualizar estado".
+  admin (Ticket Administrador → Abrir) bitácora como administración y
+                                      "Actualizar estado" (sin Comenzar).
+- La vista pedida solo se acepta si la persona cumple ese papel; si no, se usa
+  la primera que le corresponda (usuario > técnico > admin). Así, aunque
+  Cristian pida y atienda el mismo ticket, desde "Mesa de ayuda" lo ve como
+  solicitante.
+- "Volver a la bandeja" regresa a la bandeja de origen. El inicio (dashboard)
+  también abre el detalle con la vista de su perfil.
+- El servidor sigue validando los permisos reales (ajax/guardar_ticket.php):
+  cambiar estado solo técnico asignado o administración.

@@ -211,11 +211,11 @@ function ticket_boton_chat(int $ticketId, int $noLeidos = 0): string
  * Botón "Abrir" (detalle) con el número de entradas nuevas en la bitácora
  * interna (técnico ↔ administración). ticket/js/chat_ticket_panel.js lo actualiza.
  */
-function ticket_boton_abrir(int $ticketId, int $bitacoraNoLeidos = 0): string
+function ticket_boton_abrir(int $ticketId, int $bitacoraNoLeidos = 0, string $vista = 'tecnico'): string
 {
     $n = max(0, $bitacoraNoLeidos);
     $titulo = $n === 0 ? 'Abrir el detalle' : ($n === 1 ? '1 avance nuevo en la bitácora' : $n . ' avances nuevos en la bitácora');
-    return '<a class="btn btn-outline btn-sm ticket-open-button js-ticket-open' . ($n ? ' has-unread' : '') . '" href="ticket_detalle.php?id=' . $ticketId . '#bitacora"'
+    return '<a class="btn btn-outline btn-sm ticket-open-button js-ticket-open' . ($n ? ' has-unread' : '') . '" href="ticket_detalle.php?id=' . $ticketId . '&amp;vista=' . rawurlencode($vista) . '#bitacora"'
         . ' data-ticket-id="' . $ticketId . '" title="' . $titulo . '"><i class="bi bi-eye" aria-hidden="true"></i> Abrir'
         . '<span class="ticket-bitacora-unread"' . ($n ? '' : ' hidden') . '><i class="bi bi-journal-text" aria-hidden="true"></i>' . ($n > 99 ? '99+' : $n) . '</span></a>';
 }
@@ -637,4 +637,43 @@ function ticket_mover_archivo(int $ticketId, array $archivo): string
         throw new RuntimeException('No fue posible guardar un archivo adjunto.');
     }
     return $relDir . '/' . $nombre;
+}
+
+/**
+ * Código de seguimiento público del ticket (tickets.identificador, 16 caracteres
+ * aleatorios). Si el ticket no tiene, se genera. Lo usa el QR del detalle.
+ * Lógica: ticket/logica/LOGICA_SEGUIMIENTO_QR.txt
+ */
+function ticket_codigo_seguimiento(Conexion $db, int $ticketId): string
+{
+    $fila = $db->fetchOne('SELECT identificador FROM tickets WHERE id_ticket = ?', [$ticketId]);
+    $codigo = (string) ($fila['identificador'] ?? '');
+    if (preg_match('/^[A-Za-z0-9]{12,32}$/', $codigo)) {
+        return $codigo;
+    }
+    $abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+    do {
+        $codigo = '';
+        for ($i = 0; $i < 16; $i++) {
+            $codigo .= $abc[random_int(0, strlen($abc) - 1)];
+        }
+    } while ($db->fetchOne('SELECT 1 FROM tickets WHERE identificador = ?', [$codigo]));
+    $db->execute('UPDATE tickets SET identificador = ? WHERE id_ticket = ?', [$codigo, $ticketId]);
+    return $codigo;
+}
+
+/** Enlace público de seguimiento (lo que abre el QR en el celular). */
+function ticket_enlace_seguimiento(string $codigo): string
+{
+    if (!defined('BASE_URL') && is_file(dirname(__DIR__) . '/config.php')) {
+        require_once dirname(__DIR__) . '/config.php';
+    }
+    if (defined('BASE_URL')) {
+        $base = rtrim((string) BASE_URL, '/') . '/';
+    } else {
+        $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        $host = preg_replace('/[^\w.\-:]/', '', (string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        $base = ($https ? 'https' : 'http') . '://' . $host . '/';
+    }
+    return $base . 'ticket/seguimiento.php?c=' . rawurlencode($codigo);
 }

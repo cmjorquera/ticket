@@ -4,6 +4,7 @@ Cómo funciona hoy la carpeta ticket/, comparada con el sistema antiguo
 (rama "antiguo"), y qué se encontró al revisarla.
 Mensajería (chat): ver LOGICA_MENSAJERIA.txt.
 Bitácora interna (técnico ↔ administración): ver LOGICA_BITACORA.txt.
+QR de seguimiento y qué muestra el detalle según la bandeja: ver LOGICA_SEGUIMIENTO_QR.txt.
 Categorías y a qué técnico llega cada ticket: configuracion/logica/LOGICA_CATEGORIAS.txt.
 
 1. PANTALLAS
