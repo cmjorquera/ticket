@@ -69,7 +69,9 @@ final class BitacoraTicket
         if ($pedido === 'tecnico' && (int) ($ticket['id_tecnico_asignado'] ?? $ticket['id_tecnico'] ?? 0) === $usuarioId) {
             return 'tecnico';
         }
-        if ($pedido === 'admin' && puede_administrar_ticket($usuarioId, (int) ($ticket['id_colegio'] ?? 0), $this->db)) {
+        // Quien pidió el ticket no ve la bitácora aunque administre su colegio (salvo super admin)
+        $esSolicitante = (int) ($ticket['id_usuario'] ?? 0) === $usuarioId && !es_administrador_global($usuarioId, $this->db);
+        if ($pedido === 'admin' && !$esSolicitante && puede_administrar_ticket($usuarioId, (int) ($ticket['id_colegio'] ?? 0), $this->db)) {
             return 'admin';
         }
         return $pedido === 'usuario' ? null : $this->rol($usuarioId, $ticket);

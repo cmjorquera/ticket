@@ -39,7 +39,16 @@ try {
         }
         $idsColegio = array_map('intval', array_column($colegios, 'id_colegio'));
         if ($colegioFiltro > 0 && !in_array($colegioFiltro, $idsColegio, true)) $colegioFiltro = 0;
-        $tecnicos = $db->fetchAll("SELECT id, CONCAT_WS(' ', nombre, apellido_paterno) AS nombre FROM usuarios WHERE id_area_trabajo = 1 AND LOWER(estado) = 'activo' ORDER BY nombre, apellido_paterno");
+        // Técnicos asignables: funcionarios de Informática de Seduc (LOGICA_CATEGORIAS.txt)
+        require_once __DIR__ . '/../clases/RolesUsuario.php';
+        [$condTec, $paramTec] = (new RolesUsuario($db))->modeloActivo()
+            ? RolesUsuario::condicionDepartamento('u')
+            : ['u.id_area_trabajo = 1', []];
+        $tecnicos = $db->fetchAll(
+            "SELECT u.id, CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS nombre FROM usuarios u
+              WHERE LOWER(u.estado) = 'activo' AND {$condTec} ORDER BY u.nombre, u.apellido_paterno",
+            $paramTec
+        );
         $idsTecnico = array_map('intval', array_column($tecnicos, 'id'));
         if ($tecnicoFiltro > 0 && !in_array($tecnicoFiltro, $idsTecnico, true)) $tecnicoFiltro = 0;
 
@@ -95,13 +104,15 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
       <div class="modal-body">
         <div class="ticket-detail-grid" id="admin-modal-grid"></div><div class="ticket-description" id="admin-modal-descripcion"></div>
         <div class="ticket-admin-actions">
-          <div class="form-group"><label class="form-label" for="admin-modal-tecnico">Técnico asignado</label><select class="form-input" id="admin-modal-tecnico"><option value="0">Sin asignar</option><?php foreach ($tecnicos as $tecnico): ?><option value="<?= (int)$tecnico['id'] ?>"><?= e($tecnico['nombre']) ?></option><?php endforeach; ?></select></div>
+          <div class="form-group"><label class="form-label" for="admin-modal-tecnico">Técnico asignado <small class="text-muted">(Informática de Seduc)</small></label><select class="form-input" id="admin-modal-tecnico"><option value="0">Sin asignar</option><?php foreach ($tecnicos as $tecnico): ?><option value="<?= (int)$tecnico['id'] ?>"><?= e($tecnico['nombre']) ?></option><?php endforeach; ?></select><small class="tk-reasignar" id="admin-modal-tecnico-nota" hidden></small></div>
           <div class="form-group"><label class="form-label" for="admin-modal-estado">Estado</label><select class="form-input" id="admin-modal-estado"><?php foreach (ticket_estados_legacy() as $idEstado => $infoEstado): ?><option value="<?= $idEstado ?>"><?= e($infoEstado['nombre']) ?></option><?php endforeach; ?></select></div>
         </div>
         <div class="ticket-message" id="admin-modal-mensaje" role="status"></div>
       </div>
       <div class="modal-footer">
         <?php if ($esGlobal): ?><button class="btn btn-danger" id="admin-modal-eliminar"><i class="bi bi-trash"></i> Eliminar</button><?php endif; ?>
+        <a class="btn btn-outline" id="admin-modal-pdf" href="#" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+        <button class="btn btn-outline js-ticket-correo" type="button" id="admin-modal-correo" data-solo-yo="0"><i class="bi bi-envelope"></i> Correo</button>
         <button class="btn btn-outline" onclick="closeModal('modal-admin-ticket')">Cerrar</button><button class="btn btn-primary" id="admin-modal-guardar"><i class="bi bi-check2"></i> Guardar cambios</button>
       </div>
     </div>
@@ -125,7 +136,18 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     document.getElementById('admin-modal-folio').textContent=`Ticket #${t.id_ticket} · ${t.categoria_nombre}`;
     document.getElementById('admin-modal-grid').innerHTML=`<div class="ticket-detail-block"><span>Solicitante</span><strong>${escTicket(t.usuario_nombre)}</strong></div><div class="ticket-detail-block"><span>Colegio</span><strong>${escTicket(t.colegio_nombre)}</strong></div><div class="ticket-detail-block"><span>Prioridad</span><strong>${escTicket(t.prioridad)}</strong></div><div class="ticket-detail-block"><span>Creado</span><strong>${escTicket(t.fecha_creacion)}</strong></div>`;
     document.getElementById('admin-modal-descripcion').textContent=t.descripcion_texto||t.descripcion;
-    document.getElementById('admin-modal-tecnico').value=t.id_tecnico_asignado||'0'; document.getElementById('admin-modal-estado').value=t.id_estado;
+    const selTec=document.getElementById('admin-modal-tecnico'), notaTec=document.getElementById('admin-modal-tecnico-nota');
+    selTec.querySelectorAll('option[data-externo]').forEach(o=>o.remove());
+    if(t.id_tecnico_asignado && !selTec.querySelector(`option[value="${t.id_tecnico_asignado}"]`)){const o=new Option(`${t.tecnico_nombre} (fuera de Informática)`,t.id_tecnico_asignado);o.dataset.externo='1';selTec.add(o)}
+    selTec.value=t.id_tecnico_asignado||'0';
+    // Reasignar solo si el técnico aún no lo comienza (Recibido / Asignado)
+    const reasignable=[1,2].includes(Number(t.id_estado));
+    selTec.disabled=!reasignable;
+    notaTec.hidden=reasignable;
+    notaTec.innerHTML=reasignable?'':`<i class="bi bi-lock"></i> ${escTicket(t.tecnico_nombre||'El técnico')} ya comenzó el ticket: no se puede reasignar.`;
+    document.getElementById('admin-modal-estado').value=t.id_estado;
+    document.getElementById('admin-modal-pdf').href=`../ajax/ticket_pdf.php?id=${t.id_ticket}&vista=admin`;
+    const btnCorreo=document.getElementById('admin-modal-correo'); btnCorreo.dataset.ticketId=t.id_ticket; btnCorreo.dataset.email=t.usuario_email||'';
     document.getElementById('admin-modal-mensaje').className='ticket-message'; openModal('modal-admin-ticket');
   }
   async function accionTicket(accion, extra={}){
@@ -137,6 +159,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
   </script>
 <?php endif; ?>
 
+<?php require __DIR__ . '/componentes/modal_correo_ticket.php'; ?>
 <?php $vistaChat = 'admin'; require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php require __DIR__ . '/componentes/panel_detalle.php'; ?>
 <?php finalizar_layout_configuracion(); ?>

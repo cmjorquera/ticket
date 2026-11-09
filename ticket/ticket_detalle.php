@@ -29,7 +29,7 @@ try {
                 COALESCE(CONCAT(pt.fecha_comienzo_ticket, ' ', COALESCE(pt.hora_comienzo_ticket, '00:00:00')), '') AS fecha_comienzo,
                 COALESCE(CONCAT(pt.fecha_termino_ticket, ' ', COALESCE(pt.hora_termino_ticket, '00:00:00')), '') AS fecha_termino,
                 c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
-                CONCAT_WS(' ', sol.nombre, sol.apellido_paterno) AS usuario_nombre,
+                CONCAT_WS(' ', sol.nombre, sol.apellido_paterno) AS usuario_nombre, sol.email AS usuario_email,
                 CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
            FROM tickets t
            JOIN usuarios sol ON sol.id = t.id_usuario
@@ -175,6 +175,8 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <div class="ticket-detail-titleline">
         <div><span class="ticket-detail-kicker">Solicitud #<?= (int) $ticket['id_ticket'] ?></span><h1><?= e($ticket['asunto']) ?></h1></div>
         <div class="tb-cabecera-acciones">
+          <a class="btn btn-outline btn-sm" href="../ajax/ticket_pdf.php?id=<?= (int) $ticket['id_ticket'] ?>&amp;vista=<?= e($vista) ?>" target="_blank" rel="noopener" title="Ver o descargar el ticket en PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+          <button class="btn btn-outline btn-sm js-ticket-correo" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-email="<?= e($ticket['usuario_email'] ?? '') ?>" data-solo-yo="<?= $vista === 'usuario' ? '1' : '0' ?>" title="Enviar el ticket por correo con el PDF adjunto"><i class="bi bi-envelope"></i> Enviar por correo</button>
           <?php if ($vista === 'usuario'): ?><button class="btn btn-primary btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" title="<?= e($tecnicoNombre !== '' ? 'Técnico: ' . $tecnicoNombre : 'Aún sin técnico') ?>"><i class="bi bi-chat-dots"></i> <?= e($textoChat) ?></button><?php endif; ?>
           <?= ticket_badge_estado($ticket) ?>
         </div>
@@ -308,6 +310,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="js/bitacora_ticket.js?v=<?= (int) @filemtime(__DIR__ . '/js/bitacora_ticket.js') ?>"></script>
   <?php if ($vista === 'tecnico' && $esTecnico) { require __DIR__ . '/componentes/modal_comenzar_ticket.php'; } ?>
+  <?php require __DIR__ . '/componentes/modal_correo_ticket.php'; ?>
   <?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

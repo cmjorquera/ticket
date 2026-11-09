@@ -16,6 +16,33 @@ function bitacora_nombre(Conexion $db, ?int $id): string
     return (string) ($u['n'] ?? ('usuario ' . $id));
 }
 
+/**
+ * Técnico válido para asignar: activo y de Informática de Seduc (colegio 15)
+ * (configuracion/logica/LOGICA_CATEGORIAS.txt). Sin el modelo de roles: área 1.
+ */
+function tecnico_asignable(Conexion $db, int $id): bool
+{
+    require_once __DIR__ . '/../clases/RolesUsuario.php';
+    [$cond, $p] = (new RolesUsuario($db))->modeloActivo()
+        ? RolesUsuario::condicionDepartamento('u')
+        : ['u.id_area_trabajo = 1', []];
+    return (bool) $db->fetchOne(
+        "SELECT 1 FROM usuarios u WHERE u.id = ? AND LOWER(u.estado) = 'activo' AND {$cond}",
+        array_merge([$id], $p)
+    );
+}
+
+/** Reasignar técnico solo mientras el ticket no se ha comenzado (Recibido / Asignado). */
+function puede_reasignar(array $ticket, int $tecnicoNuevo): ?string
+{
+    if ($tecnicoNuevo === (int) ($ticket['id_tecnico'] ?? 0)) {
+        return null;
+    }
+    return in_array((int) $ticket['id_estado'], [1, 2], true)
+        ? null
+        : 'El técnico ya comenzó este ticket: no se puede cambiar de técnico.';
+}
+
 function bitacora_estado(int $id): string
 {
     return ticket_estados_legacy()[$id]['nombre'] ?? ('estado ' . $id);
@@ -286,13 +313,16 @@ try {
             responder_json(['ok' => false, 'error' => 'No tienes permiso para asignar este ticket.'], 403);
         }
         $tecnicoId = (int) ($datos['tecnico_id'] ?? 0);
-        if ($tecnicoId > 0 && !$db->fetchOne("SELECT id FROM usuarios WHERE id = ? AND LOWER(estado) = 'activo' LIMIT 1", [$tecnicoId])) {
-            responder_json(['ok' => false, 'error' => 'El técnico seleccionado no está disponible.'], 422);
+        if ($tecnicoId > 0 && !tecnico_asignable($db, $tecnicoId)) {
+            responder_json(['ok' => false, 'error' => 'Solo se puede asignar a funcionarios de Informática de Seduc.'], 422);
         }
-        $estadoAsignacion = $tecnicoId > 0 && (int) $ticket['id_estado'] === 1 ? 2 : (int) $ticket['id_estado'];
+        if ($motivo = puede_reasignar($ticket, $tecnicoId)) {
+            responder_json(['ok' => false, 'error' => $motivo], 409);
+        }
+        $estadoAsignacion = $tecnicoId > 0 ? (in_array((int) $ticket['id_estado'], [1, 2], true) ? 2 : (int) $ticket['id_estado']) : 1;
         $db->execute('UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?', [$tecnicoId ?: null, $estadoAsignacion, $ticketId]);
-        if ($tecnicoId > 0) {
-            $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = COALESCE(fecha_asignacion_tecnico, CURDATE()), hora_asignacion_tecnico = COALESCE(hora_asignacion_tecnico, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        if ($tecnicoId > 0 && $tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {   // (re)asignación: fecha nueva
+            $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = CURDATE(), hora_asignacion_tecnico = CURTIME() WHERE id_ticket = ?', [$ticketId]);
         }
         if ($tecnicoId > 0 && $tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {
             (new AvisosTicket($db))->asignado($ticketId, $usuarioId);
@@ -315,15 +345,18 @@ try {
         if ($estadoId <= 0) {
             responder_json(['ok' => false, 'error' => 'Estado no válido.'], 422);
         }
-        if ($tecnicoId > 0 && !$db->fetchOne("SELECT id FROM usuarios WHERE id = ? AND LOWER(estado) = 'activo' LIMIT 1", [$tecnicoId])) {
-            responder_json(['ok' => false, 'error' => 'El técnico seleccionado no está disponible.'], 422);
+        if ($tecnicoId > 0 && !tecnico_asignable($db, $tecnicoId)) {
+            responder_json(['ok' => false, 'error' => 'Solo se puede asignar a funcionarios de Informática de Seduc.'], 422);
+        }
+        if ($motivo = puede_reasignar($ticket, $tecnicoId)) {
+            responder_json(['ok' => false, 'error' => $motivo], 409);
         }
         $db->execute(
             'UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?',
             [$tecnicoId ?: null, $estadoId, $ticketId]
         );
-        if ($tecnicoId > 0) {
-            $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = COALESCE(fecha_asignacion_tecnico, CURDATE()), hora_asignacion_tecnico = COALESCE(hora_asignacion_tecnico, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+        if ($tecnicoId > 0 && $tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {   // (re)asignación: fecha nueva
+            $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = CURDATE(), hora_asignacion_tecnico = CURTIME() WHERE id_ticket = ?', [$ticketId]);
         }
         if ($estadoId === 3) {
             $db->execute('UPDATE proceso_tickets SET fecha_comienzo_ticket = COALESCE(fecha_comienzo_ticket, CURDATE()), hora_comienzo_ticket = COALESCE(hora_comienzo_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);

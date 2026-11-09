@@ -80,7 +80,7 @@ abstract class TicketDataBase
                        et.nombre AS estado_nombre, et.nombre AS nombreEstado,
                        et.color AS estado_color, et.color AS colorEstado,
                        et.color_degradado AS estado_degradado,
-                       CONCAT_WS(' ', us.nombre, us.apellido_paterno) AS usuario_nombre,
+                       CONCAT_WS(' ', us.nombre, us.apellido_paterno) AS usuario_nombre, us.email AS usuario_email,
                        CONCAT_WS(' ', tc.nombre, tc.apellido_paterno) AS tecnico_nombre,
                        categoria.nombre_categoria AS categoria_nombre,
                        colegio.nom_colegio AS colegio_nombre,

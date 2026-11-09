@@ -1,0 +1,48 @@
+ADMINISTRACIÓN DEL TICKET: REASIGNAR TÉCNICO, PDF Y ENVÍO POR CORREO
+====================================================================
+(09-11-2026, basado en el sistema antiguo: modelos/descarga/ticket_pdf.php,
+ modelos/correos/ticket_correo.php y enviarTicketPorCorreo() de js/ticket.js)
+
+1. REASIGNAR TÉCNICO (Ticket Administrador → Gestionar)
+-------------------------------------------------------
+- La lista de técnicos tiene SOLO funcionarios activos de Informática de Seduc
+  (colegio 15), igual que las categorías (configuracion/logica/LOGICA_CATEGORIAS.txt).
+  También el filtro "Técnico" de la bandeja.
+- Se puede cambiar de técnico SOLO mientras el ticket no se ha comenzado
+  (Recibido o Asignado). Si ya está En proceso / Terminado, el selector queda
+  bloqueado con el aviso "X ya comenzó el ticket: no se puede reasignar".
+- El servidor (ajax/guardar_ticket.php, acciones asignar y actualizar) lo
+  valida igual: 422 si el técnico no es de Informática de Seduc, 409 si el
+  ticket ya fue comenzado.
+- Al reasignar: estado Asignado, fecha de asignación nueva, registro en la
+  bitácora ("X asignó el ticket a Y") y aviso en la campanita del técnico nuevo
+  y del solicitante.
+
+2. PDF DEL TICKET (botón "PDF")
+-------------------------------
+- En el detalle (todas las vistas) y en "Gestionar".
+- ajax/ticket_pdf.php?id=…&vista=… (solo quien puede ver el ticket; 403 si no).
+  Contenido: número, estado, asunto, datos (solicitante, técnico, colegio,
+  categoría, prioridad), ciclo con fechas (creado, asignado, en proceso, fecha
+  estimada, terminado), descripción, conversación y, SOLO para el técnico o
+  administración, la bitácora interna. Al pie, el enlace de seguimiento (QR).
+- Se genera con FPDF (clases/PDF) en clases/Tickets/PdfTicket.php.
+
+3. ENVIAR POR CORREO (botón "Enviar por correo" / "Correo")
+-----------------------------------------------------------
+- Abre un modal: "Para" (por defecto el correo del solicitante), "Enviarme
+  una copia". El correo lleva un resumen, el botón "Ver seguimiento del ticket"
+  y el PDF adjunto.
+- El PDF del correo NUNCA incluye la bitácora interna.
+- El solicitante solo puede enviárselo a sí mismo (el campo no se edita).
+  Técnico y administración pueden escribir otro correo.
+- Límite: 5 envíos por minuto por sesión. Cada envío queda en la bitácora
+  ("X envió el ticket por correo a …").
+- Usa la sección 'smtp' de config_privada (clases/Correo.php). Si no está
+  configurada, se muestra "El envío de correos no está configurado en este
+  servidor." y no se envía nada.
+
+Código: ajax/guardar_ticket.php (tecnico_asignable, puede_reasignar),
+ticket/ticket_admin_v2.php, clases/Tickets/PdfTicket.php, ajax/ticket_pdf.php,
+clases/Correo.php, ajax/ticket_correo.php,
+ticket/componentes/modal_correo_ticket.php, ticket/js/correo_ticket.js.

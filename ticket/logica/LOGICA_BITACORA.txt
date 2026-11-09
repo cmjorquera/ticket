@@ -9,7 +9,8 @@ Registro interno de lo que se hace en un ticket. La escriben:
   - ADMINISTRACIÓN (super admin / admin del colegio del ticket): indicaciones o
     preguntas al técnico ("prioriza este", "¿se compró el repuesto?")
   - el SISTEMA, solo: creación, asignación de técnico y cada cambio de estado.
-EL SOLICITANTE NO LA VE (aunque sea admin de su colegio). Para hablar con él está
+EL SOLICITANTE NO LA VE (aunque sea admin de su colegio): ni en el detalle,
+ni en el PDF, ni pidiendo la vista admin (BitacoraTicket::rol y ::rolPara). Para hablar con él está
 el chat (LOGICA_MENSAJERIA.txt). Excepción: el super admin ve todo.
 
 2. DÓNDE SE VE

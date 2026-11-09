@@ -147,3 +147,5 @@ body.tk-panel-abierto .chatf{display:none!important}
 .tk-sobre.has-unread{display:inline-flex}
 .tk-sobre .ticket-chat-unread{margin:0;box-shadow:none;min-width:16px;height:16px;font-size:9.5px}
 .tk-sobre.is-new{animation:tc-pop .6s cubic-bezier(.3,1.6,.5,1)}
+.tk-reasignar{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:11.5px;color:#8A6200}.tk-reasignar[hidden]{display:none}
+.tk-correo__copia{display:flex;align-items:center;gap:8px;margin:-6px 0 14px;font-size:13px;cursor:pointer}.tk-correo__copia input{width:auto!important}.tk-correo__copia[hidden]{display:none}
