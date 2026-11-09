@@ -1,0 +1,61 @@
+BITÁCORA DEL TICKET (avances del técnico + conversación interna con administración)
+==================================================================================
+(09-11-2026; reemplaza los "Avances del técnico" del modal del sistema antiguo)
+
+1. QUÉ ES
+---------
+Registro interno de lo que se hace en un ticket. La escriben:
+  - el TÉCNICO asignado: avances ("se cambió el tóner", "se pidió cotización"…)
+  - ADMINISTRACIÓN (super admin / admin del colegio del ticket): indicaciones o
+    preguntas al técnico ("prioriza este", "¿se compró el repuesto?")
+  - el SISTEMA, solo: creación, asignación de técnico y cada cambio de estado.
+EL SOLICITANTE NO LA VE (aunque sea admin de su colegio). Para hablar con él está
+el chat (LOGICA_MENSAJERIA.txt). Excepción: el super admin ve todo.
+
+2. DÓNDE SE VE
+--------------
+- Detalle del ticket (ticket/ticket_detalle.php), sección "Bitácora del técnico",
+  debajo de la conversación. Se actualiza sola cada 5 s. Ctrl + Enter registra.
+  Las entradas propias muestran ✓ (enviado) / ✓✓ azul (la otra parte la vio).
+- En la columna derecha: "Ciclo del ticket" (Creado → Asignado → En proceso →
+  Terminado, con fecha y hora de proceso_tickets) y, para el técnico, los botones
+  "Comenzar ticket" (estado 1/2 → 3) y "Terminar ticket" (3/7 → 5), como el
+  botón COMENZAR TICKET del modal antiguo.
+- En las bandejas, el botón "Abrir" muestra en ámbar cuántas entradas nuevas hay:
+    Tickets Asignados     → notas nuevas de administración
+    Ticket Administrador  → avances nuevos del técnico
+  Se actualiza cada 8 s; "Abrir" lleva directo a #bitacora.
+- Ticket Terminado o Cerrado: la bitácora queda como registro (sin escribir).
+
+3. TABLA avance_tecnicos (la del sistema antiguo)
+--------------------------------------------------
+  id, id_ticket, accion (texto), fecha_avance, hora_avance      ← antiguas
+  id_usuario, lado ('tecnico'|'admin'|'sistema'), leido, eliminado ← ticket/sql/02_bitacora.sql
+- En QA la tabla no existía (por eso "No hay avances registrados"): el SQL la crea.
+- En producción ya existe con avances: el SQL la amplía, la pasa a utf8mb4 y
+  marca lo antiguo como lado 'tecnico' y leído. Los avances antiguos guardaban
+  '<div data-avance-autor="Nombre">texto</div>': se muestra el texto limpio y
+  ese nombre como autor.
+- Estadísticas (estadistica/…EstadisticaTickets.php) y los PDF antiguos ya leen
+  esta tabla, así que vuelven a mostrar avances.
+
+4. REGLAS
+---------
+- Papel (BitacoraTicket::rol): técnico asignado → 'tecnico'; si no, quien
+  administra el ticket → 'admin'; quien pidió el ticket → nada (salvo super admin).
+- No leído para el técnico = entradas lado 'admin' con leido = 0; para
+  administración = entradas lado 'tecnico'. Las propias nunca cuentan.
+- Ver la bitácora marca como leídas las del otro lado. Los registros del sistema
+  nacen leídos (no generan avisos).
+
+5. CÓDIGO
+---------
+clases/Tickets/BitacoraTicket.php    reglas, listar, registrar, no leídos
+ajax/ticket_bitacora.php             listar / guardar / no_leidos (CSRF)
+ajax/guardar_ticket.php              registros automáticos del sistema
+ticket/ticket_detalle.php            sección Bitácora + Ciclo del ticket
+ticket/js/bitacora_ticket.js         dibujo, envío, actualización, Comenzar/Terminar
+css/ticket_bitacora.css              estilos
+helpers/tickets.php                  ticket_boton_abrir (número en "Abrir")
+clases/Tickets/TicketDataBase.php    bitacora_no_leidos por bandeja
+ticket/js/chat_ticket_panel.js       actualiza el número de "Abrir" cada 8 s

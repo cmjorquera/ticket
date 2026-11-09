@@ -4,6 +4,7 @@ declare(strict_types=1);
 $depth = '../';
 require_once __DIR__ . '/../configuracion/_inicio.php';
 require_once __DIR__ . '/../clases/Tickets/ConversacionTicket.php';
+require_once __DIR__ . '/../clases/Tickets/BitacoraTicket.php';
 
 $usuarioId = (int) Sesion::get('id', 0);
 $ticketId = (int) ($_GET['id'] ?? 0);
@@ -23,6 +24,8 @@ try {
                 e.color_degradado AS estado_degradado, t.id_prioridad,
                 COALESCE(CONCAT(pt.fecha_creacion_inicio, ' ', COALESCE(pt.hora_creacion_inicio, '00:00:00')), '') AS fecha_creacion,
                 COALESCE(CONCAT(pt.fecha_asignacion_tecnico, ' ', COALESCE(pt.hora_asignacion_tecnico, '00:00:00')), '') AS fecha_respuesta,
+                COALESCE(CONCAT(pt.fecha_comienzo_ticket, ' ', COALESCE(pt.hora_comienzo_ticket, '00:00:00')), '') AS fecha_comienzo,
+                COALESCE(CONCAT(pt.fecha_termino_ticket, ' ', COALESCE(pt.hora_termino_ticket, '00:00:00')), '') AS fecha_termino,
                 c.nombre_categoria AS categoria_nombre, col.nom_colegio AS colegio_nombre,
                 CONCAT_WS(' ', sol.nombre, sol.apellido_paterno) AS usuario_nombre,
                 CONCAT_WS(' ', tec.nombre, tec.apellido_paterno) AS tecnico_nombre
@@ -69,6 +72,20 @@ if ($autorizado) {
         $conversacionDisponible = false;
     }
 
+    // Bitácora interna técnico ↔ administración (ticket/logica/LOGICA_BITACORA.txt)
+    $bitacora = new BitacoraTicket($db);
+    $rolBitacora = $bitacora->rol($usuarioId, $ticket);
+    $bitacoraLista = $rolBitacora !== null && $bitacora->disponible();
+    $entradasBitacora = [];
+    if ($bitacoraLista) {
+        try {
+            $bitacora->marcarLeidos($ticketId, $rolBitacora, $usuarioId);
+            $entradasBitacora = $bitacora->listar($ticketId, $usuarioId);
+        } catch (Throwable $ex) {
+            error_log('Error al consultar bitácora: ' . $ex->getMessage());
+        }
+    }
+
     try {
         $adjuntos = ticket_listar_adjuntos($db, $ticketId);
     } catch (Throwable $ex) {
@@ -102,6 +119,16 @@ if ($autorizado) {
 
 $volver = $esPropietario ? 'ticket.php' : ($esTecnico ? 'ticket_asignados.php' : 'ticket_admin_v2.php');
 $csrf = ticket_csrf_token();
+$rolBitacora = $rolBitacora ?? null;
+$cerradoTicket = $ticket ? ticket_estado_sin_escritura((int) $ticket['id_estado']) : true;
+// Ciclo del ticket (como el modal del sistema antiguo)
+$fechaCorta = static fn (string $f): string => strtotime($f) ? date('d/m/Y H:i', strtotime($f)) : '';
+$pasosCiclo = $ticket ? [
+    ['Creado', 'bi-plus-lg', $fechaCorta((string) $ticket['fecha_creacion']), true],
+    ['Asignado', 'bi-person-check', $fechaCorta((string) $ticket['fecha_respuesta']), (int) $ticket['id_estado'] !== 1 && (int) $ticket['id_estado'] !== 4],
+    ['En proceso', 'bi-gear', $fechaCorta((string) ($ticket['fecha_comienzo'] ?? '')), in_array((int) $ticket['id_estado'], [3, 5, 6, 7], true)],
+    ['Terminado', 'bi-flag', $fechaCorta((string) ($ticket['fecha_termino'] ?? '')), in_array((int) $ticket['id_estado'], [5, 6], true)],
+] : [];
 $estado = $ticket ? strtolower((string) $ticket['estado']) : '';
 $estadoTexto = $ticket ? (string) $ticket['estado_nombre'] : '';
 
@@ -149,9 +176,49 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
             <button class="btn btn-primary js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticketId ?>"><i class="bi bi-chat-dots"></i> <?= ticket_estado_sin_escritura((int) $ticket['id_estado']) ? 'Ver conversación' : 'Abrir chat' ?></button>
           </div>
         </section>
+
+        <?php if ($rolBitacora !== null): ?>
+        <section class="card tb-card" id="bitacora" data-rol="<?= e($rolBitacora) ?>" data-cerrado="<?= $cerradoTicket ? '1' : '0' ?>">
+          <div class="card-header">
+            <div><h2 class="card-title"><i class="bi bi-journal-text"></i> Bitácora del técnico</h2>
+              <p class="card-desc">Avances del trabajo y conversación interna con administración. <strong>El solicitante no la ve.</strong></p></div>
+            <span class="ticket-list-count" id="tb-total"><?= count($entradasBitacora) ?> registro<?= count($entradasBitacora) === 1 ? '' : 's' ?></span>
+          </div>
+          <?php if (!$bitacoraLista): ?>
+            <div class="ticket-empty"><i class="bi bi-database-exclamation"></i>Falta instalar la bitácora en la base de datos: ejecutar <code>ticket/sql/02_bitacora.sql</code>.</div>
+          <?php else: ?>
+            <ol class="tb-list" id="tb-list" aria-live="polite"></ol>
+            <?php if (!$cerradoTicket): ?>
+              <form class="tb-form" id="tb-form">
+                <label class="tc-sr" for="tb-texto">Nuevo avance</label>
+                <textarea class="form-input" id="tb-texto" maxlength="3000" rows="3" required placeholder="<?= $rolBitacora === 'tecnico' ? 'Escribe el nuevo avance… (ej.: se cambió el tóner y se probó la impresión)' : 'Escribe una indicación o pregunta para el técnico…' ?>"></textarea>
+                <div class="tb-form__pie"><small>Ctrl + Enter para registrar · como <strong><?= $rolBitacora === 'tecnico' ? 'técnico' : 'administración' ?></strong></small>
+                  <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> <?= $rolBitacora === 'tecnico' ? 'Registrar avance' : 'Enviar al técnico' ?></button></div>
+                <div class="ticket-message" id="tb-mensaje" role="status"></div>
+              </form>
+            <?php else: ?>
+              <div class="ticket-chat__closed"><i class="bi bi-lock"></i><span>Ticket terminado: la bitácora queda como registro.</span></div>
+            <?php endif; ?>
+            <script type="application/json" id="tb-datos"><?= json_encode($entradasBitacora, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+          <?php endif; ?>
+        </section>
+        <?php endif; ?>
       </div>
 
       <aside class="ticket-detail-side">
+        <section class="card tb-ciclo">
+          <h2>Ciclo del ticket</h2>
+          <ol>
+            <?php foreach ($pasosCiclo as [$nombrePaso, $iconoPaso, $fechaPaso, $hecho]): ?>
+              <li class="<?= $hecho ? 'is-done' : '' ?>"><span><i class="bi <?= $hecho ? 'bi-check-lg' : $iconoPaso ?>"></i></span><div><strong><?= e($nombrePaso) ?></strong><small><?= e($fechaPaso ?: '—') ?></small></div></li>
+            <?php endforeach; ?>
+          </ol>
+          <?php if ($esTecnico && in_array((int) $ticket['id_estado'], [1, 2], true)): ?>
+            <button class="btn btn-primary tb-accion" type="button" data-estado="3"><i class="bi bi-play-fill"></i> Comenzar ticket</button>
+          <?php elseif ($esTecnico && in_array((int) $ticket['id_estado'], [3, 7], true)): ?>
+            <button class="btn btn-primary tb-accion" type="button" data-estado="5" data-confirmar="¿Marcar el ticket como terminado? La conversación y la bitácora quedarán como registro."><i class="bi bi-flag-fill"></i> Terminar ticket</button>
+          <?php endif; ?>
+        </section>
         <section class="card ticket-detail-facts">
           <h2>Datos del ticket</h2>
           <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(str_replace('í','i',strtolower((string)$ticket['prioridad']))) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
@@ -191,7 +258,9 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       </aside>
     </div>
   </div>
+  <link rel="stylesheet" href="../css/ticket_bitacora.css?v=<?= (int) @filemtime(__DIR__ . '/../css/ticket_bitacora.css') ?>">
   <script src="js/chat_ticket.js"></script>
+  <script src="js/bitacora_ticket.js?v=<?= (int) @filemtime(__DIR__ . '/js/bitacora_ticket.js') ?>"></script>
   <?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

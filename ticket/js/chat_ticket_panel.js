@@ -348,8 +348,35 @@
       document.title = total ? `(${total}) ${tituloBase}` : tituloBase;
     }
 
+    // Avances nuevos de la bitácora interna en el botón "Abrir" (técnico y administración)
+    async function actualizarBitacora() {
+      if (!['tecnico', 'admin'].includes(vista)) return;
+      const ids = [...new Set([...document.querySelectorAll('.js-ticket-open[data-ticket-id]')].map((b) => Number(b.dataset.ticketId)).filter(Boolean))];
+      if (!ids.length) return;
+      try {
+        const body = new URLSearchParams({csrf, accion: 'no_leidos', rol: vista});
+        ids.forEach((id) => body.append('ids[]', String(id)));
+        const r = await fetch(`${API}ticket_bitacora.php`, {method: 'POST', credentials: 'same-origin', body});
+        const data = await r.json();
+        if (!data.ok) return;
+        ids.forEach((id) => {
+          const n = Number(data.no_leidos[id] || 0);
+          document.querySelectorAll(`.js-ticket-open[data-ticket-id="${id}"]`).forEach((b) => {
+            const s = b.querySelector('.ticket-bitacora-unread');
+            if (!s) return;
+            s.hidden = n <= 0;
+            s.lastChild.textContent = n > 99 ? '99+' : String(n);
+            b.classList.toggle('has-unread', n > 0);
+            b.title = n === 0 ? 'Abrir el detalle' : (n === 1 ? '1 avance nuevo en la bitácora' : `${n} avances nuevos en la bitácora`);
+          });
+        });
+      } catch (_) { /* se reintenta */ }
+    }
+
     async function actualizar() {
-      if (enCurso || document.hidden || !['usuario', 'tecnico'].includes(vista)) return;
+      if (enCurso || document.hidden) return;
+      actualizarBitacora();
+      if (!['usuario', 'tecnico'].includes(vista)) return;
       const ids = [...new Set([...document.querySelectorAll('.js-ticket-chat[data-ticket-id]')].map((b) => Number(b.dataset.ticketId)).filter(Boolean))];
       if (!ids.length) return;
       enCurso = true;

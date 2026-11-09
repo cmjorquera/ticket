@@ -207,6 +207,19 @@ function ticket_boton_chat(int $ticketId, int $noLeidos = 0): string
         . '<span class="ticket-chat-unread"' . ($n ? '' : ' hidden') . '>' . ($n > 99 ? '99+' : $n) . '</span></button>';
 }
 
+/**
+ * Botón "Abrir" (detalle) con el número de entradas nuevas en la bitácora
+ * interna (técnico ↔ administración). ticket/js/chat_ticket_panel.js lo actualiza.
+ */
+function ticket_boton_abrir(int $ticketId, int $bitacoraNoLeidos = 0): string
+{
+    $n = max(0, $bitacoraNoLeidos);
+    $titulo = $n === 0 ? 'Abrir el detalle' : ($n === 1 ? '1 avance nuevo en la bitácora' : $n . ' avances nuevos en la bitácora');
+    return '<a class="btn btn-outline btn-sm ticket-open-button js-ticket-open' . ($n ? ' has-unread' : '') . '" href="ticket_detalle.php?id=' . $ticketId . '#bitacora"'
+        . ' data-ticket-id="' . $ticketId . '" title="' . $titulo . '"><i class="bi bi-eye" aria-hidden="true"></i> Abrir'
+        . '<span class="ticket-bitacora-unread"' . ($n ? '' : ' hidden') . '><i class="bi bi-journal-text" aria-hidden="true"></i>' . ($n > 99 ? '99+' : $n) . '</span></a>';
+}
+
 /** Genera el botón de adjuntos solamente cuando el ticket tiene archivos. */
 function ticket_boton_archivos(int $ticketId, int $cantidad): string
 {

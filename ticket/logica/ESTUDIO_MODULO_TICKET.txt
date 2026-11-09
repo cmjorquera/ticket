@@ -3,6 +3,7 @@ ESTUDIO DEL MÓDULO TICKET (versión nueva, rama qa) — 09-11-2026
 Cómo funciona hoy la carpeta ticket/, comparada con el sistema antiguo
 (rama "antiguo"), y qué se encontró al revisarla.
 Mensajería (chat): ver LOGICA_MENSAJERIA.txt.
+Bitácora interna (técnico ↔ administración): ver LOGICA_BITACORA.txt.
 Categorías y a qué técnico llega cada ticket: configuracion/logica/LOGICA_CATEGORIAS.txt.
 
 1. PANTALLAS
@@ -64,9 +65,10 @@ Fechas del ciclo: proceso_tickets (creación, asignación, comienzo, término, c
      los propios); ahora depende de la bandeja.
  [ARREGLADO 09-11] El chat flotante general tapaba el botón Enviar del panel.
 
- [PENDIENTE] El "#1, #2, #3" de las tablas es la POSICIÓN en la lista, no el número
-     del ticket: el mismo ticket puede ser #1 en "Ticket Nuevo" y #4 en "Asignados",
-     y el chat dice "Ticket #597". Conviene mostrar el número real (id_ticket).
+ [ARREGLADO 09-11] El "#1, #2, #3" de las tablas era la POSICIÓN en la lista; ahora
+     todas muestran el número real del ticket (id_ticket), igual que el chat y el detalle.
+ [ARREGLADO 09-11] La bitácora de avances del técnico no existía en el sistema nuevo
+     (la tabla avance_tecnicos no está en QA). Ver LOGICA_BITACORA.txt.
  [PENDIENTE] El colegio de un ticket se calcula distinto: las bandejas y los permisos
      usan jefatura_departamento; el detalle usa usuario_colegio. Con el modelo de
      roles nuevo debería salir de usuario_colegio (o guardarse en el ticket).

@@ -77,7 +77,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
           $estadoGrupo = ticket_estado_grupo((int) $ticket['id_estado']);
         ?>
           <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['categoria_nombre'], $ticket['usuario_nombre'], $ticket['colegio_nombre'], $ticket['tecnico_nombre']]))) ?>" data-estado="<?= e($estado) ?>" data-estado-grupo="<?= e($estadoGrupo) ?>" data-fecha="<?= $fechaTicket ? e(date('Y-m-d', $fechaTicket)) : '' ?>" data-fecha-respuesta="<?= $fechaRespuesta ? e(date('Y-m-d', $fechaRespuesta)) : '' ?>">
-            <td><strong class="ticket-id">#<?= e($offsetTickets + $indice + 1) ?></strong><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
+            <td><strong class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></strong><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
             <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong></td>
             <td class="ticket-person"><strong><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></strong></td>
             <td><?= ticket_badge_estado($ticket) ?></td>

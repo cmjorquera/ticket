@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../Conexion.php';
 require_once __DIR__ . '/../../helpers/tickets.php';
 require_once __DIR__ . '/ConversacionTicket.php';
+require_once __DIR__ . '/BitacoraTicket.php';
 
 /** Consulta base compartida por las bandejas de tickets. */
 abstract class TicketDataBase
@@ -50,6 +51,7 @@ abstract class TicketDataBase
     protected function queryBase(): string
     {
         $noLeidos = (new ConversacionTicket($this->db))->sqlNoLeidos($this->vistaChat(), 't');
+        $bitacoraNoLeidos = (new BitacoraTicket($this->db))->sqlNoLeidos($this->vistaChat(), $this->idUsuarioSession, 't');
         $columnasAdjuntos = ticket_columnas_tabla('archivos_adjuntos_ticket', $this->db);
         $cantidadArchivos = isset($columnasAdjuntos['id_ticket'])
             ? '(SELECT COUNT(*) FROM archivos_adjuntos_ticket aa WHERE aa.id_ticket = t.id_ticket)'
@@ -92,6 +94,7 @@ abstract class TicketDataBase
                        CASE WHEN t.id_estado = 5 AND {$idCalificacion} IS NULL THEN 1 ELSE 0 END AS puede_calificar,
                        DATEDIFF(pt.fecha_estimada_admin, CURDATE()) AS dias_restantes,
                        {$noLeidos} AS mensajes_no_leidos,
+                       {$bitacoraNoLeidos} AS bitacora_no_leidos,
                        {$cantidadArchivos} AS cantidad_archivos
                   FROM tickets t
                   JOIN estados_ticket et ON et.id = t.id_estado

@@ -1,0 +1,42 @@
+/* Bitácora del ticket y ciclo (ticket/ticket_detalle.php). Lógica: ticket/logica/LOGICA_BITACORA.txt */
+.tb-card .card-title i{color:var(--blue);margin-right:4px}
+.tb-card .card-desc strong{color:var(--fg)}
+.tb-list{list-style:none;margin:0;padding:18px 20px 6px;display:flex;flex-direction:column;gap:12px;max-height:480px;overflow-y:auto;background:linear-gradient(180deg,#FAFBFC,#F5F7F9)}
+.tb-vacio{display:flex;justify-content:center;align-items:center;gap:8px;padding:30px 10px;color:var(--muted);font-size:13px}
+.tb-item{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;position:relative}
+.tb-item::before{content:"";position:absolute;left:14px;top:32px;bottom:-12px;width:2px;background:var(--border)}
+.tb-item:last-child::before{display:none}
+.tb-punto{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--blue-light);color:var(--blue);font-size:13px;z-index:1}
+.tb-item--admin .tb-punto{background:var(--yellow-light,#FFF6D8);color:#8A6200}
+.tb-cuerpo{padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.tb-item--admin .tb-cuerpo{border-color:rgba(232,163,61,.45);background:#FFFCF3}
+.tb-cab{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:4px}
+.tb-cab strong{font-size:12.5px}
+.tb-cab time{margin-left:auto;color:var(--muted);font:500 10px 'DM Mono',monospace}
+.tb-rol{padding:1px 7px;border-radius:99px;font-size:9.5px;font-weight:600}
+.tb-rol--tecnico{background:var(--success-light);color:var(--success)}
+.tb-rol--admin{background:var(--yellow-light,#FFF6D8);color:#8A6200}
+.tb-cuerpo p{margin:0;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.tb-sistema{display:flex;align-items:center;gap:7px;align-self:center;max-width:100%;padding:4px 12px;border-radius:99px;background:rgba(18,27,38,.05);color:var(--muted);font-size:11px}
+.tb-sistema time{font:500 9.5px 'DM Mono',monospace;opacity:.8}
+.tb-form{padding:14px 20px 18px;border-top:1px solid var(--border)}
+.tb-form textarea{min-height:76px;resize:vertical}
+.tb-form__pie{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
+.tb-form__pie small{color:var(--muted);font-size:10.5px}
+.tc-check{font-size:13px;line-height:1;color:var(--muted)}.tc-check.is-seen{color:var(--blue)}
+.tc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ciclo del ticket */
+.tb-ciclo{padding:18px 20px}
+.tb-ciclo h2{font-size:14px;margin-bottom:12px}
+.tb-ciclo ol{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.tb-ciclo li{display:grid;grid-template-columns:28px 1fr;gap:10px;position:relative;padding-bottom:14px}
+.tb-ciclo li::before{content:"";position:absolute;left:13px;top:28px;bottom:0;width:2px;background:var(--border)}
+.tb-ciclo li:last-child{padding-bottom:0}.tb-ciclo li:last-child::before{display:none}
+.tb-ciclo li>span{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--bg);color:var(--muted);font-size:13px;z-index:1}
+.tb-ciclo li.is-done>span{background:var(--success);color:#fff}
+.tb-ciclo li.is-done::before{background:var(--success)}
+.tb-ciclo strong{display:block;font-size:12.5px}
+.tb-ciclo small{color:var(--muted);font:500 10.5px 'DM Mono',monospace}
+.tb-accion{width:100%;justify-content:center;margin-top:14px}
+@media(max-width:600px){.tb-list{padding:14px}.tb-form{padding:12px 14px}.tb-form__pie{flex-direction:column;align-items:stretch}.tb-form__pie .btn{justify-content:center}}

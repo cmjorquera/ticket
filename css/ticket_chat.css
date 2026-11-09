@@ -64,3 +64,8 @@
 @media(prefers-reduced-motion:reduce){.ticket-chat-button.is-new .ticket-chat-unread{animation:none}}
 /* el chat flotante general (burbuja abajo a la derecha) tapaba el botón Enviar */
 body.ticket-chat-open .chatf{display:none!important}
+/* número de avances nuevos de la bitácora en el botón "Abrir" (técnico / administración) */
+.ticket-open-button{gap:5px;white-space:nowrap}
+.ticket-bitacora-unread{display:inline-flex;align-items:center;gap:3px;min-height:18px;padding:0 6px;border-radius:99px;background:#E8A33D;color:#fff;font:700 10px/1 'DM Mono',monospace}
+.ticket-bitacora-unread[hidden]{display:none!important}
+.ticket-open-button.has-unread{border-color:rgba(232,163,61,.55);color:#8A6200;background:#FFF8EA}

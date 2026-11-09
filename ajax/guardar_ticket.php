@@ -3,6 +3,22 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../helpers/tickets.php';
+require_once __DIR__ . '/../clases/Tickets/BitacoraTicket.php';
+
+/** Nombre corto de un usuario para los registros automáticos de la bitácora. */
+function bitacora_nombre(Conexion $db, ?int $id): string
+{
+    if (!$id) {
+        return 'nadie';
+    }
+    $u = $db->fetchOne("SELECT TRIM(CONCAT_WS(' ', nombre, apellido_paterno)) AS n FROM usuarios WHERE id = ?", [$id]);
+    return (string) ($u['n'] ?? ('usuario ' . $id));
+}
+
+function bitacora_estado(int $id): string
+{
+    return ticket_estados_legacy()[$id]['nombre'] ?? ('estado ' . $id);
+}
 Sesion::requerir();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -141,6 +157,9 @@ try {
             throw $ex;
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'crear');
+        (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, $esBorrador
+            ? 'Ticket guardado como borrador.'
+            : ($tecnicoId ? 'Ticket creado y asignado automáticamente a ' . bitacora_nombre($db, $tecnicoId) . '.' : 'Ticket creado; queda pendiente de asignación.'));
         responder_json([
             'ok' => true,
             'ticket_id' => $ticketId,
@@ -186,6 +205,10 @@ try {
             $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'cambiar_estado', 'id_estado', (string) $ticket['id_estado'], (string) $estadoId);
+        if ($estadoId !== (int) $ticket['id_estado']) {
+            (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, bitacora_nombre($db, $usuarioId) . ' cambió el estado: '
+                . bitacora_estado((int) $ticket['id_estado']) . ' → ' . bitacora_estado($estadoId) . '.');
+        }
         responder_json(['ok' => true, 'mensaje' => 'Estado actualizado.']);
     }
 
@@ -203,6 +226,11 @@ try {
             $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = COALESCE(fecha_asignacion_tecnico, CURDATE()), hora_asignacion_tecnico = COALESCE(hora_asignacion_tecnico, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'asignar', 'id_tecnico', (string) ($ticket['id_tecnico'] ?? ''), $tecnicoId > 0 ? (string) $tecnicoId : null);
+        if ($tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {
+            (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, $tecnicoId
+                ? bitacora_nombre($db, $usuarioId) . ' asignó el ticket a ' . bitacora_nombre($db, $tecnicoId) . '.'
+                : bitacora_nombre($db, $usuarioId) . ' quitó la asignación del técnico.');
+        }
         responder_json(['ok' => true, 'mensaje' => $tecnicoId ? 'Ticket asignado.' : 'Asignación retirada.']);
     }
 
@@ -231,6 +259,16 @@ try {
             $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
         }
         ticket_registrar_cambio($db, $ticketId, $usuarioId, 'actualizar', 'id_estado', (string) $ticket['id_estado'], (string) $estadoId);
+        $cambios = [];
+        if ($tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {
+            $cambios[] = $tecnicoId ? 'asignó el ticket a ' . bitacora_nombre($db, $tecnicoId) : 'quitó la asignación del técnico';
+        }
+        if ($estadoId !== (int) $ticket['id_estado']) {
+            $cambios[] = 'cambió el estado: ' . bitacora_estado((int) $ticket['id_estado']) . ' → ' . bitacora_estado($estadoId);
+        }
+        if ($cambios) {
+            (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, bitacora_nombre($db, $usuarioId) . ' ' . implode(' y ', $cambios) . '.');
+        }
         responder_json(['ok' => true, 'mensaje' => 'Asignación y estado actualizados.']);
     }
 
