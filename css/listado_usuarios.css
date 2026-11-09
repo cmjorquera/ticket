@@ -49,8 +49,13 @@
   border-radius: var(--radius);
   background: var(--card);
   box-shadow: var(--shadow-card);
-  overflow: hidden;
+  /* visible: el menú ⋮ no debe quedar cortado cuando los departamentos están cerrados */
+  overflow: visible;
 }
+
+/* El colegio con el menú abierto queda por encima del siguiente */
+.org-school:has(.org-school__menu:not([hidden])) { z-index: 20; }
+.org-school__header { border-radius: var(--radius) var(--radius) 0 0; }
 
 .org-school::before {
   content: none;
