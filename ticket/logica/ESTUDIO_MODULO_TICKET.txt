@@ -1,0 +1,88 @@
+ESTUDIO DEL MÓDULO TICKET (versión nueva, rama qa) — 09-11-2026
+================================================================
+Cómo funciona hoy la carpeta ticket/, comparada con el sistema antiguo
+(rama "antiguo"), y qué se encontró al revisarla.
+Mensajería (chat): ver LOGICA_MENSAJERIA.txt.
+Categorías y a qué técnico llega cada ticket: configuracion/logica/LOGICA_CATEGORIAS.txt.
+
+1. PANTALLAS
+------------
+ticket/ticket.php            "Ticket Nuevo" / Mesa de ayuda: tickets que YO pedí.
+                             Resumen (Nuevos / En proceso / Resueltos / Atrasados),
+                             filtros, botón "Agregar ticket" (modal_crear_ticket.php +
+                             js/crear_ticket_dinamico.js). La tabla se vuelve a pedir
+                             cada 3 s (componentes/ajax/bloque_tabla_usuario.php).
+ticket/ticket_asignados.php  "Tickets Asignados" / Bandeja técnica: tickets donde soy
+                             el técnico. Botones Chat, Abrir y Estado (cambia estado).
+ticket/ticket_admin_v2.php   "Ticket Administrador": todos los del alcance del admin;
+                             asignar técnico, editar, eliminar.
+ticket/ticket_detalle.php    Detalle: descripción, conversación, archivos, cambio de
+                             estado (técnico/admin) y calificación (solicitante).
+
+Datos de las bandejas: clases/Tickets/TicketDataBase.php (consulta común)
+  → TicketUsuario (t.id_usuario = yo), TicketTecnico (t.id_tecnico = yo),
+    TicketAdministrador (filtros de colegio / técnico / estado).
+Filas: ticket/componentes/bloque_tabla_usuario.php / _tecnico / _admin.
+
+2. GUARDADO (ajax/guardar_ticket.php, todo con token CSRF ticket_csrf)
+---------------------------------------------------------------------
+  accion=crear              solicitante (o un admin a nombre de otro). Asigna solo el
+                            técnico de Informática de Seduc con esa categoría y menos
+                            tickets abiertos → estado 2 Asignado; si nadie la tiene → 1.
+                            Borrador → 4. Adjuntos opcionales (máx. 5).
+  accion=actualizar_estado  técnico asignado o administrador.
+  accion=asignar            administrador.
+  accion=actualizar         administrador (estado, técnico, prioridad…).
+  accion=eliminar           administrador (tickets.estado = 2, borrado lógico).
+Fechas del ciclo: proceso_tickets (creación, asignación, comienzo, término, cierre).
+
+3. ESTADOS (estados_ticket)
+---------------------------
+  1 Recibido · 2 Asignado · 3 En proceso · 4 Borrador · 5 Terminado · 6 Cerrado · 7 Demorado
+  Grupos del resumen: Nuevos (1,2) · En proceso (3) · Resueltos (5,6) · Atrasados (7).
+  Sin escritura (chat y adjuntos en solo lectura): 5 y 6.
+  Calificar: el solicitante, cuando el ticket está en 5 (tabla calificacion_tickett).
+
+4. PERMISOS (helpers/tickets.php)
+---------------------------------
+  puede_ver_ticket: quien lo pidió, el técnico asignado o quien lo administra
+  (super admin o admin del colegio del ticket).
+
+5. LO QUE SE ENCONTRÓ
+---------------------
+ [ARREGLADO 09-11] El chat no dejaba escribir: el código nuevo usaba la tabla
+     comentarios_ticket, que NO existe. La conversación real siempre estuvo en
+     ticket_conversaciones (sistema antiguo). Ahora se usa esa.
+ [ARREGLADO 09-11] Adjuntar archivos (en el chat y al crear un ticket con archivos)
+     fallaba: el código esperaba columnas (nombre_archivo, ruta_archivo, tipo_archivo,
+     tamaño_archivo…) que archivos_adjuntos_ticket no tiene. Crear un ticket CON
+     archivos daba error. Ahora se adapta a la tabla y ticket/sql/01_mensajeria.sql
+     agrega nombre, tamaño, quién y cuándo.
+ [ARREGLADO 09-11] Los adjuntos quedaban con acceso público directo; ahora se
+     sirven solo a quien puede ver el ticket (ajax/ticket_archivo.php).
+ [ARREGLADO 09-11] El contador de mensajes no leídos contaba los de todos (también
+     los propios); ahora depende de la bandeja.
+ [ARREGLADO 09-11] El chat flotante general tapaba el botón Enviar del panel.
+
+ [PENDIENTE] El "#1, #2, #3" de las tablas es la POSICIÓN en la lista, no el número
+     del ticket: el mismo ticket puede ser #1 en "Ticket Nuevo" y #4 en "Asignados",
+     y el chat dice "Ticket #597". Conviene mostrar el número real (id_ticket).
+ [PENDIENTE] El colegio de un ticket se calcula distinto: las bandejas y los permisos
+     usan jefatura_departamento; el detalle usa usuario_colegio. Con el modelo de
+     roles nuevo debería salir de usuario_colegio (o guardarse en el ticket).
+ [PENDIENTE] DOCUMENTACION_SISTEMA_TICKETS.txt describe tablas que no existen
+     (comentarios_ticket, log_cambios_ticket, calificacion_ticket). El historial
+     (ticket_registrar_cambio) no guarda nada porque log_cambios_ticket no existe.
+ [SEGURIDAD] Siguen en el sitio los archivos del chat antiguo, que ya no usa nadie,
+     no piden sesión y arman el SQL con lo que llega del navegador (inyección SQL):
+       pages/modelos/guardar/conversacionTecnicoUsuario.php
+       pages/modelos/rescatar/conversacionTecnicoUsuario.php
+       pages/modelos/actualizar/marcar_leido_ticket.php
+       pages/modelos/guardar/conversacionAdjuntosTicket.php
+     Cualquiera podría leer o escribir conversaciones. Recomendación: borrarlos
+     (del repositorio y del servidor: el despliegue no borra archivos).
+ [LIMPIEZA] En ticket/ hay archivos que no se cargan desde ninguna página:
+     componentes/bloque_tabla_adminn.php, componentes/offcanvas.php,
+     componentes/grafico_estado_ticket.php, componentes/ticket_dias_restantes.php,
+     componentes/js/chat_conversacion.js, js/funciones.js (5.500 líneas),
+     js/ticket.js (3.100 líneas).

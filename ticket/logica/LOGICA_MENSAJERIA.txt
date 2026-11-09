@@ -1,0 +1,108 @@
+MENSAJERÍA DE TICKETS (chat entre quien pide el ticket y el técnico)
+====================================================================
+(09-11-2026, a partir del sistema antiguo: rama "antiguo" del repositorio)
+
+1. QUÉ HACE
+-----------
+- Cada ticket tiene su conversación. Se abre con el botón "Chat" en:
+    Ticket Nuevo        (ticket/ticket.php)           → se escribe como SOLICITANTE
+    Tickets Asignados   (ticket/ticket_asignados.php) → se escribe como TÉCNICO
+    Ticket Administrador(ticket/ticket_admin_v2.php)  → se escribe como ADMINISTRACIÓN
+    Detalle del ticket  (ticket/ticket_detalle.php)   → muestra la conversación y el botón "Abrir chat"
+- Casi en tiempo real: con el chat abierto se consulta cada 3 segundos.
+- El botón "Chat" muestra en rojo cuántos mensajes NO LEÍDOS hay (como el "1"
+  del sistema antiguo). Se actualiza solo cada 8 segundos, el número "salta"
+  cuando llega uno nuevo y el título de la pestaña muestra el total: "(2) Tickets…".
+- Al abrir el chat, lo que escribió la otra parte queda como leído, y quien lo
+  escribió ve ✓ (enviado) o ✓✓ azul (visto).
+- Se pueden adjuntar archivos desde el chat (clip): imágenes se ven dentro de la
+  conversación; PDF, Word, Excel, TXT y ZIP aparecen como archivo. Máximo 5 MB
+  cada uno y 5 por ticket (contando los que se subieron al crear el ticket).
+- Enter envía, Shift + Enter salta de línea.
+- Ticket Terminado (5) o Cerrado (6): la conversación queda de solo lectura.
+  En los demás estados (Recibido, Asignado, En proceso, Demorado) se conversa.
+- Si el ticket todavía no tiene técnico, el solicitante igual puede escribir:
+  el mensaje queda para el técnico que lo tome.
+
+2. TABLAS
+---------
+ticket_conversaciones  (la MISMA tabla del sistema antiguo; se conservan sus mensajes)
+  id, id_ticket, emisor (quién escribió), receptor (la otra parte; 0 si no hay técnico),
+  mensaje (texto, o el nombre original del archivo si es un adjunto),
+  adjunto (ruta del archivo o NULL), fecha, hora,
+  leido (1 = la otra parte ya lo vio), eliminado, creado_en,
+  lado  ← NUEVA: 'usuario' | 'tecnico' | 'admin' = desde qué bandeja se escribió.
+
+archivos_adjuntos_ticket  (lista de archivos del ticket)
+  id, id_ticket, adjunto (ruta)
+  + NUEVAS: nombre_archivo (nombre original), tamano, id_usuario, fecha_subida
+
+¿Por qué "lado" y no solo emisor/receptor?
+  Cuando la misma persona pide y atiende el ticket (ej.: Cristian se crea un
+  ticket que se le asigna a él mismo), emisor = receptor y no hay forma de saber
+  si escribió como solicitante o como técnico. "lado" lo deja guardado.
+  Sin la columna, el sistema lo deduce (si emisor = quien pidió el ticket →
+  'usuario'), que es correcto en todos los casos menos ese.
+
+3. REGLAS
+---------
+- Quién participa y como qué (clases/Tickets/ConversacionTicket.php → vistaPermitida):
+    usuario  = quien pidió el ticket (tickets.id_usuario)
+    tecnico  = el técnico asignado   (tickets.id_tecnico)
+    admin    = super admin o admin del colegio del ticket (puede_administrar_ticket)
+  La página manda la bandeja ("vista"); el servidor la acepta solo si la persona
+  cumple ese papel. Si no, usa la primera que le corresponda (usuario > técnico > admin).
+- No leídos para la bandeja V = mensajes del ticket con lado <> V, leido = 0, eliminado = 0.
+    · En "Ticket Nuevo" cuentan los del técnico y de administración.
+    · En "Tickets Asignados" cuentan los del solicitante y de administración.
+    · En "Ticket Administrador" no se cuentan (solo mira) y abrir el chat ahí
+      NO marca nada como leído, para no "robarle" el aviso a las partes.
+- Si la pestaña está oculta, el chat abierto no marca como leído (el aviso sigue).
+- Los adjuntos nuevos se guardan en uploads/ticket_conversacion/{id_ticket}/ con
+  nombre aleatorio. Esa carpeta NO se puede abrir directo desde la web
+  (.htaccess "Require all denied"); se descargan por ajax/ticket_archivo.php,
+  que revisa que quien los pide pueda ver el ticket. También sirve para los
+  archivos antiguos (archivos/…, uploads/tickets/…).
+- Al crear un ticket con archivos (ajax/guardar_ticket.php) se usa la misma
+  carpeta y el mismo registro.
+
+4. CÓDIGO
+---------
+clases/Tickets/ConversacionTicket.php    reglas: lado, no leídos, enviar, marcar leído
+ajax/_ticket_chat.php                    arranque común: sesión, CSRF, ticket y vista
+ajax/obtener_conversacion_ticket.php     mensajes + archivos (y marca como leído)
+ajax/guardar_comentario.php              enviar mensaje
+ajax/guardar_adjunto_ticket.php          adjuntar archivos desde el chat
+ajax/ticket_no_leidos.php                números del botón "Chat"
+ajax/ticket_archivo.php                  ver / descargar un adjunto con permiso
+helpers/tickets.php                      ticket_boton_chat, ticket_validar_archivos,
+                                         ticket_mover_archivo, ticket_registrar_adjunto,
+                                         ticket_listar_adjuntos, ticket_ruta_adjunto_segura
+clases/Tickets/TicketDataBase.php        mensajes_no_leidos según la bandeja (vistaChat)
+ticket/componentes/chat_ticket_panel.php el panel (cada página define $vistaChat)
+ticket/js/chat_ticket_panel.js           panel, envío, adjuntos y números del botón
+css/ticket_chat.css                      estilos (también oculta el chat flotante
+                                         general mientras el panel está abierto,
+                                         porque tapaba el botón Enviar)
+ticket/sql/01_mensajeria.sql             columnas nuevas (se puede ejecutar 2 veces)
+ticket/sql/99_volver_atras.sql           deshace lo anterior
+
+5. CONSULTAS ÚTILES
+-------------------
+-- Conversación de un ticket
+SELECT m.id, m.lado, TRIM(CONCAT(u.nombre,' ',u.apellido_paterno)) AS quien,
+       m.mensaje, m.adjunto, m.fecha, m.hora, m.leido
+  FROM ticket_conversaciones m LEFT JOIN usuarios u ON u.id = m.emisor
+ WHERE m.id_ticket = 597 AND m.eliminado = 0 ORDER BY m.id;
+
+-- Tickets con mensajes sin leer para su técnico
+SELECT t.id_ticket, t.asunto, COUNT(*) AS sin_leer
+  FROM ticket_conversaciones m JOIN tickets t ON t.id_ticket = m.id_ticket
+ WHERE m.leido = 0 AND m.eliminado = 0 AND m.lado <> 'tecnico'
+ GROUP BY t.id_ticket;
+
+6. IDEAS PARA DESPUÉS
+---------------------
+- Aviso en la campana de la barra superior con el total de mensajes sin leer.
+- Correo al técnico cuando llega un mensaje y no está conectado.
+- Pasar el ticket de "Asignado" a "En proceso" cuando el técnico responde.

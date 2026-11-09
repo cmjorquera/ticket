@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 $depth = '../';
 require_once __DIR__ . '/../configuracion/_inicio.php';
+require_once __DIR__ . '/../clases/Tickets/ConversacionTicket.php';
 
 $usuarioId = (int) Sesion::get('id', 0);
 $ticketId = (int) ($_GET['id'] ?? 0);
@@ -57,37 +58,19 @@ $puedeCambiarEstado = $esTecnico || $esAdministrador;
 
 if ($autorizado) {
     try {
-        $columnasComentario = ticket_columnas_tabla('comentarios_ticket', $db);
-        $conversacionDisponible = isset($columnasComentario['id_ticket'], $columnasComentario['id_usuario'], $columnasComentario['comentario']);
-        if ($conversacionDisponible) {
-            $campoFecha = isset($columnasComentario['fecha_comentario']) ? 'ct.fecha_comentario' : 'NULL';
-            $campoId = isset($columnasComentario['id_comentario']) ? 'ct.id_comentario' : (isset($columnasComentario['id']) ? 'ct.id' : 'ct.id_ticket');
-            $soloActivos = isset($columnasComentario['estado']) ? ' AND ct.estado = 1' : '';
-            $comentarios = $db->fetchAll(
-                "SELECT {$campoId} AS id_comentario, ct.id_usuario, ct.comentario,
-                        {$campoFecha} AS fecha_comentario,
-                        CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS autor_nombre
-                   FROM comentarios_ticket ct
-                   JOIN usuarios u ON u.id = ct.id_usuario
-                  WHERE ct.id_ticket = ?{$soloActivos}
-               ORDER BY " . (isset($columnasComentario['fecha_comentario']) ? 'ct.fecha_comentario' : $campoId) . ' ASC',
-                [$ticketId]
-            );
-        }
+        // Mensajería: ticket_conversaciones (ticket/logica/LOGICA_MENSAJERIA.txt)
+        $conversacion = new ConversacionTicket($db);
+        $vistaChat = $conversacion->resolverVista($usuarioId, $ticket) ?? 'admin';
+        $conversacion->marcarLeidos($ticketId, $vistaChat);
+        $comentarios = $conversacion->mensajes($ticketId, $vistaChat);
+        $conversacionDisponible = true;
     } catch (Throwable $ex) {
         error_log('Error al consultar conversación del ticket: ' . $ex->getMessage());
         $conversacionDisponible = false;
     }
 
     try {
-        $adjuntos = $db->fetchAll(
-            "SELECT nombre_archivo AS nombre_original,
-                    SUBSTRING_INDEX(ruta_archivo, '/', -1) AS nombre_archivo,
-                    tipo_archivo AS tipo_mime, tamaño_archivo AS tamano
-               FROM archivos_adjuntos_ticket
-              WHERE id_ticket = ? ORDER BY fecha_subida ASC",
-            [$ticketId]
-        );
+        $adjuntos = ticket_listar_adjuntos($db, $ticketId);
     } catch (Throwable $ex) {
         $adjuntos = [];
     }
@@ -150,29 +133,21 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 
         <section class="card ticket-conversation" id="conversacion">
           <div class="card-header"><div><h2 class="card-title">Conversación</h2><p class="card-desc">Seguimiento entre solicitante y equipo de soporte.</p></div><span class="ticket-list-count"><?= count($comentarios) ?> mensaje<?= count($comentarios) === 1 ? '' : 's' ?></span></div>
-          <?php if (!$conversacionDisponible): ?>
-            <div class="ticket-empty"><i class="bi bi-chat-square-dots"></i>La conversación se habilitará cuando esté instalada su tabla en la base de datos.</div>
-          <?php else: ?>
-            <div class="ticket-thread" id="ticket-thread">
-              <?php if (!$comentarios): ?><div class="ticket-thread-empty">Aún no hay mensajes. Escribe el primero para iniciar el seguimiento.</div><?php endif; ?>
-              <?php foreach ($comentarios as $mensaje): $propio = (int) $mensaje['id_usuario'] === $usuarioId; ?>
-                <article class="ticket-message-row <?= $propio ? 'is-own' : '' ?>">
-                  <div class="ticket-message-avatar"><?= e(strtoupper(substr(trim((string) $mensaje['autor_nombre']), 0, 1)) ?: 'U') ?></div>
-                  <div class="ticket-message-bubble"><div><strong><?= e($mensaje['autor_nombre']) ?></strong><time><?= $mensaje['fecha_comentario'] ? e(date('d/m/Y H:i', strtotime((string) $mensaje['fecha_comentario']))) : '' ?></time></div><p><?= nl2br(e($mensaje['comentario'])) ?></p></div>
-                </article>
-              <?php endforeach; ?>
-            </div>
-            <?php if ((int) $ticket['id_estado'] === 5): ?>
-              <div class="ticket-chat__closed"><i class="bi bi-lock"></i><span>Este ticket está cerrado y no admite nuevos mensajes.</span></div>
-            <?php else: ?>
-              <form class="ticket-reply" id="ticket-comment-form">
-                <label class="form-label" for="ticket-comment">Agregar comentario</label>
-                <textarea class="form-input" id="ticket-comment" name="comentario" minlength="3" maxlength="5000" required placeholder="Escribe una actualización o responde al equipo…"></textarea>
-                <div class="ticket-form-actions"><span class="ticket-note">Máximo 5000 caracteres.</span><button class="btn btn-primary" type="submit"><i class="bi bi-send"></i> Enviar comentario</button></div>
-                <div class="ticket-message" id="ticket-comment-message" role="status"></div>
-              </form>
-            <?php endif; ?>
-          <?php endif; ?>
+          <div class="ticket-thread" id="ticket-thread">
+            <?php if (!$comentarios): ?><div class="ticket-thread-empty">Aún no hay mensajes.</div><?php endif; ?>
+            <?php foreach ($comentarios as $mensaje): ?>
+              <article class="ticket-message-row <?= $mensaje['propio'] ? 'is-own' : '' ?>">
+                <div class="ticket-message-avatar"><?= e(mb_strtoupper(mb_substr($mensaje['autor'], 0, 1)) ?: 'U') ?></div>
+                <div class="ticket-message-bubble"><div><strong><?= e($mensaje['autor']) ?></strong><time><?= $mensaje['fecha'] ? e(date('d/m/Y H:i', strtotime($mensaje['fecha']))) : '' ?></time></div>
+                  <?php if ($mensaje['adjunto']): ?><p><a href="../ajax/ticket_archivo.php?m=<?= (int) $mensaje['id'] ?>" target="_blank" rel="noopener"><i class="bi bi-paperclip"></i> <?= e($mensaje['adjunto']['nombre']) ?></a></p>
+                  <?php else: ?><p><?= nl2br(e($mensaje['texto'])) ?></p><?php endif; ?>
+                </div>
+              </article>
+            <?php endforeach; ?>
+          </div>
+          <div class="ticket-reply" style="display:flex;justify-content:flex-end">
+            <button class="btn btn-primary js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticketId ?>"><i class="bi bi-chat-dots"></i> <?= ticket_estado_sin_escritura((int) $ticket['id_estado']) ? 'Ver conversación' : 'Abrir chat' ?></button>
+          </div>
         </section>
       </div>
 
@@ -182,7 +157,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
           <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(str_replace('í','i',strtolower((string)$ticket['prioridad']))) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
         </section>
 
-        <?php if ($adjuntos): ?><section class="card ticket-detail-files"><h2>Archivos adjuntos</h2><?php foreach ($adjuntos as $archivo): ?><a href="../uploads/tickets/<?= (int)$ticketId ?>/<?= rawurlencode(basename((string)$archivo['nombre_archivo'])) ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre_original']) ?><small><?= e(number_format(((int)$archivo['tamano']) / 1024, 0, ',', '.')) ?> KB</small></span><i class="bi bi-box-arrow-up-right"></i></a><?php endforeach; ?></section><?php endif; ?>
+        <?php if ($adjuntos): ?><section class="card ticket-detail-files"><h2>Archivos adjuntos</h2><?php foreach ($adjuntos as $archivo): ?><a href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre']) ?><small><?= $archivo['tamano'] ? e(number_format($archivo['tamano'] / 1024, 0, ',', '.')) . ' KB' : e(strtoupper($archivo['extension'])) ?></small></span><i class="bi bi-box-arrow-up-right"></i></a><?php endforeach; ?></section><?php endif; ?>
 
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
@@ -217,5 +192,6 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
     </div>
   </div>
   <script src="js/chat_ticket.js"></script>
+  <?php require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

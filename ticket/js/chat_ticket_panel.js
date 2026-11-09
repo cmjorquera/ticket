@@ -1,3 +1,11 @@
+/*
+ * Mensajería de tickets: panel de chat + número de no leídos en el botón "Chat".
+ * Lógica: ticket/logica/LOGICA_MENSAJERIA.txt
+ *
+ *  - Con el panel abierto se consulta la conversación cada 3 s (casi en tiempo real).
+ *  - En la bandeja se consultan los no leídos cada 8 s (solo vistas usuario y técnico).
+ *  - data-vista del panel dice desde qué bandeja se escribe: usuario | tecnico | admin.
+ */
 (() => {
   'use strict';
 
@@ -5,175 +13,207 @@
   if (!panel || panel.dataset.ready === '1') return;
   panel.dataset.ready = '1';
 
+  const API = '../ajax/';
   const csrf = panel.dataset.csrf || '';
+  const vista = panel.dataset.vista || 'usuario';
+  const $ = (id) => document.getElementById(id);
   const drawer = panel.querySelector('.ticket-chat__drawer');
-  const title = document.getElementById('ticket-chat-title');
-  const folio = document.getElementById('ticket-chat-folio');
-  const status = document.getElementById('ticket-chat-status');
-  const thread = document.getElementById('ticket-chat-thread');
-  const form = document.getElementById('ticket-chat-form');
-  const message = document.getElementById('ticket-chat-message');
-  const fileInput = document.getElementById('ticket-chat-files');
-  const fileList = document.getElementById('ticket-chat-file-list');
-  const fileCount = document.getElementById('ticket-chat-file-count');
-  const picker = panel.querySelector('.ticket-chat__picker');
-  const closed = document.getElementById('ticket-chat-closed');
+  const title = $('ticket-chat-title');
+  const folio = $('ticket-chat-folio');
+  const withWho = $('ticket-chat-with');
+  const status = $('ticket-chat-status');
+  const thread = $('ticket-chat-thread');
+  const form = $('ticket-chat-form');
+  const message = $('ticket-chat-message');
+  const fileInput = $('ticket-chat-files');
+  const fileList = $('ticket-chat-file-list');
+  const fileCount = $('ticket-chat-file-count');
+  const closed = $('ticket-chat-closed');
+  const sendButton = form.querySelector('.tc-send');
+  const LADOS = {usuario: 'Solicitante', tecnico: 'Técnico', admin: 'Administración'};
+  const MAX_FILES = 5;
+
   let ticketId = 0;
   let timer = 0;
   let loading = false;
-  let refreshController = null;
+  let controller = null;
   let closeTimer = 0;
   let lastTrigger = null;
-  let messageSignature = '';
-  let fileSignature = '';
-  let panelMode = 'chat';
+  let firma = '';
+  let firmaArchivos = '';
+  let modo = 'chat';
+  let archivosActuales = 0;
 
+  /* ---------- utilidades ---------- */
   function setStatus(text = '', type = '') {
     status.textContent = text;
     status.className = `ticket-chat__status${type ? ` is-${type}` : ''}`;
     status.hidden = text === '';
+    if (type === 'success') window.setTimeout(() => { if (status.textContent === text) setStatus(); }, 2500);
   }
 
-  async function post(url, body, signal = undefined) {
+  async function post(url, body, signal) {
     const response = await fetch(url, {method: 'POST', body, credentials: 'same-origin', signal});
     let data;
-    try { data = await response.json(); }
-    catch (_) { throw new Error('El servidor devolvió una respuesta no válida.'); }
-    if (!response.ok || !data.ok) throw new Error(data.error || 'No fue posible completar la solicitud.');
+    try { data = await response.json(); } catch (_) { throw new Error('El servidor devolvió una respuesta no válida.'); }
+    if (!response.ok || !data.ok) throw new Error(data.error || data.mensaje || 'No fue posible completar la solicitud.');
     return data;
   }
 
-  function emptyNode(node) {
-    while (node.firstChild) node.removeChild(node.firstChild);
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
   }
 
-  function fileIcon(path = '') {
-    const extension = String(path).split('?')[0].split('.').pop().toLowerCase();
-    const icons = {
-      pdf: 'bi-file-earmark-pdf',
-      doc: 'bi-file-earmark-word',
-      docx: 'bi-file-earmark-word',
-      xls: 'bi-file-earmark-excel',
-      xlsx: 'bi-file-earmark-excel',
-      jpg: 'bi-file-earmark-image',
-      jpeg: 'bi-file-earmark-image',
-      png: 'bi-file-earmark-image',
-      webp: 'bi-file-earmark-image',
-      txt: 'bi-file-earmark-text',
-      zip: 'bi-file-earmark-zip',
-    };
-    return `bi ${icons[extension] || 'bi-file-earmark'}`;
+  const ICONOS = {pdf: 'bi-file-earmark-pdf', doc: 'bi-file-earmark-word', docx: 'bi-file-earmark-word',
+    xls: 'bi-file-earmark-excel', xlsx: 'bi-file-earmark-excel', jpg: 'bi-file-earmark-image', jpeg: 'bi-file-earmark-image',
+    png: 'bi-file-earmark-image', webp: 'bi-file-earmark-image', gif: 'bi-file-earmark-image', txt: 'bi-file-earmark-text', zip: 'bi-file-earmark-zip'};
+  const esImagen = (ext) => ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+
+  function fecha(txt) {
+    const d = txt ? new Date(String(txt).replace(' ', 'T')) : null;
+    return d && !Number.isNaN(d.getTime()) ? d : null;
   }
 
-  function renderMessages(messages) {
-    const nearBottom = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 80;
-    emptyNode(thread);
-    if (!messages.length) {
-      const empty = document.createElement('div');
-      empty.className = 'ticket-chat__empty';
-      empty.innerHTML = '<i class="bi bi-chat-square-dots"></i><strong>Aún no hay mensajes</strong><span>Escribe el primero para iniciar el seguimiento.</span>';
-      thread.appendChild(empty);
+  function etiquetaDia(d) {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const dia = new Date(d); dia.setHours(0, 0, 0, 0);
+    const diff = Math.round((hoy - dia) / 86400000);
+    if (diff === 0) return 'Hoy';
+    if (diff === 1) return 'Ayer';
+    return d.toLocaleDateString('es-CL', {weekday: 'long', day: 'numeric', month: 'long', year: hoy.getFullYear() === d.getFullYear() ? undefined : 'numeric'});
+  }
+
+  /* ---------- conversación ---------- */
+  function renderMensajes(mensajes) {
+    const cercaDelFinal = thread.scrollHeight - thread.scrollTop - thread.clientHeight < 90;
+    thread.replaceChildren();
+    if (!mensajes.length) {
+      const vacio = el('div', 'ticket-chat__empty');
+      vacio.innerHTML = '<i class="bi bi-chat-square-dots"></i><strong>Aún no hay mensajes</strong>';
+      vacio.append(el('span', '', vista === 'tecnico'
+        ? 'Escríbele a quien pidió el ticket para comenzar.'
+        : 'Escribe el primero: el técnico lo verá al instante.'));
+      thread.append(vacio);
       return;
     }
-    messages.forEach((item) => {
-      const own = Number(item.id_usuario) === Number(panel.dataset.userId);
-      const row = document.createElement('article');
-      row.className = `ticket-message-row${own ? ' is-own' : ''}`;
-      const avatar = document.createElement('div');
-      avatar.className = 'ticket-message-avatar';
-      avatar.textContent = String(item.autor_nombre || 'U').trim().charAt(0).toUpperCase() || 'U';
-      const bubble = document.createElement('div');
-      bubble.className = 'ticket-message-bubble';
-      const meta = document.createElement('div');
-      const author = document.createElement('strong');
-      author.textContent = item.autor_nombre || 'Usuario';
-      const time = document.createElement('time');
-      const parsed = item.fecha_comentario ? new Date(String(item.fecha_comentario).replace(' ', 'T')) : null;
-      time.textContent = parsed && !Number.isNaN(parsed.getTime())
-        ? parsed.toLocaleString('es-CL', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'})
-        : '';
-      const copy = document.createElement('p');
-      copy.textContent = item.comentario || '';
-      meta.append(author, time);
-      bubble.append(meta, copy);
-      row.append(avatar, bubble);
-      thread.appendChild(row);
+    let diaAnterior = '';
+    let ladoAnterior = '';
+    mensajes.forEach((m) => {
+      const d = fecha(m.fecha);
+      const dia = d ? d.toDateString() : '';
+      if (d && dia !== diaAnterior) {
+        thread.append(el('div', 'tc-day', etiquetaDia(d)));
+        diaAnterior = dia;
+        ladoAnterior = '';
+      }
+      const fila = el('article', `tc-msg${m.propio ? ' is-own' : ''}${m.lado === ladoAnterior ? ' is-cont' : ''}`);
+      fila.dataset.lado = m.lado;
+      const burbuja = el('div', 'tc-bubble');
+      if (!m.propio && m.lado !== ladoAnterior) {
+        const quien = el('div', 'tc-author');
+        quien.append(el('strong', '', m.autor), el('span', `tc-role tc-role--${m.lado}`, LADOS[m.lado] || ''));
+        burbuja.append(quien);
+      }
+      if (m.adjunto) {
+        const a = el('a', 'tc-file');
+        a.href = m.adjunto.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        if (esImagen(m.adjunto.extension)) {
+          a.classList.add('is-image');
+          const img = el('img');
+          img.src = m.adjunto.url;
+          img.alt = m.adjunto.nombre;
+          img.loading = 'lazy';
+          a.append(img);
+        } else {
+          const i = el('i', `bi ${ICONOS[m.adjunto.extension] || 'bi-file-earmark'}`);
+          a.append(i, el('span', '', m.adjunto.nombre), el('small', '', (m.adjunto.extension || '').toUpperCase()));
+        }
+        burbuja.append(a);
+      } else {
+        burbuja.append(el('p', 'tc-text', m.texto));
+      }
+      const pie = el('div', 'tc-meta');
+      pie.append(el('time', '', d ? d.toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'}) : ''));
+      if (m.propio) {
+        const check = el('span', `tc-check${m.visto ? ' is-seen' : ''}`);
+        check.innerHTML = m.visto ? '<i class="bi bi-check2-all"></i>' : '<i class="bi bi-check2"></i>';
+        check.title = m.visto ? 'Visto' : 'Enviado';
+        pie.append(check);
+      }
+      burbuja.append(pie);
+      fila.append(burbuja);
+      thread.append(fila);
+      ladoAnterior = m.lado;
     });
-    if (nearBottom || thread.dataset.initial !== '1') {
+    if (cercaDelFinal || thread.dataset.initial !== '1') {
       thread.scrollTop = thread.scrollHeight;
       thread.dataset.initial = '1';
+      thread.querySelectorAll('img').forEach((img) => img.addEventListener('load', () => { thread.scrollTop = thread.scrollHeight; }, {once: true}));
     }
   }
 
-  function renderFiles(files, enabled) {
-    emptyNode(fileList);
-    fileCount.textContent = `${files.length}/5`;
-    picker.hidden = !enabled || files.length >= 5;
-    fileInput.disabled = !enabled || files.length >= 5;
-    if (!files.length) {
-      const empty = document.createElement('span');
-      empty.className = 'ticket-chat__no-files';
-      empty.textContent = 'Sin archivos adjuntos.';
-      fileList.appendChild(empty);
+  function renderArchivos(archivos) {
+    fileList.replaceChildren();
+    archivosActuales = archivos.length;
+    fileCount.textContent = `${archivos.length}/${MAX_FILES}`;
+    if (!archivos.length) {
+      fileList.append(el('span', 'ticket-chat__no-files', 'Sin archivos adjuntos.'));
       return;
     }
-    files.forEach((item) => {
-      const link = document.createElement('a');
-      const route = String(item.ruta_archivo || '').replace(/^\/+/, '');
-      link.href = `../${route}`;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      const icon = document.createElement('i');
-      icon.className = fileIcon(item.ruta_archivo || item.nombre_archivo);
-      const text = document.createElement('span');
-      text.textContent = item.nombre_archivo || 'Archivo';
-      const size = document.createElement('small');
-      size.textContent = `${Math.max(1, Math.round(Number(item.tamano || 0) / 1024))} KB`;
-      link.append(icon, text, size);
-      fileList.appendChild(link);
+    archivos.forEach((f) => {
+      const a = el('a');
+      a.href = f.url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.append(el('i', `bi ${ICONOS[f.extension] || 'bi-file-earmark'}`), el('span', '', f.nombre),
+        el('small', '', f.tamano ? `${Math.max(1, Math.round(f.tamano / 1024))} KB` : (f.extension || '').toUpperCase()));
+      fileList.append(a);
     });
   }
 
   async function refresh({silent = false} = {}) {
     if (!ticketId || loading || panel.hidden) return;
-    const requestedTicketId = ticketId;
+    const pedido = ticketId;
     loading = true;
-    refreshController = new AbortController();
+    controller = new AbortController();
     if (!silent) {
       thread.setAttribute('aria-busy', 'true');
-      setStatus(panelMode === 'files' ? 'Cargando archivos…' : 'Cargando conversación…');
+      setStatus(modo === 'files' ? 'Cargando archivos…' : 'Cargando conversación…');
     }
     try {
-      const body = new URLSearchParams({ticket_id: String(ticketId), csrf});
-      const data = await post('../ajax/obtener_conversacion_ticket.php', body, refreshController.signal);
-      if (requestedTicketId !== ticketId || panel.hidden) return;
-      title.textContent = data.ticket.asunto || `Ticket #${ticketId}`;
-      const chatMode = panelMode === 'chat';
-      folio.textContent = chatMode ? `Ticket #${ticketId}` : `Archivos · Ticket #${ticketId}`;
-      const writable = Boolean(data.conversacion_disponible && !data.ticket.cerrado);
-      form.hidden = !chatMode || !writable;
-      closed.hidden = !chatMode || !data.ticket.cerrado;
-      const messages = Array.isArray(data.mensajes) ? data.mensajes : [];
-      const files = Array.isArray(data.adjuntos) ? data.adjuntos : [];
-      const nextMessageSignature = JSON.stringify(messages.map((item) => [item.id_comentario, item.comentario, item.fecha_comentario]));
-      const nextFileSignature = JSON.stringify(files.map((item) => [item.id_archivo, item.ruta_archivo, item.tamano]));
-      if (nextMessageSignature !== messageSignature) {
-        renderMessages(messages);
-        messageSignature = nextMessageSignature;
-      }
-      if (nextFileSignature !== fileSignature) {
-        renderFiles(files, Boolean(chatMode && data.adjuntos_disponibles && !data.ticket.cerrado));
-        fileSignature = nextFileSignature;
-      } else {
-        picker.hidden = !chatMode || !data.adjuntos_disponibles || data.ticket.cerrado || files.length >= 5;
-        fileInput.disabled = picker.hidden;
-      }
+      const body = new URLSearchParams({ticket_id: String(ticketId), csrf, vista, marcar: document.hidden ? '0' : '1'});
+      const data = await post(`${API}obtener_conversacion_ticket.php`, body, controller.signal);
+      if (pedido !== ticketId || panel.hidden) return;
+      const t = data.ticket;
+      title.textContent = t.asunto || `Ticket #${ticketId}`;
+      folio.textContent = modo === 'files' ? `Archivos · Ticket #${ticketId}` : `Ticket #${ticketId}`;
+      const otro = data.vista === 'tecnico' ? `con ${t.solicitante || 'el solicitante'}`
+        : (data.vista === 'usuario' ? (t.tecnico ? `con ${t.tecnico} (técnico)` : 'Aún sin técnico asignado: tu mensaje quedará para quien lo tome')
+          : `${t.solicitante || 'Solicitante'} ↔ ${t.tecnico || 'sin técnico'}`);
+      withWho.textContent = modo === 'chat' ? otro : '';
+      const chat = modo === 'chat';
+      form.hidden = !chat || !data.puede_escribir;
+      closed.hidden = !chat || data.puede_escribir;
+      const mensajes = Array.isArray(data.mensajes) ? data.mensajes : [];
+      const archivos = Array.isArray(data.adjuntos) ? data.adjuntos : [];
+      const f1 = JSON.stringify(mensajes.map((m) => [m.id, m.visto]));
+      if (f1 !== firma) { renderMensajes(mensajes); firma = f1; }
+      const f2 = JSON.stringify(archivos.map((a) => a.id));
+      if (f2 !== firmaArchivos) { renderArchivos(archivos); firmaArchivos = f2; }
+      fileInput.disabled = archivosActuales >= MAX_FILES;
+      form.querySelector('.tc-attach').classList.toggle('is-disabled', fileInput.disabled);
+      if (!document.hidden) Badges.poner(ticketId, 0);
       if (!silent) setStatus();
     } catch (error) {
       if (error.name !== 'AbortError') setStatus(error.message, 'error');
     } finally {
       loading = false;
-      refreshController = null;
+      controller = null;
       thread.removeAttribute('aria-busy');
     }
   }
@@ -181,8 +221,7 @@
   function close() {
     window.clearInterval(timer);
     timer = 0;
-    refreshController?.abort();
-    refreshController = null;
+    controller?.abort();
     loading = false;
     panel.classList.remove('is-open');
     document.body.classList.remove('ticket-chat-open');
@@ -192,105 +231,178 @@
       panel.classList.remove('is-files-only');
       ticketId = 0;
       lastTrigger?.focus();
+      Badges.actualizar();
     }, 180);
   }
 
   function open(id, trigger, mode = 'chat') {
     window.clearTimeout(closeTimer);
-    refreshController?.abort();
-    refreshController = null;
+    controller?.abort();
     loading = false;
     ticketId = Number(id) || 0;
     if (!ticketId) return;
-    panelMode = mode === 'files' ? 'files' : 'chat';
-    panel.classList.toggle('is-files-only', panelMode === 'files');
-    messageSignature = '';
-    fileSignature = '';
+    modo = mode === 'files' ? 'files' : 'chat';
+    panel.classList.toggle('is-files-only', modo === 'files');
+    firma = '';
+    firmaArchivos = '';
     lastTrigger = trigger || null;
     thread.dataset.initial = '0';
     title.textContent = 'Cargando ticket…';
-    folio.textContent = panelMode === 'files' ? `Archivos · Ticket #${ticketId}` : `Ticket #${ticketId}`;
-    emptyNode(thread);
-    emptyNode(fileList);
+    withWho.textContent = '';
+    folio.textContent = modo === 'files' ? `Archivos · Ticket #${ticketId}` : `Ticket #${ticketId}`;
+    thread.replaceChildren();
+    fileList.replaceChildren();
     form.hidden = true;
     closed.hidden = true;
     panel.hidden = false;
     document.body.classList.add('ticket-chat-open');
     requestAnimationFrame(() => panel.classList.add('is-open'));
     drawer.focus({preventScroll: true});
-    refresh();
+    refresh().then(() => { if (modo === 'chat' && !form.hidden) message.focus({preventScroll: true}); });
     window.clearInterval(timer);
     timer = window.setInterval(() => refresh({silent: true}), 3000);
   }
 
+  /* ---------- enviar ---------- */
+  function ajustarAlto() {
+    message.style.height = 'auto';
+    message.style.height = `${Math.min(message.scrollHeight, 150)}px`;
+  }
+  message.addEventListener('input', ajustarAlto);
+  message.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const texto = message.value.trim();
+    if (!texto || !ticketId || sendButton.disabled) return;
+    sendButton.disabled = true;
+    try {
+      await post(`${API}guardar_comentario.php`, new URLSearchParams({ticket_id: String(ticketId), csrf, vista, comentario: texto}));
+      message.value = '';
+      ajustarAlto();
+      thread.dataset.initial = '0';   // baja al último mensaje
+      loading = false;
+      await refresh({silent: true});
+    } catch (error) {
+      setStatus(error.message, 'error');
+    } finally {
+      sendButton.disabled = false;
+      message.focus();
+    }
+  });
+
+  fileInput.addEventListener('change', async () => {
+    const archivos = Array.from(fileInput.files || []);
+    fileInput.value = '';
+    if (!archivos.length || !ticketId) return;
+    if (archivos.some((f) => f.size > 5 * 1024 * 1024)) { setStatus('Cada archivo puede pesar como máximo 5 MB.', 'error'); return; }
+    if (archivosActuales + archivos.length > MAX_FILES) { setStatus(`El ticket admite ${MAX_FILES} archivos en total (ya tiene ${archivosActuales}).`, 'error'); return; }
+    const body = new FormData();
+    body.append('ticket_id', String(ticketId));
+    body.append('csrf', csrf);
+    body.append('vista', vista);
+    archivos.forEach((f) => body.append('archivos[]', f));
+    fileInput.disabled = true;
+    setStatus(archivos.length === 1 ? `Subiendo ${archivos[0].name}…` : `Subiendo ${archivos.length} archivos…`);
+    try {
+      const data = await post(`${API}guardar_adjunto_ticket.php`, body);
+      setStatus(data.mensaje, 'success');
+      thread.dataset.initial = '0';
+      await refresh({silent: true});
+    } catch (error) {
+      setStatus(error.message, 'error');
+    } finally {
+      fileInput.disabled = archivosActuales >= MAX_FILES;
+    }
+  });
+
+  /* ---------- número de no leídos en el botón "Chat" ---------- */
+  const Badges = (() => {
+    const previos = new Map();
+    const tituloBase = document.title.replace(/^\(\d+\+?\)\s*/, '');
+    let enCurso = false;
+
+    function poner(id, n) {
+      document.querySelectorAll(`.js-ticket-chat[data-ticket-id="${id}"]`).forEach((b) => {
+        let s = b.querySelector('.ticket-chat-unread');
+        if (!s) { s = el('span', 'ticket-chat-unread'); b.append(s); }
+        s.textContent = n > 99 ? '99+' : String(n);
+        s.hidden = n <= 0;
+        b.classList.toggle('has-unread', n > 0);
+        const t = n === 0 ? 'Abrir chat' : (n === 1 ? '1 mensaje sin leer' : `${n} mensajes sin leer`);
+        b.title = t;
+        b.setAttribute('aria-label', `Chat: ${t}`);
+        if (n > (previos.get(id) || 0)) {
+          b.classList.remove('is-new');
+          void b.offsetWidth;   // reinicia la animación
+          b.classList.add('is-new');
+        }
+      });
+      previos.set(id, n);
+      const total = [...previos.values()].reduce((a, v) => a + v, 0);
+      document.title = total ? `(${total}) ${tituloBase}` : tituloBase;
+    }
+
+    async function actualizar() {
+      if (enCurso || document.hidden || !['usuario', 'tecnico'].includes(vista)) return;
+      const ids = [...new Set([...document.querySelectorAll('.js-ticket-chat[data-ticket-id]')].map((b) => Number(b.dataset.ticketId)).filter(Boolean))];
+      if (!ids.length) return;
+      enCurso = true;
+      try {
+        const r = await fetch(`${API}ticket_no_leidos.php`, {
+          method: 'POST', credentials: 'same-origin',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({csrf, vista, ids}),
+        });
+        const data = await r.json();
+        if (!data.ok) return;
+        ids.forEach((id) => poner(id, id === ticketId && !panel.hidden ? 0 : Number(data.no_leidos[id] || 0)));
+      } catch (_) { /* sin red: se reintenta en el próximo ciclo */ } finally { enCurso = false; }
+    }
+
+    // valores que vienen ya dibujados desde PHP
+    document.querySelectorAll('.js-ticket-chat .ticket-chat-unread').forEach((s) => {
+      const b = s.closest('.js-ticket-chat');
+      previos.set(Number(b.dataset.ticketId), s.hidden ? 0 : parseInt(s.textContent, 10) || 0);
+    });
+    // La bandeja de "Ticket Nuevo" se vuelve a dibujar sola cada 3 s con datos
+    // frescos del servidor: se toman esos valores (y se anima si subieron).
+    new MutationObserver(() => {
+      document.querySelectorAll('.js-ticket-chat[data-ticket-id]').forEach((b) => {
+        const id = Number(b.dataset.ticketId);
+        const s = b.querySelector('.ticket-chat-unread');
+        let n = s && !s.hidden ? parseInt(s.textContent, 10) || 0 : 0;
+        if (id === ticketId && !panel.hidden) n = 0;
+        if (n !== (previos.get(id) || 0) || (s && (s.hidden ? 0 : parseInt(s.textContent, 10) || 0) !== n)) poner(id, n);
+      });
+    }).observe(document.body, {childList: true, subtree: true});
+
+    window.setInterval(actualizar, 8000);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) return;
+      actualizar();
+      if (!panel.hidden) refresh({silent: true});
+    });
+    window.setTimeout(actualizar, 600);
+    return {poner, actualizar};
+  })();
+
+  /* ---------- eventos ---------- */
   document.addEventListener('click', (event) => {
-    const filesTrigger = event.target.closest('.js-ticket-files');
-    if (filesTrigger) {
-      event.preventDefault();
-      open(filesTrigger.dataset.ticketId, filesTrigger, 'files');
-      return;
-    }
-    const trigger = event.target.closest('.js-ticket-chat');
-    if (trigger) {
-      event.preventDefault();
-      open(trigger.dataset.ticketId, trigger);
-      return;
-    }
+    const archivos = event.target.closest('.js-ticket-files');
+    if (archivos) { event.preventDefault(); open(archivos.dataset.ticketId, archivos, 'files'); return; }
+    const chat = event.target.closest('.js-ticket-chat');
+    if (chat) { event.preventDefault(); open(chat.dataset.ticketId, chat); return; }
     if (event.target.closest('[data-chat-close]')) close();
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !panel.hidden) close();
   });
 
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (!form.reportValidity() || !ticketId) return;
-    const button = form.querySelector('button[type="submit"]');
-    button.disabled = true;
-    setStatus('Enviando mensaje…');
-    try {
-      const body = new URLSearchParams({ticket_id: String(ticketId), csrf, comentario: message.value.trim()});
-      await post('../ajax/guardar_comentario.php', body);
-      message.value = '';
-      setStatus('Mensaje enviado.', 'success');
-      await refresh({silent: true});
-    } catch (error) {
-      setStatus(error.message, 'error');
-    } finally {
-      button.disabled = false;
-    }
-  });
-
-  fileInput.addEventListener('change', async () => {
-    const files = Array.from(fileInput.files || []);
-    if (!files.length || !ticketId) return;
-    if (files.some((file) => file.size > 5 * 1024 * 1024)) {
-      setStatus('Cada archivo debe pesar como máximo 5 MB.', 'error');
-      fileInput.value = '';
-      return;
-    }
-    const body = new FormData();
-    body.append('ticket_id', String(ticketId));
-    body.append('csrf', csrf);
-    files.forEach((file) => body.append('archivos[]', file));
-    fileInput.disabled = true;
-    setStatus('Subiendo archivos…');
-    try {
-      const data = await post('../ajax/guardar_adjunto_ticket.php', body);
-      setStatus(data.mensaje, 'success');
-      await refresh({silent: true});
-    } catch (error) {
-      setStatus(error.message, 'error');
-    } finally {
-      fileInput.value = '';
-      fileInput.disabled = false;
-    }
-  });
-
-  window.TicketChatPanel = {
-    open,
-    openFiles: (id, trigger) => open(id, trigger, 'files'),
-    close,
-    refresh,
-  };
+  window.TicketChatPanel = {open, openFiles: (id, t) => open(id, t, 'files'), close, refresh, badges: Badges};
 })();

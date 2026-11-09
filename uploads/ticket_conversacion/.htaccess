@@ -1,0 +1,9 @@
+# Adjuntos de tickets: nunca se sirven directo.
+# Se descargan por ajax/ticket_archivo.php, que revisa que la persona pueda ver el ticket.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

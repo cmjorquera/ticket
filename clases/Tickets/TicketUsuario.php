@@ -6,6 +6,11 @@ require_once __DIR__ . '/TicketDataBase.php';
 /** Bandeja de tickets creados por el usuario autenticado. */
 final class TicketUsuario extends TicketDataBase
 {
+    protected function vistaChat(): string
+    {
+        return 'usuario';
+    }
+
     /**
      * @param int|null $estado Estado opcional por el que se filtrará.
      * @return array<int,array<string,mixed>>

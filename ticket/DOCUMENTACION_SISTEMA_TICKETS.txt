@@ -1,3 +1,8 @@
+AVISO (09-11-2026): parte de este documento describe tablas que NO existen en la
+base (comentarios_ticket, log_cambios_ticket, calificacion_ticket). Lo vigente:
+  - ticket/logica/ESTUDIO_MODULO_TICKET.txt  (cómo funciona hoy y hallazgos)
+  - ticket/logica/LOGICA_MENSAJERIA.txt      (chat: tabla ticket_conversaciones)
+
 ════════════════════════════════════════════════════════════════════════════════
 DOCUMENTACIÓN TÉCNICA COMPLETA: SISTEMA DE TICKETS SEDUC
 ════════════════════════════════════════════════════════════════════════════════

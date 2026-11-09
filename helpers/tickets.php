@@ -193,6 +193,20 @@ function ticket_badge_estado(array $ticket): string
         . htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') . '</span>';
 }
 
+/**
+ * Botón "Chat" de las bandejas con el número de mensajes no leídos.
+ * ticket/js/chat_ticket_panel.js actualiza ese número cada pocos segundos.
+ */
+function ticket_boton_chat(int $ticketId, int $noLeidos = 0): string
+{
+    $n = max(0, $noLeidos);
+    $titulo = $n === 0 ? 'Abrir chat' : ($n === 1 ? '1 mensaje sin leer' : $n . ' mensajes sin leer');
+    return '<button class="btn btn-outline btn-sm ticket-chat-button js-ticket-chat' . ($n ? ' has-unread' : '') . '" type="button"'
+        . ' data-ticket-id="' . $ticketId . '" title="' . $titulo . '" aria-label="Chat: ' . $titulo . '">'
+        . '<i class="bi bi-chat-dots" aria-hidden="true"></i> Chat'
+        . '<span class="ticket-chat-unread"' . ($n ? '' : ' hidden') . '>' . ($n > 99 ? '99+' : $n) . '</span></button>';
+}
+
 /** Genera el botón de adjuntos solamente cuando el ticket tiene archivos. */
 function ticket_boton_archivos(int $ticketId, int $cantidad): string
 {
@@ -450,4 +464,164 @@ function ticket_csrf_valido(string $token): bool
     Session::iniciar();
     return $token !== '' && isset($_SESSION['ticket_csrf'])
         && hash_equals((string) $_SESSION['ticket_csrf'], $token);
+}
+
+/**
+ * Registra un archivo en archivos_adjuntos_ticket con las columnas que existan:
+ * la tabla original es (id, id_ticket, adjunto); ticket/sql/01_mensajeria.sql
+ * agrega nombre_archivo, tamano, id_usuario y fecha_subida.
+ */
+function ticket_registrar_adjunto(Conexion $db, int $ticketId, string $ruta, string $nombre, int $tamano, int $usuarioId): void
+{
+    $columnas = ticket_columnas_tabla('archivos_adjuntos_ticket', $db);
+    $datos = ['id_ticket' => $ticketId];
+    if (isset($columnas['adjunto'])) {
+        $datos['adjunto'] = $ruta;
+    }
+    if (isset($columnas['ruta_archivo'])) {
+        $datos['ruta_archivo'] = $ruta;
+    }
+    foreach (['nombre_archivo' => $nombre, 'tamano' => $tamano, 'tamaño_archivo' => $tamano, 'id_usuario' => $usuarioId] as $c => $v) {
+        if (isset($columnas[$c])) {
+            $datos[$c] = $v;
+        }
+    }
+    $campos = array_map(static fn ($c) => '`' . $c . '`', array_keys($datos));
+    $valores = array_fill(0, count($datos), '?');
+    if (isset($columnas['fecha_subida'])) {
+        $campos[] = 'fecha_subida';
+        $valores[] = 'NOW()';
+    }
+    $db->execute(
+        'INSERT INTO archivos_adjuntos_ticket (' . implode(', ', $campos) . ') VALUES (' . implode(', ', $valores) . ')',
+        array_values($datos)
+    );
+}
+
+/** Adjuntos de un ticket: [{id, nombre, tamano}] sin importar la versión de la tabla. */
+function ticket_listar_adjuntos(Conexion $db, int $ticketId): array
+{
+    $c = ticket_columnas_tabla('archivos_adjuntos_ticket', $db);
+    if (!isset($c['id_ticket'])) {
+        return [];
+    }
+    $id = isset($c['id']) ? 'id' : (isset($c['id_archivo']) ? 'id_archivo' : null);
+    $ruta = isset($c['adjunto']) ? 'adjunto' : (isset($c['ruta_archivo']) ? 'ruta_archivo' : null);
+    if ($id === null || $ruta === null) {
+        return [];
+    }
+    $nombre = isset($c['nombre_archivo']) ? "NULLIF(nombre_archivo, '')" : 'NULL';
+    $tamano = isset($c['tamano']) ? 'tamano' : (isset($c['tamaño_archivo']) ? '`tamaño_archivo`' : '0');
+    $filas = $db->fetchAll(
+        "SELECT {$id} AS id, {$ruta} AS ruta, {$nombre} AS nombre, {$tamano} AS tamano
+           FROM archivos_adjuntos_ticket WHERE id_ticket = ? ORDER BY {$id} ASC",
+        [$ticketId]
+    );
+    return array_map(static fn (array $f): array => [
+        'id' => (int) $f['id'],
+        'nombre' => (string) ($f['nombre'] ?? '') !== '' ? (string) $f['nombre'] : basename(str_replace('\\', '/', (string) $f['ruta'])),
+        'extension' => strtolower(pathinfo((string) $f['ruta'], PATHINFO_EXTENSION)),
+        'tamano' => (int) $f['tamano'],
+    ], $filas);
+}
+
+/**
+ * Ruta física de un adjunto guardado en la base, solo si está dentro de las
+ * carpetas de adjuntos del sistema (nuevo y antiguo). null si no existe.
+ */
+function ticket_ruta_adjunto_segura(string $ruta): ?string
+{
+    $raiz = realpath(dirname(__DIR__));
+    $ruta = ltrim(str_replace('\\', '/', $ruta), '/');
+    if ($raiz === false || $ruta === '' || str_contains($ruta, '..')) {
+        return null;
+    }
+    $permitidas = ['uploads/ticket_conversacion/', 'uploads/tickets/', 'archivos/'];
+    $ok = false;
+    foreach ($permitidas as $p) {
+        $ok = $ok || str_starts_with($ruta, $p);
+    }
+    $real = $ok ? realpath($raiz . '/' . $ruta) : false;
+    if ($real === false || !is_file($real)) {
+        return null;
+    }
+    foreach ($permitidas as $p) {
+        $base = realpath($raiz . '/' . rtrim($p, '/'));
+        if ($base !== false && str_starts_with($real, $base . DIRECTORY_SEPARATOR)) {
+            return $real;
+        }
+    }
+    return null;
+}
+
+/** Carpeta (relativa a la raíz) donde se guardan los adjuntos nuevos de tickets. */
+const TICKET_DIR_ADJUNTOS = 'uploads/ticket_conversacion';
+const TICKET_MAX_ADJUNTOS = 5;
+const TICKET_MAX_BYTES = 5 * 1024 * 1024;
+
+/**
+ * Valida $_FILES['archivos'] (múltiple). Devuelve [original, tmp, tamano, extension]
+ * o lanza RuntimeException con un mensaje para mostrar.
+ */
+function ticket_validar_archivos(array $files): array
+{
+    $permitidos = [
+        'image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif',
+        'application/pdf' => 'pdf', 'text/plain' => 'txt',
+        'application/msword' => 'doc',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+        'application/vnd.ms-excel' => 'xls',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+        'application/zip' => 'zip', 'application/x-zip-compressed' => 'zip',
+    ];
+    $nombres = $files['name'] ?? [];
+    if (!is_array($nombres)) {
+        $nombres = [$nombres];
+        foreach (['tmp_name', 'size', 'error'] as $k) {
+            $files[$k] = [$files[$k] ?? null];
+        }
+    }
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $archivos = [];
+    foreach ($nombres as $i => $original) {
+        $error = (int) ($files['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+        if ($error === UPLOAD_ERR_NO_FILE) {
+            continue;
+        }
+        $tmp = (string) ($files['tmp_name'][$i] ?? '');
+        $tamano = (int) ($files['size'][$i] ?? 0);
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE || $tamano > TICKET_MAX_BYTES) {
+            throw new RuntimeException('Cada archivo puede pesar como máximo 5 MB.');
+        }
+        if ($error !== UPLOAD_ERR_OK || $tmp === '' || !is_uploaded_file($tmp)) {
+            throw new RuntimeException('Uno de los archivos no pudo subirse.');
+        }
+        $mime = (string) $finfo->file($tmp);
+        if ($tamano <= 0 || !isset($permitidos[$mime])) {
+            throw new RuntimeException('Tipo de archivo no permitido: ' . basename((string) $original) . '. Usa imágenes, PDF, Word, Excel, TXT o ZIP.');
+        }
+        $limpio = trim((string) preg_replace('/[\x00-\x1F\x7F\/\\\\]+/u', '', basename((string) $original)));
+        $archivos[] = [
+            'original' => mb_substr($limpio !== '' ? $limpio : 'archivo.' . $permitidos[$mime], 0, 200),
+            'tmp' => $tmp,
+            'tamano' => $tamano,
+            'extension' => $permitidos[$mime],
+        ];
+    }
+    return $archivos;
+}
+
+/** Mueve un archivo validado a uploads/ticket_conversacion/{id}/ y devuelve la ruta relativa. */
+function ticket_mover_archivo(int $ticketId, array $archivo): string
+{
+    $relDir = TICKET_DIR_ADJUNTOS . '/' . $ticketId;
+    $dir = dirname(__DIR__) . '/' . $relDir;
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('No fue posible preparar la carpeta de adjuntos.');
+    }
+    $nombre = bin2hex(random_bytes(16)) . '.' . $archivo['extension'];
+    if (!move_uploaded_file($archivo['tmp'], $dir . '/' . $nombre)) {
+        throw new RuntimeException('No fue posible guardar un archivo adjunto.');
+    }
+    return $relDir . '/' . $nombre;
 }
