@@ -69,3 +69,8 @@ body.ticket-chat-open .chatf{display:none!important}
 .ticket-bitacora-unread{display:inline-flex;align-items:center;gap:3px;min-height:18px;padding:0 6px;border-radius:99px;background:#E8A33D;color:#fff;font:700 10px/1 'DM Mono',monospace}
 .ticket-bitacora-unread[hidden]{display:none!important}
 .ticket-open-button.has-unread{border-color:rgba(232,163,61,.55);color:#8A6200;background:#FFF8EA}
+/* "Escribes como …" en la cabecera del chat */
+.tc-yo{display:inline-block;padding:1px 8px;border-radius:99px;font-size:10.5px;font-weight:600;background:var(--blue-light);color:var(--blue)}
+.tc-yo--tecnico{background:var(--success-light);color:var(--success)}
+.tc-yo--admin{background:var(--yellow-light,#FFF6D8);color:#8A6200}
+.tc-role{text-transform:capitalize}

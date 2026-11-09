@@ -30,7 +30,7 @@
   const fileCount = $('ticket-chat-file-count');
   const closed = $('ticket-chat-closed');
   const sendButton = form.querySelector('.tc-send');
-  const LADOS = {usuario: 'Solicitante', tecnico: 'Técnico', admin: 'Administración'};
+  const LADOS = {usuario: 'solicitante', tecnico: 'técnico', admin: 'administración'};
   const MAX_FILES = 5;
 
   let ticketId = 0;
@@ -195,7 +195,12 @@
       const otro = data.vista === 'tecnico' ? `con ${t.solicitante || 'el solicitante'}`
         : (data.vista === 'usuario' ? (t.tecnico ? `con ${t.tecnico} (técnico)` : 'Aún sin técnico asignado: tu mensaje quedará para quien lo tome')
           : `${t.solicitante || 'Solicitante'} ↔ ${t.tecnico || 'sin técnico'}`);
-      withWho.textContent = modo === 'chat' ? otro : '';
+      withWho.replaceChildren();
+      if (modo === 'chat') {
+        const yo = el('span', `tc-yo tc-yo--${data.vista}`, `Escribes como ${LADOS[data.vista] || data.vista}`);
+        yo.title = data.vista === 'usuario' ? 'Estás en Ticket Nuevo (Mesa de ayuda)' : (data.vista === 'tecnico' ? 'Estás en Tickets Asignados' : 'Estás en Ticket Administrador');
+        withWho.append(yo, document.createTextNode(` · ${otro}`));
+      }
       const chat = modo === 'chat';
       form.hidden = !chat || !data.puede_escribir;
       closed.hidden = !chat || data.puede_escribir;
