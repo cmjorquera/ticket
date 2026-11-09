@@ -195,11 +195,8 @@
       body.set('accion', 'crear');
       body.set('modo', mode);
       const data = await request('../ajax/guardar_ticket.php', body);
-      showMessage(`${data.mensaje} Folio #${data.ticket_id}.`, 'ok');
-      window.setTimeout(() => {
-        closeModal('modal-crear-ticket');
-        window.location.reload();
-      }, 900);
+      closeModal('modal-crear-ticket');
+      confirmarCreacion(data);
     } catch (error) {
       showMessage(error.message, 'error');
       createButton.disabled = false;
@@ -215,4 +212,46 @@
     submit('crear');
   });
   draftButton.addEventListener('click', () => submit('borrador'));
+
+  /*
+   * Confirmación al crear (como el "TICKET CREADO" del sistema antiguo, con la
+   * estética nueva): check animado, folio y técnico; se cierra sola a los 3 s
+   * (o con clic / Esc) y recarga la bandeja.
+   */
+  function confirmarCreacion(data) {
+    const DURACION = 3000;
+    const borrador = Boolean(data.borrador);
+    const capa = document.createElement('div');
+    capa.className = 'tk-ok';
+    capa.setAttribute('role', 'alertdialog');
+    capa.setAttribute('aria-live', 'assertive');
+    capa.innerHTML = `
+      <div class="tk-ok__caja" tabindex="-1">
+        <svg class="tk-ok__check" viewBox="0 0 52 52" aria-hidden="true">
+          <circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-15"/>
+        </svg>
+        <h2></h2>
+        <p class="tk-ok__folio"></p>
+        <p class="tk-ok__detalle"></p>
+        <span class="tk-ok__barra" style="animation-duration:${DURACION}ms"></span>
+      </div>`;
+    capa.querySelector('h2').textContent = borrador ? 'Borrador guardado' : 'Ticket creado';
+    capa.querySelector('.tk-ok__folio').textContent = `Folio #${data.ticket_id}`;
+    capa.querySelector('.tk-ok__detalle').textContent = borrador
+      ? 'Puedes completarlo y enviarlo cuando quieras.'
+      : (data.tecnico ? `Asignado a ${data.tecnico}` : 'Queda pendiente de asignación a un técnico.');
+    document.body.append(capa);
+    requestAnimationFrame(() => capa.classList.add('is-open'));
+    capa.querySelector('.tk-ok__caja').focus({preventScroll: true});
+    let listo = false;
+    const cerrar = () => {
+      if (listo) return;
+      listo = true;
+      capa.classList.remove('is-open');
+      window.setTimeout(() => window.location.reload(), 200);
+    };
+    const timer = window.setTimeout(cerrar, DURACION);
+    capa.addEventListener('click', () => { window.clearTimeout(timer); cerrar(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { window.clearTimeout(timer); cerrar(); } }, {once: true});
+  }
 })();

@@ -1,0 +1,15 @@
+/* Confirmación "Ticket creado" (ticket/js/crear_ticket_dinamico.js → confirmarCreacion) */
+.tk-ok{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:16px;background:rgba(15,36,64,.45);opacity:0;transition:opacity .2s ease;cursor:pointer}
+.tk-ok.is-open{opacity:1}
+.tk-ok__caja{position:relative;width:min(360px,100%);padding:30px 28px 26px;border-radius:16px;background:var(--card,#fff);box-shadow:0 30px 70px rgba(15,36,64,.3);text-align:center;overflow:hidden;transform:translateY(10px) scale(.96);transition:transform .25s cubic-bezier(.2,.8,.2,1);outline:none}
+.tk-ok.is-open .tk-ok__caja{transform:none}
+.tk-ok__check{width:74px;height:74px;margin:0 auto 14px;display:block}
+.tk-ok__check circle{fill:var(--success-light,#E8F5E9);stroke:var(--success,#2F7D32);stroke-width:2.5;stroke-dasharray:151;stroke-dashoffset:151;animation:tk-trazo .5s ease-out forwards}
+.tk-ok__check path{fill:none;stroke:var(--success,#2F7D32);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:36;stroke-dashoffset:36;animation:tk-trazo .35s .45s ease-out forwards}
+@keyframes tk-trazo{to{stroke-dashoffset:0}}
+.tk-ok h2{margin:0;font-size:20px;letter-spacing:.01em;color:var(--fg,#111827)}
+.tk-ok__folio{margin:6px 0 0;font:600 13px 'DM Mono',monospace;color:var(--blue,#1d4675)}
+.tk-ok__detalle{margin:8px 0 0;font-size:13px;color:var(--muted,#6b7280)}
+.tk-ok__barra{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--success,#2F7D32);transform-origin:left;animation:tk-cuenta linear forwards}
+@keyframes tk-cuenta{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(prefers-reduced-motion:reduce){.tk-ok__check circle,.tk-ok__check path{animation:none;stroke-dashoffset:0}.tk-ok__caja{transition:none}}

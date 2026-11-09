@@ -116,6 +116,7 @@ iniciar_layout_configuracion('Crear ticket', 'Tickets', 'ticket');
   </div>
 </div>
 
+<link rel="stylesheet" href="../css/ticket_confirmacion.css?v=<?= (int) @filemtime(__DIR__ . '/../css/ticket_confirmacion.css') ?>">
 <script src="js/crear_ticket_dinamico.js"></script>
 <script>
 let filtroContenedorMisTickets = '';

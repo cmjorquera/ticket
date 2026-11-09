@@ -163,6 +163,8 @@ try {
         responder_json([
             'ok' => true,
             'ticket_id' => $ticketId,
+            'borrador' => $esBorrador,
+            'tecnico' => $tecnicoId ? bitacora_nombre($db, $tecnicoId) : null,
             'mensaje' => $esBorrador
                 ? 'Borrador guardado correctamente.'
                 : ($tecnicoId ? 'Ticket creado y asignado automáticamente.' : 'Ticket creado; queda pendiente de asignación.'),
