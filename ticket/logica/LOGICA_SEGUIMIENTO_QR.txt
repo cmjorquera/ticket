@@ -41,3 +41,18 @@ ticket/ticket_detalle.php?id=…&vista=usuario|tecnico|admin
   también abre el detalle con la vista de su perfil.
 - El servidor sigue validando los permisos reales (ajax/guardar_ticket.php):
   cambiar estado solo técnico asignado o administración.
+
+3. EL DETALLE SE ABRE EN UN PANEL LATERAL
+-----------------------------------------
+- "Abrir" (Tickets Asignados y Ticket Administrador) y "Ver" (Mesa de ayuda)
+  abren el detalle en un panel que entra de derecha a izquierda y ocupa el
+  80% del ancho (100% en pantallas chicas), con una X y "Abrir en pestaña".
+- Dentro se carga ticket_detalle.php?…&embed=1 en un iframe: es la MISMA
+  página (chat, bitácora, Comenzar, QR, estado), sin menú, barra superior ni
+  chat flotante (configuracion/_inicio.php → $layout_embebido).
+- Esc cierra el panel (si hay un modal abierto dentro, primero cierra ese).
+- Si dentro del panel se guardó algo (Comenzar, estado…), al cerrarlo se
+  recarga la bandeja para ver los cambios.
+- Ctrl/Cmd + clic o clic central siguen abriendo la página completa.
+Código: ticket/componentes/panel_detalle.php, ticket/js/panel_detalle.js,
+        css/ticket_chat.css (.tk-panel), clase .js-ticket-ver en los enlaces.

@@ -231,7 +231,7 @@ function ticket_boton_abrir(int $ticketId, int $bitacoraNoLeidos = 0, string $vi
 {
     $n = max(0, $bitacoraNoLeidos);
     $titulo = $n === 0 ? 'Abrir el detalle' : ($n === 1 ? '1 avance nuevo en la bitácora' : $n . ' avances nuevos en la bitácora');
-    return '<a class="btn btn-outline btn-sm ticket-open-button js-ticket-open' . ($n ? ' has-unread' : '') . '" href="ticket_detalle.php?id=' . $ticketId . '&amp;vista=' . rawurlencode($vista) . '#bitacora"'
+    return '<a class="btn btn-outline btn-sm ticket-open-button js-ticket-open js-ticket-ver' . ($n ? ' has-unread' : '') . '" href="ticket_detalle.php?id=' . $ticketId . '&amp;vista=' . rawurlencode($vista) . '#bitacora"'
         . ' data-ticket-id="' . $ticketId . '" title="' . $titulo . '"><i class="bi bi-eye" aria-hidden="true"></i> Abrir'
         . '<span class="ticket-bitacora-unread"' . ($n ? '' : ' hidden') . '><i class="bi bi-journal-text" aria-hidden="true"></i>' . ($n > 99 ? '99+' : $n) . '</span></a>';
 }

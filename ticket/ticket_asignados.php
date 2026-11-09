@@ -135,4 +135,5 @@ document.getElementById('ticket-estado')?.addEventListener('change', filtrarTick
 
 <?php require __DIR__ . '/componentes/modal_comenzar_ticket.php'; ?>
 <?php $vistaChat = 'tecnico'; require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
+<?php require __DIR__ . '/componentes/panel_detalle.php'; ?>
 <?php finalizar_layout_configuracion(); ?>

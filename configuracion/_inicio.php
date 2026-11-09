@@ -56,6 +56,12 @@ function iniciar_layout_configuracion(string $titulo, string $breadcrumb, string
     $pagina_actual = $pagina;
 
     require __DIR__ . '/../componentes/head.php';
+    if (!empty($GLOBALS['layout_embebido'])) {
+        // Página mostrada dentro de un panel lateral (iframe): sin menú ni barra superior.
+        // Ej.: ticket/ticket_detalle.php?…&embed=1 (ticket/logica/LOGICA_SEGUIMIENTO_QR.txt)
+        echo '<main id="content" class="content content--embebido">';
+        return;
+    }
     require __DIR__ . '/../componentes/sidebar.php';
     echo '<div id="mobile-overlay" onclick="closeMobileSidebar()"></div><div id="main">';
     require __DIR__ . '/../componentes/topbar.php';
@@ -65,7 +71,8 @@ function iniciar_layout_configuracion(string $titulo, string $breadcrumb, string
 function finalizar_layout_configuracion(): void
 {
     global $depth, $pagina_scripts;
-    echo '</main></div>';
+    echo !empty($GLOBALS['layout_embebido']) ? '</main>' : '</main></div>';
+    $GLOBALS['sin_chat_flotante'] = !empty($GLOBALS['layout_embebido']);
     require __DIR__ . '/../componentes/scripts.php';
     echo '</body></html>';
 }

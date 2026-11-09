@@ -147,6 +147,7 @@ $pasosCiclo = $ticket ? [
 $estado = $ticket ? strtolower((string) $ticket['estado']) : '';
 $estadoTexto = $ticket ? (string) $ticket['estado_nombre'] : '';
 
+$layout_embebido = isset($_GET['embed']);   // dentro del panel lateral de las bandejas
 iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 ?>
 <?php if (!$ticket || !$autorizado): http_response_code($ticket ? 403 : 404); ?>
@@ -159,7 +160,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 <?php else: ?>
   <div id="ticket-detail-app" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-csrf="<?= e($csrf) ?>">
     <div class="ticket-detail-heading">
-      <a class="ticket-detail-back" href="<?= e($volver) ?>"><i class="bi bi-arrow-left"></i> Volver a la bandeja</a>
+      <?php if (!$layout_embebido): ?><a class="ticket-detail-back" href="<?= e($volver) ?>"><i class="bi bi-arrow-left"></i> Volver a la bandeja</a><?php endif; ?>
       <div class="ticket-detail-titleline">
         <div><span class="ticket-detail-kicker">Solicitud #<?= (int) $ticket['id_ticket'] ?></span><h1><?= e($ticket['asunto']) ?></h1></div>
         <?= ticket_badge_estado($ticket) ?>

@@ -96,3 +96,27 @@ body.ticket-chat-open .chatf{display:none!important}
 .tk-com__nota{display:flex;gap:8px;padding:10px 12px;border-radius:9px;background:var(--bg);color:var(--muted);font-size:12px;line-height:1.45}
 .tk-com__nota i{color:var(--blue)}
 @media(max-width:600px){.tk-com__prioridades{grid-template-columns:1fr}}
+/* Panel lateral con el detalle del ticket (ticket/componentes/panel_detalle.php) */
+body.tk-panel-abierto{overflow:hidden}
+.tk-panel{position:fixed;inset:0;z-index:1500}
+body.tk-panel-abierto .chatf{display:none!important}
+.tk-panel[hidden]{display:none}
+.tk-panel__fondo{position:absolute;inset:0;border:0;background:rgba(15,36,64,.45);opacity:0;transition:opacity .2s ease;cursor:default}
+.tk-panel.is-open .tk-panel__fondo{opacity:1}
+.tk-panel__caja{position:absolute;top:0;right:0;bottom:0;width:80vw;display:flex;flex-direction:column;background:var(--bg,#f3f5f8);box-shadow:-24px 0 60px rgba(15,36,64,.22);transform:translateX(100%);transition:transform .26s cubic-bezier(.2,.7,.2,1);outline:none}
+.tk-panel.is-open .tk-panel__caja{transform:none}
+.tk-panel__cab{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;background:var(--card,#fff);border-bottom:1px solid var(--border)}
+.tk-panel__cab h2{font:600 13px 'DM Mono',monospace;letter-spacing:.06em;color:var(--blue)}
+.tk-panel__acciones{display:flex;align-items:center;gap:8px}
+.tk-panel__x{display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:9px;background:var(--bg);color:var(--muted);font-size:17px;cursor:pointer}
+.tk-panel__x:hover{background:var(--danger-light);color:var(--danger)}
+.tk-panel__cuerpo{position:relative;flex:1 1 auto;min-height:0}
+.tk-panel__cuerpo iframe{width:100%;height:100%;border:0;display:block}
+.tk-panel__cargando{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-size:13px}
+.tk-panel__cargando[hidden]{display:none}
+.tk-panel__cargando i{animation:tk-gira 1s linear infinite}
+@keyframes tk-gira{to{transform:rotate(360deg)}}
+@media(max-width:900px){.tk-panel__caja{width:100vw}.tk-panel__acciones span{display:none}}
+@media(prefers-reduced-motion:reduce){.tk-panel__caja,.tk-panel__fondo{transition:none}}
+/* detalle dentro del panel */
+.content--embebido{padding-top:18px}
