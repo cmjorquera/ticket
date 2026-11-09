@@ -36,7 +36,7 @@ $esGlobal = !empty($esGlobal);
     <?php elseif (!$tickets): ?>
       <div class="ticket-empty"><i class="bi bi-inbox"></i>No hay tickets que coincidan con los filtros.</div>
     <?php else: ?>
-      <div class="table-wrap"><table id="admin-tabla"><thead><tr><th>Folio / fecha</th><th>Caso</th><th>Técnico</th><th>Usuario</th><th>Estado</th><th>Prioridad</th><th></th></tr></thead><tbody>
+      <div class="table-wrap"><table id="admin-tabla"><thead><tr><th>Folio / fecha</th><th>Caso</th><th>Técnico</th><th>Usuario</th><th>Estado</th><th>Avance</th><th>Prioridad</th><th></th></tr></thead><tbody>
       <?php foreach ($ticketsPagina as $indice => $ticket):
         $estado = strtolower((string) $ticket['estado']);
         $prioridad = ticket_prioridad_clase((string) $ticket['prioridad']);
@@ -50,6 +50,7 @@ $esGlobal = !empty($esGlobal);
           <td class="ticket-person"><strong><?= e($ticket['tecnico_nombre'] ?: 'Sin asignar') ?></strong></td>
           <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>
           <td><?= ticket_badge_estado($ticket) ?></td>
+          <td class="ticket-avance-celda"><?= ticket_avance($ticket) ?></td>
           <td><span class="ticket-priority ticket-priority--<?= e($prioridad) ?>"><?= e($ticket['prioridad']) ?></span></td>
           <td><div class="ticket-actions"><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><?= ticket_boton_abrir((int) $ticket['id_ticket'], (int) ($ticket['bitacora_no_leidos'] ?? 0), 'admin') ?><button class="btn btn-outline btn-sm" type="button" data-ticket="<?= e($json) ?>" onclick="administrarTicket(this)"><i class="bi bi-sliders"></i> Gestionar</button></div></td>
         </tr>
