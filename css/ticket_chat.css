@@ -131,3 +131,13 @@ body.tk-panel-abierto .chatf{display:none!important}
 .tk-av--hoy .tk-av__pasos span.is-on{background:#E8A33D}.tk-av--hoy small{color:#8A6200;font-weight:600}
 .tk-av--atraso .tk-av__pasos span.is-on{background:var(--danger,#C62828)}.tk-av--atraso small{color:var(--danger,#C62828);font-weight:600}
 .tk-av--ok .tk-av__pasos span.is-on{background:var(--success,#2F7D32)}.tk-av--ok small{color:var(--success,#2F7D32)}
+/* Plazo para el solicitante (helpers/tickets.php → ticket_plazo) */
+.tk-plazo{display:grid;gap:4px;min-width:150px;cursor:default}
+.tk-plazo strong{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fg)}
+.tk-plazo small{font-size:11px;color:var(--muted)}
+.tk-plazo__barra{display:block;height:6px;border-radius:99px;background:#E6E9EE;overflow:hidden}
+.tk-plazo__barra span{display:block;height:100%;border-radius:99px;background:var(--success,#2F7D32)}
+.tk-plazo--ok strong i{color:var(--success,#2F7D32)}
+.tk-plazo--hoy strong{color:#8A6200}.tk-plazo--hoy .tk-plazo__barra span{background:#E8A33D}
+.tk-plazo--atraso strong{color:var(--danger,#C62828)}.tk-plazo--atraso .tk-plazo__barra span{background:var(--danger,#C62828)}
+.tk-plazo--espera strong{color:var(--muted);font-weight:600}

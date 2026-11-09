@@ -234,7 +234,8 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <aside class="ticket-detail-side">
         <section class="card tb-ciclo">
           <h2>Ciclo del ticket</h2>
-          <?= ticket_avance(['id_estado' => $ticket['id_estado'], 'fecha_estimada_admin' => $ticket['fecha_estimada'] ?? null, 'fecha_termino_ticket' => $ticket['fecha_termino'] ?? null]) ?>
+          <?php $datosPlazo = ['id_estado' => $ticket['id_estado'], 'fecha_creacion' => $ticket['fecha_creacion'] ?? null, 'fecha_comienzo_ticket' => $ticket['fecha_comienzo'] ?? null, 'fecha_estimada_admin' => $ticket['fecha_estimada'] ?? null, 'fecha_termino_ticket' => $ticket['fecha_termino'] ?? null]; ?>
+          <?= $vista === 'usuario' ? ticket_plazo($datosPlazo) : ticket_avance($datosPlazo) ?>
           <ol>
             <?php foreach ($pasosCiclo as [$nombrePaso, $iconoPaso, $fechaPaso, $hecho]): ?>
               <li class="<?= $hecho ? 'is-done' : '' ?>"><span><i class="bi <?= $hecho ? 'bi-check-lg' : $iconoPaso ?>"></i></span><div><strong><?= e($nombrePaso) ?></strong><small><?= e($fechaPaso ?: '—') ?></small></div></li>

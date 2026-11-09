@@ -751,3 +751,77 @@ function ticket_avance(array $t): string
     return $html . '</div><small><strong>' . $pasos . '/4</strong> <i class="bi ' . $icono . '" aria-hidden="true"></i> '
         . htmlspecialchars($texto, ENT_QUOTES, 'UTF-8') . '</small></div>';
 }
+
+/**
+ * Plazo del ticket para quien lo pidió: cuenta regresiva entre la fecha de
+ * creación y la fecha estimada que dio el técnico al comenzar.
+ *   - barra = días transcurridos / días de plazo (creación → fecha estimada)
+ *   - "Quedan N días" · "Vence hoy" · "Atrasado N días" · "Listo el dd/mm (a tiempo)"
+ * Días corridos (no hábiles). Al pasar el mouse se ven todas las fechas.
+ * Lógica: ticket/logica/LOGICA_COMENZAR_TICKET.txt (sección 6)
+ */
+function ticket_plazo(array $t): string
+{
+    $dia = static function ($f): ?DateTimeImmutable {
+        $f = substr((string) $f, 0, 10);
+        return ($f !== '' && $f !== '0000-00-00' && strtotime($f) > 0) ? new DateTimeImmutable($f) : null;
+    };
+    $dd = static fn (?DateTimeImmutable $d): string => $d ? $d->format('d/m') : '—';
+    $dias = static fn (DateTimeImmutable $a, DateTimeImmutable $b): int => (int) $a->diff($b)->format('%r%a');
+    $plural = static fn (int $n, string $s): string => $n . ' ' . $s . ($n === 1 ? '' : 's');
+
+    $estado = (int) ($t['id_estado'] ?? 0);
+    $creado = $dia($t['fecha_creacion'] ?? $t['fecha_creacion_inicio'] ?? null);
+    $comenzado = $dia($t['fecha_comienzo_ticket'] ?? null);
+    $estimada = $dia($t['fecha_estimada_admin'] ?? null);
+    $termino = $dia($t['fecha_termino_ticket'] ?? null);
+    $hoy = new DateTimeImmutable('today');
+
+    $titulo = 'Creado ' . $dd($creado) . ($comenzado ? ' · comenzado ' . $dd($comenzado) : '')
+        . ($estimada ? ' · estimado ' . $dd($estimada) : '');
+    $barra = null;
+    $sub = '';
+    $icono = 'bi-hourglass-split';
+    $tono = 'normal';
+
+    if (in_array($estado, [5, 6], true)) {
+        [$texto, $tono, $icono] = ['Listo' . ($termino ? ' el ' . $dd($termino) : ''), 'ok', 'bi-check-circle-fill'];
+        if ($termino && $estimada) {
+            $dif = $dias($estimada, $termino);
+            $sub = $dif <= 0 ? 'a tiempo' : $plural($dif, 'día') . ' después de lo estimado';
+        }
+        $barra = 100;
+    } elseif ($estado === 1) {
+        [$texto, $sub, $tono, $icono] = ['Por asignar', 'esperando un técnico', 'espera', 'bi-person-dash'];
+    } elseif ($estado === 2 || ($estado === 3 && !$estimada)) {
+        [$texto, $sub, $tono, $icono] = ['Sin fecha aún', 'el técnico la indica al comenzar', 'espera', 'bi-hourglass'];
+    } elseif (in_array($estado, [3, 7], true)) {
+        $inicio = $creado ?? $comenzado ?? $hoy;
+        $total = max(1, $dias($inicio, $estimada));
+        $pasados = min($total, max(0, $dias($inicio, $hoy)));
+        $quedan = $dias($hoy, $estimada);
+        $titulo .= ' · plazo ' . $plural($total, 'día') . ' · van ' . $pasados;
+        $sub = 'listo el ' . $dd($estimada);
+        if ($quedan < 0) {
+            [$texto, $tono, $icono, $barra] = ['Atrasado ' . $plural(-$quedan, 'día'), 'atraso', 'bi-exclamation-triangle-fill', 100];
+            $sub = 'era para el ' . $dd($estimada);
+        } elseif ($quedan === 0) {
+            [$texto, $tono, $icono] = ['Vence hoy', 'hoy', 'bi-alarm'];
+            $barra = 100;
+        } else {
+            $texto = ($quedan === 1 ? 'Queda ' : 'Quedan ') . $plural($quedan, 'día');
+            $tono = $quedan === 1 ? 'hoy' : 'ok';
+            $icono = 'bi-calendar-event';
+            $barra = (int) round($pasados / $total * 100);
+        }
+    } else {
+        [$texto, $tono, $icono] = ['Borrador', 'espera', 'bi-pencil'];
+    }
+
+    $h = static fn (string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+    return '<div class="tk-plazo tk-plazo--' . $tono . '" title="' . $h($titulo) . '">'
+        . '<strong><i class="bi ' . $icono . '" aria-hidden="true"></i> ' . $h($texto) . '</strong>'
+        . ($barra !== null ? '<span class="tk-plazo__barra" aria-hidden="true"><span style="width:' . max(4, min(100, $barra)) . '%"></span></span>' : '')
+        . ($sub !== '' ? '<small>' . $h($sub) . '</small>' : '')
+        . '</div>';
+}

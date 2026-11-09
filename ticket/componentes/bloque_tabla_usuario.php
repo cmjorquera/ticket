@@ -48,7 +48,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
       <input class="form-input" id="mis-tickets-fecha" type="date">
     </div>
     <div class="form-group">
-      <label class="form-label" for="mis-tickets-respuesta">Fecha de respuesta</label>
+      <label class="form-label" for="mis-tickets-respuesta">Fecha estimada</label>
       <input class="form-input" id="mis-tickets-respuesta" type="date">
     </div>
     <button class="btn btn-primary" type="button" onclick="abrirModalTicket()"><i class="bi bi-plus-circle"></i> Agregar ticket</button>
@@ -66,12 +66,13 @@ $etiquetasEstado = $etiquetasEstado ?? [
   <?php else: ?>
     <div class="table-wrap">
       <table id="mis-tickets-tabla">
-        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Técnico</th><th>Estado</th><th>Fecha de respuesta</th><th>Categoría</th><th>Acciones</th></tr></thead>
+        <thead><tr><th>Folio / fecha</th><th>Caso</th><th>Técnico</th><th>Estado</th><th>Plazo</th><th>Categoría</th><th>Acciones</th></tr></thead>
         <tbody>
         <?php foreach ($ticketsPagina as $indice => $ticket):
           $estado = strtolower((string) $ticket['estado']);
           $fechaTicket = strtotime((string) $ticket['fecha_creacion']);
-          $fechaRespuesta = strtotime((string) $ticket['fecha_respuesta']);
+          // el filtro "Fecha estimada" usa la fecha que dio el técnico al comenzar
+          $fechaRespuesta = !empty($ticket['fecha_estimada_admin']) ? strtotime((string) $ticket['fecha_estimada_admin']) : false;
           $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
           $cantidadArchivos = max(0, (int) ($ticket['cantidad_archivos'] ?? 0));
           $estadoGrupo = ticket_estado_grupo((int) $ticket['id_estado']);
@@ -81,7 +82,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
             <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong></td>
             <td class="ticket-person"><strong><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></strong></td>
             <td><?= ticket_badge_estado($ticket) ?></td>
-            <td><span class="text-xs text-muted"><?= $fechaRespuesta ? e(date('d/m/Y H:i', $fechaRespuesta)) : 'Sin respuesta' ?></span></td>
+            <td><?= ticket_plazo($ticket) ?></td>
             <td><span class="badge badge-realizado"><?= e(trim((string) $ticket['categoria_nombre']) ?: 'Sin categoría') ?></span></td>
             <td><div class="ticket-actions"><?php if ((int) $ticket['id_estado'] === 5 && empty($ticket['tiene_calificacion'])): ?><button class="btn btn-sm ticket-rate-button" type="button" onclick="validacionTicketPorUsuario(<?= (int) $ticket['id_ticket'] ?>, <?= (int) $ticket['id_usuario'] ?>, <?= (int) $ticket['id_tecnico'] ?>)"><i class="bi bi-star-fill"></i> Calificar</button><?php endif; ?><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><?= ticket_boton_archivos((int) $ticket['id_ticket'], $cantidadArchivos) ?><a class="btn btn-outline btn-sm js-ticket-ver" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>&amp;vista=usuario"><i class="bi bi-eye"></i> Ver</a></div></td>
           </tr>

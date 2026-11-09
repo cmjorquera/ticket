@@ -52,3 +52,4 @@
 .tb-cabecera-acciones{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .tb-ciclo .tk-av{margin:-2px 0 16px}
 .tb-ciclo .tk-av small{font:500 11px Inter,system-ui,sans-serif}.tb-ciclo .tk-av small strong{font:600 10.5px 'DM Mono',monospace}
+.tb-ciclo .tk-plazo{margin:-2px 0 16px}

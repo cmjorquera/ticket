@@ -58,6 +58,24 @@ Se ve en la columna "Avance" de Tickets Asignados (reemplaza a "Técnico", que
 ahí siempre es uno mismo) y arriba del "Ciclo del ticket" en el detalle, donde
 el paso Terminado muestra "Estimado: dd/mm/aaaa" mientras no termine.
 
+6. PLAZO PARA EL SOLICITANTE ("Mis solicitudes" → columna Plazo)
+----------------------------------------------------------------
+helpers/tickets.php → ticket_plazo(). Cuenta regresiva entre la FECHA DE
+CREACIÓN del ticket y la FECHA ESTIMADA que dio el técnico al comenzar
+(días corridos, no hábiles):
+  plazo total = estimada − creación     transcurridos = hoy − creación
+  quedan      = estimada − hoy          barra = transcurridos / plazo total
+  Recibido    "Por asignar · esperando un técnico"
+  Asignado    "Sin fecha aún · el técnico la indica al comenzar"
+  En proceso  "Quedan 4 días · listo el 13/11"   (verde; "Queda 1 día" ámbar)
+              "Vence hoy · listo el 09/11"       (ámbar)
+              "Atrasado 2 días · era para el 07/11" (rojo)
+  Terminado   "Listo el 07/11 · a tiempo" o "· 2 días después de lo estimado"
+Al pasar el mouse: creado, comenzado, estimado, plazo y días transcurridos.
+Va escrito en la fila (no en un globo) porque esa tabla se redibuja cada 3 s.
+También se ve en el detalle (vista solicitante) arriba del ciclo.
+El filtro "Fecha estimada" de la bandeja filtra por esa fecha.
+
 Código:
   ajax/guardar_ticket.php                  accion=comenzar + bloqueo en actualizar_estado
   ticket/componentes/modal_comenzar_ticket.php  el modal (prioridad + fecha)
