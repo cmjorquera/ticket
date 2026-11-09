@@ -16,7 +16,10 @@ if (empty($_SESSION['csrf_editar_usuario_avanzado'])) {
 if (empty($_SESSION['csrf_departamentos'])) {
     $_SESSION['csrf_departamentos'] = bin2hex(random_bytes(32));
 }
-$pagina_estilos = ['css/listado_usuarios.css?v=' . (string) filemtime(__DIR__ . '/../css/listado_usuarios.css')];
+$pagina_estilos = [
+    'css/listado_usuarios.css?v=' . (string) filemtime(__DIR__ . '/../css/listado_usuarios.css'),
+    'configuracion/css/alta_usuario.css?v=' . (string) filemtime(__DIR__ . '/css/alta_usuario.css'),
+];
 iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuarios');
 ?>
 <div class="page-header">
@@ -166,10 +169,90 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
   </div>
 </div>
 
+<!-- Nuevo usuario (modelo de roles: configuracion/logica/LOGICA_ROLES.txt) -->
+<dialog class="alta" id="dlgAlta" aria-labelledby="altaTitulo">
+  <form class="alta__box" id="formAlta" novalidate autocomplete="off">
+    <header class="alta__head">
+      <div>
+        <h2 id="altaTitulo"><i class="bi bi-person-plus"></i> Nuevo usuario</h2>
+        <p>Se crea activo y con una <strong>clave temporal</strong> que deberá cambiar en su primer ingreso.</p>
+      </div>
+      <button type="button" class="btn-icon" data-alta-cerrar aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </header>
+
+    <div class="alta__cuerpo" id="altaFormulario">
+      <section class="alta__col">
+        <h3><span>1</span> Datos de la persona</h3>
+        <div class="alta__grid">
+          <label class="alta__campo"><span>Nombre *</span><input name="nombre" maxlength="100" required></label>
+          <label class="alta__campo"><span>Apellido paterno *</span><input name="apellido_paterno" maxlength="100" required></label>
+          <label class="alta__campo"><span>Apellido materno</span><input name="apellido_materno" maxlength="100"></label>
+          <label class="alta__campo"><span>Email *</span><input name="email" type="email" maxlength="100" required placeholder="nombre@colegio.cl"></label>
+          <label class="alta__campo"><span>Teléfono</span><input name="telefono" type="tel" maxlength="15" placeholder="+56 9 1234 5678"></label>
+          <label class="alta__campo"><span>Anexo</span><input name="anexo" inputmode="numeric" maxlength="10"></label>
+          <label class="alta__campo alta__campo--ancho"><span>Cargo (texto)</span><input name="cargo" maxlength="100" placeholder="Ej: Profesor de Matemáticas"></label>
+          <label class="alta__campo"><span>Sexo</span>
+            <select name="sexo"><option value="0">Sin indicar</option><option value="1">Masculino</option><option value="2">Femenino</option></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="alta__col">
+        <h3><span>2</span> Dónde trabaja</h3>
+        <label class="alta__campo">
+          <span>Colegio *</span>
+          <div class="alta__colegio">
+            <span class="alta__escudo" id="altaEscudo" aria-hidden="true"><i class="bi bi-building"></i></span>
+            <select name="id_colegio" id="altaColegio" required></select>
+          </div>
+        </label>
+        <div class="alta__campo">
+          <span>Cargo en el colegio *</span>
+          <div class="alta__roles" id="altaRoles" role="radiogroup" aria-label="Cargo en el colegio"></div>
+        </div>
+        <label class="alta__campo" id="altaDepWrap">
+          <span>Departamento *</span>
+          <select name="id_departamento_colegio" id="altaDep"></select>
+          <small class="alta__ayuda" id="altaDepAyuda"></small>
+        </label>
+        <div class="alta__campo">
+          <span>Además puede</span>
+          <label class="alta__check"><input type="checkbox" name="tecnico" id="altaTecnico"> <span><strong>Atender tickets</strong> (técnico)</span></label>
+          <label class="alta__check" id="altaSuperWrap" hidden><input type="checkbox" name="super_admin" id="altaSuper"> <span><strong>Super administrador</strong> · ve y administra todo</span></label>
+        </div>
+        <div class="alta__resumen" id="altaResumen" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <div class="alta__exito" id="altaExito" hidden>
+      <div class="alta__exito-ico"><i class="bi bi-check-lg"></i></div>
+      <h3 id="altaExitoTitulo">Usuario creado</h3>
+      <p id="altaExitoTexto"></p>
+      <div class="alta__clave">
+        <span>Clave temporal</span>
+        <code id="altaClave"></code>
+        <button type="button" class="btn btn-outline btn-sm" id="altaCopiar"><i class="bi bi-clipboard"></i> Copiar</button>
+      </div>
+      <p class="alta__nota"><i class="bi bi-info-circle"></i> Entrégasela a la persona. Al ingresar el sistema le pedirá cambiarla. <strong>No se volverá a mostrar.</strong></p>
+    </div>
+
+    <p class="alta__error" id="altaError" role="alert" hidden></p>
+    <footer class="alta__pie" id="altaPie">
+      <button type="button" class="btn btn-outline" data-alta-cerrar>Cancelar</button>
+      <button type="submit" class="btn btn-primary" id="altaCrear"><i class="bi bi-person-check"></i> Crear usuario</button>
+    </footer>
+    <footer class="alta__pie" id="altaPieExito" hidden>
+      <button type="button" class="btn btn-outline" id="altaOtro"><i class="bi bi-person-plus"></i> Crear otro</button>
+      <button type="button" class="btn btn-primary" data-alta-cerrar>Listo</button>
+    </footer>
+  </form>
+</dialog>
+
 <?php require __DIR__ . '/../componentes/modal_agregar_departamento.php'; ?>
 
 <script src="<?= $depth ?>js/permisos.js"></script>
 <script src="<?= $depth ?>js/paginacion.js"></script>
 <script src="<?= $depth ?>configuracion/js/usuarios_acordeon.js?v=<?= (int) filemtime(__DIR__ . '/js/usuarios_acordeon.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/listado_usuarios.js?v=<?= (int) filemtime(__DIR__ . '/js/listado_usuarios.js') ?>"></script>
+<script src="<?= $depth ?>configuracion/js/alta_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/alta_usuario.js') ?>"></script>
 <?php finalizar_layout_configuracion(); ?>

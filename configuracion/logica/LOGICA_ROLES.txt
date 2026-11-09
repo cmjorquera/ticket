@@ -55,8 +55,34 @@ b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
 - La migración guarda una copia de usuario_colegio en usuario_colegio_respaldo
   antes de reemplazar su contenido.
 
-5. ARCHIVOS
------------
+5. ALTA DE USUARIOS (Configuración → Usuarios → "Agregar usuario")
+------------------------------------------------------------------
+- El modal pide: datos de la persona; colegio → SOLO los departamentos de ese
+  colegio → cargo (rol). Solo aparecen los colegios, departamentos y cargos
+  que quien está conectado puede usar (sección 3).
+- La cuenta se crea ACTIVA con una CLAVE TEMPORAL que se muestra una sola vez.
+  En el primer ingreso el sistema lleva a Mi cuenta → Perfil y no deja usar
+  nada más hasta cambiarla (usuarios.token_reinicio = 'CAMBIAR_CLAVE').
+- Se escribe: usuarios (sexo 1/2/0, cargo, anexo), usuario_perfil (usuario
+  [+ técnico] [+ super_admin]), usuario_colegio (colegio, depto., rol),
+  permisos de menú iniciales y, para admin/jefe, jefatura_departamento
+  (compatibilidad con pantallas antiguas).
+- Editar, bloquear, activar y permisos: solo quien administra a esa persona
+  (super_admin; admin de su colegio; jefe de su departamento). Nadie que no
+  sea super_admin puede tocar a un super_admin. Todas las acciones piden el
+  token del formulario (CSRF).
+
+Código:
+  clases/RolesUsuario.php            reglas (quién ve / crea / administra a quién)
+  clases/AltaUsuario.php             crear la cuenta
+  clases/GestorAccesoModular.php     usa RolesUsuario cuando existe usuario_colegio.rol
+  ajax/usuarios_alta_opciones.php    colegios, departamentos y cargos permitidos
+  ajax/usuarios_guardar.php          crear / editar / bloquear / activar / permisos
+  configuracion/js/alta_usuario.js   el modal
+  index.php + validar_sesion.php     cambio obligatorio de la clave temporal
+
+6. ARCHIVOS SQL
+---------------
 configuracion/sql/01_roles_estructura.sql    columnas nuevas, respaldo y departamentos faltantes
 configuracion/sql/02_roles_asignaciones.sql  una fila por persona (revisada caso a caso)
 configuracion/sql/03_roles_revision.sql      consultas para revisar el resultado

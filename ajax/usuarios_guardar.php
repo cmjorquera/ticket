@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../helpers/permisos.php';
+require_once __DIR__ . '/../clases/AltaUsuario.php';
+require_once __DIR__ . '/../clases/GestorAccesoModular.php';
 Sesion::requerir();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -11,6 +13,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
 
 $datos = entrada_ajax();
 $action = strtolower(trim((string) ($datos['action'] ?? '')));
+$actor = (int) ($_SESSION['id'] ?? 0);
+
+// Token del formulario (lo entrega configuracion/listado_usuarios.php)
+$csrfSesion = (string) ($_SESSION['csrf_editar_usuario_avanzado'] ?? '');
+if ($csrfSesion === '' || !hash_equals($csrfSesion, (string) ($datos['csrf'] ?? ''))) {
+    responder_json(['ok' => false, 'mensaje' => 'La sesión expiró. Recarga la página.'], 419);
+}
 
 function ids_recibidos(mixed $valor): array
 {
@@ -72,96 +81,28 @@ try {
     $pdo = $db->getPDO();
 
     if ($action === 'crear') {
-        $nombre = trim((string) ($datos['nombre'] ?? ''));
-        $apellidoPaterno = trim((string) ($datos['apellido_paterno'] ?? ''));
-        $apellidoMaterno = trim((string) ($datos['apellido_materno'] ?? ''));
-        $email = strtolower(trim((string) ($datos['email'] ?? '')));
-        $telefono = trim((string) ($datos['telefono'] ?? ''));
-        $sexo = trim((string) ($datos['sexo'] ?? ''));
-        $idArea = (int) ($datos['id_area_trabajo'] ?? 0);
-        $idColegio = (int) ($datos['id_colegio'] ?? 0);
-        $idDepartamentoColegio = (int) ($datos['id_departamento_colegio'] ?? 0);
-        $idPerfil = (int) ($datos['id_perfil'] ?? 0);
-
-        if ($nombre === '' || $apellidoPaterno === '' || $email === '' || $idArea <= 0 || $idPerfil <= 0 || $sexo === '') {
-            responder_json(['ok' => false, 'mensaje' => 'Nombre, apellido paterno, email, área, perfil y sexo son obligatorios.'], 422);
-        }
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            responder_json(['ok' => false, 'mensaje' => 'El email no es válido.'], 422);
-        }
-        if ($db->fetchOne('SELECT id FROM usuarios WHERE email = ? LIMIT 1', [$email])) {
-            responder_json(['ok' => false, 'mensaje' => 'El email ya está registrado.'], 409);
-        }
-        if (!$db->fetchOne('SELECT id_area FROM area_trabajo WHERE id_area = ? LIMIT 1', [$idArea])) {
-            responder_json(['ok' => false, 'mensaje' => 'El área seleccionada no existe.'], 422);
-        }
-        $perfilSeleccionado = $db->fetchOne('SELECT id_perfil, nombre FROM perfiles WHERE id_perfil = ? LIMIT 1', [$idPerfil]);
-        if (!$perfilSeleccionado) {
-            responder_json(['ok' => false, 'mensaje' => 'El perfil seleccionado no existe.'], 422);
-        }
-        if ($idColegio > 0 && !$db->fetchOne('SELECT id_colegio FROM colegio WHERE id_colegio = ? AND estado = 1 LIMIT 1', [$idColegio])) {
-            responder_json(['ok' => false, 'mensaje' => 'El colegio seleccionado no está disponible.'], 422);
-        }
-        $nombrePerfil = strtolower(trim((string) $perfilSeleccionado['nombre']));
-        $esAdminColegio = str_contains($nombrePerfil, 'admin') && str_contains($nombrePerfil, 'colegio');
-        $esAdminDepartamento = str_contains($nombrePerfil, 'admin')
-            && (str_contains($nombrePerfil, 'departamento') || str_contains($nombrePerfil, 'area'));
-        if ($idColegio > 0 && !$esAdminColegio && !$esAdminDepartamento) {
-            responder_json(['ok' => false, 'mensaje' => 'El colegio solo se asigna a administradores de colegio o departamento.'], 422);
-        }
-        if ($idColegio > 0 && $esAdminDepartamento && $idDepartamentoColegio <= 0) {
-            responder_json(['ok' => false, 'mensaje' => 'Selecciona el departamento que administrará el usuario.'], 422);
-        }
-        if ($idDepartamentoColegio > 0 && !$db->fetchOne(
-            'SELECT id
-               FROM departamentos_colegio
-              WHERE id = ? AND id_colegio = ? AND estado = 1
-              LIMIT 1',
-            [$idDepartamentoColegio, $idColegio]
-        )) {
-            responder_json(['ok' => false, 'mensaje' => 'El departamento no pertenece al colegio seleccionado.'], 422);
-        }
-
-        $pdo->beginTransaction();
         try {
-            $token = bin2hex(random_bytes(32));
-            $db->execute(
-                "INSERT INTO usuarios
-                    (nombre, apellido_paterno, apellido_materno, email, clave, estado,
-                     intentos_fallidos, id_area_trabajo, telefono, sexo, token_reinicio)
-                 VALUES (?, ?, ?, ?, NULL, 'Pendiente', 0, ?, ?, ?, ?)",
-                [$nombre, $apellidoPaterno, $apellidoMaterno, $email, $idArea, $telefono, $sexo, $token]
-            );
-            $idUsuario = (int) $db->lastInsertId();
-
-            $db->execute('INSERT INTO usuario_perfil (id_usuario, id_perfil) VALUES (?, ?)', [$idUsuario, $idPerfil]);
-
-            if ($idColegio > 0) {
-                $tipoJefatura = $esAdminColegio ? 'Admin_Colegio' : 'Admin_Departamento';
-                $departamentoAsignado = $esAdminColegio ? null : $idDepartamentoColegio;
-                $db->execute(
-                    'INSERT INTO jefatura_departamento
-                        (id_usuario, id_colegio, id_departamento_colegio, tipo_jefatura, estado)
-                     VALUES (?, ?, ?, ?, 1)',
-                    [$idUsuario, $idColegio, $departamentoAsignado, $tipoJefatura]
-                );
-            }
-            if (!asignar_permisos_por_defecto($idUsuario, $idPerfil, $db)) {
-                throw new RuntimeException('No fue posible asignar los permisos iniciales.');
-            }
-            $pdo->commit();
-            responder_json(['ok' => true, 'mensaje' => 'Usuario creado con los permisos de su perfil.', 'id' => $idUsuario]);
-        } catch (Throwable $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
-            }
-            throw $e;
+            $r = (new AltaUsuario($db))->crear($actor, $datos);
+        } catch (RuntimeException $e) {
+            responder_json(['ok' => false, 'mensaje' => $e->getMessage()], 422);
         }
+        responder_json([
+            'ok' => true,
+            'mensaje' => 'Usuario creado.',
+            'id' => $r['id'],
+            'nombre' => $r['nombre'],
+            'email' => $r['email'],
+            'clave_temporal' => $r['clave_temporal'],   // se muestra una sola vez
+        ]);
     }
 
     $idUsuario = (int) ($datos['id'] ?? $datos['id_usuario'] ?? 0);
     if ($idUsuario <= 0 || !$db->fetchOne('SELECT id FROM usuarios WHERE id = ? LIMIT 1', [$idUsuario])) {
         responder_json(['ok' => false, 'mensaje' => 'Usuario no encontrado.'], 404);
+    }
+    // ¿Quien pide puede modificar a esta persona? (super admin; admin de su colegio; jefe de su departamento)
+    if (!(new GestorAccesoModular($db))->validarAccesoAUsuario($actor, $idUsuario)) {
+        responder_json(['ok' => false, 'mensaje' => 'No tienes permiso para modificar a este usuario.'], 403);
     }
 
     if ($action === 'editar') {
@@ -170,11 +111,11 @@ try {
         $apellidoMaterno = trim((string) ($datos['apellido_materno'] ?? ''));
         $email = strtolower(trim((string) ($datos['email'] ?? '')));
         $telefono = trim((string) ($datos['telefono'] ?? ''));
-        $sexo = trim((string) ($datos['sexo'] ?? ''));
-        $idArea = (int) ($datos['id_area_trabajo'] ?? 0);
+        $sexo = AltaUsuario::sexo($datos['sexo'] ?? '');   // 1 masculino, 2 femenino, 0 sin dato
+        $idArea = (int) ($datos['id_area_trabajo'] ?? 0);  // opcional (modelo de roles: el departamento está en usuario_colegio)
 
-        if ($nombre === '' || $apellidoPaterno === '' || $email === '' || $idArea <= 0 || $sexo === '') {
-            responder_json(['ok' => false, 'mensaje' => 'Nombre, apellido paterno, email, área y sexo son obligatorios.'], 422);
+        if ($nombre === '' || $apellidoPaterno === '' || $email === '') {
+            responder_json(['ok' => false, 'mensaje' => 'Nombre, apellido paterno y email son obligatorios.'], 422);
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             responder_json(['ok' => false, 'mensaje' => 'El email no es válido.'], 422);
@@ -182,7 +123,7 @@ try {
         if ($db->fetchOne('SELECT id FROM usuarios WHERE email = ? AND id <> ? LIMIT 1', [$email, $idUsuario])) {
             responder_json(['ok' => false, 'mensaje' => 'El email ya está registrado por otro usuario.'], 409);
         }
-        if (!$db->fetchOne('SELECT id_area FROM area_trabajo WHERE id_area = ? LIMIT 1', [$idArea])) {
+        if ($idArea > 0 && !$db->fetchOne('SELECT id_area FROM area_trabajo WHERE id_area = ? LIMIT 1', [$idArea])) {
             responder_json(['ok' => false, 'mensaje' => 'El área seleccionada no existe.'], 422);
         }
 
@@ -191,7 +132,7 @@ try {
                 SET nombre = ?, apellido_paterno = ?, apellido_materno = ?, email = ?,
                     id_area_trabajo = ?, telefono = ?, sexo = ?
               WHERE id = ?',
-            [$nombre, $apellidoPaterno, $apellidoMaterno, $email, $idArea, $telefono, $sexo, $idUsuario]
+            [$nombre, $apellidoPaterno, $apellidoMaterno, $email, $idArea > 0 ? $idArea : null, $telefono, $sexo, $idUsuario]
         );
         responder_json(['ok' => true, 'mensaje' => 'Usuario actualizado.']);
     }
@@ -223,5 +164,6 @@ try {
 
     responder_json(['ok' => false, 'mensaje' => 'Acción no reconocida.'], 400);
 } catch (Throwable $e) {
+    error_log('[usuarios_guardar] ' . $e->getMessage());
     responder_json(['ok' => false, 'mensaje' => 'No fue posible guardar los cambios.'], 500);
 }

@@ -70,3 +70,10 @@ if ($usuario_actual === false
 /* -- 3. Datos frescos para la página --------------------------------- */
 $_SESSION['nombre'] = $usuario_actual['nombre'];
 $_SESSION['email']  = $usuario_actual['email'];
+
+/* -- Clave temporal: hasta cambiarla solo puede estar en Mi cuenta → Perfil -- */
+if (!empty($_SESSION['debe_cambiar_clave'])
+    && !str_ends_with(str_replace('\\', '/', (string) ($_SERVER['SCRIPT_FILENAME'] ?? '')), '/mi_cuenta/perfil.php')) {
+    header('Location: ' . preg_replace('/index\.php$/', 'mi_cuenta/perfil.php?cambiar_clave=1', _vs_url_login()));
+    exit;
+}

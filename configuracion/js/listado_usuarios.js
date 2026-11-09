@@ -50,7 +50,7 @@
     return request(`${API}/usuarios_guardar.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ csrf: userModal?.dataset.csrf || '', ...data }),
     });
   }
 
@@ -458,9 +458,10 @@
   }
 
   function normalizeSex(value) {
+    // En la base: 1 masculino, 2 femenino, 0 sin dato
     const sex = String(value || '').toLowerCase();
-    if (sex === 'm' || sex === 'masculino') return 'M';
-    if (sex === 'f' || sex === 'femenino') return 'F';
+    if (sex === '1' || sex === 'm' || sex === 'masculino') return 'M';
+    if (sex === '2' || sex === 'f' || sex === 'femenino') return 'F';
     return '';
   }
 
@@ -574,8 +575,8 @@
     const data = readUserModal();
     const error = document.getElementById('modal-usuario-error');
     error.hidden = true;
-    if (!data.nombre || !data.apellido_paterno || !data.email || !data.id_area_trabajo || (!data.id && !data.id_perfil) || !data.sexo) {
-      error.textContent = 'Completa nombre, apellido paterno, email, área, perfil y sexo.';
+    if (!data.nombre || !data.apellido_paterno || !data.email) {
+      error.textContent = 'Completa nombre, apellido paterno y email.';
       error.hidden = false;
       return;
     }
@@ -734,7 +735,9 @@
     }
   }
 
-  addButton.addEventListener('click', () => abrirModalUsuario());
+  // Alta: modal nuevo con el modelo de roles (configuracion/js/alta_usuario.js)
+  addButton.addEventListener('click', () => window.AltaUsuario ? window.AltaUsuario.abrir() : abrirModalUsuario());
+  document.addEventListener('usuarios:recargar', () => loadUsers());
   downloadButton.addEventListener('click', () => {
     const params = new URLSearchParams();
     const search = searchInput.value.trim();
@@ -794,7 +797,7 @@
     if (action.dataset.schoolAction === 'email') {
       abrirModalCorreo(schoolId);
     } else if (action.dataset.schoolAction === 'add-user') {
-      abrirModalUsuario(null, { id_colegio: schoolId });
+      if (window.AltaUsuario) { window.AltaUsuario.abrir(schoolId); } else { abrirModalUsuario(null, { id_colegio: schoolId }); }
     }
   });
   document.addEventListener('click', () => cerrarMenusColegio());

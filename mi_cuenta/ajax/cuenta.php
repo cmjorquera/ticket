@@ -55,7 +55,7 @@ try {
                 $_SESSION['mc_clave'] = ['n' => $f['n'] + 1, 't' => time()];
                 throw $e;
             }
-            unset($_SESSION['mc_clave']);
+            unset($_SESSION['mc_clave'], $_SESSION['debe_cambiar_clave']);
             session_regenerate_id(true);
             mc_json(['ok' => true, 'mensaje' => 'Contraseña actualizada. Úsala la próxima vez que ingreses.']);
 

@@ -40,6 +40,11 @@ if (!class_exists('Sesion', false)) {
 }
 
 Sesion::requerir();
+// Clave temporal (cuenta nueva): primero debe cambiarla en Mi cuenta
+if (!empty($_SESSION['debe_cambiar_clave'])) {
+    header('Location: ../mi_cuenta/perfil.php?cambiar_clave=1');
+    exit;
+}
 $db = Conexion::getInstance('sistema_panel_central');
 
 function iniciar_layout_configuracion(string $titulo, string $breadcrumb, string $pagina): void

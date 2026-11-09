@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $db = Conexion::getInstance('sistema_panel_central');
 
             $usuario = $db->fetchOne(
-                "SELECT id, nombre, email, clave, estado, intentos_fallidos
+                "SELECT id, nombre, email, clave, estado, intentos_fallidos, token_reinicio
                    FROM usuarios WHERE email = ? LIMIT 1",
                 [$email]
             );
@@ -83,6 +83,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['perfil']   = $perfiles[0]['nombre_perfil'] ?? 'Sin perfil';
                 $_SESSION['perfiles'] = array_column($perfiles, 'nombre_perfil');
 
+                // Cuenta nueva con clave temporal (clases/AltaUsuario.php): debe cambiarla antes de seguir
+                if (($usuario['token_reinicio'] ?? '') === 'CAMBIAR_CLAVE') {
+                    $_SESSION['debe_cambiar_clave'] = true;
+                    header('Location: mi_cuenta/perfil.php?cambiar_clave=1');
+                    exit;
+                }
                 header('Location: contenedores.php');
                 exit;
             }

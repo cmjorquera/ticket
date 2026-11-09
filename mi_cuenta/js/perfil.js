@@ -79,11 +79,19 @@
             formClave.reset();
             revisar();
             toast('success', 'Contraseña cambiada', r.mensaje);
+            const aviso = document.getElementById('avisoClave');
+            if (aviso) { aviso.remove(); setTimeout(() => { location.href = '../contenedores.php'; }, 1200); }
         } catch (err) {
             toast('error', 'No se cambió', err.message);
             revisar();
         }
     });
+
+    // Cuenta nueva: llevar directo al formulario de contraseña
+    if (document.getElementById('avisoClave')) {
+        document.getElementById('seccionClave').scrollIntoView({ block: 'center' });
+        formClave.actual.focus();
+    }
 
     // ---------- foto
     const inputFoto = document.getElementById('inputFoto');

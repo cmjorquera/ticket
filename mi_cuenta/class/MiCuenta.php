@@ -36,6 +36,21 @@ final class MiCuenta
             return null;
         }
         $u['nombre_completo'] = trim(preg_replace('/\s+/u', ' ', $u['nombre'] . ' ' . $u['apellido_paterno'] . ' ' . $u['apellido_materno']));
+        // Modelo de roles: si no tiene área antigua, se muestra el departamento de su asignación principal
+        if (trim((string) $u['nombre_area']) === '') {
+            try {
+                $dep = $this->db->fetchOne(
+                    "SELECT d.nombre_departamento FROM usuario_colegio uc
+                       JOIN departamentos_colegio d ON d.id = uc.id_departamento_colegio
+                      WHERE uc.id_usuario = ? AND uc.estado = 1
+                   ORDER BY FIELD(uc.rol, 'jefe_departamento', 'trabajador', 'admin_colegio') LIMIT 1",
+                    [$id]
+                );
+                $u['nombre_area'] = $dep['nombre_departamento'] ?? '';
+            } catch (Throwable $e) {
+                // antes de configuracion/sql/01_roles_estructura.sql
+            }
+        }
         $u['fecha_nacimiento'] = self::fechaValida($u['fecha_nacimiento']);
         return $u;
     }

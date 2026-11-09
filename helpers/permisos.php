@@ -45,7 +45,7 @@ function insertar_permiso_defecto(Conexion $db, int $idMenu, int $idUsuario, ?in
 function asignar_permisos_por_defecto(int $usuarioId, int $perfilId, Conexion $db): bool
 {
     try {
-        $perfil = $db->fetchOne('SELECT nombre FROM perfiles WHERE id_perfil = ? LIMIT 1', [$perfilId]);
+        $perfil = $db->fetchOne('SELECT nombre_perfil AS nombre FROM perfiles WHERE id_perfil = ? LIMIT 1', [$perfilId]);
         if (!$perfil) {
             throw new RuntimeException('El perfil seleccionado no existe.');
         }

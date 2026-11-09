@@ -13,13 +13,26 @@
  *   CASO 3 — jefatura activa, depto > 0         → ve usuarios de su DEPTO+COLEGIO (Admin_Departamento)
  *   CASO 4 — sin jefatura                       → ve usuarios de su ÁREA
  */
+require_once __DIR__ . '/RolesUsuario.php';
+
+/*
+ * MODELO DE ROLES (configuracion/logica/LOGICA_ROLES.txt): cuando existe
+ * usuario_colegio.rol, quién ve y quién puede modificar a quién lo decide
+ * RolesUsuario (super_admin / admin_colegio / jefe_departamento / trabajador).
+ * Si aún no se ejecutó la migración, se usan las reglas antiguas de abajo.
+ */
 class GestorAccesoModular
 {
     private $bdato;
+    private ?RolesUsuario $roles = null;
 
     public function __construct($bdato)
     {
         $this->bdato = $bdato;
+        if ($bdato instanceof Conexion) {
+            $r = new RolesUsuario($bdato);
+            $this->roles = $r->modeloActivo() ? $r : null;
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -88,6 +101,21 @@ class GestorAccesoModular
     // -------------------------------------------------------------------------
     private function _selectBase(): string
     {
+        // Modelo de roles: "jd" = la asignación principal de cada persona
+        // (admin_colegio > jefe_departamento > trabajador), con los mismos
+        // nombres de columna que jefatura_departamento.
+        $joinJd = $this->roles
+            ? "LEFT JOIN (SELECT uc.id_usuario, uc.id_colegio, uc.id_departamento_colegio,
+                                 CASE uc.rol WHEN 'admin_colegio' THEN 'Admin_Colegio'
+                                             WHEN 'jefe_departamento' THEN 'Admin_Departamento'
+                                             ELSE 'Trabajador' END AS tipo_jefatura
+                            FROM usuario_colegio uc
+                           WHERE uc.estado = 1
+                             AND uc.id = (SELECT uc2.id FROM usuario_colegio uc2
+                                           WHERE uc2.id_usuario = uc.id_usuario AND uc2.estado = 1
+                                        ORDER BY FIELD(uc2.rol, 'admin_colegio', 'jefe_departamento', 'trabajador'), uc2.id
+                                           LIMIT 1)) jd ON jd.id_usuario = u.id"
+            : "LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1";
         return "SELECT
                     u.id,
                     u.nombre,
@@ -107,12 +135,13 @@ class GestorAccesoModular
                     MAX(jd.id_departamento_colegio) AS id_departamento_colegio,
                     MAX(dc.nombre_departamento)     AS nombre_departamento,
                     MAX(jd.id_colegio)              AS id_colegio,
-                    MAX(col.nom_colegio)            AS nom_colegio
+                    MAX(col.nom_colegio)            AS nom_colegio,
+                    MAX(jd.tipo_jefatura)           AS tipo_jefatura
                 FROM usuarios u
                 LEFT JOIN area_trabajo at          ON at.id_area    = u.id_area_trabajo
                 LEFT JOIN usuario_perfil up         ON up.id_usuario = u.id
                 LEFT JOIN perfiles p               ON p.id_perfil   = up.id_perfil
-                LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
+                {$joinJd}
                 LEFT JOIN departamentos_colegio dc ON dc.id         = jd.id_departamento_colegio
                 LEFT JOIN colegio col              ON col.id_colegio = jd.id_colegio";
     }
@@ -130,11 +159,16 @@ class GestorAccesoModular
     // -------------------------------------------------------------------------
     public function obtenerUsuariosAsociados(int $idUsuarioActual): array
     {
-        $d = $this->obtenerDatosAccesoUsuario($idUsuarioActual);
-        if (!$d) return [];
-
         $select  = $this->_selectBase();
         $groupBy = $this->_groupBy();
+
+        if ($this->roles) {
+            [$cond, $params] = $this->roles->filtroVisibles($idUsuarioActual, 'u');
+            return $this->_mapearFilas($this->bdato->fetchAll($select . ' WHERE ' . $cond . $groupBy, $params));
+        }
+
+        $d = $this->obtenerDatosAccesoUsuario($idUsuarioActual);
+        if (!$d) return [];
 
         // CASO 1: Super Admin (id_perfil = 3 exactamente) → todos
         if ($d['id_perfil'] === 3) {
@@ -209,6 +243,7 @@ class GestorAccesoModular
                 'nombre_departamento'     => trim((string) ($fila['nombre_departamento'] ?? '')),
                 'id_colegio'              => (int)    ($fila['id_colegio']       ?? 0),
                 'nom_colegio'             => trim((string) ($fila['nom_colegio'] ?? '')) ?: 'Sin colegio',
+                'tipo_jefatura'           => trim((string) ($fila['tipo_jefatura'] ?? '')),
             ];
         }
         return $resultado;
@@ -222,6 +257,9 @@ class GestorAccesoModular
         if ($idUsuarioActual <= 0 || $idUsuarioObjetivo <= 0
                 || $idUsuarioActual === $idUsuarioObjetivo) {
             return false;
+        }
+        if ($this->roles) {
+            return $this->roles->puedeGestionar($idUsuarioActual, $idUsuarioObjetivo);
         }
 
         $da = $this->obtenerDatosAccesoUsuario($idUsuarioActual);
@@ -252,6 +290,13 @@ class GestorAccesoModular
     // -------------------------------------------------------------------------
     public function obtenerFiltroAccesoSQL(int $idUsuario, string $aliasUsuario = 'u'): string
     {
+        if ($this->roles) {
+            // Solo ids enteros: se puede incrustar sin riesgo
+            $ids = array_map(static fn (array $u): int => (int) $u['id'], $this->obtenerUsuariosAsociados($idUsuario));
+            $alias = preg_replace('/[^a-zA-Z0-9_]/', '', $aliasUsuario) ?: 'u';
+            return $ids ? "{$alias}.id IN (" . implode(',', $ids) . ')' : '1=0';
+        }
+
         $d = $this->obtenerDatosAccesoUsuario($idUsuario);
         if (!$d) return '1=0';
 

@@ -28,6 +28,12 @@ require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 <div class="mc" id="mcApp" data-csrf="<?= mc_e($_SESSION['csrf_mi_cuenta']) ?>">
     <?php mc_cabecera($mcUsuario, 'perfil'); ?>
+    <?php if (!empty($_SESSION['debe_cambiar_clave'])): ?>
+        <div class="mc-aviso mc-aviso--demo mc-aviso--clave" role="alert" id="avisoClave">
+            <i class="bi bi-key"></i>
+            <div><strong>Bienvenido/a. Antes de continuar, cambia tu contraseña.</strong> Ingresaste con una clave temporal: escríbela en "Contraseña actual" y elige una nueva. Después podrás usar todo el sistema.</div>
+        </div>
+    <?php endif; ?>
 
     <div class="mc-grid">
         <div class="mc-col">
@@ -64,7 +70,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
             </section>
 
             <!-- Seguridad -->
-            <section class="card mc-card">
+            <section class="card mc-card" id="seccionClave">
                 <header class="mc-card__head">
                     <div><h2><i class="bi bi-shield-lock"></i> Contraseña</h2><p>Úsala solo en este sistema y no la compartas.</p></div>
                 </header>
