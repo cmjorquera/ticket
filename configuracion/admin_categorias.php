@@ -10,6 +10,8 @@ $depth = '../';
 $error = null;
 $categorias = [];
 $tecnicos = [];
+$catalogo = [];
+$puedeEditar = false;
 
 if (empty($_SESSION['csrf_admin_categorias'])) {
     $_SESSION['csrf_admin_categorias'] = bin2hex(random_bytes(32));
@@ -72,6 +74,37 @@ try {
        ORDER BY u.nombre ASC, u.apellido_paterno ASC",
         $paramTecnicos
     );
+    // Catálogo completo (activas e inactivas) con sus técnicos y tickets
+    $rolesActor = new RolesUsuario($db);
+    $actorId = (int) Sesion::get('id', 0);
+    $puedeEditar = $rolesActor->esSuperAdmin($actorId) || $rolesActor->esDeInformaticaSeduc($actorId);
+    $idsTecnicos = array_map(static fn ($f) => (int) $f['id'], $tecnicosFilas);
+    $ticketsPorCategoria = array_column($db->fetchAll(
+        'SELECT id_categoria_ticket AS id, COUNT(*) AS n FROM tickets WHERE estado = 1 GROUP BY id_categoria_ticket'
+    ), 'n', 'id');
+    $tecnicosPorCategoria = [];
+    foreach ($db->fetchAll('SELECT id_categoria, id_tecnico FROM categoria_tecnico') as $r) {
+        if (in_array((int) $r['id_tecnico'], $idsTecnicos, true)) {
+            $tecnicosPorCategoria[(int) $r['id_categoria']][] = (int) $r['id_tecnico'];
+        }
+    }
+    foreach ($db->fetchAll(
+        'SELECT id_categoria, nombre_categoria, abreviacion, icono, orden, estado
+           FROM categoria_de_ticket ORDER BY orden ASC, id_categoria ASC'
+    ) as $f) {
+        $idC = (int) $f['id_categoria'];
+        $catalogo[] = [
+            'id' => $idC,
+            'nombre' => (string) $f['nombre_categoria'],
+            'abreviacion' => (string) $f['abreviacion'],
+            'icono' => icono_categoria((string) ($f['icono'] ?? '')),
+            'estado' => (int) $f['estado'],
+            'tickets' => (int) ($ticketsPorCategoria[$idC] ?? 0),
+            'tecnicos' => $tecnicosPorCategoria[$idC] ?? [],
+            'otros' => $idC === 10,
+        ];
+    }
+
     foreach ($tecnicosFilas as $fila) {
         $asignaciones = [];
         foreach (array_filter(explode(',', (string) ($fila['asignaciones'] ?? ''))) as $asignacion) {
@@ -98,6 +131,9 @@ iniciar_layout_configuracion('Categorías y técnicos', 'Categorías', 'admin_ca
 ?>
 
 <div class="page-header">
+  <?php if ($puedeEditar && !$error): ?>
+  <div class="page-header-actions" style="order:2"><button type="button" class="btn btn-primary" id="btnNuevaCategoria"><i class="bi bi-plus-lg"></i> Nueva categoría</button></div>
+  <?php endif; ?>
   <div><h1><i class="bi bi-person-gear" aria-hidden="true"></i> Categorías y técnicos</h1><p>Define qué tipo de tickets puede recibir cada técnico (funcionarios del departamento de Informática de Seduc).</p></div>
 </div>
 
@@ -151,7 +187,52 @@ iniciar_layout_configuracion('Categorías y técnicos', 'Categorías', 'admin_ca
       </div>
     <?php endif; ?>
   </section>
+<!-- Catálogo de categorías: crear, editar, activar/desactivar y ordenar -->
+  <section class="card cc-panel" id="ccPanel">
+    <div class="card-header">
+      <div><h2 class="card-title">Catálogo de categorías</h2><p class="card-desc">Las categorías activas aparecen al crear un ticket, en este orden.</p></div>
+      <label class="cc-inactivas"><input type="checkbox" id="ccVerInactivas"> Mostrar inactivas</label>
+    </div>
+    <div class="cc-tabla-wrap">
+      <table class="cc-tabla">
+        <thead><tr><th class="cc-col-orden">Orden</th><th>Categoría</th><th>Abreviación</th><th>Técnicos</th><th class="cc-num">Tickets</th><th>Estado</th><?php if ($puedeEditar): ?><th class="cc-acc">Acciones</th><?php endif; ?></tr></thead>
+        <tbody id="ccFilas"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog class="cc-dialog" id="dlgCategoria" aria-labelledby="ccTitulo">
+    <form class="cc-dialog__box" id="formCategoria" novalidate autocomplete="off">
+      <header class="cc-dialog__head">
+        <h2 id="ccTitulo">Nueva categoría</h2>
+        <button type="button" class="btn-icon" data-cc-cerrar aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+      </header>
+      <div class="cc-dialog__cuerpo">
+        <div class="cc-vista" aria-hidden="true"><span class="cc-vista__chip"><i class="bi bi-tag" id="ccVistaIcono"></i> <span id="ccVistaNombre">Nueva categoría</span></span><small>Así se verá</small></div>
+        <div class="cc-campos">
+          <label class="cc-campo"><span>Nombre *</span><input name="nombre" maxlength="80" required placeholder="Ej: Proyectores"></label>
+          <label class="cc-campo"><span>Abreviación</span><input name="abreviacion" maxlength="50" placeholder="Ej: Proyect."></label>
+        </div>
+        <div class="cc-campo">
+          <span>Ícono</span>
+          <div class="cc-iconos" id="ccIconos" role="radiogroup" aria-label="Ícono"></div>
+          <input name="icono" id="ccIcono" maxlength="45" placeholder="o escribe uno de Bootstrap Icons, ej: bi-projector">
+        </div>
+        <div class="cc-campo">
+          <span>Técnicos que la atienden</span>
+          <div class="cc-tecnicos" id="ccTecnicos"></div>
+          <small class="cc-ayuda" id="ccTecAyuda">Los tickets de esta categoría llegan al técnico con menos tickets abiertos.</small>
+        </div>
+        <p class="cc-error" id="ccError" role="alert" hidden></p>
+      </div>
+      <footer class="cc-dialog__pie">
+        <button type="button" class="btn btn-outline" data-cc-cerrar>Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="ccGuardar"><i class="bi bi-check2"></i> Guardar</button>
+      </footer>
+    </form>
+  </dialog>
 <?php endif; ?>
+
 
 <style>
 .ac-stats{margin-bottom:16px}.ac-panel{overflow:hidden}.ac-alert{display:flex;align-items:center;gap:10px}.ac-alert--danger{color:var(--danger);background:var(--danger-light)}.ac-alert--warning{color:var(--warning);background:var(--warning-light)}
@@ -242,4 +323,15 @@ iniciar_layout_configuracion('Categorías y técnicos', 'Categorías', 'admin_ca
 })();
 </script>
 
+<?php if (!$error): ?>
+<script>window.CAT_DATA = <?= json_encode([
+    'csrf' => $csrf,
+    'puedeEditar' => $puedeEditar,
+    'catalogo' => $catalogo,
+    'tecnicos' => array_map(static fn ($t) => ['id' => $t['id'], 'nombre' => trim($t['nombre'] . ' ' . $t['apellido']),
+        'iniciales' => iniciales_tecnico($t['nombre'], $t['apellido'])], $tecnicos),
+], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;</script>
+<link rel="stylesheet" href="css/categorias.css?v=<?= (int) @filemtime(__DIR__ . '/css/categorias.css') ?>">
+<script src="js/categorias_catalogo.js?v=<?= (int) @filemtime(__DIR__ . '/js/categorias_catalogo.js') ?>"></script>
+<?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

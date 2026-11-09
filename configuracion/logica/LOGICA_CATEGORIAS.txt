@@ -54,3 +54,23 @@ Consulta útil: categorías de cada técnico
 
 Pendiente a futuro: categoria_de_ticket.id_colegio permitiría categorías
 propias de un colegio; hoy todas son comunes (NULL).
+
+CATÁLOGO DE CATEGORÍAS (misma pantalla, sección "Catálogo de categorías")
+-------------------------------------------------------------------------
+Pueden usarlo el super admin y los funcionarios de Informática de Seduc
+(los demás ven la pantalla sin botones y la API responde 403).
+  - Nueva categoría: nombre (único, sin importar mayúsculas), abreviación
+    (si se deja vacía se usa el nombre), ícono Bootstrap (bi-…; por defecto
+    bi-tag) y los técnicos que la atienden. Queda activa y al final del orden.
+  - Editar: los mismos campos. Los técnicos marcados quedan EXACTAMENTE como
+    se eligen (se agregan/quitan filas en categoria_tecnico).
+  - Activar / desactivar: una categoría inactiva no aparece al crear tickets
+    ni en la grilla de asignación; sus tickets antiguos se conservan.
+    "Mostrar inactivas" las vuelve a listar.
+  - Orden (flechas ↑ ↓): es el orden en que se ven al crear un ticket; se
+    renumera 1..n para que no haya repetidos.
+  - "Otros" (id 10) es la categoría por defecto: no se desactiva ni se le
+    asignan técnicos.
+  Código: configuracion/ajax/categorias_ticket.php (crear / editar / estado /
+  mover, con token CSRF), configuracion/js/categorias_catalogo.js,
+  configuracion/css/categorias.css.
