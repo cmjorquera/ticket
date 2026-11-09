@@ -258,7 +258,8 @@
           </div>
         </section>`;
       }).join('');
-    window.inicializarAcordeon?.(orgView);
+    // Departamentos vacíos: se muestran salvo que haya una búsqueda escrita
+    window.inicializarAcordeon?.(orgView, { cargarVacios: !searchInput.value.trim() });
     aplicarExpandir();
   }
 

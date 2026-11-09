@@ -122,6 +122,7 @@
     modoFormulario();
     $('#altaCrear').disabled = true;
     if (!dlg.open) { dlg.showModal(); }
+    opciones = null;   // siempre fresco: incluye departamentos recién creados
     try {
       await cargarOpciones();
     } catch (e) {

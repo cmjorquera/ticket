@@ -64,13 +64,10 @@
     if (!Array.isArray(departments)) throw new Error('No fue posible interpretar los departamentos.');
 
     departments.forEach(department => {
-      let group = container.querySelector(`[data-department-id="${Number(department.id)}"]`);
-      if (!group) {
-        group = createEmptyDepartment(department);
-      }
-      const count = group.querySelector('.org-department-count');
-      if (count) count.textContent = String(department.usuarios_count || 0);
-      container.appendChild(group);
+      // Solo se agregan los departamentos que faltan (los vacíos); los que ya
+      // están dibujados conservan su contador, que respeta los filtros del listado.
+      if (container.querySelector(`[data-department-id="${Number(department.id)}"]`)) return;
+      container.appendChild(createEmptyDepartment(department));
     });
 
     container.dataset.departmentsLoaded = '1';
@@ -139,11 +136,25 @@
     });
   }
 
-  function inicializarAcordeon(root = document) {
+  /**
+   * @param opciones.cargarVacios  true (por defecto): muestra de inmediato también
+   *        los departamentos sin usuarios de cada colegio (ej. uno recién creado).
+   *        El listado lo apaga mientras hay una búsqueda escrita.
+   */
+  function inicializarAcordeon(root = document, opciones = {}) {
     root.querySelectorAll('[data-school-logo]').forEach(loadSchoolIcon);
     initializeDepartmentButtons(root);
     initializeAddButtons(root);
     initializeToggleAllButtons(root);
+    if (opciones.cargarVacios !== false) {
+      root.querySelectorAll('.org-school[data-school-id]').forEach(school => {
+        const id = Number(school.dataset.schoolId || 0);
+        const container = school.querySelector('[data-school-departments]');
+        if (id > 0 && container && container.dataset.departmentsLoaded !== '1') {
+          reloadSchoolDepartments(id).catch(error => console.error('No fue posible cargar los departamentos.', error));
+        }
+      });
+    }
   }
 
   function abrirModalAgregarDepto(idColegio, nombreColegio = 'Colegio') {

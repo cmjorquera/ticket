@@ -15,16 +15,23 @@ try {
         responder_json(['success' => false, 'message' => 'El colegio indicado no existe.'], 404);
     }
 
+    // Modelo de roles (configuracion/logica/LOGICA_ROLES.txt): las personas de
+    // cada departamento están en usuario_colegio; si aún no se migró, en jefatura_departamento.
+    $modeloRoles = (bool) $db->fetchOne(
+        "SELECT 1 FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuario_colegio' AND COLUMN_NAME = 'rol'"
+    );
+    $tablaPersonas = $modeloRoles ? 'usuario_colegio' : 'jefatura_departamento';
     $filas = $db->fetchAll(
-        'SELECT dc.id, dc.nombre_departamento, dc.sigla,
-                COUNT(DISTINCT CASE WHEN jd.estado = 1 THEN jd.id_usuario END) AS usuarios_count
+        "SELECT dc.id, dc.nombre_departamento, dc.sigla,
+                COUNT(DISTINCT CASE WHEN x.estado = 1 THEN x.id_usuario END) AS usuarios_count
            FROM departamentos_colegio dc
-      LEFT JOIN jefatura_departamento jd
-             ON jd.id_departamento_colegio = dc.id
-            AND jd.id_colegio = dc.id_colegio
+      LEFT JOIN {$tablaPersonas} x
+             ON x.id_departamento_colegio = dc.id
+            AND x.id_colegio = dc.id_colegio
           WHERE dc.id_colegio = ? AND dc.estado = 1
        GROUP BY dc.id, dc.nombre_departamento, dc.sigla
-       ORDER BY dc.nombre_departamento ASC',
+       ORDER BY dc.nombre_departamento ASC",
         [$idColegio]
     );
 
