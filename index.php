@@ -43,6 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Tu cuenta está bloqueada. Contacta al administrador.';
             } elseif ($usuario['estado'] === 'inactivo') {
                 $error = 'Tu cuenta está inactiva. Contacta al administrador.';
+            } elseif (strcasecmp((string) $usuario['estado'], 'Pendiente') === 0 && (string) $usuario['clave'] === '') {
+                // Cuenta nueva sin activar (clases/ActivacionCuenta.php): no cuenta como intento fallido
+                $error = 'Tu cuenta aún no está activada. Usa el enlace que te llegó por correo para elegir tu contraseña, o pide que te lo reenvíen.';
             } elseif (!password_verify($clave, (string)$usuario['clave'])) {
                 $intentos = (int)$usuario['intentos_fallidos'] + 1;
                 if ($intentos >= MAX_INTENTOS) {

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/Conexion.php';
 require_once __DIR__ . '/RolesUsuario.php';
+require_once __DIR__ . '/ActivacionCuenta.php';
 require_once dirname(__DIR__) . '/helpers/permisos.php';
 
 /**
@@ -10,16 +11,12 @@ require_once dirname(__DIR__) . '/helpers/permisos.php';
  *   usuarios + usuario_perfil (usuario [+ técnico] [+ super_admin])
  *   + usuario_colegio (colegio, departamento, rol) + permisos de menú iniciales.
  *
- * La cuenta queda ACTIVA con una CLAVE TEMPORAL que se muestra una sola vez a
- * quien la creó; en el primer ingreso el sistema obliga a cambiarla
- * (usuarios.token_reinicio = 'CAMBIAR_CLAVE', ver index.php y validar_sesion.php).
+ * La cuenta queda 'Pendiente' y sin clave: se envía un correo con un ENLACE
+ * para que la persona elija su contraseña (clases/ActivacionCuenta.php,
+ * activar_cuenta.php). Si el correo no sale, quien la creó ve el enlace.
  */
 final class AltaUsuario
 {
-    public const MARCA_CAMBIAR_CLAVE = 'CAMBIAR_CLAVE';
-    /** Sin caracteres que se confunden (0/O, 1/l/I). */
-    private const ALFABETO = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
-
     private Conexion $db;
     private RolesUsuario $roles;
 
@@ -27,17 +24,6 @@ final class AltaUsuario
     {
         $this->db = $db;
         $this->roles = new RolesUsuario($db);
-    }
-
-    public static function claveTemporal(): string
-    {
-        do {
-            $c = '';
-            for ($i = 0; $i < 10; $i++) {
-                $c .= self::ALFABETO[random_int(0, strlen(self::ALFABETO) - 1)];
-            }
-        } while (!preg_match('/[a-z]/', $c) || !preg_match('/[A-Z]/', $c) || !preg_match('/\d/', $c));
-        return $c;
     }
 
     /** 1 masculino, 2 femenino, 0 sin dato (también acepta M/F). */
@@ -52,7 +38,7 @@ final class AltaUsuario
     }
 
     /**
-     * @return array{id:int, clave_temporal:string, nombre:string, email:string}
+     * @return array{id:int, nombre:string, email:string, enlace:string, correo_enviado:bool, motivo_correo:string}
      * @throws RuntimeException con un mensaje para mostrar
      */
     public function crear(int $actor, array $d): array
@@ -111,7 +97,6 @@ final class AltaUsuario
         }
 
         // --- crear
-        $clave = self::claveTemporal();
         $ahora = (new DateTimeImmutable('now', new DateTimeZone('America/Santiago')))->format('Y-m-d H:i:s');
         $pdo = $this->db->getPDO();
         $pdo->beginTransaction();
@@ -120,9 +105,9 @@ final class AltaUsuario
                 "INSERT INTO usuarios
                     (nombre, apellido_paterno, apellido_materno, email, telefono, sexo, clave, cargo,
                      intentos_fallidos, id_area_trabajo, estado, anexo, token_reinicio, identificador, es_admin_global)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 'Activo', ?, ?, ?, ?)",
-                [$nombre, $paterno, $materno, $email, $telefono, $sexo, password_hash($clave, PASSWORD_DEFAULT), $cargo,
-                 $anexo, self::MARCA_CAMBIAR_CLAVE, substr(bin2hex(random_bytes(8)), 0, 16), $super ? 1 : 0]
+                 VALUES (?, ?, ?, ?, ?, ?, NULL, ?, 0, NULL, 'Pendiente', ?, NULL, ?, ?)",
+                [$nombre, $paterno, $materno, $email, $telefono, $sexo, $cargo,
+                 $anexo, substr(bin2hex(random_bytes(8)), 0, 16), $super ? 1 : 0]
             );
             $id = (int) $this->db->lastInsertId();
 
@@ -154,6 +139,8 @@ final class AltaUsuario
             if (!asignar_permisos_por_defecto($id, $perfilMenus, $this->db)) {
                 throw new RuntimeException('No fue posible asignar los permisos de menú iniciales.');
             }
+            $activacion = new ActivacionCuenta($this->db);
+            $enlace = $activacion->generar($id);
             $pdo->commit();
         } catch (Throwable $e) {
             if ($pdo->inTransaction()) {
@@ -161,6 +148,12 @@ final class AltaUsuario
             }
             throw $e;
         }
-        return ['id' => $id, 'clave_temporal' => $clave, 'nombre' => trim("$nombre $paterno"), 'email' => $email];
+        // Correo con el enlace (fuera de la transacción: si falla, la cuenta igual queda creada)
+        $col = $this->db->fetchOne('SELECT nom_colegio FROM colegio WHERE id_colegio = ?', [$idColegio]);
+        $dep = $idDep ? $this->db->fetchOne('SELECT nombre_departamento FROM departamentos_colegio WHERE id = ?', [$idDep]) : null;
+        $donde = trim(($dep ? mb_convert_case(mb_strtolower((string) $dep['nombre_departamento']), MB_CASE_TITLE) . ' · ' : '') . (string) ($col['nom_colegio'] ?? ''));
+        $correo = ActivacionCuenta::enviarCorreo($email, trim("$nombre $paterno"), $donde, $enlace);
+        return ['id' => $id, 'nombre' => trim("$nombre $paterno"), 'email' => $email, 'enlace' => $enlace,
+                'correo_enviado' => $correo['enviado'], 'motivo_correo' => $correo['motivo']];
     }
 }

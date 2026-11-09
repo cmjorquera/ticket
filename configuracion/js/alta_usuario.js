@@ -147,6 +147,47 @@
 
   function cerrar() { dlg.close(); }
 
+  /** Pantalla final: correo enviado o enlace para copiar. */
+  function mostrarExito(j, tituloTexto) {
+    $('#altaFormulario').hidden = true;
+    $('#altaPie').hidden = true;
+    $('#altaExito').hidden = false;
+    $('#altaPieExito').hidden = false;
+    $('#altaOtro').hidden = !!j.reenvio;
+    $('#altaExitoTitulo').textContent = tituloTexto;
+    $('#altaExitoTexto').textContent = `Su usuario es ${j.email}.`;
+    const c = $('#altaCorreo');
+    c.className = 'alta__correo ' + (j.correo_enviado ? 'is-ok' : 'is-aviso');
+    c.innerHTML = j.correo_enviado
+      ? `<i class="bi bi-envelope-check"></i> Le enviamos el enlace a <strong>${esc(j.email)}</strong> para que elija su contraseña.`
+      : `<i class="bi bi-exclamation-triangle"></i> ${esc(j.motivo_correo || 'No se pudo enviar el correo.')} Copia el enlace y envíaselo por otro medio.`;
+    $('#altaEnlace').value = j.enlace || '';
+  }
+
+  /** "Reenviar activación" desde el listado (usuarios en estado Pendiente). */
+  async function reenviar(idUsuario) {
+    error('');
+    if (!dlg.open) { dlg.showModal(); }
+    $('#altaFormulario').hidden = true;
+    $('#altaPie').hidden = true;
+    $('#altaExito').hidden = true;
+    $('#altaPieExito').hidden = true;
+    try {
+      const r = await fetch(`${API}/usuarios_guardar.php`, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ action: 'reenviar_activacion', id: Number(idUsuario), csrf: csrf() }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) { throw new Error(j.mensaje || 'No fue posible reenviar la activación.'); }
+      mostrarExito({ ...j, reenvio: true }, `Activación de ${j.nombre}`);
+    } catch (err) {
+      error(err.message);
+      $('#altaPieExito').hidden = false;
+      $('#altaOtro').hidden = true;
+    }
+  }
+
   // ---------- eventos
   $('#altaColegio').addEventListener('change', () => {
     pintarEscudo(Number($('#altaColegio').value || 0));
@@ -162,11 +203,8 @@
   });
   $('#altaOtro').addEventListener('click', () => abrir(Number($('#altaColegio').value || 0)));
   $('#altaCopiar').addEventListener('click', async () => {
-    const t = $('#altaClave').textContent;
-    try { await navigator.clipboard.writeText(t); } catch (_) {
-      const r = document.createRange(); r.selectNodeContents($('#altaClave'));
-      const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy');
-    }
+    const campo = $('#altaEnlace');
+    try { await navigator.clipboard.writeText(campo.value); } catch (_) { campo.select(); document.execCommand('copy'); }
     $('#altaCopiar').innerHTML = '<i class="bi bi-check2"></i> Copiada';
     setTimeout(() => { $('#altaCopiar').innerHTML = '<i class="bi bi-clipboard"></i> Copiar'; }, 1800);
   });
@@ -210,13 +248,7 @@
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || !j.ok) { throw new Error(j.mensaje || 'No fue posible crear el usuario.'); }
-      $('#altaFormulario').hidden = true;
-      $('#altaPie').hidden = true;
-      $('#altaExito').hidden = false;
-      $('#altaPieExito').hidden = false;
-      $('#altaExitoTitulo').textContent = `${j.nombre} ya tiene cuenta`;
-      $('#altaExitoTexto').textContent = `Ingresa con ${j.email}`;
-      $('#altaClave').textContent = j.clave_temporal;
+      mostrarExito(j, `${j.nombre} ya tiene cuenta`);
       document.dispatchEvent(new CustomEvent('usuarios:recargar'));
     } catch (err) {
       error(err.message);
@@ -226,5 +258,5 @@
     }
   });
 
-  window.AltaUsuario = { abrir, cargarOpciones };
+  window.AltaUsuario = { abrir, reenviar, cargarOpciones };
 })();

@@ -60,9 +60,25 @@ b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
 - El modal pide: datos de la persona; colegio → SOLO los departamentos de ese
   colegio → cargo (rol). Solo aparecen los colegios, departamentos y cargos
   que quien está conectado puede usar (sección 3).
-- La cuenta se crea ACTIVA con una CLAVE TEMPORAL que se muestra una sola vez.
-  En el primer ingreso el sistema lleva a Mi cuenta → Perfil y no deja usar
-  nada más hasta cambiarla (usuarios.token_reinicio = 'CAMBIAR_CLAVE').
+- ACTIVACIÓN POR ENLACE (igual que el sistema antiguo, que enviaba
+  acceso.seduc.cl/reiniciar_clave.php?token=…):
+    1. La cuenta se crea en estado 'Pendiente' y SIN contraseña.
+    2. Se envía un correo a la persona con el enlace
+         {BASE_URL}activar_cuenta.php?token=<64 caracteres>
+       (SMTP de config_privada, sección 'smtp'; nunca credenciales en el código).
+    3. En activar_cuenta.php elige su contraseña (8+ caracteres, letra y número)
+       → estado 'Activo'. Recién ahí puede iniciar sesión.
+    - El enlace vence a los 7 días y sirve una sola vez. En la base solo queda
+      el hash: usuarios.token_reinicio = 'ACT:<vence_unix>:<sha256 del token>'.
+    - Si el correo no se pudo enviar, quien creó la cuenta ve el enlace en
+      pantalla para copiarlo y enviarlo por otro medio.
+    - "Reenviar activación" (sobre en la fila de un usuario Pendiente) genera
+      un enlace nuevo; el anterior deja de servir.
+    - Si alguien Pendiente intenta iniciar sesión, el login le recuerda usar
+      el enlace (no cuenta como intento fallido ni bloquea la cuenta).
+  (Además existe el cambio obligatorio de contraseña: si un administrador
+   deja usuarios.token_reinicio = 'CAMBIAR_CLAVE', al ingresar la persona va
+   directo a Mi cuenta → Perfil hasta cambiarla.)
 - Se escribe: usuarios (sexo 1/2/0, cargo, anexo), usuario_perfil (usuario
   [+ técnico] [+ super_admin]), usuario_colegio (colegio, depto., rol),
   permisos de menú iniciales y, para admin/jefe, jefatura_departamento
@@ -79,7 +95,14 @@ Código:
   ajax/usuarios_alta_opciones.php    colegios, departamentos y cargos permitidos
   ajax/usuarios_guardar.php          crear / editar / bloquear / activar / permisos
   configuracion/js/alta_usuario.js   el modal
-  index.php + validar_sesion.php     cambio obligatorio de la clave temporal
+  clases/ActivacionCuenta.php        token, correo y activación
+  activar_cuenta.php                 página pública donde se elige la contraseña
+  index.php + validar_sesion.php     aviso a cuentas Pendientes y cambio obligatorio de clave
+
+Listado de usuarios:
+  - Super admin: filtro "Todos los colegios" (con la cantidad de usuarios).
+  - Todos: casilla "Departamentos abiertos" en la vista por colegio para abrir
+    o cerrar todos los departamentos a la vez.
 
 6. ARCHIVOS SQL
 ---------------

@@ -11,6 +11,9 @@
   const tableBody = document.querySelector('#tabla-usuarios tbody');
   const searchInput = document.getElementById('buscar-usuario');
   const areaFilter = document.getElementById('filtro-area');
+  const schoolFilter = document.getElementById('filtro-colegio');   // solo super admin
+  const expandWrap = document.getElementById('wrap-expandir');
+  const expandCheck = document.getElementById('chk-expandir');
   const statusFilter = document.getElementById('filtro-estado');
   const total = document.getElementById('total-usuarios');
   const addButton = document.getElementById('btn-agregar-usuario');
@@ -116,12 +119,14 @@
   function filteredUsers() {
     const query = searchInput.value.trim().toLocaleLowerCase('es');
     const area = areaFilter.value;
+    const school = schoolFilter ? schoolFilter.value : '';
     const status = _estadoFiltro.toLocaleLowerCase('es');
     return _todosUsuarios.filter(user => {
       const profiles = Array.isArray(user.perfiles) ? user.perfiles.join(' ') : (user.perfiles || '');
       const searchable = `${fullName(user)} ${user.email || ''} ${profiles} ${user.nombre_departamento || ''} ${user.nombre_area || ''} ${user.nom_colegio || ''}`.toLocaleLowerCase('es');
       return (!query || searchable.includes(query))
         && (!area || String(user.id_area_trabajo || '') === area)
+        && (!school || String(user.id_colegio || 0) === school)
         && (!status || String(user.estado || '').toLocaleLowerCase('es') === status);
     });
   }
@@ -150,6 +155,7 @@
         <td><div class="flex gap-2">
           <button type="button" class="btn-icon" data-action="editar" data-id="${Number(user.id)}" title="Editar"><i class="bi bi-pencil"></i></button>
           <button type="button" class="btn-icon" data-action="permisos" data-id="${Number(user.id)}" title="Permisos"><i class="bi bi-shield-lock"></i></button>
+          ${String(user.estado || '').toLowerCase() === 'pendiente' ? `<button type="button" class="btn-icon" data-action="reenviar" data-id="${Number(user.id)}" title="Reenviar enlace de activación"><i class="bi bi-envelope-arrow-up"></i></button>` : ''}
           <button type="button" class="${active ? 'btn-danger-ghost' : 'btn-icon'}" data-action="estado" data-id="${Number(user.id)}" title="${active ? 'Bloquear' : 'Activar'}"><i class="bi ${active ? 'bi-person-slash' : 'bi-person-check'}"></i></button>
         </div></td>
       </tr>`;
@@ -253,6 +259,7 @@
         </section>`;
       }).join('');
     window.inicializarAcordeon?.(orgView);
+    aplicarExpandir();
   }
 
   function abrirModalCorreo(schoolId) {
@@ -321,6 +328,7 @@
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
     });
+    if (expandWrap) expandWrap.hidden = _vistaActual !== 'organigrama';
     if (_vistaActual === 'organigrama') renderOrganigrama();
   }
 
@@ -700,10 +708,38 @@
     }
   }
 
+  /** Filtro por colegio (super admin): los colegios que aparecen en el listado, con su cantidad. */
+  function llenarFiltroColegios() {
+    if (!schoolFilter) return;
+    const previo = schoolFilter.value;
+    const cuenta = new Map();
+    _todosUsuarios.forEach(user => {
+      const id = Number(user.id_colegio || 0);
+      const actual = cuenta.get(id) || { name: id > 0 ? String(user.nom_colegio || 'Colegio') : 'Sin colegio', n: 0 };
+      actual.n += 1;
+      cuenta.set(id, actual);
+    });
+    schoolFilter.innerHTML = '<option value="">Todos los colegios</option>' + [...cuenta.entries()]
+      .sort(([, a], [, b]) => a.name.localeCompare(b.name, 'es'))
+      .map(([id, c]) => `<option value="${id}">${escapeHtml(c.name)} (${c.n})</option>`).join('');
+    if ([...schoolFilter.options].some(o => o.value === previo)) schoolFilter.value = previo;
+  }
+
+  /** "Departamentos abiertos": abre o cierra todos los departamentos de la vista por colegio. */
+  function aplicarExpandir(root = orgView) {
+    if (!expandCheck) return;
+    const abrir = expandCheck.checked;
+    root.querySelectorAll('.org-department-group').forEach(group => {
+      group.classList.toggle('is-collapsed', !abrir);
+      group.querySelector('[data-department-toggle]')?.setAttribute('aria-expanded', String(abrir));
+    });
+  }
+
   async function loadUsers() {
     tableBody.innerHTML = '<tr><td colspan="9" class="text-muted">Cargando usuarios…</td></tr>';
     try {
       _todosUsuarios = await request(`../configuracion/ajax/obtener_usuarios_asociados.php`);
+      llenarFiltroColegios();
       aplicarFiltros();
     } catch (error) {
       _todosUsuarios = [];
@@ -765,6 +801,14 @@
     updateAssignmentFields();
   });
   searchInput.addEventListener('input', aplicarFiltros);
+  schoolFilter?.addEventListener('change', aplicarFiltros);
+  expandCheck?.addEventListener('change', () => aplicarExpandir());
+  // Departamentos vacíos que el acordeón agrega después: respetan la casilla
+  new MutationObserver(cambios => cambios.forEach(c => c.addedNodes.forEach(n => {
+    if (n.nodeType === 1 && (n.matches?.('.org-department-group') || n.querySelector?.('.org-department-group'))) {
+      aplicarExpandir(n.parentElement || orgView);
+    }
+  }))).observe(orgView, { childList: true, subtree: true });
   areaFilter.addEventListener('change', aplicarFiltros);
   statusFilter.addEventListener('click', event => {
     const pill = event.target.closest('.pill');
@@ -812,6 +856,7 @@
     if (button.dataset.action === 'editar') abrirModalUsuario(user);
     if (button.dataset.action === 'permisos') window.location.href = `usuarios_permisos.php?usuario_id=${encodeURIComponent(user.id)}`;
     if (button.dataset.action === 'estado') cambiarEstado(user.id, fullName(user), user.estado);
+    if (button.dataset.action === 'reenviar') window.AltaUsuario?.reenviar(user.id);
   });
 
   window.abrirModalUsuario = abrirModalUsuario;

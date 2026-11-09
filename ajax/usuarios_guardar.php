@@ -86,14 +86,7 @@ try {
         } catch (RuntimeException $e) {
             responder_json(['ok' => false, 'mensaje' => $e->getMessage()], 422);
         }
-        responder_json([
-            'ok' => true,
-            'mensaje' => 'Usuario creado.',
-            'id' => $r['id'],
-            'nombre' => $r['nombre'],
-            'email' => $r['email'],
-            'clave_temporal' => $r['clave_temporal'],   // se muestra una sola vez
-        ]);
+        responder_json(['ok' => true, 'mensaje' => 'Usuario creado.'] + $r);
     }
 
     $idUsuario = (int) ($datos['id'] ?? $datos['id_usuario'] ?? 0);
@@ -135,6 +128,21 @@ try {
             [$nombre, $apellidoPaterno, $apellidoMaterno, $email, $idArea > 0 ? $idArea : null, $telefono, $sexo, $idUsuario]
         );
         responder_json(['ok' => true, 'mensaje' => 'Usuario actualizado.']);
+    }
+
+    if ($action === 'reenviar_activacion') {
+        $u = $db->fetchOne('SELECT nombre, apellido_paterno, email, clave FROM usuarios WHERE id = ?', [$idUsuario]);
+        if (!empty($u['clave'])) {
+            responder_json(['ok' => false, 'mensaje' => 'Esta persona ya activó su cuenta.'], 422);
+        }
+        require_once __DIR__ . '/../clases/ActivacionCuenta.php';
+        $enlace = (new ActivacionCuenta($db))->generar($idUsuario);
+        $db->execute("UPDATE usuarios SET estado = 'Pendiente' WHERE id = ? AND (clave IS NULL OR clave = '')", [$idUsuario]);
+        $nombre = trim($u['nombre'] . ' ' . $u['apellido_paterno']);
+        $correo = ActivacionCuenta::enviarCorreo((string) $u['email'], $nombre, 'Panel SEDUC', $enlace);
+        responder_json(['ok' => true, 'mensaje' => $correo['enviado'] ? 'Enlace reenviado a ' . $u['email'] . '.' : 'Se generó un enlace nuevo.',
+                        'nombre' => $nombre, 'email' => $u['email'], 'enlace' => $enlace,
+                        'correo_enviado' => $correo['enviado'], 'motivo_correo' => $correo['motivo']]);
     }
 
     if ($action === 'bloquear') {

@@ -51,9 +51,17 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
         <i class="bi bi-diagram-3" aria-hidden="true"></i>
       </button>
     </div>
+    <?php if ($esSuperAdmin): ?>
+    <select class="input" id="filtro-colegio" style="max-width:240px" aria-label="Filtrar por colegio">
+      <option value="">Todos los colegios</option>
+    </select>
+    <?php endif; ?>
     <select class="input" id="filtro-area" style="max-width:220px" aria-label="Filtrar por área">
       <option value="">Todas las áreas</option>
     </select>
+    <label class="toolbar-check" id="wrap-expandir" hidden title="Abre o cierra todos los departamentos de la vista por colegio">
+      <input type="checkbox" id="chk-expandir" checked> Departamentos abiertos
+    </label>
     <div class="filtro-pills" id="filtro-estado" aria-label="Filtrar por estado">
       <button type="button" class="pill active" data-val="">Todos</button>
       <button type="button" class="pill" data-val="activo">Activo</button>
@@ -175,7 +183,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     <header class="alta__head">
       <div>
         <h2 id="altaTitulo"><i class="bi bi-person-plus"></i> Nuevo usuario</h2>
-        <p>Se crea activo y con una <strong>clave temporal</strong> que deberá cambiar en su primer ingreso.</p>
+        <p>Le llegará un <strong>correo con un enlace</strong> para que elija su contraseña.</p>
       </div>
       <button type="button" class="btn-icon" data-alta-cerrar aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
     </header>
@@ -228,12 +236,13 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
       <div class="alta__exito-ico"><i class="bi bi-check-lg"></i></div>
       <h3 id="altaExitoTitulo">Usuario creado</h3>
       <p id="altaExitoTexto"></p>
-      <div class="alta__clave">
-        <span>Clave temporal</span>
-        <code id="altaClave"></code>
+      <p class="alta__correo" id="altaCorreo"></p>
+      <div class="alta__enlace">
+        <span>Enlace de activación</span>
+        <input type="text" id="altaEnlace" readonly aria-label="Enlace de activación">
         <button type="button" class="btn btn-outline btn-sm" id="altaCopiar"><i class="bi bi-clipboard"></i> Copiar</button>
       </div>
-      <p class="alta__nota"><i class="bi bi-info-circle"></i> Entrégasela a la persona. Al ingresar el sistema le pedirá cambiarla. <strong>No se volverá a mostrar.</strong></p>
+      <p class="alta__nota"><i class="bi bi-info-circle"></i> El enlace vence en 7 días. Mientras no lo use, su estado será <strong>Pendiente</strong> y podrás reenviarlo desde el listado.</p>
     </div>
 
     <p class="alta__error" id="altaError" role="alert" hidden></p>
