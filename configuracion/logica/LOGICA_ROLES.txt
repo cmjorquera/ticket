@@ -1,0 +1,62 @@
+MODELO DE USUARIOS, COLEGIOS, DEPARTAMENTOS Y ROLES
+==================================================
+(acordado con Cristian el 09-11-2026; diagrama: modelo_roles.png)
+
+1. LA ORGANIZACIÓN
+------------------
+- SEDUC administra colegios. La propia empresa se guarda como un colegio más:
+  colegio.id_colegio = 15 "Seduc SpA".
+- Cada colegio (Seduc incluido) tiene sus propios departamentos.
+  Seduc: Informática, Contabilidad, Finanzas, RRHH, Gerencia, Periodismo, Pedagogía…
+  Un colegio: Matemáticas, Ciencias, Lenguaje, Informática…
+- Los departamentos de TODOS los colegios están en una sola tabla:
+  departamentos_colegio (id, id_colegio, nombre_departamento, estado).
+  area_trabajo era la lista de departamentos de Seduc; queda solo como dato
+  histórico (no se usa para nada nuevo).
+- Regla para ubicar a una persona: el dominio del correo indica su colegio.
+    @seduc.cl → Seduc (15)            @colegiocordillera.cl → Cordillera (1)
+    @tabancura.cl → Tabancura (8)     @colegiolosandes.cl → Los Andes (9)
+    @colegiolosalerces.cl → Alerces (10)  @huelen.cl → Huelén (11)
+    @colegiohuinganal.cl → Huinganal (13)
+
+2. DOS CAPAS QUE SE COMBINAN
+----------------------------
+a) QUÉ PUEDE HACER  → usuario_perfil (global, se pueden tener varios)
+     1 usuario      todos: crear y ver sus tickets, almuerzos, etc.
+     2 técnico      atiende tickets (las categorías están en categoria_tecnico)
+     3 super_admin  Cristian: todo, en todos los colegios
+   Los perfiles 4 (admin_colegio) y 5 (admin_area) quedan SIN USO: esa
+   información ahora está en la capa b), con su colegio y departamento.
+
+b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
+     rol = admin_colegio       un colegio entero (id_departamento_colegio NULL)
+     rol = jefe_departamento   un departamento de un colegio
+     rol = trabajador          pertenece a un departamento de un colegio
+   Una persona puede tener varias filas. Ej.: un profesor de Matemáticas del
+   colegio 7 que también es profesor de Matemáticas del colegio 3 = 2 filas.
+   Samuel Aranda = perfiles usuario + técnico, y la fila
+   "admin_colegio de Cordillera".
+
+3. QUIÉN PUEDE CREAR QUÉ
+------------------------
+                       admin colegio  departamentos  jefe depto.   trabajadores
+  super_admin          sí (solo él)   sí, todos      sí            sí
+  admin_colegio        no             su colegio     su colegio    su colegio
+  jefe_departamento    no             no             no            su departamento
+  trabajador           no             no             no            no
+  Seduc (15) no tiene admin_colegio: lo administra el super_admin.
+
+4. COMPATIBILIDAD (mientras se adapta el código)
+------------------------------------------------
+- usuario_colegio.id_perfil se mantiene con el valor anterior (hoy 3 para
+  todos), porque Inventario lo usa para decidir qué colegios mostrar. Cuando
+  Inventario pase a leer el rol, esa columna deja de usarse.
+- jefatura_departamento queda como respaldo; lo nuevo se lee de usuario_colegio.
+- La migración guarda una copia de usuario_colegio en usuario_colegio_respaldo
+  antes de reemplazar su contenido.
+
+5. ARCHIVOS
+-----------
+configuracion/sql/01_roles_estructura.sql    columnas nuevas, respaldo y departamentos faltantes
+configuracion/sql/02_roles_asignaciones.sql  una fila por persona (revisada caso a caso)
+configuracion/sql/03_roles_revision.sql      consultas para revisar el resultado

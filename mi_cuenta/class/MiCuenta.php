@@ -61,9 +61,28 @@ final class MiCuenta
         ];
     }
 
-    /** Colegios y perfil en cada uno. */
+    /** Colegios con el rol y departamento de cada asignación (modelo de roles, configuracion/logica/LOGICA_ROLES.txt). */
     public function colegios(int $id): array
     {
+        $roles = ['admin_colegio' => 'Administrador del colegio', 'jefe_departamento' => 'Jefe de departamento', 'trabajador' => 'Trabajador'];
+        try {
+            $filas = $this->db->fetchAll(
+                "SELECT c.id_colegio, c.nom_colegio, uc.rol, d.nombre_departamento, uc.fecha_asignacion
+                   FROM usuario_colegio uc
+                   JOIN colegio c ON c.id_colegio = uc.id_colegio
+              LEFT JOIN departamentos_colegio d ON d.id = uc.id_departamento_colegio
+                  WHERE uc.id_usuario = ? AND uc.estado = 1
+               ORDER BY c.nom_colegio, FIELD(uc.rol, 'admin_colegio', 'jefe_departamento', 'trabajador')",
+                [$id]
+            );
+            return array_map(static function (array $f) use ($roles): array {
+                $dep = $f['nombre_departamento'] ? ' · ' . mb_convert_case(mb_strtolower((string) $f['nombre_departamento']), MB_CASE_TITLE) : '';
+                $f['nombre_perfil'] = ($roles[$f['rol']] ?? (string) $f['rol']) . $dep;
+                return $f;
+            }, $filas);
+        } catch (Throwable $e) {
+            // Antes de configuracion/sql/01_roles_estructura.sql no existe la columna rol
+        }
         return $this->db->fetchAll(
             "SELECT c.id_colegio, c.nom_colegio, p.nombre_perfil, uc.fecha_asignacion
                FROM usuario_colegio uc

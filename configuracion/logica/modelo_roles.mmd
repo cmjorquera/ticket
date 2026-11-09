@@ -1,0 +1,50 @@
+erDiagram
+    usuarios {
+        int id PK
+        varchar nombre
+        varchar email "el dominio indica el colegio"
+        varchar clave
+        varchar cargo
+        varchar estado
+    }
+    perfiles {
+        int id_perfil PK "1 usuario, 2 tecnico, 3 super_admin"
+        varchar nombre_perfil "4 y 5 quedan sin uso"
+    }
+    usuario_perfil {
+        int id_usuario FK
+        int id_perfil FK "QUE PUEDE HACER (global, combinable)"
+    }
+    colegio {
+        int id_colegio PK "15 = Seduc SpA"
+        varchar nom_colegio
+    }
+    departamentos_colegio {
+        int id PK
+        int id_colegio FK "una tabla para todos, Seduc incluido"
+        varchar nombre_departamento
+        int estado
+    }
+    usuario_colegio {
+        int id PK
+        int id_usuario FK
+        int id_colegio FK
+        int id_departamento_colegio FK "NULL solo para admin_colegio"
+        enum rol "DONDE Y CON QUE CARGO: admin_colegio, jefe_departamento, trabajador"
+        int id_perfil "compatibilidad con Inventario"
+        int estado
+        int creado_por FK
+        datetime fecha_asignacion
+    }
+    categoria_tecnico {
+        int id_categoria FK
+        int id_tecnico FK "que tickets atiende"
+    }
+
+    usuarios ||--o{ usuario_perfil : "puede"
+    perfiles ||--o{ usuario_perfil : ""
+    usuarios ||--o{ usuario_colegio : "1 persona, N asignaciones"
+    colegio ||--o{ usuario_colegio : ""
+    colegio ||--o{ departamentos_colegio : "tiene"
+    departamentos_colegio |o--o{ usuario_colegio : ""
+    usuarios ||--o{ categoria_tecnico : "atiende"

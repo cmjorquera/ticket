@@ -7,12 +7,15 @@ modelo_usuarios.png        Diagrama de las tablas de usuarios, perfiles, colegio
                            Línea punteada = relación que solo maneja el código.
 modelo_usuarios.mmd        Fuente del diagrama (Mermaid). Para regenerar la imagen:
                            mmdc -i modelo_usuarios.mmd -o modelo_usuarios.png -b white -w 2600
-logica_usuarios.txt        Lógica del listado, alta y edición de usuarios.
+LOGICA_ROLES.txt           MODELO ACORDADO: colegios, departamentos, roles y quién crea qué.
+modelo_roles.png / .mmd    Diagrama del modelo acordado.
+logica_usuarios.txt        Lógica del listado, alta y edición de usuarios (anterior al
+                           modelo de roles; se actualizará al corregir el alta).
 logica_permisos_usuarios.txt  Lógica de permisos por departamento / área.
 
-Pendiente de definir (antes de corregir el alta de usuarios):
-- El perfil está en dos tablas: usuario_perfil (lo usa el login) y
-  usuario_colegio.id_perfil. ¿Cuál manda?
-- El colegio está en usuario_colegio (todos) y jefatura_departamento (jefes).
-- Los permisos de submenú están en permisos_menu_1.id_submenu y en permiso_sub_menu.
-- logica_usuarios.txt dice que usuario_colegio "no existe": sí existe (39 filas).
+Migración al modelo de roles (configuracion/sql/)
+-------------------------------------------------
+01_roles_estructura.sql    columnas nuevas en usuario_colegio, respaldo, deptos. faltantes
+02_roles_asignaciones.sql  una fila por persona (las ⚠ son a confirmar)
+03_roles_revision.sql      revisar el resultado (solo lectura)
+99_volver_atras.sql        deja usuario_colegio como estaba (desde el respaldo)
