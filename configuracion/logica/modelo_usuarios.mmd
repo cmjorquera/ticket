@@ -1,0 +1,104 @@
+erDiagram
+    usuarios {
+        int id PK
+        varchar nombre
+        varchar apellido_paterno
+        varchar apellido_materno
+        varchar email "login"
+        varchar clave "bcrypt"
+        varchar cargo
+        varchar telefono
+        char anexo
+        int sexo "1 masc, 2 fem, 0 sin dato"
+        varchar estado "Activo, bloqueado, inactivo, Pendiente"
+        int intentos_fallidos
+        varchar token_reinicio
+        int id_area_trabajo FK
+        blob foto
+        tinyint es_admin_global
+    }
+    area_trabajo {
+        int id_area PK
+        varchar nombre_area
+        varchar sigla_area
+        varchar encargado_area
+    }
+    perfiles {
+        int id_perfil PK "1 usuario, 2 tecnico, 3 super_admin, 4 admin_colegio, 5 admin_area"
+        varchar nombre_perfil
+        varchar descripcion
+        int estado
+    }
+    usuario_perfil {
+        int id_usuario FK
+        int id_perfil FK
+    }
+    usuario_colegio {
+        int id PK
+        int id_usuario FK
+        int id_colegio FK
+        int id_perfil FK "otro perfil, por colegio"
+        int estado "1 activo"
+    }
+    colegio {
+        int id_colegio PK "15 = Seduc SpA"
+        varchar nom_colegio
+        int estado
+    }
+    jefatura_departamento {
+        int id PK
+        int id_usuario FK
+        int id_colegio FK
+        int id_departamento_colegio FK "NULL = Admin_Colegio"
+        enum tipo_jefatura "Admin_Colegio, Admin_Departamento"
+        int estado
+    }
+    departamentos_colegio {
+        int id PK
+        int id_colegio FK
+        varchar nombre_departamento
+        varchar sigla
+        int estado
+    }
+    menu_1 {
+        int id_menu PK
+        varchar nombre
+        varchar archivo
+        varchar orden
+    }
+    menu_1_sub {
+        int id_submenu PK
+        int id_menu FK
+        varchar nombre
+        varchar archivo
+    }
+    permisos_menu_1 {
+        int id PK
+        int id_usuario FK
+        int id_menu1 FK
+        int id_submenu "NULL = menu completo"
+        int id_tipo_permiso "1 = ve"
+    }
+    permiso_sub_menu {
+        int id_permiso_sub PK
+        int id_usuario FK
+        int id_submenu FK
+        tinyint permiso "1 visible, 0 oculto"
+    }
+
+    area_trabajo ||..o{ usuarios : "trabaja en"
+    usuarios ||--o{ usuario_perfil : "tiene"
+    perfiles ||..o{ usuario_perfil : ""
+    usuarios ||..o{ usuario_colegio : "pertenece a"
+    colegio ||..o{ usuario_colegio : ""
+    perfiles ||..o{ usuario_colegio : ""
+    usuarios ||..o{ jefatura_departamento : "es jefe en"
+    colegio ||..o{ jefatura_departamento : ""
+    departamentos_colegio |o..o{ jefatura_departamento : ""
+    colegio ||--o{ departamentos_colegio : "tiene"
+    usuarios ||--o{ permisos_menu_1 : "ve"
+    menu_1 ||--o{ permisos_menu_1 : ""
+    menu_1 ||--o{ menu_1_sub : "contiene"
+    menu_1_sub ||..o{ permisos_menu_1 : ""
+    usuarios ||..o{ permiso_sub_menu : "ve u oculta"
+    menu_1_sub ||..o{ permiso_sub_menu : ""

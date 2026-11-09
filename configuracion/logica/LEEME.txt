@@ -1,0 +1,18 @@
+LÓGICA DEL MÓDULO CONFIGURACIÓN
+===============================
+
+modelo_usuarios.png        Diagrama de las tablas de usuarios, perfiles, colegios,
+                           jefaturas y permisos de menú (base de QA, nov. 2026).
+                           Línea continua = llave foránea real en la base.
+                           Línea punteada = relación que solo maneja el código.
+modelo_usuarios.mmd        Fuente del diagrama (Mermaid). Para regenerar la imagen:
+                           mmdc -i modelo_usuarios.mmd -o modelo_usuarios.png -b white -w 2600
+logica_usuarios.txt        Lógica del listado, alta y edición de usuarios.
+logica_permisos_usuarios.txt  Lógica de permisos por departamento / área.
+
+Pendiente de definir (antes de corregir el alta de usuarios):
+- El perfil está en dos tablas: usuario_perfil (lo usa el login) y
+  usuario_colegio.id_perfil. ¿Cuál manda?
+- El colegio está en usuario_colegio (todos) y jefatura_departamento (jefes).
+- Los permisos de submenú están en permisos_menu_1.id_submenu y en permiso_sub_menu.
+- logica_usuarios.txt dice que usuario_colegio "no existe": sí existe (39 filas).
