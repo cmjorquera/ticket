@@ -2,6 +2,8 @@
 /**
  * Campanita de notificaciones (barra superior). La usan componentes/topbar.php
  * e includes/header.php. Datos: ajax/notificaciones.php · js/notificaciones.js
+ * Incluye el sobre de Mensajes (mensajes internos sin leer) y los contadores
+ * del menú lateral (Ticket Nuevo / Ticket Asignados / Mensajes).
  * Lógica: ticket/logica/LOGICA_NOTIFICACIONES.txt
  */
 if (empty($_SESSION['csrf_notificaciones'])) {
@@ -11,6 +13,10 @@ $baseCampanita = (string) ($depth ?? '');
 $verNotif = static fn (string $f): int => (int) (@filemtime(__DIR__ . '/../' . $f) ?: 1);
 ?>
 <link rel="stylesheet" href="<?= htmlspecialchars($baseCampanita) ?>css/notificaciones.css?v=<?= $verNotif('css/notificaciones.css') ?>">
+<a class="notif-btn notif-sobre" id="notif-sobre" href="<?= htmlspecialchars($baseCampanita) ?>mensajes/index.php" aria-label="Mensajes" title="Mensajes">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+  <span class="notif-badge" id="notif-sobre-badge" hidden>0</span>
+</a>
 <div class="notif" id="notif" data-base="<?= htmlspecialchars($baseCampanita) ?>" data-csrf="<?= htmlspecialchars((string) $_SESSION['csrf_notificaciones']) ?>">
   <button class="notif-btn" id="notif-btn" type="button" aria-label="Notificaciones" aria-haspopup="dialog" aria-expanded="false" aria-controls="notif-panel">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>

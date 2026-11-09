@@ -35,12 +35,73 @@
     anterior = n;
   }
 
+  /* Sobre de mensajes (barra superior) y números en el menú lateral. */
+  const sobre = document.getElementById('notif-sobre');
+  const sobreBadge = document.getElementById('notif-sobre-badge');
+  const txt = (n) => (n > 99 ? '99+' : String(n));
+
+  function marca(enlace, n, titulo) {
+    if (!enlace) return;
+    let b = enlace.querySelector(':scope > .nav-contador');
+    if (n <= 0) { if (b) b.remove(); return; }
+    if (!b) {
+      b = el('span', 'nav-contador');
+      enlace.append(b);
+    }
+    b.textContent = txt(n);
+    b.title = titulo;
+    b.setAttribute('aria-label', titulo);
+  }
+
+  function enlaceA(fin) {
+    return [...document.querySelectorAll('.sidebar a.nav-item, nav a.nav-item, a.nav-subitem')]
+      .find((a) => (a.getAttribute('href') || '').split('?')[0].endsWith(fin)) || null;
+  }
+
+  function contadores(c) {
+    const m = Number(c.mensajes) || 0;
+    if (sobre && sobreBadge) {
+      sobreBadge.hidden = m <= 0;
+      sobreBadge.textContent = txt(m);
+      sobre.setAttribute('aria-label', m ? `Mensajes: ${m} sin leer` : 'Mensajes');
+    }
+    const grupos = new Map();
+    [
+      ['ticket/ticket.php', Number(c.ticket_usuario) || 0, 'mensajes sin leer en tus tickets'],
+      ['ticket/ticket_asignados.php', Number(c.ticket_tecnico) || 0, 'mensajes sin leer en tickets asignados'],
+      ['mensajes/index.php', m, 'mensajes sin leer'],
+    ].forEach(([fin, n, t]) => {
+      const a = enlaceA(fin);
+      if (!a) return;
+      marca(a, n, `${n} ${t}`);
+      const sub = a.closest('.nav-submenu');
+      const padre = sub && sub.previousElementSibling && sub.previousElementSibling.matches('.nav-item-parent')
+        ? sub.previousElementSibling
+        : (sub && sub.parentElement ? sub.parentElement.querySelector(':scope > .nav-item-parent') : null);
+      if (padre) grupos.set(padre, (grupos.get(padre) || 0) + n);
+    });
+    grupos.forEach((n, padre) => {
+      let b = padre.querySelector(':scope > .nav-contador');
+      if (n <= 0) { if (b) b.remove(); return; }
+      if (!b) {
+        b = el('span', 'nav-contador nav-contador--grupo');
+        const chev = padre.querySelector(':scope > svg');
+        chev ? padre.insertBefore(b, chev) : padre.append(b);
+      }
+      b.textContent = txt(n);
+      b.title = `${n} sin leer`;
+    });
+  }
+
   async function contar() {
     if (document.hidden) return;
     try {
       const r = await fetch(`${api}?accion=contar`, {credentials: 'same-origin', cache: 'no-store'});
       const d = await r.json();
-      if (d.ok) pintar(Number(d.sin_leer) || 0);
+      if (d.ok) {
+        pintar(Number(d.sin_leer) || 0);
+        if (d.contadores) contadores(d.contadores);
+      }
     } catch (_) { /* sin red: se reintenta */ }
   }
 

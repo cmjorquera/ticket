@@ -77,6 +77,7 @@ $totalPaginas = (int) ceil($totalTickets / $ticketsPorPagina);
 $paginaActual = max(1, (int) ($_GET['pagina'] ?? 1));
 $paginaActual = min($paginaActual, max(1, $totalPaginas));
 $offsetTickets = ($paginaActual - 1) * $ticketsPorPagina;
+$tickets = ticket_ordenar_lista($tickets);   // clic en las cabeceras (?orden=&dir=)
 $ticketsPagina = array_slice($tickets, $offsetTickets, $ticketsPorPagina);
 
 require __DIR__ . '/../bloque_tabla_admin.php';

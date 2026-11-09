@@ -115,6 +115,50 @@ final class Notificaciones
         }
     }
 
+    /**
+     * Números para el menú lateral y el sobre de la barra superior:
+     *   ticket_usuario  mensajes del chat sin leer en mis tickets (Ticket Nuevo)
+     *   ticket_tecnico  mensajes del chat + notas de administración sin leer en los
+     *                   tickets que atiendo (Ticket Asignados)
+     *   mensajes        mensajes internos sin leer (módulo Mensajes)
+     * Cada cálculo es independiente: si una tabla no existe, ese número queda en 0.
+     */
+    public function contadores(int $usuarioId): array
+    {
+        $out = ['ticket_usuario' => 0, 'ticket_tecnico' => 0, 'mensajes' => 0];
+        $uno = function (string $sql, array $p): int {
+            try {
+                return (int) ($this->db->fetchOne($sql, $p)['n'] ?? 0);
+            } catch (Throwable $e) {
+                return 0;
+            }
+        };
+        if (is_file(__DIR__ . '/Tickets/ConversacionTicket.php')) {
+            require_once __DIR__ . '/Tickets/ConversacionTicket.php';
+            require_once __DIR__ . '/Tickets/BitacoraTicket.php';
+            $lado = (new ConversacionTicket($this->db))->sqlLado('m', 't');
+            $base = "SELECT COUNT(*) AS n FROM ticket_conversaciones m JOIN tickets t ON t.id_ticket = m.id_ticket
+                      WHERE t.estado = 1 AND m.eliminado = 0 AND COALESCE(m.leido, 0) = 0";
+            $out['ticket_usuario'] = $uno("{$base} AND t.id_usuario = ? AND {$lado} <> 'usuario'", [$usuarioId]);
+            $out['ticket_tecnico'] = $uno("{$base} AND t.id_tecnico = ? AND {$lado} <> 'tecnico'", [$usuarioId]);
+            $bit = new BitacoraTicket($this->db);
+            if ($bit->disponible()) {
+                $out['ticket_tecnico'] += $uno(
+                    "SELECT COUNT(*) AS n FROM avance_tecnicos b JOIN tickets t ON t.id_ticket = b.id_ticket
+                      WHERE t.estado = 1 AND t.id_tecnico = ? AND b.eliminado = 0 AND b.leido = 0 AND b.lado = 'admin' AND COALESCE(b.id_usuario, 0) <> ?",
+                    [$usuarioId, $usuarioId]
+                );
+            }
+        }
+        $out['mensajes'] = $uno(
+            "SELECT COUNT(*) AS n FROM mensajes_chat m
+          LEFT JOIN mensajes_chat_carpeta c ON c.id_conversacion = m.id_conversacion AND c.id_usuario = ?
+              WHERE m.para = ? AND m.leido = 0 AND m.eliminado = 0 AND (c.carpeta IS NULL OR c.carpeta <> 'eliminado')",
+            [$usuarioId, $usuarioId]
+        );
+        return $out;
+    }
+
     /** Marca como leídos los avisos de un ticket (al abrir su detalle o su chat). */
     public function leerPorTicket(int $usuarioId, int $idTicket, array $tipos = []): void
     {

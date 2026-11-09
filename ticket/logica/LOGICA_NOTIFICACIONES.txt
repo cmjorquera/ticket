@@ -54,3 +54,38 @@ Código: clases/Notificaciones.php, clases/Tickets/AvisosTicket.php,
 ajax/notificaciones.php, componentes/campanita.php (la incluyen
 componentes/topbar.php e includes/header.php), js/notificaciones.js,
 css/notificaciones.css, helpers/tickets.php → ticket_sobre().
+
+==========================================================================
+CONTADORES: SOBRE DE MENSAJES Y NÚMEROS EN EL MENÚ LATERAL
+==========================================================================
+ajax/notificaciones.php?accion=contar devuelve además:
+  contadores = { ticket_usuario, ticket_tecnico, mensajes }
+calculados en Notificaciones::contadores($usuarioId):
+  - ticket_usuario : mensajes del chat sin leer en MIS tickets (lado <> 'usuario').
+  - ticket_tecnico : mensajes del chat sin leer en tickets donde soy técnico
+                     (lado <> 'tecnico') + notas de bitácora del admin sin leer.
+  - mensajes       : mensajes internos (mensajes_chat) para mí, leido = 0,
+                     no eliminados y fuera de la carpeta "eliminado".
+js/notificaciones.js (cada 30 s, junto con la campanita) pinta:
+  - el sobre de la barra superior (componentes/campanita.php, #notif-sobre)
+    → enlaza a mensajes/index.php;
+  - un número rojo (.nav-contador) en los enlaces del menú cuyo href termina en
+    ticket/ticket.php (Ticket Nuevo), ticket/ticket_asignados.php (Ticket
+    Asignados) y mensajes/index.php (Recibidos), y la suma en el botón padre
+    (Ticket / Mensajes). Con el menú colapsado se ve como punto sobre el ícono.
+No requiere SQL nuevo.
+
+==========================================================================
+TABLAS DE TICKETS: CORRELATIVO Y ORDEN POR CABECERA
+==========================================================================
+- La primera columna muestra un correlativo (1, 2, 3… continuo entre páginas:
+  offset + índice + 1) y debajo, en chico, "Ticket #id" (el id real sigue
+  siendo el que se usa en chat, PDF, QR y enlaces).
+- Las cabeceras son enlaces (helpers/tickets.php → ticket_th) que agregan
+  ?orden=<columna>&dir=asc|desc a la URL; un segundo clic invierte el sentido.
+  ticket_ordenar_lista() ordena en el servidor ANTES de paginar, así el orden
+  vale para todas las páginas. La paginación y el refresco automático conservan
+  orden/dir. Columnas: numero, fecha, caso, tecnico, usuario, estado (flujo:
+  Recibido, Asignado, En proceso, Demorado, Terminado, Cerrado, Borrador),
+  prioridad (Alta→Baja, "Sin definir" al final), plazo/avance (fecha
+  comprometida) y categoria. Sin orden elegido se mantiene el de siempre.

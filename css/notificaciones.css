@@ -28,3 +28,12 @@
 @media(prefers-reduced-motion:reduce){.notif-btn.is-nueva svg{animation:none}}
 .notif-item__ic--evento_invitacion,.notif-item__ic--evento_actualizado{background:#EDE9FE;color:#6D28D9}
 .notif-item__ic--evento_cancelado{background:#FDECEC;color:#B42318}
+
+/* Sobre de Mensajes junto a la campanita y números del menú lateral */
+.notif-sobre{text-decoration:none}
+.nav-contador{margin-left:auto;min-width:19px;height:19px;padding:0 6px;border-radius:99px;background:#E53935;color:#fff;font-size:10.5px;font-weight:700;line-height:19px;text-align:center;flex-shrink:0}
+.nav-contador--grupo{margin-right:6px}
+.nav-item-parent .nav-contador--grupo + svg{margin-left:0}
+.nav-item .nav-contador{overflow:visible}
+#sidebar.collapsed .nav-item .nav-contador{opacity:1;width:auto;position:absolute;top:1px;right:6px;min-width:15px;height:15px;line-height:15px;padding:0 4px;font-size:9px;margin:0}
+.nav-item-parent:has(.nav-contador--grupo) .chevron{margin-left:0}

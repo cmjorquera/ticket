@@ -34,7 +34,7 @@ $errorCarga = $errorCarga ?? null;
   <?php else: ?>
     <div class="table-wrap">
       <table id="tabla-tickets">
-        <thead><tr><th>N° / fecha</th><th>Caso</th><th>Avance</th><th>Usuario</th><th>Estado</th><th>Prioridad</th><th></th></tr></thead>
+        <thead><tr><?= ticket_th('N° / fecha', 'fecha') ?><?= ticket_th('Caso', 'caso') ?><?= ticket_th('Avance', 'plazo') ?><?= ticket_th('Usuario', 'usuario') ?><?= ticket_th('Estado', 'estado') ?><?= ticket_th('Prioridad', 'prioridad') ?><th></th></tr></thead>
         <tbody>
         <?php foreach ($ticketsPagina as $indice => $ticket):
           $estado = strtolower((string) $ticket['estado']);
@@ -44,7 +44,7 @@ $errorCarga = $errorCarga ?? null;
           $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
         ?>
           <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string) $ticket['id_ticket'], $ticket['asunto'], $ticket['usuario_nombre'], $ticket['tecnico_nombre'], $ticket['colegio_nombre'], $ticket['categoria_nombre']]))) ?>" data-estado="<?= e($estado) ?>">
-            <td><div class="tk-num"><strong class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></strong><?= ticket_sobre((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?></div><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
+            <td><div class="tk-num"><strong class="ticket-id" title="Ticket #<?= (int) $ticket['id_ticket'] ?>"><?= $offsetTickets + $indice + 1 ?></strong><?= ticket_sobre((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?></div><div class="tk-num__ticket">Ticket #<?= (int) $ticket['id_ticket'] ?></div><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
             <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong><small><?= e($ticket['categoria_nombre']) ?> · <?= e($ticket['colegio_nombre']) ?></small></td>
             <td class="ticket-avance-celda"><?= ticket_avance($ticket) ?></td>
             <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>

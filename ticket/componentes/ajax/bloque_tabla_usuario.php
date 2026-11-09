@@ -46,6 +46,7 @@ $totalPaginas = (int) ceil($totalTickets / $ticketsPorPagina);
 $paginaActual = max(1, (int) ($_GET['pagina'] ?? 1));
 $paginaActual = min($paginaActual, max(1, $totalPaginas));
 $offsetTickets = ($paginaActual - 1) * $ticketsPorPagina;
+$misTickets = ticket_ordenar_lista($misTickets);   // clic en las cabeceras (?orden=&dir=)
 $ticketsPagina = array_slice($misTickets, $offsetTickets, $ticketsPorPagina);
 
 if ($errorListado) {

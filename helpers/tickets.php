@@ -838,3 +838,61 @@ function ticket_plazo(array $t): string
         . ($sub !== '' ? '<small>' . $h($sub) . '</small>' : '')
         . '</div>';
 }
+
+/**
+ * Orden de las bandejas al hacer clic en las cabeceras (?orden=…&dir=asc|desc).
+ * Se ordena la lista completa antes de paginar, así el orden vale para todas las páginas.
+ * Lógica: ticket/logica/ESTUDIO_MODULO_TICKET.txt (sección "Bandejas")
+ */
+function ticket_columnas_orden(): array
+{
+    return [
+        'numero' => static fn (array $t) => (int) $t['id_ticket'],
+        'fecha' => static fn (array $t) => (string) $t['fecha_creacion'],
+        'caso' => static fn (array $t) => mb_strtolower((string) $t['asunto']),
+        'tecnico' => static fn (array $t) => mb_strtolower(trim((string) $t['tecnico_nombre']) ?: 'zzz'),
+        'usuario' => static fn (array $t) => mb_strtolower((string) $t['usuario_nombre']),
+        // Recibido → Asignado → En proceso → Demorado → Terminado → Cerrado → Borrador
+        'estado' => static fn (array $t) => array_search((int) $t['id_estado'], [1, 2, 3, 7, 5, 6, 4], true),
+        // Alta → Media → Baja → Sin definir
+        'prioridad' => static fn (array $t) => (int) ($t['id_prioridad'] ?? 0) ?: 9,
+        'plazo' => static fn (array $t) => (string) ($t['fecha_estimada_admin'] ?: '9999-12-31'),
+        'categoria' => static fn (array $t) => mb_strtolower((string) $t['categoria_nombre']),
+    ];
+}
+
+/** @return array{0:string,1:string} [columna, dir] pedidos y válidos ('' si no hay orden) */
+function ticket_orden_pedido(): array
+{
+    $col = (string) ($_GET['orden'] ?? '');
+    $dir = ($_GET['dir'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+    return isset(ticket_columnas_orden()[$col]) ? [$col, $dir] : ['', 'asc'];
+}
+
+function ticket_ordenar_lista(array $tickets): array
+{
+    [$col, $dir] = ticket_orden_pedido();
+    if ($col === '') {
+        return $tickets;   // orden por defecto de la consulta (estado y fecha)
+    }
+    $clave = ticket_columnas_orden()[$col];
+    usort($tickets, static function (array $a, array $b) use ($clave, $dir): int {
+        $r = $clave($a) <=> $clave($b) ?: ((int) $b['id_ticket'] <=> (int) $a['id_ticket']);
+        return $dir === 'desc' ? -$r : $r;
+    });
+    return $tickets;
+}
+
+/** Cabecera ordenable: clic = ascendente, otro clic = descendente. */
+function ticket_th(string $texto, string $col): string
+{
+    [$actual, $dir] = ticket_orden_pedido();
+    $activa = $actual === $col;
+    $nuevaDir = $activa && $dir === 'asc' ? 'desc' : 'asc';
+    $q = http_build_query(array_merge($_GET, ['orden' => $col, 'dir' => $nuevaDir, 'pagina' => 1]));
+    $icono = $activa ? ($dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down') : 'bi-arrow-down-up';
+    $aria = $activa ? ($dir === 'asc' ? 'ascending' : 'descending') : 'none';
+    return '<th aria-sort="' . $aria . '"><a class="tk-th' . ($activa ? ' is-on' : '') . '" href="?' . htmlspecialchars($q, ENT_QUOTES, 'UTF-8')
+        . '" title="Ordenar por ' . htmlspecialchars(mb_strtolower(strip_tags($texto)), ENT_QUOTES, 'UTF-8') . '">' . $texto
+        . ' <i class="bi ' . $icono . '" aria-hidden="true"></i></a></th>';
+}

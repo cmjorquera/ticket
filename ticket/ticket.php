@@ -53,6 +53,7 @@ $totalPaginas = (int) ceil($totalTickets / $ticketsPorPagina);
 $paginaActual = max(1, (int) ($_GET['pagina'] ?? 1));
 $paginaActual = min($paginaActual, max(1, $totalPaginas));
 $offsetTickets = ($paginaActual - 1) * $ticketsPorPagina;
+$misTickets = ticket_ordenar_lista($misTickets);   // clic en las cabeceras (?orden=&dir=)
 $ticketsPagina = array_slice($misTickets, $offsetTickets, $ticketsPorPagina);
 
 $etiquetasEstado = [
@@ -249,7 +250,7 @@ document.getElementById('form-calificar-ticket')?.addEventListener('submit', asy
     if (consultando || document.hidden) return;
     consultando = true;
     try {
-      const response = await fetch(`componentes/ajax/bloque_tabla_usuario.php?pagina=${paginaActual}`, {
+      const response = await fetch(`componentes/ajax/bloque_tabla_usuario.php?${new URLSearchParams({...Object.fromEntries(new URLSearchParams(location.search)), pagina: paginaActual})}`, {
         method: 'POST',
         credentials: 'same-origin',
         headers: {'X-Requested-With': 'XMLHttpRequest'},

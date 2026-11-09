@@ -35,7 +35,7 @@ try {
     if (($_GET['accion'] ?? 'contar') === 'listar') {
         responder_json(['ok' => true, 'instalada' => $n->instalada(), 'sin_leer' => $n->contar($usuarioId), 'avisos' => $n->listar($usuarioId)]);
     }
-    responder_json(['ok' => true, 'sin_leer' => $n->contar($usuarioId)]);
+    responder_json(['ok' => true, 'sin_leer' => $n->contar($usuarioId), 'contadores' => $n->contadores($usuarioId)]);
 } catch (Throwable $e) {
     error_log('[notificaciones] ' . $e->getMessage());
     responder_json(['ok' => false, 'error' => 'No fue posible consultar las notificaciones.'], 500);

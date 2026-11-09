@@ -36,7 +36,7 @@ $esGlobal = !empty($esGlobal);
     <?php elseif (!$tickets): ?>
       <div class="ticket-empty"><i class="bi bi-inbox"></i>No hay tickets que coincidan con los filtros.</div>
     <?php else: ?>
-      <div class="table-wrap"><table id="admin-tabla"><thead><tr><th>N° / fecha</th><th>Caso</th><th>Técnico</th><th>Usuario</th><th>Estado</th><th>Avance</th><th>Prioridad</th><th></th></tr></thead><tbody>
+      <div class="table-wrap"><table id="admin-tabla"><thead><tr><?= ticket_th('N° / fecha', 'fecha') ?><?= ticket_th('Caso', 'caso') ?><?= ticket_th('Técnico', 'tecnico') ?><?= ticket_th('Usuario', 'usuario') ?><?= ticket_th('Estado', 'estado') ?><?= ticket_th('Avance', 'plazo') ?><?= ticket_th('Prioridad', 'prioridad') ?><th></th></tr></thead><tbody>
       <?php foreach ($ticketsPagina as $indice => $ticket):
         $estado = strtolower((string) $ticket['estado']);
         $prioridad = ticket_prioridad_clase((string) $ticket['prioridad']);
@@ -45,7 +45,7 @@ $esGlobal = !empty($esGlobal);
         $estadoRgb = ticket_color_estado_rgb((string) ($ticket['estado_color'] ?? ''));
       ?>
         <tr class="<?= $estadoRgb !== '' ? 'ticket-row--state' : '' ?>"<?= $estadoRgb !== '' ? ' style="--ticket-state-rgb:' . e($estadoRgb) . '"' : '' ?> data-search="<?= e(strtolower(implode(' ', [(string)$ticket['id_ticket'],$ticket['asunto'],$ticket['usuario_nombre'],$ticket['tecnico_nombre'],$ticket['colegio_nombre']]))) ?>">
-          <td><div class="tk-num"><strong class="ticket-id">#<?= (int) $ticket['id_ticket'] ?></strong><?= ticket_sobre((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?></div><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
+          <td><div class="tk-num"><strong class="ticket-id" title="Ticket #<?= (int) $ticket['id_ticket'] ?>"><?= $offsetTickets + $indice + 1 ?></strong><?= ticket_sobre((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?></div><div class="tk-num__ticket">Ticket #<?= (int) $ticket['id_ticket'] ?></div><div class="text-xs text-muted"><?= $fechaTicket ? e(date('d/m/Y H:i', $fechaTicket)) : 'Sin fecha' ?></div></td>
           <td class="ticket-subject"><strong><?= e($ticket['asunto']) ?></strong><small><?= e($ticket['categoria_nombre']) ?> · <?= e($ticket['colegio_nombre']) ?></small></td>
           <td class="ticket-person"><strong><?= e($ticket['tecnico_nombre'] ?: 'Sin asignar') ?></strong></td>
           <td class="ticket-person"><strong><?= e($ticket['usuario_nombre']) ?></strong></td>
