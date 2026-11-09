@@ -49,6 +49,16 @@ return [
         'nombre_remitente' => 'SeducSPA',
     ],
 
+    // Buk (opcional): liquidaciones y documentos en "Mi cuenta".
+    // Si no se define, en QA/local se muestran DATOS DE EJEMPLO y en
+    // producción la página indica que la conexión está pendiente.
+    // El token se genera en Buk (Configuración → API); solo lectura basta.
+    // 'buk' => [
+    //     'url'     => 'https://EMPRESA.buk.cl/api/v1/chile',
+    //     'token'   => 'CAMBIAR_token_buk',
+    //     'timeout' => 15,
+    // ],
+
     // Clase antigua class_odd/conexion.php (no usada actualmente).
     // Puede quedar con valores vacíos.
     'db_antigua' => [

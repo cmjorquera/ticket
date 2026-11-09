@@ -25,15 +25,15 @@
         </div>
       </button>
       <div class="dropdown-menu" style="right:0;min-width:180px">
-        <a class="dropdown-item" href="<?= $depth ?? '' ?>pages/perfil.php">
+        <a class="dropdown-item" href="<?= $depth ?? '' ?>mi_cuenta/perfil.php">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
           Perfil
         </a>
-        <a class="dropdown-item" href="<?= $depth ?? '' ?>liquidaciones.php">
+        <a class="dropdown-item" href="<?= $depth ?? '' ?>mi_cuenta/liquidaciones.php">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           Liquidaciones
         </a>
-        <a class="dropdown-item" href="<?= $depth ?? '' ?>documentos.php">
+        <a class="dropdown-item" href="<?= $depth ?? '' ?>mi_cuenta/documentos.php">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           Documentos
         </a>

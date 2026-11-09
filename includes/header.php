@@ -93,6 +93,15 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
                 break;
             }
         }
+        // Foto de perfil (Mi cuenta): solo se pregunta si existe; la imagen la entrega mi_cuenta/foto.php
+        $topbar_foto = false;
+        try {
+            $topbar_foto = isset($_SESSION['id']) && (bool) (Conexion::getInstance('sistema_panel_central')->fetchOne(
+                'SELECT (foto IS NOT NULL AND LENGTH(foto) > 0) AS f FROM usuarios WHERE id = ?', [(int) $_SESSION['id']]
+            )['f'] ?? false);
+        } catch (Throwable $e) {
+            $topbar_foto = false;
+        }
         ?>
         <header id="topbar">
             <button id="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Abrir menú">
@@ -114,16 +123,24 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
                 </button>
                 <div class="dropdown">
                     <button class="user-chip" type="button" onclick="toggleDropdown(this)">
-                        <div class="avatar"><?= htmlspecialchars($topbar_iniciales !== '' ? $topbar_iniciales : 'U') ?></div>
+                        <div class="avatar<?= $topbar_foto ? ' avatar--foto' : '' ?>"><?php if ($topbar_foto): ?><img src="<?= $depth ?>mi_cuenta/foto.php" alt=""><?php else: ?><?= htmlspecialchars($topbar_iniciales !== '' ? $topbar_iniciales : 'U') ?><?php endif; ?></div>
                         <div class="user-info">
                             <strong><?= htmlspecialchars($topbar_nombre) ?></strong>
                             <span><?= htmlspecialchars((string) $usuario_rol) ?></span>
                         </div>
                     </button>
                     <div class="dropdown-menu" style="right:0;min-width:180px">
-                        <a class="dropdown-item" href="<?= $depth ?>pages/perfil.php">
+                        <a class="dropdown-item" href="<?= $depth ?>mi_cuenta/perfil.php">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                             Perfil
+                        </a>
+                        <a class="dropdown-item" href="<?= $depth ?>mi_cuenta/liquidaciones.php">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                            Liquidaciones
+                        </a>
+                        <a class="dropdown-item" href="<?= $depth ?>mi_cuenta/documentos.php">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Documentos
                         </a>
                         <div style="height:1px;background:var(--border);margin:4px 8px"></div>
                         <a class="dropdown-item danger" href="<?= $depth ?>cerrar_sesion.php">

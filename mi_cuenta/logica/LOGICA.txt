@@ -1,0 +1,51 @@
+MI CUENTA  (menú del usuario: Perfil · Liquidaciones · Documentos · Salir)
+=========================================================================
+
+Páginas
+-------
+perfil.php          Datos personales, foto, contraseña, colegios y actividad.
+liquidaciones.php   Indicadores, gráfico, tabla y detalle de cada liquidación (PDF).
+documentos.php      Carpetas (contratos, anexos, certificados, personales, otros),
+                    búsqueda, ver y descargar.
+descargar.php       Entrega el PDF de una liquidación o documento (?tipo=&id=&ver=1).
+foto.php            Foto de perfil de la persona de la sesión.
+ajax/cuenta.php     POST: datos, clave, foto, quitar_foto, actualizar (con CSRF).
+ajax/rrhh.php       GET: detalle de una liquidación.
+
+Reglas
+------
+- Todo trabaja con el id de la SESIÓN. El navegador nunca manda un id de usuario,
+  RUT ni id de Buk; un id de liquidación/documento solo sirve si está en la
+  lista de esa misma persona.
+- Perfil: la persona solo cambia teléfono, anexo y fecha de nacimiento.
+  Nombre, correo y cargo los cambia un administrador.
+- Contraseña: pide la actual; mínimo 8 caracteres con letra y número; distinta
+  de la actual. 5 intentos fallidos → espera 10 minutos. Se guarda con
+  password_hash (igual que el login de index.php).
+- Foto: JPG/PNG/WEBP hasta 3 MB; se recorta cuadrada a 320 px y se guarda como
+  JPEG en usuarios.foto (BLOB, máx. 64 KB). También aparece en la barra superior.
+- Salir: componentes/confirmar_salida.php muestra un modal antes de ir a
+  cerrar_sesion.php (en todas las páginas).
+
+¿De dónde salen liquidaciones y documentos?  (class/Rrhh.php)
+--------------------------------------------------------------
+1. Si config_privada tiene la sección 'buk' (url + token) → FuenteBuk (API de Buk).
+2. Si no, y el entorno NO es 'produccion' → FuenteDemo: DATOS DE EJEMPLO,
+   calculados a partir del id de la persona. La pantalla muestra el aviso
+   "Vista previa con datos de ejemplo" y los PDF dicen "EJEMPLO – SIN VALIDEZ".
+3. Si no, en producción → FuenteNinguna: aviso "Conexión con Buk pendiente".
+
+Conectar Buk (cuando esté el token)
+-----------------------------------
+1. En config_privada/ticket_config.php agregar:
+     'buk' => ['url' => 'https://EMPRESA.buk.cl/api/v1/chile', 'token' => '...'],
+2. VERIFICAR con la documentación de la API de Buk de SEDUC las rutas de
+   FuenteBuk::RUTAS y los nombres de campos (mapearLiquidacion / mapearDocumento).
+   Si alguna ruta es distinta, se puede poner en 'rutas' dentro de 'buk'
+   sin tocar el código.
+3. Cada persona se busca en Buk por (en orden): id_empleado_buk o rut de la
+   tabla usuario_rrhh (sql/01_usuario_rrhh.sql, la llena un administrador), o
+   su correo institucional. Si hay más de una coincidencia, no se muestra nada.
+4. Lo leído de Buk se guarda 10 minutos en la sesión ("Actualizar desde Buk"
+   lo vuelve a leer). Los enlaces de descarga de Buk nunca llegan al navegador:
+   descargar.php los baja y los entrega.

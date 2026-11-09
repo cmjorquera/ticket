@@ -44,6 +44,20 @@ final class ConfigPrivada
         return $config[$seccion];
     }
 
+    /**
+     * Sección opcional (por ejemplo 'buk'): devuelve null si no existe o si
+     * no hay archivo de configuración, sin lanzar error.
+     */
+    public static function opcional(string $seccion): ?array
+    {
+        try {
+            $config = self::cargar();
+        } catch (Throwable $e) {
+            return null;
+        }
+        return isset($config[$seccion]) && is_array($config[$seccion]) ? $config[$seccion] : null;
+    }
+
     /** Entorno declarado en la configuración: 'local', 'qa' o 'produccion'. */
     public static function entorno(): string
     {
