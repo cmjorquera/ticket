@@ -208,7 +208,8 @@
       fileInput.disabled = archivosActuales >= MAX_FILES;
       form.querySelector('.tc-attach').classList.toggle('is-disabled', fileInput.disabled);
       if (!document.hidden) Badges.poner(ticketId, 0);
-      if (!silent) setStatus();
+      if (data.falta_sql) setStatus('Falta ejecutar ticket/sql/01_mensajeria.sql en la base: sin eso, si pides y atiendes el mismo ticket, todos los mensajes se ven como del solicitante.', 'error');
+      else if (!silent) setStatus();
     } catch (error) {
       if (error.name !== 'AbortError') setStatus(error.message, 'error');
     } finally {

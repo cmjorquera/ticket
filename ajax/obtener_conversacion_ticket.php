@@ -50,6 +50,9 @@ try {
             'tecnico' => (string) ($partes['tecnico'] ?? ''),
         ],
         'puede_escribir' => !$cerrado,
+        // Aviso para el super admin si falta ticket/sql/01_mensajeria.sql (sin la
+        // columna "lado" no se distingue solicitante de técnico cuando son la misma persona)
+        'falta_sql' => !$conv->conLado() && es_administrador_global($usuarioId, $db),
         // compatibilidad con el panel anterior
         'conversacion_disponible' => true,
         'adjuntos_disponibles' => true,
