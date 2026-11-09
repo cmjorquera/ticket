@@ -31,15 +31,25 @@ try {
         responder_json(['success' => false, 'message' => 'El colegio indicado no existe.', 'icono' => null, 'existe' => false, 'sigla' => '—'], 404);
     }
 
-    $nombreArchivo = 'colegio_' . $idColegio . '.png';
-    $rutaFisica = __DIR__ . '/../../../img/colegios/' . $nombreArchivo;
-    $existe = is_file($rutaFisica);
+    // Escudos en assets/images/escudo/{id_colegio}.png|jpg|webp|svg (15.jpg = Seduc).
+    // Se entrega la ruta relativa a la raíz del sitio (sin "/" inicial) para que
+    // funcione también si el sistema vive en una subcarpeta.
+    $raiz = dirname(__DIR__, 3);
+    $icono = null;
+    foreach (['png', 'jpg', 'jpeg', 'webp', 'svg'] as $ext) {
+        $relativa = 'assets/images/escudo/' . $idColegio . '.' . $ext;
+        if (is_file($raiz . '/' . $relativa)) {
+            $icono = $relativa . '?v=' . filemtime($raiz . '/' . $relativa);
+            break;
+        }
+    }
+    $existe = $icono !== null;
 
     $sigla = iniciales_colegio((string) $colegio['nom_colegio']);
     responder_json([
         'success' => true,
         'message' => 'Icono consultado',
-        'icono' => $existe ? '/img/colegios/' . $nombreArchivo : null,
+        'icono' => $icono,
         'existe' => $existe,
         'sigla' => $sigla,
         'iniciales' => $sigla,

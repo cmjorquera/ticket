@@ -6,7 +6,9 @@
 --     (Seduc) o el departamento del mismo nombre en su colegio
 --   - admin_colegio = jefatura Admin_Colegio o perfil 4
 --   - jefe_departamento = perfil 5 (admin_area); el resto = trabajador
---  Las líneas marcadas con ⚠ son las que Cristian debe confirmar.
+--  Decisiones de Cristian (09-11): Cordillera → solo Samuel Aranda es admin;
+--  Finanzas → 2 jefes; Gerencia → jefe Felipe Guzmán; Periodismo → jefa
+--  María José Sánchez. Las líneas con ⚠ siguen pendientes de confirmar.
 --  * Requiere 01_roles_estructura.sql. Reemplaza las filas de estas 39
 --    personas en usuario_colegio (la copia está en usuario_colegio_respaldo).
 --  * Se puede ejecutar más de una vez.
@@ -14,11 +16,9 @@
 USE `crist668_sistema_panel_central`;
 SET NAMES utf8mb4;
 START TRANSACTION;   -- si algo falla, no queda a medias
-
 DELETE FROM usuario_colegio WHERE id_usuario IN (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 18, 20, 24, 25, 26, 31, 33, 35, 39, 41, 42, 43, 44, 45, 46, 48, 49, 2476, 2488, 2492, 2493, 2495, 2496, 2497);
 
 -- id_perfil: se conserva el que tenía (Inventario lo usa para decidir qué colegios mostrar)
-
 
 -- ---------- Seduc SpA (id 15)
 -- Alex Espinoza <aespinosa@seduc.cl>
@@ -46,7 +46,7 @@ INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, ro
 -- Javier Ureta <fjureta@seduc.cl>
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 14, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'GERENCIA' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 14), 1), 1, 8, NOW();  -- GERENCIA
 -- Beatriz Herrera <bherrera@seduc.cl>
-INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 15, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'GERENCIA' LIMIT 1), 'jefe_departamento', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 15), 1), 1, 8, NOW();  -- GERENCIA
+INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 15, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'GERENCIA' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 15), 1), 1, 8, NOW();  -- GERENCIA
 -- Gisela Friedl <gfriedl@seduc.cl>
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 16, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'RECURSOS HUMANOS' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 16), 1), 1, 8, NOW();  -- RECURSOS HUMANOS
 -- Constanza Nieto <cnieto@seduc.cl>
@@ -62,7 +62,7 @@ INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, ro
 -- Josefina Mackenna <jmackenna@seduc.cl>
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 26, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'FINANZAS' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 26), 1), 1, 8, NOW();  -- FINANZAS
 -- Catalina Aspillaga <caspillaga@seduc.cl>   -- ⚠ área ADMINISTRADOR COLEGIO pero no figura como admin
-INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 35, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'PERIODISMO' LIMIT 1), 'jefe_departamento', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 35), 1), 1, 8, NOW();  -- PERIODISMO
+INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 35, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'PERIODISMO' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 35), 1), 1, 8, NOW();  -- PERIODISMO
 -- Francisco  Gomez <fgomez@seduc.cl>
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 39, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'CONTABILIDAD' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 39), 1), 1, 8, NOW();  -- CONTABILIDAD
 -- Trinidad Errazuriz <terrazuriz@seduc.cl>   -- ⚠ PROFESORAS → PEDAGOGIA (confirmar)
@@ -75,10 +75,9 @@ INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, ro
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 44, 15, (SELECT id FROM departamentos_colegio WHERE id_colegio = 15 AND nombre_departamento = 'PEDAGOGIA' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 44), 1), 1, 8, NOW();  -- PEDAGOGIA
 
 -- ---------- Colegio Cordillera de las Condes (id 1)
--- Javier  Gonzalez <jgonzalez@colegiocordillera.cl>   -- ⚠ 2 administradores en este colegio
-INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 31, 1, NULL, 'admin_colegio', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 31), 1), 1, 8, NOW();
+-- Javier  Gonzalez <jgonzalez@colegiocordillera.cl>
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 31, 1, (SELECT id FROM departamentos_colegio WHERE id_colegio = 1 AND nombre_departamento = 'INFORMATICA' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 31), 1), 1, 8, NOW();  -- INFORMATICA
--- Samuel Aranda <saranda@colegiocordillera.cl>   -- ⚠ perfil admin_colegio sin jefatura de colegio; 2 administradores en este colegio
+-- Samuel Aranda <saranda@colegiocordillera.cl>
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 48, 1, NULL, 'admin_colegio', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 48), 1), 1, 8, NOW();
 INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion) SELECT 48, 1, (SELECT id FROM departamentos_colegio WHERE id_colegio = 1 AND nombre_departamento = 'INFORMATICA' LIMIT 1), 'trabajador', COALESCE((SELECT MAX(r.id_perfil) FROM usuario_colegio_respaldo r WHERE r.id_usuario = 48), 1), 1, 8, NOW();  -- INFORMATICA
 -- Nicolas Bernstein <nbernstein@colegiocordillera.cl>

@@ -40,8 +40,10 @@
       holder.replaceChildren();
       if (data.existe && data.icono) {
         const image = document.createElement('img');
-        image.src = data.icono;
+        // Ruta relativa a la raíz del sitio; esta página está en configuracion/
+        image.src = /^(https?:)?\/\//.test(data.icono) || data.icono.startsWith('/') ? data.icono : '../' + data.icono;
         image.alt = '';
+        image.onerror = () => { holder.textContent = holder.dataset.fallback || 'C'; };
         image.width = 48;
         image.height = 48;
         holder.appendChild(image);
