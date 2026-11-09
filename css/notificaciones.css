@@ -26,3 +26,5 @@
 .notif-vacio i{font-size:24px}
 @media(max-width:600px){.notif-panel{position:fixed;top:64px;right:12px;left:12px;width:auto}}
 @media(prefers-reduced-motion:reduce){.notif-btn.is-nueva svg{animation:none}}
+.notif-item__ic--evento_invitacion,.notif-item__ic--evento_actualizado{background:#EDE9FE;color:#6D28D9}
+.notif-item__ic--evento_cancelado{background:#FDECEC;color:#B42318}

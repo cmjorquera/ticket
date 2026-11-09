@@ -19,6 +19,7 @@
   const ICONOS = {
     ticket_creado: 'bi-ticket-perforated', ticket_asignado: 'bi-person-check', ticket_comenzado: 'bi-play-circle',
     ticket_estado: 'bi-arrow-repeat', ticket_mensaje: 'bi-chat-dots', ticket_bitacora: 'bi-journal-text',
+    evento_invitacion: 'bi-calendar-plus', evento_actualizado: 'bi-calendar-event', evento_cancelado: 'bi-calendar-x',
   };
   let anterior = null;
 

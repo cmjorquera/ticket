@@ -12,9 +12,11 @@ final class Correo
     /**
      * @param array<int,array{0:string,1:string}> $para      [[email, nombre], …]
      * @param array<int,array{0:string,1:string,2:string}> $adjuntos [[contenido, nombre, mime], …]
+     * @param string $ical  invitación de calendario (.ics, METHOD:REQUEST/CANCEL): Gmail y Outlook
+     *                      muestran "Agregar al calendario" y los botones Sí / No / Quizás
      * @return array{enviado:bool,motivo:string}
      */
-    public static function enviar(array $para, string $asunto, string $html, string $texto = '', array $adjuntos = []): array
+    public static function enviar(array $para, string $asunto, string $html, string $texto = '', array $adjuntos = [], string $ical = ''): array
     {
         $smtp = ConfigPrivada::opcional('smtp');
         if (!$smtp || empty($smtp['host']) || str_starts_with((string) ($smtp['password'] ?? ''), 'CAMBIAR')) {
@@ -46,6 +48,11 @@ final class Correo
             $mail->Subject = $asunto;
             $mail->Body = $html;
             $mail->AltBody = $texto !== '' ? $texto : trim(html_entity_decode(strip_tags($html), ENT_QUOTES, 'UTF-8'));
+            if ($ical !== '') {
+                $mail->Ical = $ical;   // parte text/calendar (la que leen los clientes de correo)
+                $metodo = preg_match('/METHOD:(\w+)/', $ical, $m) ? $m[1] : 'REQUEST';
+                $mail->addStringAttachment($ical, $metodo === 'CANCEL' ? 'cancelacion.ics' : 'invitacion.ics', 'base64', 'text/calendar; charset=utf-8; method=' . $metodo);
+            }
             $mail->send();
             return ['enviado' => true, 'motivo' => ''];
         } catch (Throwable $e) {

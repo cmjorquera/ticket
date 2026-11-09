@@ -1,0 +1,73 @@
+MÓDULO EVENTOS — CALENDARIO INSTITUCIONAL (tipo Google Calendar)
+================================================================
+(09-11-2026; reemplaza la maqueta anterior y toma la lógica del sistema antiguo:
+ rama "antiguo", carpeta eventos/)
+
+1. QUÉ HACE
+-----------
+- Calendario con vistas Mes / Semana / Día / Agenda (FullCalendar 6, en español,
+  semana desde el lunes, horario hábil 08–18 marcado, línea roja de "ahora").
+- Crear: botón "Nuevo evento", clic en un día o arrastrando sobre las horas en la
+  vista Semana/Día. Mover o alargar un evento arrastrándolo (si se puede editar).
+- Formulario: título, fecha y hora (o "Todo el día", puede durar varios días),
+  ubicación, tipo (con color), colegio, responsable, invitados (personas del
+  sistema o correos externos), descripción y LOGÍSTICA (audio, proyector, música,
+  cantidad de asistentes, observaciones para soporte) como el sistema antiguo.
+- Detalle (panel lateral): cuándo, dónde, responsable, logística, invitados con
+  su respuesta (Sí / Quizás / No / Pendiente), historial y acciones
+  (Editar, Cancelar evento, Eliminar). Si me invitaron: "¿Asistirás?".
+- Filtros: tipos (clic en los colores), colegio, "Solo mis eventos", "Ver cancelados".
+- "Próximos 14 días" al costado (en el celular, abajo).
+- ?evento=N abre el detalle (lo usan la campanita y los correos).
+
+2. CORREOS (como Google Calendar)
+---------------------------------
+Cada correo lleva una INVITACIÓN DE CALENDARIO (.ics): Gmail y Outlook muestran
+el evento con "Agregar al calendario" y Sí / No / Quizás.
+  Crear       → invitación a todos los invitados y al responsable.
+  Editar /    → "Actualizado: …" diciendo QUÉ cambió (fecha, hora, lugar…). La
+  mover         invitación lleva una versión mayor (SEQUENCE): el evento se
+                actualiza solo en el calendario del invitado.
+                Invitados nuevos reciben la invitación; los quitados, la cancelación.
+  Cancelar    → "Cancelado: …" con .ics METHOD:CANCEL (se borra de su calendario).
+  Eliminar    → no envía correo (para avisar, usar "Cancelar evento").
+- Nunca se envía a quien hizo la acción.
+- Botones Sí / Quizás / No del correo → eventos/responder.php?t=<token personal>.
+  El enlace solo PRESELECCIONA la respuesta y se guarda al confirmar (así los
+  antivirus de correo que abren enlaces no responden por la persona).
+- La invitación trae un recordatorio 30 minutos antes (en el calendario del invitado).
+- Usa la sección 'smtp' de config_privada (clases/Correo.php). Si no está
+  configurada, el evento se guarda igual y el aviso dice cuántos correos salieron.
+- Además, los invitados con cuenta reciben aviso en la campanita.
+
+3. QUIÉN VE Y QUIÉN EDITA
+-------------------------
+  Ver:     super admin → todos. Resto → eventos de sus colegios + donde es
+           responsable, creador o invitado.
+  Crear:   cualquiera, para sus colegios (super admin: cualquier colegio).
+  Editar / cancelar: super admin, creador, responsable o admin del colegio del evento.
+  Eliminar: super admin o creador (eliminación lógica: eliminado = '1').
+
+4. TABLAS (eventos/sql/01_eventos.sql — se puede ejecutar más de una vez)
+-------------------------------------------------------------------------
+  eventos            la del sistema antiguo (se conservan sus eventos) + columnas
+                     nuevas: creado_por, todo_el_dia, secuencia (versión .ics),
+                     recordatorio_enviado (para un recordatorio futuro por cron).
+  eventos_invitados  id_evento, id_usuario (o NULL si es externo), email, nombre,
+                     respuesta (pendiente|si|no|quizas), respondido_en, token.
+  eventos_historial  id_evento, accion (creacion|edicion|cancelacion|eliminacion|
+                     respuesta), descripcion, id_usuario, creado_en.
+                     (El sistema antiguo la usaba pero la tabla no existía.)
+  Vuelta atrás: eventos/sql/99_volver_atras.sql (no borra los eventos).
+
+5. AVISO DE SEGURIDAD (sistema antiguo)
+---------------------------------------
+eventos/bootstrap.php de la rama "antiguo" tiene la contraseña SMTP escrita en
+el código (está en GitHub) y enviaba TODOS los correos a una dirección fija en
+vez de al responsable. El módulo nuevo no usa ese archivo. Recomendación:
+cambiar esa contraseña del correo.
+
+Código: eventos/index.php, eventos/class/Eventos.php (reglas),
+eventos/class/CorreoEvento.php (correo + .ics), eventos/ajax/eventos.php (API),
+eventos/responder.php (Sí/No/Quizás público), eventos/js/eventos.js,
+eventos/css/eventos.css, clases/Correo.php (parámetro $ical).
