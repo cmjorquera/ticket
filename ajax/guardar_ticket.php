@@ -67,6 +67,13 @@ try {
             $_SESSION['ticket_colegio_id'] = (int) $colegio['id_colegio'];
         }
 
+        // Técnico: el de la categoría con menos tickets abiertos. Con el modelo de
+        // roles solo cuentan los funcionarios de Informática de Seduc
+        // (configuracion/logica/LOGICA_CATEGORIAS.txt).
+        require_once __DIR__ . '/../clases/RolesUsuario.php';
+        [$condTecnico, $paramTecnico] = (new RolesUsuario($db))->modeloActivo()
+            ? RolesUsuario::condicionDepartamento('u')
+            : ['1 = 1', []];
         $tecnico = !$esBorrador ? $db->fetchOne(
             "SELECT ct.id_tecnico
                FROM categoria_tecnico ct
@@ -75,11 +82,11 @@ try {
                  ON abiertos.id_tecnico = ct.id_tecnico
                 AND abiertos.id_estado IN (1, 2, 3)
                 AND abiertos.estado = 1
-              WHERE ct.id_categoria = ?
+              WHERE ct.id_categoria = ? AND {$condTecnico}
            GROUP BY ct.id_tecnico
            ORDER BY COUNT(abiertos.id_ticket) ASC, ct.id_tecnico ASC
               LIMIT 1",
-            [$categoriaId]
+            array_merge([$categoriaId], $paramTecnico)
         ) : false;
         $tecnicoId = $tecnico ? (int) $tecnico['id_tecnico'] : null;
 

@@ -9,6 +9,7 @@ modelo_usuarios.mmd        Fuente del diagrama (Mermaid). Para regenerar la imag
                            mmdc -i modelo_usuarios.mmd -o modelo_usuarios.png -b white -w 2600
 LOGICA_ROLES.txt           MODELO ACORDADO: colegios, departamentos, roles y quién crea qué.
 modelo_roles.png / .mmd    Diagrama del modelo acordado.
+LOGICA_CATEGORIAS.txt      Categorías de tickets, quiénes son técnicos y a quién llega cada ticket.
 logica_usuarios.txt        Lógica del listado, alta y edición de usuarios (anterior al
                            modelo de roles; se actualizará al corregir el alta).
 logica_permisos_usuarios.txt  Lógica de permisos por departamento / área.

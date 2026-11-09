@@ -1,0 +1,56 @@
+CATEGORÍAS DE TICKETS Y TÉCNICOS  (Configuración → Admin categorías)
+=====================================================================
+
+1. TABLAS
+---------
+categoria_de_ticket   El catálogo: id_categoria, nombre_categoria, abreviacion,
+                      icono (Bootstrap Icons), orden, estado (1 activa),
+                      id_colegio (hoy NULL en todas = categorías comunes).
+                      La 10 "Otros" no se asigna a técnicos.
+categoria_tecnico     Qué categorías atiende cada técnico:
+                      id_categoria_tecnico, id_categoria, id_tecnico (usuarios.id).
+                      Un técnico puede tener varias categorías y una categoría
+                      varios técnicos.
+
+2. QUIÉNES SON TÉCNICOS
+-----------------------
+Los funcionarios ACTIVOS del departamento INFORMATICA del colegio Seduc (15),
+según usuario_colegio (modelo de roles, LOGICA_ROLES.txt):
+    usuario_colegio.id_colegio = 15
+    usuario_colegio.id_departamento_colegio → departamentos_colegio.nombre_departamento = 'INFORMATICA'
+    usuario_colegio.estado = 1  y  usuarios.estado = 'Activo'
+Para agregar un técnico: crearlo (o asignarlo) en Seduc → Informática.
+Personas de Informática de OTROS colegios no son técnicos de este sistema.
+(Antes de la migración de roles se usaba usuarios.id_area_trabajo = 1.)
+Código: RolesUsuario::condicionDepartamento() y RolesUsuario::DEPTO_TECNICOS.
+
+3. PANTALLA "Admin categorías" (configuracion/admin_categorias.php)
+-------------------------------------------------------------------
+- Una tarjeta por técnico con todas las categorías como chips:
+  verde = asignada (recibe tickets de esa categoría), blanco = no.
+- Los cambios se juntan y se guardan con "Guardar cambios"
+  (configuracion/ajax/guardar_categorias_tecnicos.php): por cada chip
+  cambiado inserta o borra la fila en categoria_tecnico, todo en una
+  transacción y con token CSRF.
+- Pueden guardar: el super admin y los funcionarios de Informática de Seduc.
+  Solo se aceptan técnicos que cumplan el punto 2.
+
+4. QUÉ TÉCNICO RECIBE UN TICKET NUEVO (ajax/guardar_ticket.php)
+--------------------------------------------------------------
+Al crear un ticket (no borrador) con la categoría X:
+  1. Se buscan los técnicos con X en categoria_tecnico, activos y de
+     Informática de Seduc.
+  2. Se elige el que tiene MENOS tickets abiertos (id_estado 1, 2 o 3);
+     si empatan, el de id menor.
+  3. Si nadie tiene la categoría, el ticket queda sin técnico asignado.
+
+Consulta útil: categorías de cada técnico
+  SELECT TRIM(CONCAT(u.nombre,' ',u.apellido_paterno)) AS tecnico,
+         GROUP_CONCAT(c.nombre_categoria ORDER BY c.orden SEPARATOR ', ') AS categorias
+    FROM categoria_tecnico ct
+    JOIN usuarios u ON u.id = ct.id_tecnico
+    JOIN categoria_de_ticket c ON c.id_categoria = ct.id_categoria
+   GROUP BY u.id ORDER BY tecnico;
+
+Pendiente a futuro: categoria_de_ticket.id_colegio permitiría categorías
+propias de un colegio; hoy todas son comunes (NULL).
