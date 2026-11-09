@@ -19,6 +19,7 @@ if (empty($_SESSION['csrf_departamentos'])) {
 $pagina_estilos = [
     'css/listado_usuarios.css?v=' . (string) filemtime(__DIR__ . '/../css/listado_usuarios.css'),
     'configuracion/css/alta_usuario.css?v=' . (string) filemtime(__DIR__ . '/css/alta_usuario.css'),
+    'configuracion/css/permisos_usuario.css?v=' . (string) filemtime(__DIR__ . '/css/permisos_usuario.css'),
 ];
 iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuarios');
 ?>
@@ -257,11 +258,28 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
   </form>
 </dialog>
 
+<!-- Permisos en panel lateral (entra de derecha a izquierda). Carga usuarios_permisos.php?fragmento=1 -->
+<dialog class="oc-perm" id="dlgPermisos" aria-labelledby="ocPermTitulo">
+  <div class="oc-perm__box">
+    <header class="oc-perm__head">
+      <span class="user-avatar oc-perm__avatar" id="ocPermAvatar" aria-hidden="true"></span>
+      <div class="oc-perm__titulo">
+        <h2 id="ocPermTitulo">Permisos</h2>
+        <p id="ocPermSub"></p>
+      </div>
+      <a class="btn-icon" id="ocPermPagina" href="#" title="Abrir en página completa" aria-label="Abrir en página completa"><i class="bi bi-box-arrow-up-right"></i></a>
+      <button type="button" class="btn-icon" data-oc-cerrar aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </header>
+    <div class="oc-perm__cuerpo" id="ocPermCuerpo"></div>
+  </div>
+</dialog>
+
 <?php require __DIR__ . '/../componentes/modal_agregar_departamento.php'; ?>
 
 <script src="<?= $depth ?>js/permisos.js"></script>
 <script src="<?= $depth ?>js/paginacion.js"></script>
 <script src="<?= $depth ?>configuracion/js/usuarios_acordeon.js?v=<?= (int) filemtime(__DIR__ . '/js/usuarios_acordeon.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/listado_usuarios.js?v=<?= (int) filemtime(__DIR__ . '/js/listado_usuarios.js') ?>"></script>
+<script src="<?= $depth ?>configuracion/js/permisos_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/permisos_usuario.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/alta_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/alta_usuario.js') ?>"></script>
 <?php finalizar_layout_configuracion(); ?>

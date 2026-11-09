@@ -708,6 +708,44 @@
     }
   }
 
+  // ---------- Permisos en panel lateral (de derecha a izquierda)
+  const permDialog = document.getElementById('dlgPermisos');
+  function cerrarPermisos() {
+    if (!permDialog?.open) return;
+    permDialog.classList.add('is-saliendo');
+    setTimeout(() => { permDialog.classList.remove('is-saliendo'); permDialog.close(); }, 200);
+  }
+  async function abrirPermisos(user, event) {
+    const url = `usuarios_permisos.php?usuario_id=${encodeURIComponent(user.id)}`;
+    // Ctrl/Cmd + clic o sin soporte de <dialog>: página completa
+    if (!permDialog || typeof permDialog.showModal !== 'function' || event?.ctrlKey || event?.metaKey) {
+      window.location.href = url;
+      return;
+    }
+    document.getElementById('ocPermTitulo').textContent = `Permisos de ${fullName(user)}`;
+    document.getElementById('ocPermSub').textContent = `${user.email || ''} · ${user.estado || ''}`;
+    document.getElementById('ocPermAvatar').textContent = initials(user);
+    document.getElementById('ocPermPagina').href = url;
+    const body = document.getElementById('ocPermCuerpo');
+    body.innerHTML = '<div class="oc-perm__cargando"><i class="bi bi-arrow-repeat"></i><span>Cargando permisos…</span></div>';
+    permDialog.showModal();
+    try {
+      const response = await fetch(`${url}&fragmento=1`, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      body.innerHTML = await response.text();
+      const form = body.querySelector('#form-permisos');
+      if (form) {
+        window.PermisosUsuario?.iniciar(form, { alGuardar: () => setTimeout(cerrarPermisos, 900) });
+        form.querySelector('input')?.focus({ preventScroll: true });
+      }
+    } catch (_) {
+      body.innerHTML = '<div class="card"><div class="card-body">No fue posible cargar los permisos.</div></div>';
+    }
+  }
+  permDialog?.addEventListener('click', event => {
+    if (event.target === permDialog || event.target.closest('[data-oc-cerrar]')) cerrarPermisos();
+  });
+  permDialog?.addEventListener('cancel', event => { event.preventDefault(); cerrarPermisos(); });
+
   /** Filtro por colegio (super admin): los colegios que aparecen en el listado, con su cantidad. */
   function llenarFiltroColegios() {
     if (!schoolFilter) return;
@@ -854,7 +892,7 @@
     const user = _todosUsuarios.find(item => Number(item.id) === Number(button.dataset.id));
     if (!user) return;
     if (button.dataset.action === 'editar') abrirModalUsuario(user);
-    if (button.dataset.action === 'permisos') window.location.href = `usuarios_permisos.php?usuario_id=${encodeURIComponent(user.id)}`;
+    if (button.dataset.action === 'permisos') abrirPermisos(user, event);
     if (button.dataset.action === 'estado') cambiarEstado(user.id, fullName(user), user.estado);
     if (button.dataset.action === 'reenviar') window.AltaUsuario?.reenviar(user.id);
   });
