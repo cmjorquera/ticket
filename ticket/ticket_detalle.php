@@ -191,6 +191,53 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 
     <div class="ticket-detail-layout">
       <div class="ticket-detail-main">
+        <?php if ($adjuntos): ?>
+          <?php
+            $imagenesTicket = [];
+            $documentosTicket = [];
+            foreach ($adjuntos as $archivo) {
+                $extensionArchivo = strtolower((string) ($archivo['extension'] ?? ''));
+                if (in_array($extensionArchivo, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+                    $imagenesTicket[] = $archivo;
+                } else {
+                    $documentosTicket[] = $archivo;
+                }
+            }
+          ?>
+          <section class="card ticket-detail-files">
+            <h2>Archivos adjuntos</h2>
+            <?php if ($imagenesTicket): ?>
+              <div class="ticket-image-gallery" data-gallery>
+                <div class="ticket-image-gallery-head"><strong>Imágenes (<?= count($imagenesTicket) ?>)</strong><span data-gallery-count>1 de <?= count($imagenesTicket) ?></span></div>
+                <div class="ticket-image-gallery-stage">
+                  <?php foreach ($imagenesTicket as $indice => $archivo): ?>
+                    <a class="ticket-image-gallery-slide" data-gallery-slide href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener" <?= $indice === 0 ? '' : 'hidden' ?> title="Ampliar imagen">
+                      <img src="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" alt="<?= e($archivo['nombre']) ?>" loading="lazy" decoding="async">
+                    </a>
+                  <?php endforeach; ?>
+                  <?php if (count($imagenesTicket) > 1): ?>
+                    <button type="button" class="ticket-image-gallery-arrow ticket-image-gallery-prev" data-gallery-prev aria-label="Imagen anterior"><i class="bi bi-chevron-left"></i></button>
+                    <button type="button" class="ticket-image-gallery-arrow ticket-image-gallery-next" data-gallery-next aria-label="Imagen siguiente"><i class="bi bi-chevron-right"></i></button>
+                  <?php endif; ?>
+                </div>
+                <div class="ticket-image-gallery-thumbs">
+                  <?php foreach ($imagenesTicket as $indice => $archivo): ?>
+                    <button type="button" class="ticket-image-gallery-thumb <?= $indice === 0 ? 'is-active' : '' ?>" data-gallery-thumb="<?= $indice ?>" aria-label="Ver imagen <?= $indice + 1 ?>" aria-pressed="<?= $indice === 0 ? 'true' : 'false' ?>"><img src="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" alt="" loading="lazy"></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php endif; ?>
+            <?php if ($documentosTicket): ?>
+              <div class="ticket-image-gallery-documents">
+                <?php foreach ($documentosTicket as $archivo): ?>
+                  <a href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre']) ?><small><?= $archivo['tamano'] ? e(number_format($archivo['tamano'] / 1024, 0, ',', '.')) . ' KB' : e(strtoupper((string) $archivo['extension'])) ?></small></span><i class="bi bi-box-arrow-up-right"></i></a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </section>
+        <?php endif; ?>
+
+
         <section class="card ticket-detail-section">
           <div class="card-header"><div><h2 class="card-title">Descripción del caso</h2><p class="card-desc"><?= e($ticket['categoria_nombre']) ?></p></div></div>
           <div class="ticket-detail-copy ticket-rich-content"><?= ticket_renderizar_descripcion((string) $ticket['descripcion']) ?></div>
@@ -276,52 +323,6 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
           <h2>Datos del ticket</h2>
           <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Fecha estimada</dt><dd><?= !empty($ticket['fecha_estimada']) && strtotime((string) $ticket['fecha_estimada']) > 0 ? e(date('d/m/Y', strtotime((string) $ticket['fecha_estimada']))) : 'La define el técnico al comenzar' ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(ticket_prioridad_clase((string) $ticket['prioridad'])) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
         </section>
-
-        <?php if ($adjuntos): ?>
-          <?php
-            $imagenesTicket = [];
-            $documentosTicket = [];
-            foreach ($adjuntos as $archivo) {
-                $extensionArchivo = strtolower((string) ($archivo['extension'] ?? ''));
-                if (in_array($extensionArchivo, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-                    $imagenesTicket[] = $archivo;
-                } else {
-                    $documentosTicket[] = $archivo;
-                }
-            }
-          ?>
-          <section class="card ticket-detail-files">
-            <h2>Archivos adjuntos</h2>
-            <?php if ($imagenesTicket): ?>
-              <div class="ticket-image-gallery" data-gallery>
-                <div class="ticket-image-gallery-head"><strong>Imágenes (<?= count($imagenesTicket) ?>)</strong><span data-gallery-count>1 de <?= count($imagenesTicket) ?></span></div>
-                <div class="ticket-image-gallery-stage">
-                  <?php foreach ($imagenesTicket as $indice => $archivo): ?>
-                    <a class="ticket-image-gallery-slide" data-gallery-slide href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener" <?= $indice === 0 ? '' : 'hidden' ?> title="Ampliar imagen">
-                      <img src="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" alt="<?= e($archivo['nombre']) ?>" loading="lazy" decoding="async">
-                    </a>
-                  <?php endforeach; ?>
-                  <?php if (count($imagenesTicket) > 1): ?>
-                    <button type="button" class="ticket-image-gallery-arrow ticket-image-gallery-prev" data-gallery-prev aria-label="Imagen anterior"><i class="bi bi-chevron-left"></i></button>
-                    <button type="button" class="ticket-image-gallery-arrow ticket-image-gallery-next" data-gallery-next aria-label="Imagen siguiente"><i class="bi bi-chevron-right"></i></button>
-                  <?php endif; ?>
-                </div>
-                <div class="ticket-image-gallery-thumbs">
-                  <?php foreach ($imagenesTicket as $indice => $archivo): ?>
-                    <button type="button" class="ticket-image-gallery-thumb <?= $indice === 0 ? 'is-active' : '' ?>" data-gallery-thumb="<?= $indice ?>" aria-label="Ver imagen <?= $indice + 1 ?>" aria-pressed="<?= $indice === 0 ? 'true' : 'false' ?>"><img src="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" alt="" loading="lazy"></button>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-            <?php endif; ?>
-            <?php if ($documentosTicket): ?>
-              <div class="ticket-image-gallery-documents">
-                <?php foreach ($documentosTicket as $archivo): ?>
-                  <a href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre']) ?><small><?= $archivo['tamano'] ? e(number_format($archivo['tamano'] / 1024, 0, ',', '.')) . ' KB' : e(strtoupper((string) $archivo['extension'])) ?></small></span><i class="bi bi-box-arrow-up-right"></i></a>
-                <?php endforeach; ?>
-              </div>
-            <?php endif; ?>
-          </section>
-        <?php endif; ?>
 
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form" data-estado-actual="<?= (int) $ticket['id_estado'] ?>" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
