@@ -31,3 +31,13 @@ Pruebas manuales pendientes:
 4. Ticket no terminado: no se ofrece calificar.
 5. Acceso desde panel lateral embebido y desde pestaña completa.
 6. Tabla ausente: no mostrar botón; verificar logs del servidor.
+
+ACTUALIZACIÓN 2026-11-10 — MODAL DE CALIFICACIÓN
+- Botón amarillo pulsante en cabecera del detalle (opción 2).
+- Abre dialog nativo centrado con 5 estrellas, comentario opcional y guardar.
+- El formulario existente se movió desde tarjeta lateral al modal; conserva
+  id=ticket-rating-form y ajax/guardar_calificacion.php sin cambios.
+- La tarjeta lateral solo se presenta cuando ya existe una valoración;
+  administrador y técnico continúan viéndola en modo lectura.
+- Animación desactivada para prefers-reduced-motion.
+- No requiere SQL nuevo. Pendiente validar visualmente en servidor QA.
