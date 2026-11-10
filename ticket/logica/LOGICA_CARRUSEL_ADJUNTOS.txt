@@ -32,3 +32,17 @@ ACTUALIZACIÓN 2026-11-10 — CARRUSEL AMPLIO Y MODAL DE BANDEJAS
 - Pruebas pendientes en QA: tickets con y sin imágenes, PDF mixtos,
   permisos de los tres perfiles, modal sobre paneles existentes,
   scroll en móviles, cierre de modal, listado actualizado por AJAX.
+
+CORRECCIÓN QA 2026-11-10 — ALINEACIÓN Y VISIBILIDAD
+- Carrusel del detalle: reglas CSS específicas sobre el enlace/imagen de
+  cada slide; anulan estilos globales de .ticket-detail-files que impedían
+  centrar la imagen dentro del escenario ancho.
+- Modal de bandejas: posición fija centrada en viewport con top/left 50%,
+  transform translate(-50%, -50%) y dimensiones responsivas.
+- TicketDataBase::queryBase calcula cantidad_imagenes en la consulta de
+  bandejas a partir de extensión de ruta almacenada, usando las columnas
+  disponibles de archivos_adjuntos_ticket (adjunto/ruta_archivo).
+- Los tres componentes de tabla muestran botón Adjuntos solo cuando
+  cantidad_imagenes > 0. Tickets sin imágenes ya no muestran botón.
+- Sin modificaciones de esquema ni SQL. Validar en servidor QA ticket #602
+  con imágenes y #597 sin imágenes; comprobar en móvil y tres perfiles.
