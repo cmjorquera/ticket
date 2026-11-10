@@ -1,0 +1,36 @@
+FUSIÓN DE TICKETS — QA — 10/11/2026
+====================================
+Estado: implementación inicial publicada, pendiente pruebas funcionales y
+auditoría integral de todas las rutas que modifican el estado del ticket.
+NO HABILITAR EN PRODUCCIÓN.
+
+SQL MANUAL PREVIO: ticket/sql/04_fusion_tickets.sql
+Tablas: ticket_fusiones, ticket_fusion_eventos.
+No ejecutar SQL automáticamente. Solo aplicar a base QA por phpMyAdmin.
+
+Interfaz: ticket/ticket_admin_v2.php > Gestionar > Fusionar.
+Ingresar ID secundario y motivo (5-500 caracteres).
+Backend: ajax/guardar_ticket.php, accion=fusionar, CSRF y permiso de
+administración en ambos tickets. Servicio: clases/Tickets/FusionTicket.php.
+Validaciones: tickets distintos, activos, no terminados, sin fusión
+anidada ni ciclos, bloqueo de filas y transacción.
+Al pasar principal a id_estado=5 por actualizar_estado o actualizar,
+los secundarios activos se actualizan a id_estado=5 y se registra
+fecha de término y evento. tickets.estado permanece en 1.
+El secundario fusionado no admite cambios individuales de estado,
+reasignación ni comienzo mediante guardar_ticket.php.
+No se borran conversaciones ni adjuntos.
+
+LIMITACIONES CONOCIDAS / PENDIENTES:
+- Auditar otros endpoints que puedan terminar tickets, para cubrir TODOS.
+- Asegurar avisos a solicitantes de secundarios después del commit.
+- Excluir secundarios de KPI operativos sin ocultarlos al solicitante.
+- Mostrar indicador de principal/secundario y lista de relaciones.
+- Añadir búsqueda amigable en vez de ingresar número manual.
+- Revisar concurrencia y transacciones con pruebas reales de QA.
+- Confirmar compatibilidad de columnas con esquema real y php -l.
+- Evaluar fecha/hora y transición al estado 6 (cerrado).
+- No afirmar que está listo para producción hasta superar pruebas.
+
+Regla elegida por usuario: cierre automático de secundarios al terminar
+el principal. El sistema no debe eliminar físicamente ningún ticket.
