@@ -9,14 +9,24 @@ class Conexion
 
     public function __construct(string $bd)
     {
-        // Credenciales desde la configuración privada (fuera del repositorio).
-        // Ver clases/ConfigPrivada.php y config_privada.example.php
+        // La configuración privada define las credenciales y puede mapear
+        // nombres lógicos a nombres físicos distintos en QA y producción.
         $cfg = ConfigPrivada::get('db');
+
+        $bases = $cfg['bases'] ?? [];
+        if (!is_array($bases)) {
+            throw new \RuntimeException('Configuración inválida de bases de datos.');
+        }
+
+        $nombreBd = $bases[$bd] ?? (($cfg['prefijo'] ?? '') . $bd);
+        if (!is_string($nombreBd) || $nombreBd === '') {
+            throw new \RuntimeException('Nombre de base de datos no configurado.');
+        }
 
         $dsn = sprintf(
             'mysql:host=%s;dbname=%s;charset=%s',
             $cfg['host'] ?? 'localhost',
-            ($cfg['prefijo'] ?? '') . $bd,
+            $nombreBd,
             $cfg['charset'] ?? 'utf8'
         );
 
@@ -59,8 +69,7 @@ class Conexion
 
     public function execute(string $sql, array $params = []): int
     {
-        $stmt = $this->query($sql, $params);
-        return $stmt->rowCount();
+        return $this->query($sql, $params)->rowCount();
     }
 
     public function lastInsertId(): string
