@@ -175,7 +175,13 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       <div class="ticket-detail-titleline">
         <div><span class="ticket-detail-kicker">Solicitud #<?= (int) $ticket['id_ticket'] ?></span><h1><?= e($ticket['asunto']) ?></h1></div>
         <div class="tb-cabecera-acciones">
-          <a class="btn btn-outline btn-sm" href="../ajax/ticket_pdf.php?id=<?= (int) $ticket['id_ticket'] ?>&amp;vista=<?= e($vista) ?>" target="_blank" rel="noopener" title="Ver o descargar el ticket en PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+          <?php if ($vista === 'usuario' && $esPropietario && $calificacionDisponible && (int) $ticket['id_estado'] === 5 && !$calificacion): ?>
+             <a class="btn btn-primary btn-sm ticket-rating-cta" href="#calificacion" aria-label="Calificar atención del ticket con estrellas"><i class="bi bi-star-fill"></i> Calificar atención <span aria-hidden="true">★★★★★</span></a>
+           <?php endif; ?>
+           <?php if ($calificacionDisponible && $calificacion && in_array($vista, ['admin','tecnico'], true)): ?>
+             <span class="ticket-rating-summary" title="Calificación del solicitante: <?= (int) $calificacion['puntaje'] ?> de 5 estrellas"><i class="bi bi-star-fill"></i> <?= (int) $calificacion['puntaje'] ?>/5</span>
+           <?php endif; ?>
+           <a class="btn btn-outline btn-sm" href="../ajax/ticket_pdf.php?id=<?= (int) $ticket['id_ticket'] ?>&amp;vista=<?= e($vista) ?>" target="_blank" rel="noopener" title="Ver o descargar el ticket en PDF"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
           <button class="btn btn-outline btn-sm js-ticket-correo" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-email="<?= e($ticket['usuario_email'] ?? '') ?>" data-solo-yo="<?= $vista === 'usuario' ? '1' : '0' ?>" title="Enviar el ticket por correo con el PDF adjunto"><i class="bi bi-envelope"></i> Enviar por correo</button>
           <?php if ($vista === 'usuario'): ?><button class="btn btn-primary btn-sm js-ticket-chat" type="button" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" title="<?= e($tecnicoNombre !== '' ? 'Técnico: ' . $tecnicoNombre : 'Aún sin técnico') ?>"><i class="bi bi-chat-dots"></i> <?= e($textoChat) ?></button><?php endif; ?>
           <?= ticket_badge_estado($ticket) ?>
@@ -275,12 +281,12 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form" data-estado-actual="<?= (int) $ticket['id_estado'] ?>" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
-        <?php if ($calificacionDisponible && $vista === 'usuario' && $esPropietario && in_array($estado, ['resuelto','cerrado'], true)): ?>
+        <?php if ($calificacionDisponible && (($vista === 'usuario' && $esPropietario && (int) $ticket['id_estado'] === 5) || (in_array($vista, ['admin','tecnico'], true) && $calificacion))): ?>
           <section class="card ticket-rating" id="calificacion">
-            <h2>Califica la atención</h2>
+            <h2><?= $vista === 'usuario' ? 'Califica la atención' : 'Calificación del solicitante' ?></h2>
             <?php if ($calificacion): ?>
               <div class="ticket-rating-result">
-                <div><?= str_repeat('★', (int)$calificacion['puntaje']) . str_repeat('☆', 5 - (int)$calificacion['puntaje']) ?></div>
+                <div class="ticket-rating-readonly" aria-label="<?= (int) $calificacion['puntaje'] ?> de 5 estrellas"><?= str_repeat('★', max(0, min(5, (int) $calificacion['puntaje']))) . str_repeat('☆', 5 - max(0, min(5, (int) $calificacion['puntaje']))) ?></div>
                 <p><?= e($calificacion['comentario'] ?: 'Sin comentario adicional.') ?></p>
               </div>
             <?php else: ?>
@@ -305,6 +311,15 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       </aside>
     </div>
   </div>
+  <style>
+    .ticket-rating-cta{animation:ticket-rating-pulse 1.9s ease-in-out infinite;white-space:nowrap}
+    .ticket-rating-cta span{letter-spacing:1px;font-size:11px}
+    @keyframes ticket-rating-pulse{0%,100%{box-shadow:0 0 0 0 rgba(230,163,27,.35)}50%{box-shadow:0 0 0 7px rgba(230,163,27,0)}}
+    @media(prefers-reduced-motion:reduce){.ticket-rating-cta{animation:none}}
+    .ticket-rating-summary{display:inline-flex;align-items:center;gap:6px;color:#9a6400;background:#fff4d8;border:1px solid #ead9ac;border-radius:7px;padding:7px 10px;font-weight:600;font-size:13px;white-space:nowrap}
+    .ticket-rating-readonly{font-size:27px;color:#c58a14;letter-spacing:2px}
+    #calificacion{scroll-margin-top:24px}
+  </style>
   <link rel="stylesheet" href="../css/ticket_bitacora.css?v=<?= (int) @filemtime(__DIR__ . '/../css/ticket_bitacora.css') ?>">
   <script src="js/chat_ticket.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
