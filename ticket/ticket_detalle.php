@@ -277,7 +277,51 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
           <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Fecha estimada</dt><dd><?= !empty($ticket['fecha_estimada']) && strtotime((string) $ticket['fecha_estimada']) > 0 ? e(date('d/m/Y', strtotime((string) $ticket['fecha_estimada']))) : 'La define el técnico al comenzar' ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(ticket_prioridad_clase((string) $ticket['prioridad'])) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
         </section>
 
-        <?php if ($adjuntos): ?><section class="card ticket-detail-files"><h2>Archivos adjuntos</h2><?php foreach ($adjuntos as $archivo): ?><a href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre']) ?><small><?= $archivo['tamano'] ? e(number_format($archivo['tamano'] / 1024, 0, ',', '.')) . ' KB' : e(strtoupper($archivo['extension'])) ?></small></span><i class="bi bi-box-arrow-up-right"></i></a><?php endforeach; ?></section><?php endif; ?>
+        <?php if ($adjuntos): ?>
+          <?php
+            $imagenesTicket = [];
+            $documentosTicket = [];
+            foreach ($adjuntos as $archivo) {
+                $extensionArchivo = strtolower((string) ($archivo['extension'] ?? ''));
+                if (in_array($extensionArchivo, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+                    $imagenesTicket[] = $archivo;
+                } else {
+                    $documentosTicket[] = $archivo;
+                }
+            }
+          ?>
+          <section class="card ticket-detail-files">
+            <h2>Archivos adjuntos</h2>
+            <?php if ($imagenesTicket): ?>
+              <div class="ticket-image-gallery" data-gallery>
+                <div class="ticket-image-gallery-head"><strong>Imágenes (<?= count($imagenesTicket) ?>)</strong><span data-gallery-count>1 de <?= count($imagenesTicket) ?></span></div>
+                <div class="ticket-image-gallery-stage">
+                  <?php foreach ($imagenesTicket as $indice => $archivo): ?>
+                    <a class="ticket-image-gallery-slide" data-gallery-slide href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener" <?= $indice === 0 ? '' : 'hidden' ?> title="Ampliar imagen">
+                      <img src="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" alt="<?= e($archivo['nombre']) ?>" loading="lazy" decoding="async">
+                    </a>
+                  <?php endforeach; ?>
+                  <?php if (count($imagenesTicket) > 1): ?>
+                    <button type="button" class="ticket-image-gallery-arrow ticket-image-gallery-prev" data-gallery-prev aria-label="Imagen anterior"><i class="bi bi-chevron-left"></i></button>
+                    <button type="button" class="ticket-image-gallery-arrow ticket-image-gallery-next" data-gallery-next aria-label="Imagen siguiente"><i class="bi bi-chevron-right"></i></button>
+                  <?php endif; ?>
+                </div>
+                <div class="ticket-image-gallery-thumbs">
+                  <?php foreach ($imagenesTicket as $indice => $archivo): ?>
+                    <button type="button" class="ticket-image-gallery-thumb <?= $indice === 0 ? 'is-active' : '' ?>" data-gallery-thumb="<?= $indice ?>" aria-label="Ver imagen <?= $indice + 1 ?>" aria-pressed="<?= $indice === 0 ? 'true' : 'false' ?>"><img src="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" alt="" loading="lazy"></button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php endif; ?>
+            <?php if ($documentosTicket): ?>
+              <div class="ticket-image-gallery-documents">
+                <?php foreach ($documentosTicket as $archivo): ?>
+                  <a href="../ajax/ticket_archivo.php?a=<?= (int) $archivo['id'] ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i><span><?= e($archivo['nombre']) ?><small><?= $archivo['tamano'] ? e(number_format($archivo['tamano'] / 1024, 0, ',', '.')) . ' KB' : e(strtoupper((string) $archivo['extension'])) ?></small></span><i class="bi bi-box-arrow-up-right"></i></a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </section>
+        <?php endif; ?>
 
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form" data-estado-actual="<?= (int) $ticket['id_estado'] ?>" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
@@ -346,6 +390,52 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
       trigger.addEventListener('click',()=>{if(!dialog.open)dialog.showModal();});
       document.getElementById('cerrar-calificacion')?.addEventListener('click',()=>dialog.close());
       dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+    })();
+  </script>
+  <style>
+    .ticket-image-gallery{width:100%;min-width:0;margin-top:12px}
+    .ticket-image-gallery-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:12px;color:#64748b}
+    .ticket-image-gallery-head strong{color:#334155}
+    .ticket-image-gallery-stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:180px;background:#f1f4f8;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+    .ticket-image-gallery-slide{display:flex;align-items:center;justify-content:center;width:100%;height:240px}
+    .ticket-image-gallery-slide[hidden]{display:none!important}
+    .ticket-image-gallery-slide img{display:block;max-width:100%;max-height:100%;object-fit:contain}
+    .ticket-image-gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:1;display:grid;place-items:center;width:34px;height:34px;border:1px solid #d9e0e9;border-radius:50%;background:rgba(255,255,255,.94);color:#19375b;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+    .ticket-image-gallery-prev{left:8px}.ticket-image-gallery-next{right:8px}
+    .ticket-image-gallery-thumbs{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 4px}
+    .ticket-image-gallery-thumb{flex:0 0 54px;width:54px;height:54px;border:2px solid transparent;border-radius:8px;background:#eef2f7;padding:2px;cursor:pointer;overflow:hidden}
+    .ticket-image-gallery-thumb.is-active{border-color:#194a80}
+    .ticket-image-gallery-thumb img{width:100%;height:100%;object-fit:cover;border-radius:4px}
+    .ticket-image-gallery-documents{margin-top:12px}
+    @media(max-width:640px){.ticket-image-gallery-slide{height:190px}.ticket-image-gallery-thumb{flex-basis:46px;width:46px;height:46px}}
+  </style>
+  <script>
+    (() => {
+      document.querySelectorAll('#ticket-detail-app [data-gallery]').forEach(gallery => {
+        const slides=Array.from(gallery.querySelectorAll('[data-gallery-slide]'));
+        const thumbs=Array.from(gallery.querySelectorAll('[data-gallery-thumb]'));
+        const count=gallery.querySelector('[data-gallery-count]');
+        if(!slides.length)return;
+        let index=0;
+        function mostrar(next){
+          index=(next+slides.length)%slides.length;
+          slides.forEach((slide,i)=>{slide.hidden=i!==index;});
+          thumbs.forEach((thumb,i)=>{thumb.classList.toggle('is-active',i===index);thumb.setAttribute('aria-pressed',String(i===index));});
+          if(count)count.textContent=(index+1)+' de '+slides.length;
+          thumbs[index]?.scrollIntoView({block:'nearest',inline:'nearest',behavior:'smooth'});
+        }
+        gallery.querySelector('[data-gallery-prev]')?.addEventListener('click',()=>mostrar(index-1));
+        gallery.querySelector('[data-gallery-next]')?.addEventListener('click',()=>mostrar(index+1));
+        thumbs.forEach((thumb,i)=>thumb.addEventListener('click',()=>mostrar(i)));
+        let touchStart=null;
+        gallery.querySelector('.ticket-image-gallery-stage')?.addEventListener('touchstart',event=>{touchStart=event.changedTouches[0]?.clientX??null},{passive:true});
+        gallery.querySelector('.ticket-image-gallery-stage')?.addEventListener('touchend',event=>{
+          if(touchStart===null)return;
+          const distance=(event.changedTouches[0]?.clientX??touchStart)-touchStart;
+          touchStart=null;
+          if(Math.abs(distance)>45)mostrar(index+(distance<0?1:-1));
+        },{passive:true});
+      });
     })();
   </script>
   <link rel="stylesheet" href="../css/ticket_bitacora.css?v=<?= (int) @filemtime(__DIR__ . '/../css/ticket_bitacora.css') ?>">
