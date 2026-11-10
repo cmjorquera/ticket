@@ -1,0 +1,18 @@
+EVENTOS — TABLAS Y MIGRACION A PRODUCCION (2026-11-10)
+Fuente: eventos/logica/LOGICA.txt (rama qa).
+
+TABLAS DOCUMENTADAS
+- eventos: evento principal, incluye campos nuevos creado_por, todo_el_dia, secuencia y recordatorio_enviado.
+- eventos_invitados: invitados internos/externos, respuestas y token.
+- eventos_historial: auditoria de creacion, edicion, cancelacion, eliminacion y respuesta.
+- usuarios y colegios: referencias compartidas, verificar nombres y claves reales.
+
+SQL DE REFERENCIA: eventos/sql/01_eventos.sql; reversa: eventos/sql/99_volver_atras.sql.
+
+MIGRACION
+- Preservar IDs de eventos antiguos y enlazar invitados/historial correctamente.
+- No reenviar invitaciones ni notificaciones al importar historicos.
+- Revisar diferencias de columnas y valores de eliminacion logica.
+- Verificar claves foraneas y tokens; no regenerarlos sin necesidad.
+
+PENDIENTE: cotejo contra exportaciones de produccion y QA.
