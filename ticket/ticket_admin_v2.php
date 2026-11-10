@@ -292,4 +292,5 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
 <?php require __DIR__ . '/componentes/modal_correo_ticket.php'; ?>
 <?php $vistaChat = 'admin'; require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
 <?php require __DIR__ . '/componentes/panel_detalle.php'; ?>
+<script src="js/galeria_modal.js"></script>
 <?php finalizar_layout_configuracion(); ?>
