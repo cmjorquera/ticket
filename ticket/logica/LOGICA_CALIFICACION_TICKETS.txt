@@ -1,0 +1,33 @@
+CALIFICACIÓN DE TICKETS — QA — 2026-11-10
+==========================================
+Se reutiliza la lógica existente: ajax/guardar_calificacion.php.
+El solicitante califica con 1-5 estrellas y comentario opcional,
+solo si id_estado=5 (Terminado) y todavía no calificó.
+No puede calificar un administrador ni un técnico en su nombre.
+Solo una calificación por ticket; se conserva el control del servidor.
+
+Interfaz:
+- ticket/componentes/bloque_tabla_usuario.php: se retira el botón Calificar
+  de la fila para no duplicar acciones.
+- ticket/ticket_detalle.php: botón pulsante «Calificar atención ★★★★★»
+  en la cabecera del detalle, solo cuando procede; enlaza a la tarjeta
+  existente de estrellas en el panel lateral.
+- Vista admin y técnico: si existe valoración, se muestra resumen
+  N/5 en cabecera y tarjeta de solo lectura con estrellas y comentario.
+- Se respeta prefers-reduced-motion para evitar animación forzada.
+
+Base de datos:
+- La lógica vigente detecta calificacion_ticket y como alternativa
+  calificacion_tickett. No se crea ninguna tabla nueva en este cambio.
+- Si ninguna existe, la calificación se deshabilita. Verificar en QA
+  la tabla existente antes de probar; NO ejecutar SQL inventado.
+- ticket/DOCUMENTACION_SISTEMA_TICKETS.txt contiene esquema antiguo;
+  la referencia fiable actual es ESTUDIO_MODULO_TICKET.txt.
+
+Pruebas manuales pendientes:
+1. Solicitante abre ticket 5 sin calificación: botón superior y formulario.
+2. Guardar 1-5 estrellas, comentario; botón desaparece al recargar.
+3. Técnico y administrador ven las estrellas pero no pueden modificarlas.
+4. Ticket no terminado: no se ofrece calificar.
+5. Acceso desde panel lateral embebido y desde pestaña completa.
+6. Tabla ausente: no mostrar botón; verificar logs del servidor.
