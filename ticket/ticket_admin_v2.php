@@ -119,6 +119,27 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     </div>
   </div>
 
+  <div class="modal-overlay" id="modal-admin-eliminar" onclick="closeModalOutside(event,'modal-admin-eliminar')">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-header"><h3>Eliminar ticket</h3><p id="admin-eliminar-folio"></p></div>
+      <div class="modal-body">
+        <p>El ticket dejará de aparecer en los listados. No se borrará de la base de datos.</p>
+        <div class="form-group"><label class="form-label" for="admin-eliminar-motivo">Motivo obligatorio</label>
+          <select class="form-input" id="admin-eliminar-motivo" required>
+            <option value="">Selecciona un motivo</option>
+            <option value="duplicado">Ticket duplicado</option>
+            <option value="prueba_limpieza">Prueba o limpieza de registros</option>
+            <option value="error_registro">Solicitud creada por error</option>
+          </select>
+        </div>
+        <div class="ticket-message" id="admin-eliminar-mensaje" role="status"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-admin-eliminar')">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="admin-eliminar-confirmar"><i class="bi bi-trash"></i> Confirmar eliminación</button>
+      </div>
+    </div>
+  </div>
   <script>
   const adminTicketCsrf = <?= json_encode($csrf) ?>;
   let adminTicketActual = 0;
@@ -155,7 +176,26 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     const message=document.getElementById('admin-modal-mensaje');
     try{const body=new URLSearchParams({accion,ticket_id:adminTicketActual,csrf:adminTicketCsrf,...extra});const response=await fetch('../ajax/guardar_ticket.php',{method:'POST',body,credentials:'same-origin'});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||'No fue posible guardar.');message.className='ticket-message ok';message.textContent=data.mensaje;setTimeout(()=>location.reload(),650)}catch(error){message.className='ticket-message error';message.textContent=error.message}}
   document.getElementById('admin-modal-guardar').onclick=()=>accionTicket('actualizar',{tecnico_id:document.getElementById('admin-modal-tecnico').value,estado:document.getElementById('admin-modal-estado').value});
-  document.getElementById('admin-modal-eliminar')?.addEventListener('click',()=>{if(confirm(`¿Eliminar definitivamente el ticket #${adminTicketActual}?`))accionTicket('eliminar')});
+  document.getElementById('admin-modal-eliminar')?.addEventListener('click',()=>{
+     document.getElementById('admin-eliminar-folio').textContent=`Ticket #${adminTicketActual}`;
+     document.getElementById('admin-eliminar-motivo').value='';
+     const msg=document.getElementById('admin-eliminar-mensaje');msg.textContent='';msg.className='ticket-message';
+     openModal('modal-admin-eliminar');
+   });
+   document.getElementById('admin-eliminar-confirmar')?.addEventListener('click',async()=>{
+     const motivo=document.getElementById('admin-eliminar-motivo').value;
+     const msg=document.getElementById('admin-eliminar-mensaje');
+     if(!motivo){msg.className='ticket-message error';msg.textContent='Selecciona un motivo.';return;}
+     const btn=document.getElementById('admin-eliminar-confirmar');btn.disabled=true;
+     try{
+       const body=new URLSearchParams({accion:'eliminar',ticket_id:adminTicketActual,csrf:adminTicketCsrf,motivo_eliminacion:motivo});
+       const response=await fetch('../ajax/guardar_ticket.php',{method:'POST',body,credentials:'same-origin'});
+       const data=await response.json();
+       if(!response.ok||!data.ok)throw new Error(data.error||'No se pudo eliminar el ticket.');
+       msg.className='ticket-message ok';msg.textContent=data.mensaje;
+       setTimeout(()=>location.reload(),650);
+     }catch(error){msg.className='ticket-message error';msg.textContent=error.message;btn.disabled=false;}
+   });
   document.getElementById('admin-buscar').addEventListener('input',event=>{const q=event.target.value.trim().toLowerCase();document.querySelectorAll('#admin-tabla tbody tr').forEach(row=>row.hidden=!row.dataset.search.includes(q))});
   </script>
 <?php endif; ?>
