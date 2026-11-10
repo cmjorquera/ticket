@@ -1,0 +1,25 @@
+TICKET — TABLAS Y MIGRACION A PRODUCCION (2026-11-10)
+Fuente: ticket/logica/ESTUDIO_MODULO_TICKET.txt (rama qa).
+
+TABLAS CONFIRMADAS EN DOCUMENTACION QA
+- tickets: registros principales; estado=2 significa eliminado logico; id_estado es etapa del flujo.
+- estados_ticket: catalogo de etapas.
+- proceso_tickets: fechas de creacion, asignacion, inicio, termino y cierre.
+- ticket_conversaciones: mensajes reales del ticket.
+- archivos_adjuntos_ticket: adjuntos de tickets.
+- calificacion_tickett: calificaciones reales (con doble t final).
+- categoria_de_ticket: categorias.
+- usuario_colegio, jefatura_departamento: vinculacion de colegio, pendiente unificar criterio.
+- usuarios: identidad y responsables; verificar en que base vive cada tabla.
+
+NO PRESUPONER EXISTENCIA: comentarios_ticket, log_cambios_ticket y calificacion_ticket aparecen en documentacion antigua, pero no en la BD QA descrita por ESTUDIO_MODULO_TICKET.txt.
+
+MIGRACION
+1. Conservar tickets de produccion, sus IDs, mensajes, archivos, proceso, calificaciones y relaciones.
+2. Comparar SHOW CREATE TABLE de QA y respaldo antes de importar datos antiguos.
+3. No hacer TRUNCATE, REPLACE ni importar INSERT sobre IDs existentes sin plan de correspondencia.
+4. Los archivos fisicos adjuntos requieren respaldo y traslado independiente de SQL.
+5. Verificar claves foraneas, AUTO_INCREMENT, codificaciones y conteos antes/despues.
+6. No ejecutar SQL automaticamente: scripts de migracion separados en ticket/sql/ tras comparar esquemas reales.
+
+PENDIENTE: cotejar dumps QA/produccion y confirmar columnas, FK y tablas auxiliares exactas.
