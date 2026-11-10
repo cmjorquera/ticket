@@ -18,14 +18,18 @@ return [
     'entorno' => 'qa',
 
     // BD principal. Usada por clases/Conexion.php.
-    // El nombre final es prefijo + nombre pedido en Conexion::getInstance(),
-    // por ejemplo 'crist668_' + 'sistema_panel_central'.
+    // 'bases' permite mapear nombres lógicos a bases reales según el servidor.
+    // Si una entrada no está definida, se mantiene prefijo + nombre lógico.
     'db' => [
         'host'     => 'localhost',
         'usuario'  => 'CAMBIAR_usuario_bd',
         'password' => 'CAMBIAR_password_bd',
         'prefijo'  => 'crist668_',
         'charset'  => 'utf8',
+        'bases'    => [
+            'sistema_panel_central' => 'crist668_sistema_panel_central',
+            'sistema_ticket'        => 'crist668_sistema_ticket',
+        ],
     ],
 
     // BD de permisos. Usada por PermisosManager.php y gestionar_permisos.php.
