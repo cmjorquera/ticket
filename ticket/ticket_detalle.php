@@ -319,9 +319,35 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
         </section>
         <?php endif; ?>
 
+        <?php
+          // Duración desde el inicio técnico hasta el término, o hasta ahora si está activo.
+          $tiempoTecnico = 'Aún no comienza';
+          $detalleTiempoTecnico = 'Se calculará cuando el técnico comience.';
+          $inicioTecnico = !empty($ticket['fecha_comienzo']) ? strtotime((string) $ticket['fecha_comienzo']) : false;
+          $finTecnico = !empty($ticket['fecha_termino']) ? strtotime((string) $ticket['fecha_termino']) : false;
+          if ($inicioTecnico !== false) {
+              $terminado = in_array((int) $ticket['id_estado'], [5, 6], true);
+              if ($terminado && $finTecnico === false) {
+                  $tiempoTecnico = 'Sin fecha de término';
+                  $detalleTiempoTecnico = 'No hay registro suficiente para calcular la duración.';
+              } else {
+                  $hasta = $terminado ? $finTecnico : time();
+                  $segundos = max(0, $hasta - $inicioTecnico);
+                  $dias = intdiv($segundos, 86400);
+                  $horas = intdiv($segundos % 86400, 3600);
+                  $minutos = intdiv($segundos % 3600, 60);
+                  $partes = [];
+                  if ($dias) $partes[] = $dias . ($dias === 1 ? ' día' : ' días');
+                  if ($horas) $partes[] = $horas . ($horas === 1 ? ' hora' : ' horas');
+                  if ($minutos || !$partes) $partes[] = $minutos . ' min';
+                  $tiempoTecnico = implode(', ', $partes);
+                  $detalleTiempoTecnico = $terminado ? 'Desde que comenzó hasta que terminó el trabajo.' : 'Tiempo transcurrido desde el inicio; aún en curso.';
+              }
+          }
+        ?>
         <section class="card ticket-detail-facts">
           <h2>Datos del ticket</h2>
-          <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><div><dt>Fecha estimada</dt><dd><?= !empty($ticket['fecha_estimada']) && strtotime((string) $ticket['fecha_estimada']) > 0 ? e(date('d/m/Y', strtotime((string) $ticket['fecha_estimada']))) : 'La define el técnico al comenzar' ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(ticket_prioridad_clase((string) $ticket['prioridad'])) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
+          <dl><div><dt>Solicitante</dt><dd><?= e($ticket['usuario_nombre']) ?></dd></div><div><dt>Colegio</dt><dd><?= e($ticket['colegio_nombre'] ?: 'Sin colegio') ?></dd></div><div><dt>Técnico</dt><dd><?= e(trim((string) $ticket['tecnico_nombre']) ?: 'Sin asignar') ?></dd></div><?php if ($vista === 'usuario'): ?><div><dt>Categoría</dt><dd><?= e($ticket['categoria_nombre'] ?: 'Sin categoría') ?></dd></div><div><dt>Tiempo del técnico</dt><dd><?= e($tiempoTecnico) ?><small style="display:block;margin-top:4px;color:#64748b;font-size:11px;line-height:1.4"><?= e($detalleTiempoTecnico) ?></small></dd></div><?php endif; ?><div><dt>Fecha estimada</dt><dd><?= !empty($ticket['fecha_estimada']) && strtotime((string) $ticket['fecha_estimada']) > 0 ? e(date('d/m/Y', strtotime((string) $ticket['fecha_estimada']))) : 'La define el técnico al comenzar' ?></dd></div><div><dt>Prioridad</dt><dd><span class="ticket-priority ticket-priority--<?= e(ticket_prioridad_clase((string) $ticket['prioridad'])) ?>"><?= e($ticket['prioridad']) ?></span></dd></div><div><dt>Creado</dt><dd><?= strtotime((string)$ticket['fecha_creacion']) ? e(date('d/m/Y H:i', strtotime((string)$ticket['fecha_creacion']))) : 'Sin fecha' ?></dd></div></dl>
         </section>
 
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form" data-estado-actual="<?= (int) $ticket['id_estado'] ?>" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
