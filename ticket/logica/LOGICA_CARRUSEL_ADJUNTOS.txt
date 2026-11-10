@@ -1,0 +1,18 @@
+GALERÍA DE ADJUNTOS — QA — 2026-11-10
+========================================
+Archivo: ticket/ticket_detalle.php
+La vista de detalle es compartida por usuario, técnico y administrador.
+Los adjuntos de tipo JPG/JPEG, PNG, GIF y WebP se muestran en carrusel:
+- Imagen grande con object-fit: contain para evitar recortes.
+- Flechas anterior/siguiente con navegación circular.
+- Miniaturas seleccionables, contador N de total.
+- Deslizamiento táctil en dispositivos móviles.
+- Clic sobre imagen abre original en pestaña nueva.
+- PDF, Word, Excel y otros siguen como enlaces en sección documentos.
+- Una sola imagen: no mostrar flechas.
+
+El endpoint ajax/ticket_archivo.php sirve imágenes inline y verifica
+sesión, permisos de acceso al ticket y ruta física segura.
+No se crean tablas ni columnas. No cambia almacenamiento ni permisos.
+Validar en QA con 0, 1 y múltiples imágenes, documentos mixtos y
+cada perfil; comprobar vista móvil y carga en servidor real.
