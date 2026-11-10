@@ -84,7 +84,7 @@ $etiquetasEstado = $etiquetasEstado ?? [
             <td><?= ticket_badge_estado($ticket) ?></td>
             <td><?= ticket_plazo($ticket) ?></td>
             <td><span class="badge badge-realizado"><?= e(trim((string) $ticket['categoria_nombre']) ?: 'Sin categoría') ?></span></td>
-            <td><div class="ticket-actions"><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><?= ticket_boton_archivos((int) $ticket['id_ticket'], $cantidadArchivos) ?><a class="btn btn-outline btn-sm js-ticket-ver" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>&amp;vista=usuario"><i class="bi bi-eye"></i> Ver</a></div></td>
+            <td><div class="ticket-actions"><?= ticket_boton_chat((int) $ticket['id_ticket'], (int) ($ticket['mensajes_no_leidos'] ?? 0)) ?><button type="button" class="btn btn-outline btn-sm js-ticket-gallery" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" title="Ver imágenes y archivos adjuntos" aria-label="Ver adjuntos del ticket #<?= (int) $ticket['id_ticket'] ?>"><i class="bi bi-images"></i> Adjuntos</button><a class="btn btn-outline btn-sm js-ticket-ver" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" href="ticket_detalle.php?id=<?= (int) $ticket['id_ticket'] ?>&amp;vista=usuario"><i class="bi bi-eye"></i> Ver</a></div></td>
           </tr>
         <?php endforeach; ?>
         </tbody>
