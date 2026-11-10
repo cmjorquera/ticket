@@ -223,6 +223,12 @@ try {
         responder_json(['ok' => false, 'error' => 'Ticket no encontrado.'], 404);
     }
 
+    // Un ticket secundario fusionado solo puede cerrarse a través del principal.
+    if (in_array($accion, ['comenzar', 'actualizar_estado', 'asignar', 'actualizar'], true)
+        && FusionTicket::instalada($db) && FusionTicket::esSecundario($db, $ticketId)) {
+        responder_json(['ok' => false, 'error' => 'Este ticket está fusionado. Gestiona su estado desde el ticket principal.'], 409);
+    }
+
     /*
      * COMENZAR: solo el técnico asignado, con el ticket Recibido o Asignado.
      * Define la prioridad y la fecha estimada de término (como el modal antiguo).
@@ -318,6 +324,9 @@ try {
         $pdo->beginTransaction();
         try {
             $db->execute('UPDATE tickets SET id_estado = ? WHERE id_ticket = ?', [$estadoId, $ticketId]);
+            if ($estadoId === 5) {
+                $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+            }
             $cerradosFusion = $estadoId === 5 ? FusionTicket::terminarSecundarios($db, $ticketId, $usuarioId) : [];
             $pdo->commit();
         } catch (Throwable $e) {
@@ -388,6 +397,9 @@ try {
                 'UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?',
                 [$tecnicoId ?: null, $estadoId, $ticketId]
             );
+            if ($estadoId === 5) {
+                $db->execute('UPDATE proceso_tickets SET fecha_termino_ticket = COALESCE(fecha_termino_ticket, CURDATE()), hora_termino_ticket = COALESCE(hora_termino_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
+            }
             $cerradosFusion = $estadoId === 5 ? FusionTicket::terminarSecundarios($db, $ticketId, $usuarioId) : [];
             $pdo->commit();
         } catch (Throwable $e) {
