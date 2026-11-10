@@ -176,7 +176,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
         <div><span class="ticket-detail-kicker">Solicitud #<?= (int) $ticket['id_ticket'] ?></span><h1><?= e($ticket['asunto']) ?></h1></div>
         <div class="tb-cabecera-acciones">
           <?php if ($vista === 'usuario' && $esPropietario && $calificacionDisponible && (int) $ticket['id_estado'] === 5 && !$calificacion): ?>
-             <a class="btn btn-primary btn-sm ticket-rating-cta" href="#calificacion" aria-label="Calificar atención del ticket con estrellas"><i class="bi bi-star-fill"></i> Calificar atención <span aria-hidden="true">★★★★★</span></a>
+             <button class="btn btn-sm ticket-rating-cta" type="button" id="abrir-calificacion" aria-haspopup="dialog" aria-controls="modal-calificacion-detalle"><i class="bi bi-star-fill"></i> Calificar atención <span aria-hidden="true">★★★★★</span></button>
            <?php endif; ?>
            <?php if ($calificacionDisponible && $calificacion && in_array($vista, ['admin','tecnico'], true)): ?>
              <span class="ticket-rating-summary" title="Calificación del solicitante: <?= (int) $calificacion['puntaje'] ?> de 5 estrellas"><i class="bi bi-star-fill"></i> <?= (int) $calificacion['puntaje'] ?>/5</span>
@@ -281,7 +281,7 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
 
         <?php if ($puedeCambiarEstado): ?><section class="card ticket-detail-manage"><h2>Actualizar estado</h2><form id="ticket-state-form" data-estado-actual="<?= (int) $ticket['id_estado'] ?>" data-ticket-id="<?= (int) $ticket['id_ticket'] ?>" data-asunto="<?= e($ticket['asunto']) ?>"><label class="form-label" for="ticket-state">Estado del caso</label><select class="form-input" id="ticket-state" name="estado"><?php foreach (ticket_estados_legacy() as $valor=>$info): ?><option value="<?= $valor ?>" <?= (int)$ticket['id_estado'] === $valor ? 'selected' : '' ?>><?= e($info['nombre']) ?></option><?php endforeach; ?></select><button class="btn btn-primary" type="submit">Guardar estado</button><div class="ticket-message" id="ticket-state-message" role="status"></div></form></section><?php endif; ?>
 
-        <?php if ($calificacionDisponible && (($vista === 'usuario' && $esPropietario && (int) $ticket['id_estado'] === 5) || (in_array($vista, ['admin','tecnico'], true) && $calificacion))): ?>
+        <?php if ($calificacionDisponible && $calificacion && (($vista === 'usuario' && $esPropietario) || in_array($vista, ['admin','tecnico'], true))): ?>
           <section class="card ticket-rating" id="calificacion">
             <h2><?= $vista === 'usuario' ? 'Califica la atención' : 'Calificación del solicitante' ?></h2>
             <?php if ($calificacion): ?>
@@ -290,7 +290,38 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
                 <p><?= e($calificacion['comentario'] ?: 'Sin comentario adicional.') ?></p>
               </div>
             <?php else: ?>
-              <form id="ticket-rating-form">
+              <?php /* El formulario se abre desde el modal superior. */ ?>
+            <?php endif; ?>
+          </section>
+        <?php endif; ?>
+      </aside>
+    </div>
+  </div>
+  <style>
+    .ticket-rating-cta{background:#f4c84b!important;color:#493500!important;border:1px solid #dfaa19!important;animation:ticket-rating-flash 1.25s ease-in-out infinite;white-space:nowrap;font-weight:700}
+    .ticket-rating-cta span{letter-spacing:1px;font-size:12px;color:#795000}
+    @keyframes ticket-rating-flash{0%,100%{background:#f4c84b;filter:brightness(1);box-shadow:0 0 0 0 rgba(238,178,23,.25)}50%{background:#ffe58c;filter:brightness(1.15);box-shadow:0 0 0 6px rgba(238,178,23,.08)}}
+    @media(prefers-reduced-motion:reduce){.ticket-rating-cta{animation:none}}
+    .ticket-rating-summary{display:inline-flex;align-items:center;gap:6px;color:#9a6400;background:#fff4d8;border:1px solid #ead9ac;border-radius:7px;padding:7px 10px;font-weight:600;font-size:13px;white-space:nowrap}
+    .ticket-rating-readonly{font-size:27px;color:#c58a14;letter-spacing:2px}
+    .ticket-rating-dialog{position:fixed;inset:0;margin:auto;width:min(440px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;padding:24px;border:1px solid #e0e4eb;border-radius:14px;background:#fff;color:#233047;box-shadow:0 18px 70px rgba(10,24,45,.24)}
+    .ticket-rating-dialog::backdrop{background:rgba(10,22,38,.48)}
+    .ticket-rating-dialog-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px}
+    .ticket-rating-dialog-head h2{font-size:19px;margin:0 0 5px}
+    .ticket-rating-dialog-head p{font-size:13px;color:#64748b;margin:0}
+    .ticket-rating-dialog-close{border:0;background:#f1f4f8;border-radius:8px;padding:8px 10px;cursor:pointer}
+    .ticket-rating-dialog .ticket-stars label{color:#e0ad27}
+    .ticket-rating-dialog form{display:grid;gap:12px}
+    .ticket-rating-dialog textarea{min-height:80px}
+    @media(prefers-reduced-motion:reduce){.ticket-rating-cta{animation:none}}
+  </style>
+        <?php if ($calificacionDisponible && $vista === 'usuario' && $esPropietario && (int) $ticket['id_estado'] === 5 && !$calificacion): ?>
+        <dialog id="modal-calificacion-detalle" class="ticket-rating-dialog" aria-labelledby="titulo-calificacion-detalle">
+          <div class="ticket-rating-dialog-head">
+            <div><h2 id="titulo-calificacion-detalle">Califica la atención</h2><p>¿Cómo fue la atención que recibiste?</p></div>
+            <button type="button" class="ticket-rating-dialog-close" id="cerrar-calificacion" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+          </div>
+                        <form id="ticket-rating-form">
                 <fieldset>
                   <legend>Selecciona de 1 a 5 estrellas</legend>
                   <div class="ticket-stars">
@@ -305,21 +336,18 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
                 <button class="btn btn-primary" type="submit"><i class="bi bi-star"></i> Guardar calificación</button>
                 <div class="ticket-message" id="ticket-rating-message" role="status"></div>
               </form>
-            <?php endif; ?>
-          </section>
+        </dialog>
         <?php endif; ?>
-      </aside>
-    </div>
-  </div>
-  <style>
-    .ticket-rating-cta{animation:ticket-rating-pulse 1.9s ease-in-out infinite;white-space:nowrap}
-    .ticket-rating-cta span{letter-spacing:1px;font-size:11px}
-    @keyframes ticket-rating-pulse{0%,100%{box-shadow:0 0 0 0 rgba(230,163,27,.35)}50%{box-shadow:0 0 0 7px rgba(230,163,27,0)}}
-    @media(prefers-reduced-motion:reduce){.ticket-rating-cta{animation:none}}
-    .ticket-rating-summary{display:inline-flex;align-items:center;gap:6px;color:#9a6400;background:#fff4d8;border:1px solid #ead9ac;border-radius:7px;padding:7px 10px;font-weight:600;font-size:13px;white-space:nowrap}
-    .ticket-rating-readonly{font-size:27px;color:#c58a14;letter-spacing:2px}
-    #calificacion{scroll-margin-top:24px}
-  </style>
+  <script>
+    (() => {
+      const dialog=document.getElementById('modal-calificacion-detalle');
+      const trigger=document.getElementById('abrir-calificacion');
+      if(!dialog||!trigger)return;
+      trigger.addEventListener('click',()=>{if(!dialog.open)dialog.showModal();});
+      document.getElementById('cerrar-calificacion')?.addEventListener('click',()=>dialog.close());
+      dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+    })();
+  </script>
   <link rel="stylesheet" href="../css/ticket_bitacora.css?v=<?= (int) @filemtime(__DIR__ . '/../css/ticket_bitacora.css') ?>">
   <script src="js/chat_ticket.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
