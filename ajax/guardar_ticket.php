@@ -5,6 +5,7 @@ require_once __DIR__ . '/_bootstrap.php';
 require_once __DIR__ . '/../helpers/tickets.php';
 require_once __DIR__ . '/../clases/Tickets/BitacoraTicket.php';
 require_once __DIR__ . '/../clases/Tickets/AvisosTicket.php';
+require_once __DIR__ . '/../clases/Tickets/FusionTicket.php';
 
 /** Nombre corto de un usuario para los registros automáticos de la bitácora. */
 function bitacora_nombre(Conexion $db, ?int $id): string
@@ -227,6 +228,26 @@ try {
      * Define la prioridad y la fecha estimada de término (como el modal antiguo).
      * Lógica: ticket/logica/LOGICA_COMENZAR_TICKET.txt
      */
+    if ($accion === 'fusionar') {
+        $secundarioId = (int) ($datos['ticket_secundario_id'] ?? 0);
+        $motivoFusion = trim((string) ($datos['motivo_fusion'] ?? ''));
+        if (!puede_administrar_ticket($usuarioId, (int) $ticket['id_colegio'], $db)) {
+            responder_json(['ok' => false, 'error' => 'No tienes permiso para fusionar este ticket.'], 403);
+        }
+        $secundarioTicket = $secundarioId > 0 ? ticket_buscar_para_acceso($secundarioId, $db) : false;
+        if (!$secundarioTicket || !puede_administrar_ticket($usuarioId, (int) ($secundarioTicket['id_colegio'] ?? 0), $db)) {
+            responder_json(['ok' => false, 'error' => 'El ticket secundario no existe o está fuera de tu alcance.'], 403);
+        }
+        try {
+            FusionTicket::fusionar($db, $ticketId, $secundarioId, $usuarioId, $motivoFusion);
+        } catch (DomainException $e) {
+            responder_json(['ok' => false, 'error' => $e->getMessage()], 422);
+        }
+        (new BitacoraTicket($db))->registrarSistema($ticketId, $usuarioId, 'Se fusionó el ticket #' . $secundarioId . '. Motivo: ' . $motivoFusion);
+        (new BitacoraTicket($db))->registrarSistema($secundarioId, $usuarioId, 'Ticket vinculado al principal #' . $ticketId . '. Motivo: ' . $motivoFusion);
+        responder_json(['ok' => true, 'mensaje' => 'Tickets fusionados. El secundario se terminará automáticamente cuando termine el principal.']);
+    }
+
     if ($accion === 'comenzar') {
         if ((int) ($ticket['id_tecnico'] ?? 0) !== $usuarioId) {
             responder_json(['ok' => false, 'error' => 'Solo el técnico asignado puede comenzar el ticket.'], 403);
@@ -293,7 +314,16 @@ try {
         if (!$esTecnicoAsignado && !puede_administrar_ticket($usuarioId, (int) $ticket['id_colegio'], $db)) {
             responder_json(['ok' => false, 'error' => 'No tienes permiso para actualizar este ticket.'], 403);
         }
-        $db->execute('UPDATE tickets SET id_estado = ? WHERE id_ticket = ?', [$estadoId, $ticketId]);
+        $pdo = $db->getPDO();
+        $pdo->beginTransaction();
+        try {
+            $db->execute('UPDATE tickets SET id_estado = ? WHERE id_ticket = ?', [$estadoId, $ticketId]);
+            $cerradosFusion = $estadoId === 5 ? FusionTicket::terminarSecundarios($db, $ticketId, $usuarioId) : [];
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
+        }
         if ($estadoId === 3) {
             $db->execute('UPDATE proceso_tickets SET fecha_comienzo_ticket = COALESCE(fecha_comienzo_ticket, CURDATE()), hora_comienzo_ticket = COALESCE(hora_comienzo_ticket, CURTIME()) WHERE id_ticket = ?', [$ticketId]);
         } elseif ($estadoId === 5) {
@@ -351,10 +381,19 @@ try {
         if ($motivo = puede_reasignar($ticket, $tecnicoId)) {
             responder_json(['ok' => false, 'error' => $motivo], 409);
         }
-        $db->execute(
-            'UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?',
-            [$tecnicoId ?: null, $estadoId, $ticketId]
-        );
+        $pdo = $db->getPDO();
+        $pdo->beginTransaction();
+        try {
+            $db->execute(
+                'UPDATE tickets SET id_tecnico = ?, id_estado = ? WHERE id_ticket = ?',
+                [$tecnicoId ?: null, $estadoId, $ticketId]
+            );
+            $cerradosFusion = $estadoId === 5 ? FusionTicket::terminarSecundarios($db, $ticketId, $usuarioId) : [];
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $e;
+        }
         if ($tecnicoId > 0 && $tecnicoId !== (int) ($ticket['id_tecnico'] ?? 0)) {   // (re)asignación: fecha nueva
             $db->execute('UPDATE proceso_tickets SET fecha_asignacion_tecnico = CURDATE(), hora_asignacion_tecnico = CURTIME() WHERE id_ticket = ?', [$ticketId]);
         }
