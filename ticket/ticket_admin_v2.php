@@ -111,10 +111,10 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
         <div class="ticket-message" id="admin-modal-mensaje" role="status"></div>
       </div>
       <div class="modal-footer">
-        <?php if ($esGlobal): ?><button class="btn btn-danger" id="admin-modal-eliminar"><i class="bi bi-trash"></i> Eliminar</button><?php endif; ?>
-        <button type="button" class="btn btn-outline" id="admin-modal-fusionar"><i class="bi bi-intersect"></i> Fusionar</button>
-        <a class="btn btn-outline" id="admin-modal-pdf" href="#" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
-        <button class="btn btn-outline js-ticket-correo" type="button" id="admin-modal-correo" data-solo-yo="0"><i class="bi bi-envelope"></i> Correo</button>
+        <?php if ($esGlobal): ?><button class="btn btn-danger" id="admin-modal-eliminar" hidden><i class="bi bi-trash"></i> Eliminar</button><?php endif; ?>
+        <button type="button" class="btn btn-outline" id="admin-modal-fusionar" hidden><i class="bi bi-intersect"></i> Fusionar</button>
+        <a class="btn btn-outline" id="admin-modal-pdf" hidden href="#" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+        <button class="btn btn-outline js-ticket-correo" type="button" id="admin-modal-correo" hidden data-solo-yo="0"><i class="bi bi-envelope"></i> Correo</button>
         <button class="btn btn-outline" onclick="closeModal('modal-admin-ticket')">Cerrar</button><button class="btn btn-primary" id="admin-modal-guardar"><i class="bi bi-check2"></i> Guardar cambios</button>
       </div>
     </div>
@@ -142,6 +142,26 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     </div>
   </div>
   <div class="modal-overlay" id="modal-admin-fusionar" onclick="closeModalOutside(event,'modal-admin-fusionar')"><div class="modal" style="max-width:520px"><div class="modal-header"><h3>Fusionar tickets</h3><p id="fusion-folio"></p></div><div class="modal-body"><p>El ticket actual será el principal. El secundario conservará su historial y se terminará automáticamente cuando termine el principal.</p><div class="form-group"><label class="form-label" for="fusion-secundario">N° ticket secundario</label><input class="form-input" id="fusion-secundario" type="number" min="1" step="1"></div><div class="form-group"><label class="form-label" for="fusion-motivo">Motivo de fusión</label><textarea class="form-input" id="fusion-motivo" rows="3" maxlength="500"></textarea></div><div class="ticket-message" id="fusion-mensaje" role="status"></div></div><div class="modal-footer"><button class="btn btn-outline" type="button" onclick="closeModal('modal-admin-fusionar')">Cancelar</button><button class="btn btn-primary" type="button" id="fusion-confirmar">Confirmar fusión</button></div></div></div>
+  <style>
+    .ticket-more-menu{position:fixed;z-index:1100;width:224px;max-width:calc(100vw - 20px);padding:6px;background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#243044);border:1px solid #d9dee6;border-radius:10px;box-shadow:0 12px 30px rgba(20,30,45,.17)}
+    .ticket-more-menu[hidden]{display:none!important}
+    .ticket-more-menu button,.ticket-more-menu a{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border:0;border-radius:6px;background:transparent;color:inherit;text-align:left;text-decoration:none;font:inherit;font-size:13px;cursor:pointer}
+    .ticket-more-menu button:hover,.ticket-more-menu a:hover,.ticket-more-menu button:focus-visible,.ticket-more-menu a:focus-visible{background:#f0f3f7}
+    .ticket-more-menu .ticket-more-danger{color:#b42318}
+    .ticket-more-menu .ticket-more-danger:hover{background:#fff0ee}
+    .ticket-more-menu .ticket-more-divider{border-top:1px solid #e3e7ed;margin:5px 2px}
+    .ticket-more-menu i{width:17px;text-align:center}
+    .ticket-more-menu button:disabled{opacity:.5;cursor:not-allowed}
+  </style>
+  <div class="ticket-more-menu" id="admin-ticket-more-menu" role="menu" aria-label="Acciones del ticket" hidden>
+    <button type="button" role="menuitem" data-action="gestionar"><i class="bi bi-sliders"></i> Gestionar ticket</button>
+    <button type="button" role="menuitem" data-action="fusionar"><i class="bi bi-intersect"></i> Fusionar tickets</button>
+    <button type="button" role="menuitem" data-action="historial" disabled title="Disponible próximamente"><i class="bi bi-clock-history"></i> Historial (próximamente)</button>
+    <div class="ticket-more-divider" role="separator"></div>
+    <button type="button" role="menuitem" data-action="pdf"><i class="bi bi-file-earmark-pdf"></i> Descargar PDF</button>
+    <button type="button" role="menuitem" data-action="correo"><i class="bi bi-envelope"></i> Enviar correo</button>
+    <?php if ($esGlobal): ?><div class="ticket-more-divider" role="separator"></div><button type="button" role="menuitem" class="ticket-more-danger" data-action="eliminar"><i class="bi bi-trash"></i> Eliminar ticket</button><?php endif; ?>
+  </div>
   <script>
   const adminTicketCsrf = <?= json_encode($csrf) ?>;
   let adminTicketActual = 0;
@@ -153,6 +173,50 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
     const filtrar=()=>{const url=new URL(window.location.href);if(url.searchParams.get('resumen')===contenedor.dataset.estado)url.searchParams.delete('resumen');else url.searchParams.set('resumen',contenedor.dataset.estado);url.searchParams.delete('pagina');window.location.href=url.toString()};
     contenedor.addEventListener('click',filtrar);contenedor.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();filtrar()}});
   });
+  const ticketMoreMenu=document.getElementById('admin-ticket-more-menu');
+  let ticketMoreTrigger=null;
+  function cerrarMenuTicket(){
+    ticketMoreMenu.hidden=true;
+    if(ticketMoreTrigger){ticketMoreTrigger.setAttribute('aria-expanded','false');ticketMoreTrigger=null;}
+  }
+  function abrirMenuTicket(button,event){
+    event?.stopPropagation();
+    if(!ticketMoreMenu.hidden&&ticketMoreTrigger===button){cerrarMenuTicket();return;}
+    cerrarMenuTicket();
+    ticketMoreTrigger=button;
+    button.setAttribute('aria-expanded','true');
+    ticketMoreMenu.hidden=false;
+    const rect=button.getBoundingClientRect();
+    const width=ticketMoreMenu.offsetWidth, height=ticketMoreMenu.offsetHeight;
+    const left=Math.max(10,Math.min(rect.right-width,window.innerWidth-width-10));
+    const top=rect.bottom+6+height>window.innerHeight?Math.max(10,rect.top-height-6):rect.bottom+6;
+    ticketMoreMenu.style.left=left+'px';ticketMoreMenu.style.top=top+'px';
+    ticketMoreMenu.querySelector('button:not(:disabled)')?.focus();
+  }
+  ticketMoreMenu.addEventListener('click',event=>{
+    const item=event.target.closest('[data-action]');
+    if(!item||item.disabled||!ticketMoreTrigger)return;
+    const trigger=ticketMoreTrigger;
+    const action=item.dataset.action;
+    cerrarMenuTicket();
+    if(action==='historial')return;
+    administrarTicket(trigger);
+    if(action==='gestionar')return;
+    // Las acciones independientes no requieren mantener visible el modal de gestión.
+    closeModal('modal-admin-ticket');
+    if(action==='fusionar')document.getElementById('admin-modal-fusionar')?.click();
+    if(action==='eliminar')document.getElementById('admin-modal-eliminar')?.click();
+    if(action==='correo')document.getElementById('admin-modal-correo')?.click();
+    if(action==='pdf'){
+      const url=document.getElementById('admin-modal-pdf').href;
+      const nueva=window.open(url,'_blank','noopener,noreferrer');
+      if(!nueva)window.location.href=url;
+    }
+  });
+  document.addEventListener('click',event=>{if(!ticketMoreMenu.contains(event.target)&&!event.target.closest('.ticket-more-trigger'))cerrarMenuTicket()});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!ticketMoreMenu.hidden){cerrarMenuTicket();event.preventDefault();}});
+  window.addEventListener('resize',cerrarMenuTicket);
+  window.addEventListener('scroll',cerrarMenuTicket,true);
   function escTicket(value){const d=document.createElement('div');d.textContent=value??'';return d.innerHTML}
   function administrarTicket(button){
     const t=JSON.parse(button.dataset.ticket); adminTicketActual=Number(t.id_ticket);
