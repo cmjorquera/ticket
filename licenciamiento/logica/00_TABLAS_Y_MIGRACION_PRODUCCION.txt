@@ -1,0 +1,21 @@
+LICENCIAMIENTO — TABLAS Y MIGRACION A PRODUCCION (2026-11-10)
+Fuente: licenciamiento/logica/DIAGRAMA_TABLAS.txt (rama qa).
+
+TABLAS DOCUMENTADAS
+- software_catalogo: licencias y software.
+- software_datos_almacenamiento: contactos/datos asociados.
+- software_historial: auditoria de cambios.
+- software_datos_sensibles_rel: relacion con catalogo de datos sensibles.
+- inventario_software_datos_sensibles: catalogo de datos sensibles.
+- software_tipo_usuario_rel: relacion con tipos de usuario.
+- inventario_software_tipo_usuario: catalogo de tipos de usuario.
+- sitios_web_catalogo: sitios web y aplicaciones.
+- colegio y usuarios: entidades compartidas; NO reemplazar datos globales al migrar el modulo.
+
+MIGRACION
+- Preservar IDs de software/sitios y las relaciones e historiales.
+- No importar datos sensibles sin revisar control de acceso, cifrado y necesidad.
+- Validar que id_colegio e id_usuario_responsable correspondan a registros de produccion.
+- Comparar estructura SQL y duplicados antes de insertar datos del respaldo.
+
+PENDIENTE: comprobar columnas y FK exactas contra los dumps reales.
