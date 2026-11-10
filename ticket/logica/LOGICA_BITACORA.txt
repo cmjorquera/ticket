@@ -60,3 +60,5 @@ css/ticket_bitacora.css              estilos
 helpers/tickets.php                  ticket_boton_abrir (número en "Abrir")
 clases/Tickets/TicketDataBase.php    bitacora_no_leidos por bandeja
 ticket/js/chat_ticket_panel.js       actualiza el número de "Abrir" cada 8 s
+
+2026-11-10 QA: Se reemplaza window.confirm del botón rápido Terminar ticket por modal de confirmación propio, centrado y coherente con la estética SEDUC. Implementado en ticket/js/bitacora_ticket.js; mantiene POST actualizar_estado, CSRF, registro de bitácora y recarga después de confirmar. Cancelar, Escape y clic fuera no alteran estado. No requiere SQL.
