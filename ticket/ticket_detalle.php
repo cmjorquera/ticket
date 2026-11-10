@@ -399,6 +399,22 @@ iniciar_layout_configuracion('Detalle de ticket', 'Tickets', 'ticket_detalle');
     .ticket-image-gallery-head strong{color:#334155}
     .ticket-image-gallery-stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:180px;background:#f1f4f8;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
     .ticket-image-gallery-slide{display:flex;align-items:center;justify-content:center;width:100%;height:240px}
+    /* Anular estilos genéricos de enlaces de la tarjeta que alineaban la imagen a la izquierda. */
+    .ticket-detail-files .ticket-image-gallery-stage > a.ticket-image-gallery-slide{
+      display:flex!important;align-items:center!important;justify-content:center!important;
+      width:100%!important;min-width:0!important;height:300px!important;
+      padding:12px 50px!important;margin:0!important;box-sizing:border-box!important;
+      background:transparent!important;border:0!important;text-align:center!important;
+    }
+    .ticket-detail-files .ticket-image-gallery-stage > a.ticket-image-gallery-slide[hidden]{display:none!important}
+    .ticket-detail-files .ticket-image-gallery-stage > a.ticket-image-gallery-slide img{
+      display:block!important;width:auto!important;height:auto!important;
+      max-width:100%!important;max-height:100%!important;object-fit:contain!important;
+      margin:auto!important;flex:0 1 auto!important;
+    }
+    @media(max-width:640px){
+      .ticket-detail-files .ticket-image-gallery-stage > a.ticket-image-gallery-slide{height:220px!important;padding:8px 44px!important}
+    }
     .ticket-image-gallery-slide[hidden]{display:none!important}
     .ticket-image-gallery-slide img{display:block;max-width:100%;max-height:100%;object-fit:contain}
     .ticket-image-gallery-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:1;display:grid;place-items:center;width:34px;height:34px;border:1px solid #d9e0e9;border-radius:50%;background:rgba(255,255,255,.94);color:#19375b;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12)}
