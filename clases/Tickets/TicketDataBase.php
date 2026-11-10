@@ -57,6 +57,16 @@ abstract class TicketDataBase
             ? '(SELECT COUNT(*) FROM archivos_adjuntos_ticket aa WHERE aa.id_ticket = t.id_ticket)'
             : '0';
 
+        // El botón de galería solo se muestra si hay imágenes adjuntas.
+        $rutaAdjunto = isset($columnasAdjuntos['adjunto']) ? 'adjunto'
+            : (isset($columnasAdjuntos['ruta_archivo']) ? 'ruta_archivo' : null);
+        $cantidadImagenes = $rutaAdjunto !== null && isset($columnasAdjuntos['id_ticket'])
+            ? "(SELECT COUNT(*) FROM archivos_adjuntos_ticket ai
+                 WHERE ai.id_ticket = t.id_ticket
+                   AND LOWER(SUBSTRING_INDEX(ai.{$rutaAdjunto}, '.', -1))
+                       IN ('jpg', 'jpeg', 'png', 'gif', 'webp'))"
+            : '0';
+
         $tablaCalificacion = 'calificacion_ticket';
         $columnasCalificacion = ticket_columnas_tabla($tablaCalificacion, $this->db);
         if (!$columnasCalificacion) {
@@ -95,7 +105,8 @@ abstract class TicketDataBase
                        DATEDIFF(pt.fecha_estimada_admin, CURDATE()) AS dias_restantes,
                        {$noLeidos} AS mensajes_no_leidos,
                        {$bitacoraNoLeidos} AS bitacora_no_leidos,
-                       {$cantidadArchivos} AS cantidad_archivos
+                       {$cantidadArchivos} AS cantidad_archivos,
+                       {$cantidadImagenes} AS cantidad_imagenes
                   FROM tickets t
                   JOIN estados_ticket et ON et.id = t.id_estado
                   JOIN usuarios us ON us.id = t.id_usuario
