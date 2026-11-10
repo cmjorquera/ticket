@@ -1,0 +1,27 @@
+INVENTARIO — TABLAS Y MIGRACION A PRODUCCION (2026-11-10)
+Fuente principal: inventario/logica/02_distribucion_tablas.txt (rama qa). Este documento es un indice, no reemplaza el detalle oficial.
+
+PC — TABLAS DOCUMENTADAS
+- equipos: entidad principal y asignacion de usuario/colegio/ubicacion.
+- equipos_compra: datos de compra.
+- equipo_almacenamiento: discos.
+- equipo_memoria: memorias.
+- equipo_monitor: monitores asociados a un PC (NO confundir con monitores independientes).
+- equipo_procesador: procesador.
+- equipo_software: software detectado del equipo.
+- equipo_fotos: fotos y ruta fisica.
+- equipo_movimiento: movimientos de ubicacion.
+- equipo_asignacion_historial: historial de asignaciones.
+- equipo_ubicacion: ubicaciones.
+- estado_equipo: catalogo de estados.
+- tipo_pc_catalogo: catalogo de tipo de PC.
+- monitores: inventario independiente (verificar resto de tablas en 02_distribucion_tablas.txt).
+
+MIGRACION
+- Conservar IDs y relaciones entre equipos y sus tablas hijas; NO copiar solo equipos.
+- Verificar historiales, fotos y ficheros en uploads, ademas de SQL.
+- Distinguir baja operativa (id_estado) de eliminacion logica (eliminado).
+- Comparar columnas y motor de tablas entre QA y produccion antes de importar.
+- Verificar en especial tablas de monitores independientes y su relacion con equipos.
+
+PENDIENTE: inventario completo de todas las tablas de monitores y verificacion contra dumps reales; consultar 02_distribucion_tablas.txt.
