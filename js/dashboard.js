@@ -38,13 +38,46 @@
       : new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(date);
   };
 
+  // Skeletons con la misma geometría de las tarjetas, gráficos y tabla.
+  function showSkeletons() {
+    const kpis = $('dashboard-kpis');
+    if (kpis) {
+      kpis.innerHTML = Array.from({ length: 4 }, () => `
+        <div class="dashboard-kpi-cell">
+          <div class="dashboard-skeleton-card" aria-hidden="true">
+            <span class="dashboard-skeleton sk-line sk-kpi-label"></span>
+            <span class="dashboard-skeleton sk-line sk-kpi-number"></span>
+            <span class="dashboard-skeleton sk-line sk-kpi-sub"></span>
+            <span class="dashboard-skeleton sk-kpi-icon"></span>
+          </div>
+        </div>`).join('');
+    }
+    const table = $('dashboard-ticket-table');
+    if (table) {
+      table.innerHTML = `<div class="dashboard-skeleton-table" aria-hidden="true">
+        <div class="dashboard-skeleton-table-head">
+          ${Array.from({length:6},(_,i)=>`<span class="dashboard-skeleton sk-line" style="width:${i===1?75:55}%"></span>`).join('')}
+        </div>
+        ${Array.from({length:5},(_,row)=>`<div class="dashboard-skeleton-table-row">
+          ${Array.from({length:6},(_,col)=>`<span class="dashboard-skeleton sk-line" style="width:${col===1?85:row%2?60:72}%"></span>`).join('')}
+        </div>`).join('')}
+      </div>`;
+    }
+    const count = $('dashboard-list-count');
+    if (count) count.textContent = '—';
+  }
+
   function setBusy(busy) {
     app.setAttribute('aria-busy', busy ? 'true' : 'false');
     document.querySelectorAll('[data-dashboard-profile]').forEach(button => { button.disabled = busy; });
+    document.querySelectorAll('.dashboard-chart-body').forEach(body => {
+      body.classList.toggle('dashboard-chart-is-loading', busy);
+    });
     ['loadingGraficoTicket', 'loadingGraficoCategorias'].forEach(id => {
       const loader = $(id);
       if (loader) loader.hidden = !busy;
     });
+    if (busy) showSkeletons();
   }
 
   function showError(message) {
@@ -78,13 +111,10 @@
     state.controller = controller;
     setBusy(true);
     clearError();
-    const start = performance.now();
 
     try {
       const endpoint = `${config.endpoints.datos}?perfil=${encodeURIComponent(profile)}`;
       const payload = await requestJson(endpoint, { signal: controller.signal });
-      const remaining = Math.max(0, 1000 - (performance.now() - start));
-      if (remaining) await new Promise(resolve => window.setTimeout(resolve, remaining));
 
       state.data = payload.data;
       state.perfil = payload.data.perfil;
