@@ -1,0 +1,37 @@
+FUSIÓN DE TICKETS — DISEÑO APROBADO (10-11-2026)
+================================================
+Rama de desarrollo: feature/fusion-tickets-cierre-automatico (base qa)
+ESTADO: DISEÑO + SQL PREPARADOS; FUNCIONALIDAD PHP AÚN NO IMPLEMENTADA.
+
+Decisión del usuario: opción A. Al terminar el ticket principal (id_estado=5),
+terminar automáticamente todos los secundarios asociados, en la MISMA
+transacción que actualiza el principal.
+
+Datos:
+- ticket_fusiones: principal, secundario, actor, motivo, fecha y cierre automático.
+- ticket_fusion_eventos: bitácora auditable de fusiones y cierres.
+- tickets.estado (1 activo / 2 eliminado) NO es lo mismo que tickets.id_estado
+  (5 terminado / 6 cerrado). Fusionar NO implica borrar lógicamente.
+- El SQL está en ticket/sql/04_fusion_tickets.sql y se ejecuta MANUALMENTE en QA.
+
+Condiciones imprescindibles para el código posterior:
+1. Administrador autorizado; validar alcance de colegios en backend.
+2. Principal y secundario distintos, activos, existentes y visibles para el admin.
+3. Evitar ciclos, fusiones anidadas y fusionar tickets ya fusionados.
+4. Permitir seleccionar secundarios con confirmación explícita y motivo.
+5. La transacción debe bloquear filas involucradas (SELECT ... FOR UPDATE),
+   actualizar estado de secundarios y fechas de proceso_tickets, registrar
+   eventos y hacer rollback íntegro ante error.
+6. El cierre automático se dispara en TODOS los endpoints que terminen
+   el principal, no solo desde la interfaz del administrador.
+7. Mantener conversaciones, adjuntos y permisos de acceso a cada ticket.
+8. Filtrar secundarios fusionados de KPI operativos sin ocultarlos de
+   la vista del solicitante ni de la auditoría.
+9. Las notificaciones deben enviarse después de commit; evitar duplicados.
+10. Pruebas: múltiples secundarios, reintentos, concurrencia, permisos,
+    cierre previo del secundario, eliminación, fallo SQL, plazos y PDF.
+11. No inventar fechas históricas anteriores a la auditoría.
+12. No desplegar a producción sin validar estructura real y pruebas QA.
+
+Pendiente: comprobar esquema exacto de tickets/proceso_tickets, los caminos
+de actualización de estado, la lógica de fusión antigua y permisos.
