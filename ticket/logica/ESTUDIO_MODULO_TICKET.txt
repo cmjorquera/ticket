@@ -95,3 +95,5 @@ Fechas del ciclo: proceso_tickets (creación, asignación, comienzo, término, c
      componentes/grafico_estado_ticket.php, componentes/ticket_dias_restantes.php,
      componentes/js/chat_conversacion.js, js/funciones.js (5.500 líneas),
      js/ticket.js (3.100 líneas).
+
+2026-11-10 QA: En ticket/ticket_detalle.php, tarjeta Datos del ticket del perfil usuario, se muestran Categoría (categoria_de_ticket.nombre_categoria) y Tiempo del técnico. La duración se calcula con proceso_tickets.fecha/hora_comienzo_ticket y fecha/hora_termino_ticket; para trabajos en curso se calcula hasta el momento de cargar la página. Si falta fecha de término en ticket terminado, se informa que no hay registro suficiente. No requiere cambios SQL.
