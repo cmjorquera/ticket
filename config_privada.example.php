@@ -17,7 +17,7 @@ return [
     // 'local', 'qa' o 'produccion'
     'entorno' => 'qa',
 
-    // BD principal. Usada por clases/Conexion.php.
+    // URL pública de este servidor. No depende del host enviado por el navegador.\n    'app' => [\n        'base_url' => 'https://sistemabase.webnia.cl/', // En producción: https://acceso.seduc.cl/\n    ],\n\n    // BD principal. Usada por clases/Conexion.php.
     // 'bases' permite mapear nombres lógicos a bases reales según el servidor.
     // Si una entrada no está definida, se mantiene prefijo + nombre lógico.
     'db' => [
