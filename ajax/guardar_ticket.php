@@ -386,8 +386,24 @@ try {
         if (!es_administrador_global($usuarioId, $db)) {
             responder_json(['ok' => false, 'error' => 'Solo un administrador general puede eliminar tickets.'], 403);
         }
-        $db->execute('UPDATE tickets SET estado = 2 WHERE id_ticket = ?', [$ticketId]);
-        responder_json(['ok' => true, 'mensaje' => 'Ticket eliminado.']);
+        $motivos = [
+            'duplicado' => 'Ticket duplicado',
+            'prueba_limpieza' => 'Prueba o limpieza de registros',
+            'error_registro' => 'Solicitud creada por error',
+        ];
+        $codigoMotivo = trim((string) ($datos['motivo_eliminacion'] ?? ''));
+        if (!array_key_exists($codigoMotivo, $motivos)) {
+            responder_json(['ok' => false, 'error' => 'Debes seleccionar un motivo de eliminación válido.'], 422);
+        }
+        // Solo eliminación lógica. Conservamos id_estado, conversaciones y adjuntos.
+        $db->execute('UPDATE tickets SET estado = 2 WHERE id_ticket = ? AND estado = 1', [$ticketId]);
+        ticket_registrar_cambio($db, $ticketId, $usuarioId, 'eliminar', 'estado', '1', '2');
+        (new BitacoraTicket($db))->registrarSistema(
+            $ticketId,
+            $usuarioId,
+            bitacora_nombre($db, $usuarioId) . ' eliminó lógicamente el ticket. Motivo: ' . $motivos[$codigoMotivo] . '.'
+        );
+        responder_json(['ok' => true, 'mensaje' => 'Ticket eliminado lógicamente. Motivo registrado.']);
     }
 
     responder_json(['ok' => false, 'error' => 'Acción no reconocida.'], 400);
