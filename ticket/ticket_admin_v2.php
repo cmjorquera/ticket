@@ -112,6 +112,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
       </div>
       <div class="modal-footer">
         <?php if ($esGlobal): ?><button class="btn btn-danger" id="admin-modal-eliminar"><i class="bi bi-trash"></i> Eliminar</button><?php endif; ?>
+        <button type="button" class="btn btn-outline" id="admin-modal-fusionar"><i class="bi bi-intersect"></i> Fusionar</button>
         <a class="btn btn-outline" id="admin-modal-pdf" href="#" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <button class="btn btn-outline js-ticket-correo" type="button" id="admin-modal-correo" data-solo-yo="0"><i class="bi bi-envelope"></i> Correo</button>
         <button class="btn btn-outline" onclick="closeModal('modal-admin-ticket')">Cerrar</button><button class="btn btn-primary" id="admin-modal-guardar"><i class="bi bi-check2"></i> Guardar cambios</button>
@@ -140,6 +141,7 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
       </div>
     </div>
   </div>
+  <div class="modal-overlay" id="modal-admin-fusionar" onclick="closeModalOutside(event,'modal-admin-fusionar')"><div class="modal" style="max-width:520px"><div class="modal-header"><h3>Fusionar tickets</h3><p id="fusion-folio"></p></div><div class="modal-body"><p>El ticket actual será el principal. El secundario conservará su historial y se terminará automáticamente cuando termine el principal.</p><div class="form-group"><label class="form-label" for="fusion-secundario">N° ticket secundario</label><input class="form-input" id="fusion-secundario" type="number" min="1" step="1"></div><div class="form-group"><label class="form-label" for="fusion-motivo">Motivo de fusión</label><textarea class="form-input" id="fusion-motivo" rows="3" maxlength="500"></textarea></div><div class="ticket-message" id="fusion-mensaje" role="status"></div></div><div class="modal-footer"><button class="btn btn-outline" type="button" onclick="closeModal('modal-admin-fusionar')">Cancelar</button><button class="btn btn-primary" type="button" id="fusion-confirmar">Confirmar fusión</button></div></div></div>
   <script>
   const adminTicketCsrf = <?= json_encode($csrf) ?>;
   let adminTicketActual = 0;
@@ -196,6 +198,28 @@ iniciar_layout_configuracion('Administración de tickets', 'Tickets', 'ticket_ad
        setTimeout(()=>location.reload(),650);
      }catch(error){msg.className='ticket-message error';msg.textContent=error.message;btn.disabled=false;}
    });
+  document.getElementById('admin-modal-fusionar').addEventListener('click',()=>{
+    document.getElementById('fusion-folio').textContent='Ticket principal #'+adminTicketActual;
+    document.getElementById('fusion-secundario').value='';
+    document.getElementById('fusion-motivo').value='';
+    document.getElementById('fusion-mensaje').textContent='';
+    openModal('modal-admin-fusionar');
+  });
+  document.getElementById('fusion-confirmar').addEventListener('click',async()=>{
+    const id=Number(document.getElementById('fusion-secundario').value);
+    const motivo=document.getElementById('fusion-motivo').value.trim();
+    const msg=document.getElementById('fusion-mensaje');
+    if(!Number.isSafeInteger(id)||id<=0||id===adminTicketActual||motivo.length<5){msg.className='ticket-message error';msg.textContent='Indica otro ticket válido y un motivo de al menos cinco caracteres.';return;}
+    if(!confirm('¿Fusionar el ticket #'+id+' con el principal #'+adminTicketActual+'?'))return;
+    const btn=document.getElementById('fusion-confirmar');btn.disabled=true;
+    try{
+      const body=new URLSearchParams({accion:'fusionar',ticket_id:adminTicketActual,ticket_secundario_id:id,motivo_fusion:motivo,csrf:adminTicketCsrf});
+      const response=await fetch('../ajax/guardar_ticket.php',{method:'POST',body,credentials:'same-origin'});
+      const data=await response.json();
+      if(!response.ok||!data.ok)throw new Error(data.error||'No se pudo fusionar.');
+      msg.className='ticket-message ok';msg.textContent=data.mensaje;setTimeout(()=>location.reload(),800);
+    }catch(error){msg.className='ticket-message error';msg.textContent=error.message;btn.disabled=false;}
+  });
   document.getElementById('admin-buscar').addEventListener('input',event=>{const q=event.target.value.trim().toLowerCase();document.querySelectorAll('#admin-tabla tbody tr').forEach(row=>row.hidden=!row.dataset.search.includes(q))});
   </script>
 <?php endif; ?>
