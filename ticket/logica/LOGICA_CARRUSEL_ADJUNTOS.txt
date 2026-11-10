@@ -16,3 +16,19 @@ sesión, permisos de acceso al ticket y ruta física segura.
 No se crean tablas ni columnas. No cambia almacenamiento ni permisos.
 Validar en QA con 0, 1 y múltiples imágenes, documentos mixtos y
 cada perfil; comprobar vista móvil y carga en servidor real.
+
+ACTUALIZACIÓN 2026-11-10 — CARRUSEL AMPLIO Y MODAL DE BANDEJAS
+- ticket/ticket_detalle.php: se mueve sección Archivos adjuntos desde
+  ticket-detail-side a ticket-detail-main (área ancha).
+- ticket/componentes/bloque_tabla_usuario.php: botón Adjuntos.
+- ticket/componentes/bloque_tabla_tecnico.php: botón Adjuntos.
+- ticket/componentes/bloque_tabla_admin.php: botón Adjuntos.
+- ticket/js/galeria_modal.js: modal compartido con iframe, cierre y Escape.
+- ticket/galeria_adjuntos.php: visor independiente con control de sesión
+  y permiso por ticket, carrusel de imágenes y enlaces de documentos.
+- ticket/ticket.php, ticket/ticket_asignados.php, ticket/ticket_admin_v2.php:
+  cargan script común.
+- No requiere cambios de tablas ni SQL.
+- Pruebas pendientes en QA: tickets con y sin imágenes, PDF mixtos,
+  permisos de los tres perfiles, modal sobre paneles existentes,
+  scroll en móviles, cierre de modal, listado actualizado por AJAX.
