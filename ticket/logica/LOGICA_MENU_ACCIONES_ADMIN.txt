@@ -1,0 +1,28 @@
+MENÚ DE ACCIONES ADMINISTRACIÓN — QA — 2026-11-10
+================================================
+Archivos modificados:
+- ticket/componentes/bloque_tabla_admin.php
+- ticket/ticket_admin_v2.php
+
+En la tabla se mantienen Chat y Abrir. Se reemplaza el botón
+Gestionar por botón ⋮, con menú flotante de acciones:
+1. Gestionar ticket: abre modal existente (técnico/estado).
+2. Fusionar tickets: abre modal existente de fusión.
+3. Historial del ticket: deshabilitado hasta su implementación.
+4. Descargar PDF: usa ajax/ticket_pdf.php con vista=admin.
+5. Enviar correo: reutiliza botón/evento existente js-ticket-correo.
+6. Eliminar ticket: solo administrador global, abre modal de tres
+   motivos obligatorios y mantiene eliminación lógica tickets.estado=2.
+
+El menú es flotante fixed para no recortarse dentro de table-wrap,
+se coloca arriba cuando no hay espacio, se cierra al hacer clic fuera,
+presionar Escape, desplazar la pantalla o cambiar tamaño de ventana.
+Los botones de acciones anteriores se conservan ocultos para
+reutilizar listeners y no alterar los endpoints.
+
+No requiere SQL adicional para este cambio de interfaz.
+Pruebas pendientes en navegador QA: modal de correo, PDF, permisos
+de admin colegio, menú en última fila, dispositivos móviles,
+cierre con Escape y accesibilidad con teclado.
+La fusión requiere ejecutar manualmente ticket/sql/04_fusion_tickets.sql
+en QA y realizar pruebas específicas antes de usarla con datos reales.
