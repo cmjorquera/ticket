@@ -1,0 +1,22 @@
+ELIMINACIÓN LÓGICA DE TICKETS — QA (2026-11-10)
+================================================
+Archivos: ticket/ticket_admin_v2.php y ajax/guardar_ticket.php
+Rama: qa
+
+Administrador global: botón Eliminar abre modal con tres motivos obligatorios:
+- duplicado: Ticket duplicado
+- prueba_limpieza: Prueba o limpieza de registros
+- error_registro: Solicitud creada por error
+
+El backend valida el código contra lista cerrada, exige CSRF y administrador
+global, y actualiza tickets.estado=2 solo si estado=1. No modificar id_estado.
+Se registra ticket_registrar_cambio y entrada de sistema en BitacoraTicket
+(avance_tecnicos cuando esté disponible). No borrar adjuntos ni conversaciones.
+
+SQL: no requiere columnas nuevas para esta primera etapa.
+PENDIENTE QA: probar con ticket ficticio, verificar que desaparece de los
+listados y revisar que bitácora y log registran el motivo. Para auditoría
+permanente independiente de bitácora se puede añadir tabla dedicada después.
+PENDIENTE: menú contextual de tres puntos y vista de restauración.
+La fusión automática todavía no se integró a qa; diseño en rama
+feature/fusion-tickets-cierre-automatico.
