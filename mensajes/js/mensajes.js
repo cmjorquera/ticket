@@ -4,7 +4,7 @@
     const CFG = window.MSG_CONFIG || {};
     const URL = 'ajax/mensajes.php';
     const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const aviso = (icon, title, text) => (window.Swal ? Swal.fire({ icon, title, text, confirmButtonColor: '#1e4e8c' }) : alert(title + (text ? '\n' + text : '')));
+    const aviso = (icon, title, text) => (window.Swal ? Swal.fire({ icon, title, text, confirmButtonColor: '#003B6F', customClass: { popup: 'rounded-3', confirmButton: 'btn btn-primary' }, buttonsStyling: false }) : alert(title + (text ? '\n' + text : '')));
     const errorDe = xhr => (xhr && xhr.responseJSON && xhr.responseJSON.mensaje) || 'No fue posible completar la acción.';
     const post = datos => $.ajax({ url: URL, method: 'POST', data: Object.assign({ csrf: CFG.csrf }, datos), dataType: 'json', traditional: true });
 
@@ -50,8 +50,11 @@
     const panel = panelEl ? new bootstrap.Offcanvas(panelEl) : null;
     let conversacionActual = 0;
     let huboCambios = false;
+    let hiloFirma = '';
+    let listaFirma = null;
 
     function pintarHilo(c) {
+        hiloFirma = c.mensajes.map(m => m.id).join(',');
         $('#panelTitulo').text(c.otro);
         $('#panelSub').text(c.mensajes.length + (c.mensajes.length === 1 ? ' mensaje' : ' mensajes') + (c.archivada ? ' · archivada' : ''));
         const html = c.mensajes.map(m => `
@@ -79,7 +82,53 @@
     }
     $tabla.on('click', '.btnAbrir', function () { abrir($(this).data('id')); });
     $tabla.on('dblclick', 'tr.msg-fila', function () { abrir($(this).data('id')); });
-    panelEl && panelEl.addEventListener('hidden.bs.offcanvas', () => { if (huboCambios) { location.reload(); } });
+    panelEl && panelEl.addEventListener('hidden.bs.offcanvas', () => { conversacionActual = 0; hiloFirma = ''; if (huboCambios) { location.reload(); } });
+    // Actualización periódica sin recargar: solo sustituye el hilo si llegaron mensajes nuevos.
+    async function actualizarMensajes() {
+        if (document.hidden) return;
+        if (conversacionActual && panelEl?.classList.contains('show')) {
+            try {
+                const r = await $.getJSON(URL, {accion:'conversacion',id:conversacionActual});
+                const firma = r.data.mensajes.map(m => m.id).join(',');
+                if (firma !== hiloFirma) { pintarHilo(r.data); huboCambios = true; window.Notificaciones?.contar?.(); }
+            } catch (_) { /* Reintentar en próximo ciclo */ }
+        }
+        // Mantener la bandeja visible sincronizada, preservando filtros y paginación.
+        try {
+            const r = await $.getJSON(URL, {accion:'listar',carpeta:CFG.carpeta});
+            if (!r.ok) return;
+            const actual = JSON.stringify(r.data.map(m => [m.id,m.total,m.no_leidos,m.fecha,m.ultimo]));
+            if (actual !== listaFirma) {
+                listaFirma = actual;
+                const pagina = tabla.page();
+                tabla.clear();
+                r.data.forEach(m => {
+                    const id = Number(m.id), nombre = esc(m.otro), mensaje = esc(m.ultimo), fecha = esc(fechaCorta(m.fecha));
+                    const urgente = m.urgente ? ' · Urgente' : '';
+                    const badge = m.no_leidos ? '<span class="msg-badge" title="Sin leer">'+Number(m.no_leidos)+'</span>' : '';
+                    const accion = CFG.carpeta === 'archivados' ? 'desarchivar' : 'archivar';
+                    const icono = accion === 'archivar' ? 'bi-archive' : 'bi-inbox';
+                    const node = tabla.row.add([
+                        '<div class="msg-persona"><span class="msg-avatar">'+nombre.charAt(0)+'</span><div><strong>'+nombre+'</strong><span class="msg-sub">'+Number(m.total)+' mensajes'+urgente+'</span></div>'+badge+'</div>',
+                        (m.ultimo_mio ? '<span class="msg-sub d-inline">Tú: </span>' : '')+mensaje,
+                        fecha,
+                        '<button type="button" class="module-btn module-btn--primary btnAbrir" data-id="'+id+'"><i class="bi bi-chat-dots"></i>Abrir</button> '+
+                        '<button type="button" class="module-btn module-btn--secondary btnAccion" data-accion="'+accion+'" data-id="'+id+'"><i class="bi '+icono+'"></i></button> '+
+                        '<button type="button" class="module-btn module-btn--secondary btnAccion" data-accion="eliminar" data-id="'+id+'"><i class="bi bi-trash3"></i></button>'
+                    ]).node();
+                    node.className = 'msg-fila'+(m.no_leidos ? ' msg-no-leida' : '');
+                    node.dataset.id = id; node.dataset.noLeida = m.no_leidos ? '1' : '0'; node.dataset.urgente = m.urgente ? '1' : '0';
+                    node.cells[2].setAttribute('data-order',m.fecha);
+                });
+                tabla.draw(false);
+                if (pagina < tabla.page.info().pages) tabla.page(pagina).draw('page');
+            }
+            const stats = document.querySelectorAll('.msg-stat-link .inv-stat-card strong');
+            ['no_leidos','recibidos','enviados','archivados'].forEach((k,i) => {if(stats[i]) stats[i].textContent = Number(r.resumen[k] || 0).toLocaleString('es-CL');});
+            window.Notificaciones?.contar?.();
+        } catch (_) { /* Reintentar en siguiente ciclo */ }
+    }
+    window.setInterval(actualizarMensajes, 10000);
 
     $('#formResponder').on('submit', function (e) {
         e.preventDefault();
@@ -101,7 +150,7 @@
             .fail(xhr => aviso('error', 'No fue posible', errorDe(xhr)));
         if (accion !== 'eliminar' || !window.Swal) { ejecutar(); return; }
         Swal.fire({ icon: 'warning', title: '¿Eliminar la conversación?', text: 'Desaparece de tu bandeja. La otra persona la sigue viendo.', showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar', confirmButtonColor: '#dc2626' })
+            confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar', confirmButtonColor: '#003B6F', customClass: { popup: 'rounded-3', confirmButton: 'btn btn-danger', cancelButton: 'btn btn-outline-secondary' }, buttonsStyling: false })
             .then(r => { if (r.isConfirmed) { ejecutar(); } });
     });
 

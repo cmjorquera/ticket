@@ -37,6 +37,12 @@ try {
                 msg_json(['ok' => true, 'data' => $c, 'resumen' => $mensajeria->resumen()]);
             case 'destinatarios':
                 msg_json(['ok' => true, 'data' => $mensajeria->destinatarios()]);
+            case 'listar':
+                $carpeta = (string) ($_GET['carpeta'] ?? 'recibidos');
+                if (!in_array($carpeta, ['recibidos','enviados','archivados'], true)) {
+                    msg_json(['ok' => false, 'mensaje' => 'Carpeta no válida.'], 400);
+                }
+                msg_json(['ok' => true, 'data' => $mensajeria->listar($carpeta), 'resumen' => $mensajeria->resumen()]);
             case 'resumen':
                 msg_json(['ok' => true, 'data' => $mensajeria->resumen()]);
         }
