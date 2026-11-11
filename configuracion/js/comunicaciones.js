@@ -8,20 +8,29 @@
   const asunto=$('com-asunto'), mensaje=$('com-mensaje'), enviar=$('com-enviar'), probar=$('com-prueba');
   let nombrePropio='', correoPropio='';
   const confirmacion=$('modal-confirmar-prueba');
-  // El modal secundario debe quedar por encima del modal principal y sus overlays.
-  if(confirmacion.parentElement!==document.body)document.body.appendChild(confirmacion);
-  confirmacion.style.zIndex='11050';
+  const aviso=$('com-aviso-exito');
+  for(const el of [confirmacion,aviso])if(el.parentElement!==document.body)document.body.appendChild(el);
   const confirmarBtn=$('com-confirmar-prueba');
   function cerrarConfirmacion(){
-    confirmacion.style.setProperty('display','none','important');
-    confirmacion.classList.remove('active','show','visible','is-open');
+    confirmacion.classList.remove('com-visible');
     confirmacion.setAttribute('aria-hidden','true');
   }
   function abrirConfirmacion(){
-    confirmacion.style.setProperty('display','flex','important');
-    confirmacion.style.zIndex='11050';
-    confirmacion.removeAttribute('aria-hidden');
+    confirmacion.classList.add('com-visible');
+    confirmacion.setAttribute('aria-hidden','false');
     confirmarBtn.focus();
+  }
+  let avisoTimer;
+  function mostrarExito(titulo,texto){
+    clearTimeout(avisoTimer);
+    $('com-aviso-titulo').textContent=titulo;
+    $('com-aviso-texto').textContent=texto;
+    aviso.classList.add('com-visible');
+    aviso.setAttribute('aria-hidden','false');
+    avisoTimer=setTimeout(()=>{
+      aviso.classList.remove('com-visible');
+      aviso.setAttribute('aria-hidden','true');
+    },2500);
   }
   cerrarConfirmacion();
   const buscar=$('com-buscar'), todosManual=$('com-todos-manual'), manualWrap=$('com-manual-wrap');
@@ -109,7 +118,7 @@
       ids.forEach((id,i)=>{body['ids['+i+']']=String(id);});
       const r=await api(accion,body);
       estado.textContent=r.mensaje;
-      if(accion==='prueba'){prueba=true;enviar.disabled=false;enviar.title='Confirmar envío a los destinatarios seleccionados.';estado.textContent=r.mensaje+' Ya puedes enviar el comunicado a '+ids.length+' destinatario(s).';}else{prueba=false;enviar.disabled=true;}
+      if(accion==='prueba'){prueba=true;enviar.disabled=false;enviar.title='Confirmar envío a los destinatarios seleccionados.';estado.textContent=r.mensaje+' Ya puedes enviar el comunicado a '+ids.length+' destinatario(s).';mostrarExito('Prueba enviada',r.mensaje);}else{prueba=false;enviar.disabled=true;mostrarExito('Envío procesado',r.mensaje);}
     }catch(e){estado.textContent=e.message;if(accion==='enviar')enviar.disabled=!prueba;}
     finally{ocupado=false;probar.disabled=false;}
   }
@@ -127,6 +136,6 @@
     ejecutar('prueba');
   });
   confirmacion.addEventListener('click',e=>{if(e.target===confirmacion)cerrarConfirmacion();});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&confirmacion.getAttribute('aria-hidden')!=='true')cerrarConfirmacion();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&confirmacion.classList.contains('com-visible'))cerrarConfirmacion();});
   enviar.addEventListener('click',()=>ejecutar('enviar'));
 })();
