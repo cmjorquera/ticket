@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD']==='GET') {
     if ($accion!=='opciones') salida(['ok'=>false,'mensaje'=>'Acción inválida.'],400);
     try {
         $usuarios=$db->fetchAll("SELECT u.id, TRIM(CONCAT(COALESCE(u.nombre,''),' ',COALESCE(u.apellido_paterno,''))) nombre, u.email, COALESCE(jd.id_colegio,0) id_colegio, u.id_area_trabajo FROM usuarios u LEFT JOIN (SELECT id_usuario, MIN(id_colegio) id_colegio FROM jefatura_departamento WHERE estado=1 GROUP BY id_usuario) jd ON jd.id_usuario=u.id WHERE LOWER(u.estado)='activo' AND u.email IS NOT NULL AND u.email <> '' ORDER BY u.nombre");
-        $colegios=$db->fetchAll('SELECT id_colegio AS id, nom_colegio AS nombre FROM colegio ORDER BY nom_colegio');
+        $colegios=$db->fetchAll('SELECT id_colegio AS id, nom_colegio AS nombre FROM colegio WHERE estado = 1 ORDER BY nom_colegio');
         $areas=$db->fetchAll('SELECT id_area AS id, nombre_area AS nombre FROM area_trabajo ORDER BY nombre_area');
         $propio=$db->fetchOne('SELECT nombre,apellido_paterno,email FROM usuarios WHERE id = ? LIMIT 1',[$adminId]);
         salida(['ok'=>true,'usuarios'=>$usuarios,'colegios'=>$colegios,'areas'=>$areas,'propio'=>['nombre'=>trim((string)($propio['nombre']??'').' '.(string)($propio['apellido_paterno']??'')),'email'=>(string)($propio['email']??'')],'csrf'=>$_SESSION['csrf_comunicaciones']]);
