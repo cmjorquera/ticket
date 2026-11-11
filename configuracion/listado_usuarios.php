@@ -102,7 +102,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
         <label class="form-label" for="com-modo">Destinatarios</label>
         <select class="form-input" id="com-modo"><option value="todos">Todos los usuarios activos</option><option value="colegio">Por colegio</option><option value="area">Por área</option><option value="manual">Selección manual</option></select>
         <select class="form-input" id="com-grupo" style="margin-top:10px" hidden></select>
-        <div id="com-manual" style="max-height:160px;overflow:auto;margin-top:10px" hidden></div>
+        <div id="com-manual-wrap" hidden style="margin-top:10px"><input type="search" class="form-input" id="com-buscar" placeholder="Buscar usuario o correo"><label style="display:block;margin:10px 0"><input type="checkbox" id="com-todos-manual"> Seleccionar todos los usuarios visibles</label><div id="com-manual" style="max-height:190px;overflow:auto;border:1px solid #d9e2ef;border-radius:8px;padding:8px"></div></div>
         <p class="text-sm" id="com-contador" style="margin:10px 0">Cargando destinatarios…</p>
         <label class="form-label" for="com-asunto">Asunto</label>
         <input class="form-input" id="com-asunto" maxlength="150" value="Nueva versión del Sistema de Centralización – v2.0">
