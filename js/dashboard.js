@@ -224,7 +224,6 @@
     renderKpis();
     renderTechAttention();
     renderAdminOverview();
-    renderUserActiveTicket();
     renderStateChart();
     renderCategoryChart();
     renderTickets();
@@ -262,31 +261,6 @@
         <span class="dashboard-attention-tag is-${tone}">${escape(status)}</span><i class="bi bi-chevron-right" aria-hidden="true"></i>
       </a>`;
     }).join('') + (count > 4 ? `<a class="dashboard-attention-more" href="ticket/ticket_asignados.php">Ver todos los tickets asignados (${count}) <i class="bi bi-arrow-right"></i></a>` : '') : '<p class="dashboard-attention-empty"><i class="bi bi-check-circle"></i> No hay tickets demorados, próximos a vencer o en proceso.</p>';
-  }
-
-  // Resumen del ticket activo: exclusivamente solicitudes autorizadas del usuario.
-  function renderUserActiveTicket() {
-    const panel = $('dashboard-user-active');
-    if (!panel) return;
-    const active = state.perfil === 'usuario' && !!state.data;
-    panel.hidden = !active;
-    if (!active) return;
-    const tickets = (state.data.tickets || []).filter(t => ![5, 6].includes(Number(t.id_estado)));
-    const ticket = tickets.sort((a,b) => {
-      const priority = t => Number(t.id_estado) === 7 ? -10000 : t.dias_restantes === null || t.dias_restantes === undefined || t.dias_restantes === '' ? 10000 : Number(t.dias_restantes);
-      return priority(a) - priority(b);
-    })[0];
-    if (!ticket) {
-      panel.innerHTML = '<div class="dashboard-user-active-empty"><i class="bi bi-check-circle"></i><strong>No tienes solicitudes pendientes</strong><p>Cuando tengas un ticket activo podrás consultar aquí su técnico y fecha estimada.</p></div>';
-      return;
-    }
-    const days = ticket.dias_restantes === null || ticket.dias_restantes === undefined || ticket.dias_restantes === '' ? null : Number(ticket.dias_restantes);
-    const time = days === null || !Number.isFinite(days) ? 'Sin fecha estimada' : days < 0 ? 'Vencido hace ' + Math.abs(days) + ' día(s)' : days === 0 ? 'Vence hoy' : 'Faltan ' + days + ' día(s)';
-    const late = Number(ticket.id_estado) === 7 || (days !== null && days < 0);
-    panel.innerHTML = `<div class="dashboard-user-active-heading"><div><h2>Mi ticket que requiere atención</h2><p>Seguimiento de tu solicitud pendiente más urgente.</p></div><span class="dashboard-user-active-status">${escape(ticket.estado)}</span></div>
-      <a class="dashboard-user-active-subject" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=usuario">#${Number(ticket.id_ticket)} · ${escape(ticket.asunto)} <i class="bi bi-arrow-up-right"></i></a>
-      <div class="dashboard-user-active-details"><div><small>Técnico asignado</small><strong>${escape(ticket.tecnico || 'Pendiente de asignación')}</strong></div><div><small>Fecha estimada</small><strong>${escape(ticket.fecha_estimada || 'Sin definir')}</strong></div></div>
-      <div class="dashboard-user-active-deadline${late ? ' is-late' : ''}"><i class="bi bi-clock"></i>${escape(time)}</div>`;
   }
 
   function renderKpis() {
