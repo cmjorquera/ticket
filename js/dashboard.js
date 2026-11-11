@@ -322,12 +322,22 @@
       <div class="dashboard-admin-grid">
         <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Distribución por estado de los tickets de cada colegio en el período seleccionado.</p><div class="dashboard-admin-graph" id="dashboard-admin-school-chart"></div></article>
         <article class="dashboard-admin-card"><h3>Evolución mensual de tickets</h3><p>Tickets creados y actualmente resueltos, agrupados por mes de creación.</p><div class="dashboard-admin-graph" id="dashboard-admin-month-chart"></div></article>
-        <article class="dashboard-admin-card"><h3>Carga de trabajo por técnico</h3><p>Distribución de tickets en el período seleccionado.</p><div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Técnico</th><th>Activos</th><th>Atrasados</th><th>Resueltos</th><th>Total</th></tr></thead><tbody>${techs.map(t=>`<tr><td>${escape(t.nombre)}</td><td><span class="dashboard-admin-pill blue">${Number(t.activos)}</span></td><td><span class="dashboard-admin-pill red">${Number(t.atrasados)}</span></td><td><span class="dashboard-admin-pill green">${Number(t.resueltos)}</span></td><td><b>${Number(t.total)}</b></td></tr>`).join('')}</tbody></table></div></article>
+        <article class="dashboard-admin-card"><h3>Carga de trabajo por técnico</h3><p>Distribución de tickets en el período seleccionado.</p><div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Técnico</th><th>Activos</th><th>Atrasados</th><th>Resueltos</th><th>Total</th><th>Detalle</th></tr></thead><tbody>${techs.map((t,index)=>`<tr><td>${escape(t.nombre)}</td><td><span class="dashboard-admin-pill blue">${Number(t.activos)}</span></td><td><span class="dashboard-admin-pill red">${Number(t.atrasados)}</span></td><td><span class="dashboard-admin-pill green">${Number(t.resueltos)}</span></td><td><b>${Number(t.total)}</b></td><td><button type="button" class="dashboard-admin-detail-btn" data-tech-index="${index}" aria-label="Ver categorías de ${escape(t.nombre)}" title="Ver categorías"><i class="bi bi-pie-chart"></i> <span>Ver</span></button></td></tr>`).join('')}</tbody></table></div></article>
         <div class="dashboard-admin-stack">
           <article class="dashboard-admin-card"><h3>Tickets sin técnico asignado <span class="dashboard-admin-count">${noTech.length} casos</span></h3><p>Solicitudes que requieren asignación inmediata.</p>${table(noTech)}</article>
           <article class="dashboard-admin-card"><h3>Casos que requieren supervisión <span class="dashboard-admin-count">${delayed.length} casos</span></h3><p>Tickets demorados que requieren seguimiento.</p>${table(delayed,true)}</article>
         </div>
+      </div>
+      <div id="dashboard-tech-modal" class="dashboard-tech-modal" hidden role="dialog" aria-modal="true" aria-labelledby="dashboard-tech-modal-title">
+        <div class="dashboard-tech-dialog">
+          <header class="dashboard-tech-header"><div><h2 id="dashboard-tech-modal-title">Categorías del técnico</h2><p id="dashboard-tech-modal-subtitle"></p></div><button type="button" id="dashboard-tech-close" aria-label="Cerrar detalle"><i class="bi bi-x-lg"></i></button></header>
+          <div class="dashboard-tech-content"><div class="dashboard-tech-chart-card"><h3>Distribución por categoría</h3><div id="dashboard-tech-pie"></div></div><div class="dashboard-tech-chart-card"><h3>Estados por categoría</h3><div id="dashboard-tech-bars"></div></div></div>
+          <div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Categoría</th><th>Tickets</th><th>Porcentaje</th><th>Detalle por estado</th></tr></thead><tbody id="dashboard-tech-categories"></tbody></table></div>
+        </div>
       </div>`;
+    panel.querySelectorAll('[data-tech-index]').forEach(button => button.addEventListener('click', () => openTechCategories(techs[Number(button.dataset.techIndex)])));
+    $('dashboard-tech-close').addEventListener('click', closeTechCategories);
+    $('dashboard-tech-modal').addEventListener('click', event => { if (event.target === $('dashboard-tech-modal')) closeTechCategories(); });
     $('dashboard-admin-period').value = data.periodo;
     $('dashboard-admin-school').value = String(data.colegio);
     $('dashboard-admin-period').addEventListener('change', e => { state.adminPeriod=e.target.value; state.adminSchool=0; loadDashboard('administrador'); });
@@ -363,6 +373,58 @@
     const monthChart = new window.ApexCharts($('dashboard-admin-month-chart'),{...base,chart:{...base.chart,type:'area'},series:[{name:'Creados',data:months.map(m=>Number(m.creados))},{name:'Resueltos actualmente',data:months.map(m=>Number(m.resueltos))}],colors:['#1684eb','#159654'],stroke:{width:3,curve:'smooth'},fill:{type:'solid',opacity:.12},markers:{size:3},xaxis:{categories:months.map(m=>m.mes),labels:{style:{colors:'#213a59'}}},yaxis:{min:0,forceNiceScale:true,labels:{formatter:v=>Math.round(v)}},legend:{position:'top',horizontalAlign:'right'}});
     monthChart.render();state.adminCharts.push(monthChart);
   }
+
+  let techModalCharts = [];
+  let techModalReturnFocus = null;
+  function closeTechCategories() {
+    const modal = $('dashboard-tech-modal');
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    techModalCharts.forEach(chart => chart.destroy());
+    techModalCharts = [];
+    document.body.classList.remove('dashboard-tech-modal-open');
+    techModalReturnFocus?.focus();
+  }
+  function openTechCategories(tech) {
+    if (!tech) return;
+    closeTechCategories();
+    const modal = $('dashboard-tech-modal');
+    if (!modal) return;
+    techModalReturnFocus = document.activeElement;
+    const categories = tech.categorias || [];
+    const total = Number(tech.total || 0);
+    $('dashboard-tech-modal-title').textContent = 'Categorías · ' + tech.nombre;
+    $('dashboard-tech-modal-subtitle').textContent = total + ' tickets en el período y colegio seleccionados';
+    const states = [{id:1,name:'Recibido',color:'#5895d0'},{id:2,name:'Asignado',color:'#f0bd45'},{id:3,name:'En proceso',color:'#f38c80'},{id:4,name:'Borrador',color:'#9c8dbb'},{id:5,name:'Terminado',color:'#35b77a'},{id:6,name:'Cerrado',color:'#7b8797'},{id:7,name:'Demorado',color:'#e25b61'}];
+    $('dashboard-tech-categories').innerHTML = categories.length ? categories.map(cat => {
+      const details = states.filter(s => Number(cat.estados?.[s.id] || 0) > 0).map(s => escape(s.name) + ': ' + Number(cat.estados[s.id])).join(' · ');
+      return '<tr><td><strong>' + escape(cat.nombre) + '</strong></td><td>' + Number(cat.total) + '</td><td>' + (total ? Math.round(Number(cat.total) * 100 / total) : 0) + '%</td><td>' + details + '</td></tr>';
+    }).join('') : '<tr><td colspan="4">Sin tickets para este técnico.</td></tr>';
+    modal.hidden = false;
+    document.body.classList.add('dashboard-tech-modal-open');
+    $('dashboard-tech-close').focus();
+    if (typeof window.ApexCharts !== 'function' || !categories.length) {
+      $('dashboard-tech-pie').textContent = categories.length ? 'Gráfico no disponible.' : 'Sin datos';
+      $('dashboard-tech-bars').textContent = categories.length ? 'Gráfico no disponible.' : 'Sin datos';
+      return;
+    }
+    const pie = new window.ApexCharts($('dashboard-tech-pie'), {chart:{type:'donut',height:320,toolbar:{show:false}},series:categories.map(cat=>Number(cat.total)),labels:categories.map(cat=>cat.nombre),legend:{position:'bottom'},dataLabels:{enabled:true,formatter:val=>Math.round(val)+'%'},tooltip:{y:{formatter:val=>val+' tickets'}},noData:{text:'Sin datos'}});
+    const bars = new window.ApexCharts($('dashboard-tech-bars'), {chart:{type:'bar',stacked:true,height:320,toolbar:{show:false}},series:states.map(s=>({name:s.name,data:categories.map(cat=>Number(cat.estados?.[s.id] || 0))})),colors:states.map(s=>s.color),xaxis:{categories:categories.map(cat=>cat.nombre),labels:{rotate:-35,trim:true}},yaxis:{min:0,labels:{formatter:val=>Math.round(val)}},plotOptions:{bar:{horizontal:false,columnWidth:'65%'}},legend:{position:'bottom'},dataLabels:{enabled:false},tooltip:{shared:true,intersect:false,y:{formatter:val=>val+' tickets'}}});
+    techModalCharts = [pie,bars];
+    techModalCharts.forEach(chart=>chart.render());
+  }
+  document.addEventListener('keydown', event => {
+    const modal = $('dashboard-tech-modal');
+    if (!modal || modal.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeTechCategories(); }
+    if (event.key === 'Tab') {
+      const focusable = [...modal.querySelectorAll('button:not([disabled]),a[href],input:not([disabled]),select:not([disabled]')];
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
 
   function renderStateChart() {
     if (!state.data || typeof window.Chart !== 'function') return;
