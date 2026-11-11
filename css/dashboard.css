@@ -53,3 +53,16 @@
 .dashboard-skeleton-table-row{min-height:48px}
 @keyframes dashboard-chart-fade{0%,100%{opacity:.7}50%{opacity:1}}
 @media(prefers-reduced-motion:reduce){.dashboard-skeleton::after,.dashboard-chart-body.dashboard-chart-is-loading::before{animation:none!important}}
+
+/* Unificación de listado Dashboard con las bandejas del módulo Ticket. */
+.dashboard-page .dashboard-ticket-folio{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:125px}
+.dashboard-page .dashboard-ticket-row-number{font-size:14px;font-weight:800;line-height:1.25;color:#17365a}
+.dashboard-page .dashboard-ticket-folio .ticket-id{font-size:11px;font-weight:700;color:#315f93;text-decoration:none}
+.dashboard-page .dashboard-ticket-folio .ticket-id:hover{text-decoration:underline}
+.dashboard-page .dashboard-ticket-folio small{font-size:11px;color:#64748b;line-height:1.4}
+.dashboard-page .dashboard-ticket-state{font-size:11px;font-weight:700;padding:5px 9px;background:color-mix(in srgb,var(--state-color) 17%,white);color:color-mix(in srgb,var(--state-color) 68%,#0f172a);border:1px solid color-mix(in srgb,var(--state-color) 22%,white)}
+.dashboard-page .dashboard-ticket-state::before{width:7px;height:7px}
+.dashboard-page .dashboard-ticket-main strong{font-size:12px;color:#1e293b}
+.dashboard-page .dashboard-ticket-main small{font-size:11px;color:#64748b}
+.dashboard-page #dashboard-ticket-table td{color:#334155;font-size:12px}
+.dashboard-page #dashboard-ticket-table tbody tr:hover{background:#f7faff}
