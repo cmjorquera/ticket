@@ -334,14 +334,14 @@ final class DashboardTickets
         $colegiosPermitidos = $this->obtenerColegiosAdministrados();
         if ($colegiosPermitidos === null) {
             $schools = $this->db->fetchAll(
-                "SELECT c.id_colegio AS id, c.nom_colegio AS nombre FROM colegio c ORDER BY c.nom_colegio"
+                "SELECT c.id_colegio AS id, c.nom_colegio AS nombre FROM colegio c WHERE c.estado = 1 ORDER BY c.nom_colegio"
             );
         } elseif ($colegiosPermitidos === []) {
             $schools = [];
         } else {
             $marcadores = implode(',', array_fill(0, count($colegiosPermitidos), '?'));
             $schools = $this->db->fetchAll(
-                "SELECT c.id_colegio AS id, c.nom_colegio AS nombre FROM colegio c WHERE c.id_colegio IN ({$marcadores}) ORDER BY c.nom_colegio",
+                "SELECT c.id_colegio AS id, c.nom_colegio AS nombre FROM colegio c WHERE c.estado = 1 AND c.id_colegio IN ({$marcadores}) ORDER BY c.nom_colegio",
                 $colegiosPermitidos
             );
         }
