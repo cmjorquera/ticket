@@ -29,7 +29,7 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     <p>Administra cuentas, permisos y estado de acceso, organizados por colegio.</p>
   </div>
   <div class="page-header-actions">
-    <?php if ($usuarioActual === 8): ?>
+    <?php if ($esSuperAdmin): ?>
     <button type="button" class="btn btn-primary" id="btn-comunicaciones"><i class="bi bi-send"></i> Enviar comunicado</button>
     <?php endif; ?>
     <button type="button" class="btn btn-outline" id="btn-descargar-usuarios" title="Descargar los usuarios que coinciden con los filtros actuales">
@@ -93,7 +93,8 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 
 <p id="usuarios-feedback" class="text-sm" role="status" hidden style="margin-top:12px"></p>
 
-<?php if ($usuarioActual === 8): ?>
+<?php if ($esSuperAdmin): ?>
+<div class="modal-overlay" id="modal-confirmar-prueba" onclick="closeModalOutside(event,'modal-confirmar-prueba')"><div class="modal" style="max-width:440px" role="dialog" aria-modal="true" aria-labelledby="com-confirmar-titulo"><div class="modal-header"><h3 id="com-confirmar-titulo">Confirmar correo de prueba</h3><p>Se enviará una prueba únicamente a tu correo institucional.</p></div><div class="modal-body"><p>Destinatario: <strong id="com-correo-propio"></strong></p></div><div class="modal-footer"><button type="button" class="btn btn-outline" id="com-cancelar-prueba">Cancelar</button><button type="button" class="btn btn-primary" id="com-confirmar-prueba">Enviar prueba</button></div></div></div>
 <div class="modal-overlay" id="modal-comunicaciones" onclick="closeModalOutside(event,'modal-comunicaciones')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="com-titulo" style="max-width:1050px;width:95vw">
     <div class="modal-header"><h3 id="com-titulo">Enviar comunicado institucional</h3><p>Personaliza el anuncio del Sistema de Centralización v2.0 y envía primero una prueba.</p></div>
@@ -309,5 +310,5 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 <script src="<?= $depth ?>configuracion/js/listado_usuarios.js?v=<?= (int) filemtime(__DIR__ . '/js/listado_usuarios.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/permisos_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/permisos_usuario.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/alta_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/alta_usuario.js') ?>"></script>
-<?php if ($usuarioActual === 8): ?><script src="<?= $depth ?>configuracion/js/comunicaciones.js?v=<?= (int) filemtime(__DIR__ . '/js/comunicaciones.js') ?>"></script><?php endif; ?>
+<?php if ($esSuperAdmin): ?><script src="<?= $depth ?>configuracion/js/comunicaciones.js?v=<?= (int) filemtime(__DIR__ . '/js/comunicaciones.js') ?>"></script><?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

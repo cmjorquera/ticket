@@ -6,7 +6,9 @@
   let usuarios=[], colegios=[], areas=[], csrf='', prueba=false, ocupado=false;
   const modo=$('com-modo'), grupo=$('com-grupo'), manual=$('com-manual'), estado=$('com-estado');
   const asunto=$('com-asunto'), mensaje=$('com-mensaje'), enviar=$('com-enviar'), probar=$('com-prueba');
-  const nombrePropio='Cristian Jorquera';
+  let nombrePropio='', correoPropio='';
+  const confirmacion=$('modal-confirmar-prueba');
+  function cerrarConfirmacion(){if(typeof window.closeModal==='function')window.closeModal('modal-confirmar-prueba');else confirmacion.style.display='none';}
   const buscar=$('com-buscar'), todosManual=$('com-todos-manual'), manualWrap=$('com-manual-wrap');
   function filtrarManual(){
     const q=buscar.value.trim().toLocaleLowerCase('es');
@@ -19,7 +21,7 @@
     todosManual.indeterminate=visibles.some(c=>c.checked) && !todosManual.checked;
   }
   buscar.addEventListener('input',filtrarManual);
-  todosManual.addEventListener('change',()=>{manual.querySelectorAll('label:not([hidden]) input').forEach(c=>{c.checked=todosManual.checked;});cambiar();});
+  todosManual.addEventListener('change',()=>{manual.querySelectorAll('label').forEach(l=>{if(l.style.display!=='none')l.querySelector('input').checked=todosManual.checked;});cambiar();});
   function seleccionado(){
     if(modo.value==='todos')return usuarios;
     if(modo.value==='manual'){const ids=new Set([...manual.querySelectorAll('input:checked')].map(x=>Number(x.value)));return usuarios.filter(u=>ids.has(Number(u.id)));}
@@ -29,7 +31,9 @@
   function cambiar(){
     prueba=false;enviar.disabled=true;
     grupo.hidden=!['colegio','area'].includes(modo.value);
+    grupo.style.display=grupo.hidden?'none':'block';
     manualWrap.hidden=modo.value!=='manual';
+    manualWrap.style.display=manualWrap.hidden?'none':'block';
     if(!grupo.hidden){
       const campo=modo.value==='colegio'?'id_colegio':'id_area_trabajo';
       const catalogo=modo.value==='colegio'?colegios:areas;
@@ -57,6 +61,7 @@
     try{
       const r=await api('opciones');
       csrf=r.csrf;
+      nombrePropio=r.propio?.nombre||'Usuario';correoPropio=r.propio?.email||'';
       colegios=r.colegios||[];areas=r.areas||[];
       usuarios=r.usuarios.filter(u=>/^\S+@\S+\.\S+$/.test(u.email||''));
       manual.replaceChildren(...usuarios.map(u=>{const l=document.createElement('label');l.style.display='block';l.style.padding='5px';const c=document.createElement('input');c.type='checkbox';c.value=u.id;c.addEventListener('change',cambiar);l.append(c,' '+u.nombre+' ('+u.email+')');return l;}));
@@ -83,6 +88,12 @@
     }catch(e){estado.textContent=e.message;if(accion==='enviar')enviar.disabled=!prueba;}
     finally{ocupado=false;probar.disabled=false;}
   }
-  probar.addEventListener('click',()=>ejecutar('prueba'));
+  probar.addEventListener('click',()=>{
+    if(!correoPropio){estado.textContent='Tu cuenta no tiene un correo disponible.';return;}
+    $('com-correo-propio').textContent=correoPropio;
+    if(typeof window.openModal==='function')window.openModal('modal-confirmar-prueba');else confirmacion.style.display='flex';
+  });
+  $('com-cancelar-prueba').addEventListener('click',cerrarConfirmacion);
+  $('com-confirmar-prueba').addEventListener('click',()=>{cerrarConfirmacion();ejecutar('prueba');});
   enviar.addEventListener('click',()=>ejecutar('enviar'));
 })();
