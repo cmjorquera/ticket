@@ -164,12 +164,45 @@
 
   function renderAll() {
     renderKpis();
+    renderTechAttention();
     renderAdminOverview();
     renderStateChart();
     renderCategoryChart();
     renderTickets();
     renderInsights();
     updateFilterStatus();
+  }
+
+  // Alertas del técnico: sólo tickets autorizados de su bandeja, sin duplicar KPI.
+  function renderTechAttention() {
+    const panel = $('dashboard-tech-attention');
+    if (!panel) return;
+    const visible = state.perfil === 'tecnico' && !!state.data;
+    panel.hidden = !visible;
+    if (!visible) return;
+    const tickets = (state.data.tickets || []).filter(t => [2, 3, 7].includes(Number(t.id_estado)));
+    const scored = tickets.map(ticket => {
+      const days = ticket.dias_restantes === null || ticket.dias_restantes === undefined || ticket.dias_restantes === '' ? null : Number(ticket.dias_restantes);
+      const validDays = days !== null && Number.isFinite(days);
+      const overdue = Number(ticket.id_estado) === 7 || (validDays && days < 0);
+      const soon = !overdue && validDays && days <= 2;
+      const inProgress = Number(ticket.id_estado) === 3;
+      return { ticket, days, validDays, overdue, soon, inProgress, rank: overdue ? 0 : soon ? 1 : inProgress ? 2 : 3 };
+    }).filter(item => item.rank < 3).sort((a,b) => a.rank - b.rank || (a.validDays ? a.days : 9999) - (b.validDays ? b.days : 9999));
+    const count = scored.length;
+    const title = panel.querySelector('[data-attention-count]');
+    if (title) title.textContent = count + (count === 1 ? ' ticket' : ' tickets');
+    const list = panel.querySelector('[data-attention-list]');
+    if (!list) return;
+    list.innerHTML = count ? scored.slice(0, 4).map(({ticket, days, validDays, overdue, soon}) => {
+      const status = overdue ? (validDays && days < 0 ? `Vencido hace ${Math.abs(days)} d` : 'Demorado') : soon ? (days === 0 ? 'Vence hoy' : `Faltan ${days} d`) : 'En proceso';
+      const tone = overdue ? 'late' : soon ? 'soon' : 'progress';
+      const url = `ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=tecnico`;
+      return `<a class="dashboard-attention-item" href="${url}" aria-label="Abrir ticket ${Number(ticket.id_ticket)}: ${escape(ticket.asunto)}">
+        <span class="dashboard-attention-copy"><strong>#${Number(ticket.id_ticket)} · ${escape(ticket.asunto)}</strong><small>${escape(ticket.categoria || ticket.colegio || 'Ticket asignado')}</small></span>
+        <span class="dashboard-attention-tag is-${tone}">${escape(status)}</span><i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </a>`;
+    }).join('') + (count > 4 ? `<a class="dashboard-attention-more" href="ticket/ticket_asignados.php">Ver todos los tickets asignados (${count}) <i class="bi bi-arrow-right"></i></a>` : '') : '<p class="dashboard-attention-empty"><i class="bi bi-check-circle"></i> No hay tickets demorados, próximos a vencer o en proceso.</p>';
   }
 
   function renderKpis() {
@@ -184,7 +217,7 @@
       const description = kpi.descripcion || `${kpi.estado}: ${kpi.cantidad} tickets.`;
       const help = state.perfil === 'tecnico' ? `<span class="dashboard-kpi-help" role="button" tabindex="0" data-kpi-help="${id}" aria-label="Descripción de ${escape(kpi.estado)}" title="Ver descripción"><i class="bi bi-info-circle" aria-hidden="true"></i></span>` : '';
       return `<div class="dashboard-kpi-cell">
-        <button class="contenedor-ticket dashboard-kpi ${classByState[id] || ''}${active ? ' is-active' : ''}" type="button" data-kpi-state="${id}" style="--kpi-color:${color}" title="${escape(description)}" aria-pressed="${active ? 'true' : 'false'}">
+        <button class="contenedor-ticket dashboard-kpi ${classByState[id] || ''}${active ? ' is-active' : ''}${state.perfil === 'tecnico' && id === 7 && Number(kpi.cantidad) > 0 ? ' dashboard-kpi-alert' : ''}" type="button" data-kpi-state="${id}" style="--kpi-color:${color}" title="${escape(description)}" aria-pressed="${active ? 'true' : 'false'}">
           <span class="contenedor-ticket-body">
             <span class="contenedor-ticket-titulo">${escape(kpi.estado)} ${help}</span>
             <strong class="contenedor-ticket-numero">${Number(kpi.cantidad)}</strong>
