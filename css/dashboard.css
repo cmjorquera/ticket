@@ -182,3 +182,19 @@
 .dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado]):hover td{background:#edf4fb!important}
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-state{display:inline-flex;align-items:center;gap:5px;border-radius:999px!important;font-size:11px!important;font-weight:800!important;padding:5px 10px!important;color:#172b46!important;background:color-mix(in srgb,var(--state-color) 48%,white)!important;border:1px solid color-mix(in srgb,var(--state-color) 55%,white)!important}
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-state::before{content:"";display:inline-block;flex:none;width:7px;height:7px;border-radius:50%;background:color-mix(in srgb,var(--state-color) 85%,#172b46)}
+
+/* Desglose de categorías por técnico (solo vista ejecutiva de administrador). */
+.dashboard-admin-detail-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #b9cee5;border-radius:7px;background:#f4f8fd;color:#124477;font-weight:750;cursor:pointer}
+.dashboard-admin-detail-btn:hover,.dashboard-admin-detail-btn:focus-visible{background:#e4effb;border-color:#417cb8}
+.dashboard-tech-modal[hidden]{display:none!important}
+.dashboard-tech-modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(13,30,53,.55);overflow:auto}
+.dashboard-tech-dialog{width:min(1120px,100%);max-height:min(92vh,900px);overflow:auto;background:#fff;border:1px solid #d6e1ec;border-radius:13px;box-shadow:0 20px 60px rgba(5,20,40,.25);padding:22px;color:#172e4b}
+.dashboard-tech-header{display:flex;justify-content:space-between;align-items:start;gap:15px;border-bottom:1px solid #e2e8f0;padding-bottom:16px}
+.dashboard-tech-header h2{margin:0;color:#12345a;font-size:21px;font-weight:800}
+.dashboard-tech-header p{margin:5px 0 0;color:#53657b;font-size:13px}
+.dashboard-tech-header button{background:#f1f5f9;border:0;border-radius:8px;padding:10px;color:#203d5f;cursor:pointer}
+.dashboard-tech-content{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.dashboard-tech-chart-card{min-width:0;border:1px solid #e0e7ef;border-radius:10px;padding:14px}
+.dashboard-tech-chart-card h3{margin:0 0 10px;font-size:14px;color:#15385e}
+.dashboard-tech-modal-open{overflow:hidden}
+@media(max-width:760px){.dashboard-tech-content{grid-template-columns:1fr}.dashboard-tech-dialog{padding:14px}.dashboard-tech-modal{padding:8px}}
