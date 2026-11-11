@@ -310,14 +310,13 @@
           {id:1,nombre:'Recibido',icono:'bi-inbox',color:'#005B96'},
           {id:2,nombre:'Asignado',icono:'bi-person-check',color:'#FFBF4C'},
           {id:3,nombre:'En proceso',icono:'bi-hourglass-split',color:'#FFE0E0'},
-          {id:4,nombre:'Borrador',icono:'bi-file-earmark',color:'#F3E5F5'},
           {id:5,nombre:'Terminado',icono:'bi-check-circle',color:'#C8F7C5'},
-          {id:6,nombre:'Cerrado',icono:'bi-lock',color:'#E0E0E0'},
           {id:7,nombre:'Demorado',icono:'bi-exclamation-triangle',color:'#FFD6A5'}
         ].map(st=>{
           const count=Number((data.estados_conteo||{})[st.id]||0);
           const pct=total?Math.round(count*100/total):0;
-          return `<div class="dashboard-admin-metric" style="border-left-color:${st.color}"><span><i class="bi ${st.icono}"></i> ${st.nombre}</span><strong>${count}</strong><small>${pct}% del total de tickets</small></div>`;
+          const description=String((data.estados_descripciones||{})[st.id]||st.nombre);
+          return `<div class="dashboard-admin-metric" style="border-left-color:${st.color}" title="${escape(description)}" aria-label="${escape(st.nombre)}: ${escape(description)}"><span><i class="bi ${st.icono}"></i> ${st.nombre}</span><strong>${count}</strong><small>${pct}% del total de tickets</small></div>`;
         }).join('')}
       </div>
       <div class="dashboard-admin-grid">
