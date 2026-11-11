@@ -263,3 +263,24 @@
 .dashboard--tecnico .dashboard-tech-metric-help summary{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:#1d4e89;background:#fff;border-radius:50%;width:22px;height:22px}
 .dashboard--tecnico .dashboard-tech-metric-help[open]{z-index:25}
 .dashboard--tecnico .dashboard-tech-metric-help .dashboard-admin-metric-help-text{min-width:220px;max-width:300px}
+
+/* Vista Usuario: seguimiento prioritario, sin afectar los perfiles técnico y administrador. */
+.dashboard-user-active{padding:1.25rem 1.4rem!important;border-left:4px solid #e9a32b!important}
+.dashboard-user-active[hidden]{display:none!important}
+.dashboard-user-active-heading{display:flex;justify-content:space-between;align-items:start;gap:1rem}
+.dashboard-user-active-heading h2{font-size:1rem;font-weight:750;color:#142d4e;margin:0}
+.dashboard-user-active-heading p,.dashboard-user-active-empty p{color:#60718a;font-size:.77rem;margin:.3rem 0 0}
+.dashboard-user-active-status{border-radius:99px;background:#fff2d9;color:#855008;font-weight:700;font-size:.72rem;padding:.35rem .7rem}
+.dashboard-user-active-subject{display:block;margin:1rem 0;color:#123d70;font-size:1rem;font-weight:750;text-decoration:none}
+.dashboard-user-active-subject:hover{text-decoration:underline}
+.dashboard-user-active-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-bottom:1rem}
+.dashboard-user-active-details>div{display:grid;gap:.25rem}
+.dashboard-user-active-details small{font-size:.7rem;color:#61718a}
+.dashboard-user-active-details strong{font-size:.86rem;color:#142d4e}
+.dashboard-user-active-deadline{display:flex;align-items:center;gap:.5rem;border-radius:7px;padding:.7rem 1rem;background:#fff0cf;color:#825400;font-weight:750;font-size:.85rem}
+.dashboard-user-active-deadline.is-late{background:#ffe6e8;color:#a21f32}
+.dashboard-user-active-empty{padding:.6rem 0;color:#227a45}
+.dashboard--usuario .dashboard-chart-body{min-height:350px}
+.dashboard--usuario .dashboard-chart-body canvas{height:310px!important}
+@media(min-width:1100px){.dashboard--usuario .dashboard-chart-grid{grid-template-columns:1fr 1fr}.dashboard--usuario .dashboard-user-active{max-width:none}}
+@media(max-width:600px){.dashboard-user-active-details{grid-template-columns:1fr}.dashboard-user-active-heading{flex-direction:column}}
