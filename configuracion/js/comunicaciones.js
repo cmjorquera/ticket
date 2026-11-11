@@ -8,6 +8,9 @@
   const asunto=$('com-asunto'), mensaje=$('com-mensaje'), enviar=$('com-enviar'), probar=$('com-prueba');
   let nombrePropio='', correoPropio='';
   const confirmacion=$('modal-confirmar-prueba');
+  // El modal secundario debe quedar por encima del modal principal y sus overlays.
+  if(confirmacion.parentElement!==document.body)document.body.appendChild(confirmacion);
+  confirmacion.style.zIndex='11050';
   function cerrarConfirmacion(){if(typeof window.closeModal==='function')window.closeModal('modal-confirmar-prueba');else confirmacion.style.display='none';}
   const buscar=$('com-buscar'), todosManual=$('com-todos-manual'), manualWrap=$('com-manual-wrap');
   function filtrarManual(){
@@ -92,6 +95,8 @@
     if(!correoPropio){estado.textContent='Tu cuenta no tiene un correo disponible.';return;}
     $('com-correo-propio').textContent=correoPropio;
     if(typeof window.openModal==='function')window.openModal('modal-confirmar-prueba');else confirmacion.style.display='flex';
+    confirmacion.style.zIndex='11050';
+    confirmacion.style.display='flex';
   });
   $('com-cancelar-prueba').addEventListener('click',cerrarConfirmacion);
   $('com-confirmar-prueba').addEventListener('click',()=>{cerrarConfirmacion();ejecutar('prueba');});
