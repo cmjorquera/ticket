@@ -25,7 +25,7 @@ final class InventarioConexion
             (string) ($cfg['host'] ?? 'localhost'),
             (string) ($cfg['usuario'] ?? ''),
             (string) ($cfg['password'] ?? ''),
-            (string) ($cfg['prefijo'] ?? '') . self::BASE
+            (string) (($cfg['bases'][self::BASE] ?? null) ?: (($cfg['prefijo'] ?? '') . self::BASE))
         );
         if (!$cn) {
             error_log('[inventario] conexion: ' . mysqli_connect_error());
