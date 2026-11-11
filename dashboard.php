@@ -6,11 +6,11 @@ require_once __DIR__ . '/configuracion/_inicio.php';
 require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $con_charts = true;
-$pagina_estilos = ['css/dashboard.css?v=20261111-role-insights'];
+$pagina_estilos = ['css/dashboard.css?v=20261111-admin-redesign'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
-$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-role-insights'];
+$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-admin-redesign'];
 
 $usuarioId = (int) ($_SESSION['id'] ?? 0);
 $perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
@@ -75,6 +75,8 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
             <?php endfor; ?>
         </div>
     </section>
+
+    <section class="dashboard-admin-overview" id="dashboard-admin-overview" hidden aria-label="Resumen de administración"></section>
 
     <section class="chart-grid dashboard-chart-grid" aria-label="Gráficos de tickets">
         <div>
