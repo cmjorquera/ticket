@@ -400,8 +400,10 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
             var campo = event.target;
             var panel = campo.closest('.accordion-collapse');
             if (!panel || panel.classList.contains('show')) return;
+            event.preventDefault();
             var abrirCampo = function () {
                 if (typeof campo.focus === 'function') campo.focus();
+                if (typeof campo.reportValidity === 'function') campo.reportValidity();
             };
             panel.addEventListener('shown.bs.collapse', abrirCampo, { once: true });
             if (window.bootstrap && bootstrap.Collapse) {
