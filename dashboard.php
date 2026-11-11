@@ -6,7 +6,7 @@ require_once __DIR__ . '/configuracion/_inicio.php';
 require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $con_charts = true;
-$pagina_estilos = ['css/dashboard.css?v=20261111-ticket-table-contrast'];
+$pagina_estilos = ['css/dashboard.css?v=20261111-role-insights'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
@@ -113,6 +113,17 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
                 </div>
             </article>
         </div>
+    </section>
+
+    <section class="dashboard-insights" id="dashboard-insights" aria-label="Información destacada según perfil" aria-live="polite">
+        <article class="card dashboard-panel dashboard-insight-panel">
+            <div class="card-header dashboard-panel-header"><div><h2 id="dashboard-insight-chart-title">Resumen de prioridades</h2><p id="dashboard-insight-chart-description">Distribución de los tickets visibles.</p></div></div>
+            <div class="card-body"><div id="dashboard-insight-chart" class="dashboard-insight-chart"></div></div>
+        </article>
+        <article class="card dashboard-panel dashboard-insight-panel">
+            <div class="card-header dashboard-panel-header"><div><h2 id="dashboard-insight-list-title">Tickets que requieren atención</h2><p id="dashboard-insight-list-description">Casos destacados de tu bandeja.</p></div></div>
+            <div class="card-body"><div id="dashboard-insight-list" class="dashboard-insight-list"></div></div>
+        </article>
     </section>
 
     <section class="card dashboard-panel dashboard-table-panel" aria-labelledby="dashboard-table-title">
