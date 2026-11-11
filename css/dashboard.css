@@ -101,3 +101,34 @@
 .dashboard-insight-empty{margin:0;color:var(--muted);font-size:.8rem}
 @media(max-width:991.98px){.dashboard-insights{grid-template-columns:1fr}}
 @media(max-width:575px){.dashboard-insight-item{flex-wrap:wrap}.dashboard-insight-item .dashboard-ticket-state{margin-left:auto}}
+
+/* Vista ejecutiva administrador y corrección de contraste real (sin transparencia). */
+.dashboard-page{opacity:1!important;filter:none!important}
+.dashboard-page .dashboard-panel,.dashboard-page .dashboard-panel *{opacity:1}
+.dashboard-page #dashboard-ticket-table,.dashboard-page #dashboard-ticket-table .tabla,.dashboard-page #dashboard-ticket-table .tabla td,.dashboard-page #dashboard-ticket-table .tabla th{opacity:1!important;filter:none!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody td{color:#172b46!important;font-weight:600!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody td strong{color:#10233d!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-state{color:#172b46!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-actions a{background:#fff!important;color:#183b64!important;border:1px solid #c9d5e3!important}
+.dashboard-admin-overview[hidden],.dashboard-chart-grid[hidden],.dashboard-insights[hidden]{display:none!important}
+.dashboard-admin-overview{display:grid;gap:18px}
+.dashboard-admin-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dashboard-admin-heading h2{margin:0;color:#112b4d;font-size:1.15rem;font-weight:800}
+.dashboard-admin-heading p,.dashboard-admin-card>p{margin:5px 0 0;color:#52657d;font-size:.8rem}
+.dashboard-admin-scope{color:#425a77;font-size:.72rem}
+.dashboard-admin-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.dashboard-admin-metric{display:grid;gap:7px;background:#fff;border:1px solid #d8e1ed;border-left:4px solid #0d3b70;border-radius:10px;padding:18px;box-shadow:0 2px 8px rgba(14,39,70,.06)}
+.dashboard-admin-metric:nth-child(2){border-left-color:#e5a100}.dashboard-admin-metric:nth-child(3){border-left-color:#c82e3a}.dashboard-admin-metric:nth-child(4){border-left-color:#15934a}
+.dashboard-admin-metric span{font-size:.78rem;font-weight:750;color:#243b56}.dashboard-admin-metric strong{font-size:2rem;line-height:1.1;color:#102844}.dashboard-admin-metric small{color:#51647b;font-size:.72rem}
+.dashboard-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.dashboard-admin-card{min-width:0;background:#fff;border:1px solid #d8e1ed;border-radius:10px;padding:20px;box-shadow:0 2px 8px rgba(14,39,70,.06)}
+.dashboard-admin-card h3{font-size:1rem;font-weight:800;color:#102844;margin:0}
+.dashboard-admin-schools{display:grid;gap:16px;margin-top:22px}
+.dashboard-admin-school{display:grid;grid-template-columns:minmax(90px,130px) 1fr 35px;align-items:center;gap:12px;font-size:.78rem;color:#233d5a;font-weight:650}
+.dashboard-admin-track{height:15px;background:#e9eff6;border-radius:4px;overflow:hidden}.dashboard-admin-track i{display:block;height:100%;background:#164c87;border-radius:4px}
+.dashboard-admin-school b{text-align:right;color:#102844}
+.dashboard-admin-statuses{display:grid;gap:13px;margin-top:22px}.dashboard-admin-statuses>div{display:flex;align-items:center;gap:10px;color:#233d5a;font-size:.82rem}.dashboard-admin-statuses b{margin-left:auto;font-size:1rem;color:#102844}.dashboard-admin-dot{width:11px;height:11px;border-radius:50%}
+.dashboard-admin-table-wrap{overflow:auto;margin-top:16px}.dashboard-admin-table{width:100%;border-collapse:collapse;font-size:.78rem}.dashboard-admin-table th{text-align:left;background:#eef3f9;color:#17375b}.dashboard-admin-table td,.dashboard-admin-table th{padding:12px 9px;border-bottom:1px solid #e0e7ef;color:#203850}
+.dashboard-admin-stack{display:grid;gap:16px}.dashboard-admin-case{display:flex;align-items:center;gap:12px;margin-top:12px;padding:10px;border:1px solid #dce5ef;border-radius:8px;text-decoration:none;color:#16385e}.dashboard-admin-case>b{color:#0b4e91}.dashboard-admin-case span{display:grid;gap:3px;flex:1;min-width:0}.dashboard-admin-case strong{font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dashboard-admin-case small{font-size:.7rem;color:#52657d}.dashboard-admin-case:hover{background:#eef5fc}
+@media(max-width:1000px){.dashboard-admin-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-admin-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.dashboard-admin-metrics{grid-template-columns:1fr}.dashboard-admin-heading{flex-direction:column;align-items:flex-start}}
