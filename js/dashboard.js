@@ -105,9 +105,12 @@
     return payload;
   }
 
+  const MIN_SKELETON_MS = 2000;
+
   async function loadDashboard(profile = state.perfil) {
     if (state.controller) state.controller.abort();
     const controller = new AbortController();
+    const skeletonStartedAt = performance.now();
     state.controller = controller;
     setBusy(true);
     clearError();
@@ -115,6 +118,9 @@
     try {
       const endpoint = `${config.endpoints.datos}?perfil=${encodeURIComponent(profile)}`;
       const payload = await requestJson(endpoint, { signal: controller.signal });
+      const remaining = MIN_SKELETON_MS - (performance.now() - skeletonStartedAt);
+      if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
+      if (controller.signal.aborted) return;
 
       state.data = payload.data;
       state.perfil = payload.data.perfil;
