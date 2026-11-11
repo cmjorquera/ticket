@@ -10,11 +10,11 @@
   const buscar=$('com-buscar'), todosManual=$('com-todos-manual'), manualWrap=$('com-manual-wrap');
   function filtrarManual(){
     const q=buscar.value.trim().toLocaleLowerCase('es');
-    manual.querySelectorAll('label').forEach(label=>{label.hidden=!label.textContent.toLocaleLowerCase('es').includes(q);});
+    manual.querySelectorAll('label').forEach(label=>{label.style.display=label.textContent.toLocaleLowerCase('es').includes(q)?'block':'none';});
     actualizarSeleccionManual();
   }
   function actualizarSeleccionManual(){
-    const visibles=[...manual.querySelectorAll('label:not([hidden]) input')];
+    const visibles=[...manual.querySelectorAll('label')].filter(l=>l.style.display!=='none').map(l=>l.querySelector('input'));
     todosManual.checked=visibles.length>0 && visibles.every(c=>c.checked);
     todosManual.indeterminate=visibles.some(c=>c.checked) && !todosManual.checked;
   }
