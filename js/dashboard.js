@@ -282,9 +282,18 @@
     const insights = $('dashboard-insights');
     const kpis = $('dashboard-kpis')?.closest('section');
     const admin = state.perfil === 'administrador' && !!state.data?.admin;
+    const tecnico = state.perfil === 'tecnico';
+    app.classList.toggle('dashboard--tecnico', tecnico);
+    const title = $('dashboard-table-title');
+    const desc = $('dashboard-table-description');
+    if (title) title.textContent = tecnico ? 'Mis tickets asignados' : 'Últimos tickets';
+    if (desc) desc.textContent = tecnico ? 'Listado de tickets a mi cargo. Selecciona el número para destacar una fila.' : 'Los casos más recientes disponibles para el perfil activo.';
+    const headings = document.querySelectorAll('.dashboard-chart-grid .dashboard-panel-header > div:first-child');
+    if (headings[0]) { headings[0].querySelector('h2').textContent = tecnico ? 'Estados de mis tickets' : 'Gráfico de tickets'; headings[0].querySelector('p').textContent = tecnico ? 'Distribución de mi bandeja por estado.' : 'Distribución actual de la bandeja.'; }
+    if (headings[1]) { headings[1].querySelector('h2').textContent = tecnico ? 'Mis tickets por categoría' : 'Estados por categoría'; headings[1].querySelector('p').textContent = tecnico ? 'Cantidad de tickets asignados por tipo de solicitud.' : 'Comparación de carga entre tipos de solicitud.'; }
     if (panel) panel.hidden = !admin;
     if (charts) charts.hidden = admin;
-    if (insights) insights.hidden = admin;
+    if (insights) insights.hidden = admin || tecnico;
     if (kpis) kpis.hidden = admin;
     state.adminCharts.forEach(chart => chart.destroy());
     state.adminCharts = [];
@@ -432,9 +441,10 @@
     const canvas = $('graficoTicket');
     if (!canvas) return;
     state.chartEstados?.destroy();
-    const rows = state.data.grafico_estados;
+    const rows = state.perfil === 'tecnico' ? state.data.grafico_estados.filter(row => [2,3,5,7].includes(Number(row.id_estado))) : state.data.grafico_estados;
+    const donut = state.perfil === 'tecnico';
     state.chartEstados = new window.Chart(canvas, {
-      type: 'bar',
+      type: donut ? 'doughnut' : 'bar',
       data: {
         labels: rows.map(row => row.estado),
         datasets: [{
@@ -446,18 +456,20 @@
           borderRadius: 5,
           borderSkipped: false,
           barThickness: 18,
+          ...(donut ? { hoverOffset: 7, cutout: '68%' } : {}),
         }],
       },
       options: {
-        indexAxis: 'y',
+        indexAxis: donut ? 'x' : 'y',
+        cutout: donut ? '68%' : undefined,
         responsive: true,
         maintainAspectRatio: false,
         animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 500 },
         plugins: {
-          legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 7, color: '#6B7280', font: { size: 10 } } },
+          legend: { display: true, position: 'bottom', labels: { usePointStyle: true, boxWidth: 7, color: '#6B7280', font: { size: 11 } } },
           tooltip: { displayColors: true, padding: 10, cornerRadius: 6 },
         },
-        scales: {
+        scales: donut ? {} : {
           x: { beginAtZero: true, ticks: { precision: 0, color: '#6B7280' }, grid: { color: '#EEF0F3' }, border: { display: false } },
           y: { ticks: { color: '#3F424A', font: { size: 11, weight: 600 } }, grid: { display: false }, border: { display: false } },
         },
@@ -476,18 +488,21 @@
       container.innerHTML = '<div class="empty-state"><h3>Sin categorías</h3><p>No existen categorías activas para graficar.</p></div>';
       return;
     }
+    const tecnico = state.perfil === 'tecnico';
+    const categoryTotals = graph.categorias.map((_, index) => graph.series.reduce((sum, series) => sum + Number(series.data[index] || 0), 0));
     state.chartCategorias = new window.ApexCharts(container, {
-      chart: { type: 'area', height: 345, toolbar: { show: false }, animations: { enabled: !window.matchMedia('(prefers-reduced-motion: reduce)').matches } },
-      series: graph.series.map(series => ({ name: series.name, data: series.data.map(Number) })),
-      colors: graph.series.map(series => safeColor(series.color)),
+      chart: { type: tecnico ? 'bar' : 'area', height: 345, toolbar: { show: false }, animations: { enabled: !window.matchMedia('(prefers-reduced-motion: reduce)').matches } },
+      series: tecnico ? [{ name: 'Tickets', data: categoryTotals }] : graph.series.map(series => ({ name: series.name, data: series.data.map(Number) })),
+      colors: tecnico ? ['#448CE0'] : graph.series.map(series => safeColor(series.color)),
+      plotOptions: tecnico ? { bar: { borderRadius: 5, columnWidth: '48%', distributed: false } } : {},
       stroke: { width: 2, curve: 'smooth' },
-      fill: { type: 'solid', opacity: 0.08 },
+      fill: { type: 'solid', opacity: tecnico ? 0.9 : 0.08 },
       markers: { size: 3, strokeWidth: 0, hover: { size: 5 } },
-      dataLabels: { enabled: false },
+      dataLabels: { enabled: tecnico, style: { colors: ['#15345B'] }, offsetY: -18 },
       xaxis: { categories: graph.categorias, labels: { rotate: -35, trim: true, style: { colors: '#6B7280', fontSize: '10px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
       yaxis: { min: 0, forceNiceScale: true, decimalsInFloat: 0, labels: { style: { colors: '#6B7280', fontSize: '10px' } } },
       grid: { borderColor: '#EEF0F3', strokeDashArray: 3, padding: { left: 4, right: 8 } },
-      legend: { position: 'bottom', fontSize: '10px', labels: { colors: '#6B7280' }, markers: { width: 7, height: 7, radius: 7 } },
+      legend: { show: !tecnico, position: 'bottom', fontSize: '10px', labels: { colors: '#6B7280' }, markers: { width: 7, height: 7, radius: 7 } },
       tooltip: { theme: 'light', shared: true, intersect: false },
       noData: { text: 'Sin datos para mostrar' },
     });
@@ -514,10 +529,10 @@
       { key: 'asunto', label: 'Caso', render: ticket => `<span class="dashboard-ticket-main"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.colegio)}</small></span>` },
     ];
     if (state.perfil !== 'usuario') columns.push({ key: 'usuario', label: 'Usuario' });
-    columns.push({ key: 'tecnico', label: 'Técnico' });
+    if (state.perfil !== 'tecnico') columns.push({ key: 'tecnico', label: 'Técnico' });
     columns.push(
       { key: 'estado', label: 'Estado', render: ticket => `<span class="dashboard-ticket-state" style="--state-color:${safeColor(ticket.estado_color)}">${escape(ticket.estado)}</span>` },
-      { key: 'fecha_respuesta', label: 'Fecha de respuesta', render: ticket => `<span class="text-nowrap">${formatDate(ticket.fecha_respuesta)}</span>` },
+      { key: 'fecha_respuesta', label: state.perfil === 'tecnico' ? 'Plazo' : 'Fecha de respuesta', render: ticket => `<span class="text-nowrap">${formatDate(ticket.fecha_respuesta)}</span>` },
       { key: 'categoria', label: 'Categoría', render: ticket => `<span class="badge badge-realizado">${escape(ticket.categoria)}</span>` },
       { key: 'acciones', label: 'Acciones', render: renderActions },
     );
