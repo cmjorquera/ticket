@@ -2062,3 +2062,26 @@
 }
 .inventario-body .nav .nav-item:hover{background:none;}
 .inventario-body .nav-item.active{border-left:0;padding-left:0;}
+
+
+/* Paginación unificada con Ticket Administrador (PC y Monitores). */
+#tablaInventario_wrapper .dataTables_paginate,
+#tablaMonitores_wrapper .dataTables_paginate { float: none; text-align: right; }
+#tablaInventario_wrapper .pagination,
+#tablaMonitores_wrapper .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 5px; margin: 0; }
+#tablaInventario_wrapper .page-link,
+#tablaMonitores_wrapper .page-link { min-width: 34px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border: 1px solid #dce3ed; border-radius: 7px; background: #fff; color: #17365c; font-size: .82rem; font-weight: 500; box-shadow: none; }
+#tablaInventario_wrapper .page-item.active .page-link,
+#tablaMonitores_wrapper .page-item.active .page-link { background: #17365c; border-color: #17365c; color: #fff; }
+#tablaInventario_wrapper .page-item:not(.disabled):not(.active) .page-link:hover,
+#tablaMonitores_wrapper .page-item:not(.disabled):not(.active) .page-link:hover { background: #edf3fa; border-color: #b9cce3; }
+#tablaInventario_wrapper .page-item.disabled .page-link,
+#tablaMonitores_wrapper .page-item.disabled .page-link { color: #a3aeba; background: #f8fafc; border-color: #e6ebf1; }
+#tablaInventario_wrapper .dataTables_info,
+#tablaMonitores_wrapper .dataTables_info { font-size: .8rem; color: #6a788b; }
+@media (max-width: 767.98px) {
+  #tablaInventario_wrapper .dataTables_paginate,
+  #tablaMonitores_wrapper .dataTables_paginate { text-align: center; }
+  #tablaInventario_wrapper .pagination,
+  #tablaMonitores_wrapper .pagination { justify-content: center; }
+}
