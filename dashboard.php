@@ -6,11 +6,11 @@ require_once __DIR__ . '/configuracion/_inicio.php';
 require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $con_charts = true;
-$pagina_estilos = ['css/dashboard.css?v=20261111-tecnico-dashboard-v3'];
+$pagina_estilos = ['css/dashboard.css?v=20261111-tecnico-dashboard-v4'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
-$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-tecnico-dashboard-v3'];
+$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-tecnico-dashboard-v4'];
 
 $usuarioId = (int) ($_SESSION['id'] ?? 0);
 $perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
@@ -113,6 +113,15 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
                     <div class="dashboard-chart-loader" id="loadingGraficoCategorias" role="status"><span class="dashboard-loader-dot" aria-hidden="true"></span><span>Cargando gráfico</span></div>
                     <div id="graficoCategorias" aria-label="Estados de tickets por categoría"></div>
                 </div>
+            </article>
+        </div>
+        <div class="dashboard-tech-attention" id="dashboard-tech-attention" hidden>
+            <article class="card dashboard-panel">
+                <div class="card-header dashboard-panel-header">
+                    <div><h2><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Tickets que requieren atención</h2><p>Demorados, próximos a vencer y en proceso.</p></div>
+                    <span class="dashboard-attention-count" data-attention-count></span>
+                </div>
+                <div class="dashboard-attention-list" data-attention-list></div>
             </article>
         </div>
     </section>
