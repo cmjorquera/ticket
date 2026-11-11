@@ -166,6 +166,7 @@
     renderKpis();
     renderTechAttention();
     renderAdminOverview();
+    renderUserActiveTicket();
     renderStateChart();
     renderCategoryChart();
     renderTickets();
@@ -205,6 +206,31 @@
     }).join('') + (count > 4 ? `<a class="dashboard-attention-more" href="ticket/ticket_asignados.php">Ver todos los tickets asignados (${count}) <i class="bi bi-arrow-right"></i></a>` : '') : '<p class="dashboard-attention-empty"><i class="bi bi-check-circle"></i> No hay tickets demorados, próximos a vencer o en proceso.</p>';
   }
 
+  // Resumen del ticket activo: exclusivamente solicitudes autorizadas del usuario.
+  function renderUserActiveTicket() {
+    const panel = $('dashboard-user-active');
+    if (!panel) return;
+    const active = state.perfil === 'usuario' && !!state.data;
+    panel.hidden = !active;
+    if (!active) return;
+    const tickets = (state.data.tickets || []).filter(t => ![5, 6].includes(Number(t.id_estado)));
+    const ticket = tickets.sort((a,b) => {
+      const priority = t => Number(t.id_estado) === 7 ? -10000 : t.dias_restantes === null || t.dias_restantes === undefined || t.dias_restantes === '' ? 10000 : Number(t.dias_restantes);
+      return priority(a) - priority(b);
+    })[0];
+    if (!ticket) {
+      panel.innerHTML = '<div class="dashboard-user-active-empty"><i class="bi bi-check-circle"></i><strong>No tienes solicitudes pendientes</strong><p>Cuando tengas un ticket activo podrás consultar aquí su técnico y fecha estimada.</p></div>';
+      return;
+    }
+    const days = ticket.dias_restantes === null || ticket.dias_restantes === undefined || ticket.dias_restantes === '' ? null : Number(ticket.dias_restantes);
+    const time = days === null || !Number.isFinite(days) ? 'Sin fecha estimada' : days < 0 ? 'Vencido hace ' + Math.abs(days) + ' día(s)' : days === 0 ? 'Vence hoy' : 'Faltan ' + days + ' día(s)';
+    const late = Number(ticket.id_estado) === 7 || (days !== null && days < 0);
+    panel.innerHTML = `<div class="dashboard-user-active-heading"><div><h2>Mi ticket que requiere atención</h2><p>Seguimiento de tu solicitud pendiente más urgente.</p></div><span class="dashboard-user-active-status">${escape(ticket.estado)}</span></div>
+      <a class="dashboard-user-active-subject" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=usuario">#${Number(ticket.id_ticket)} · ${escape(ticket.asunto)} <i class="bi bi-arrow-up-right"></i></a>
+      <div class="dashboard-user-active-details"><div><small>Técnico asignado</small><strong>${escape(ticket.tecnico || 'Pendiente de asignación')}</strong></div><div><small>Fecha estimada</small><strong>${escape(ticket.fecha_estimada || 'Sin definir')}</strong></div></div>
+      <div class="dashboard-user-active-deadline${late ? ' is-late' : ''}"><i class="bi bi-clock"></i>${escape(time)}</div>`;
+  }
+
   function renderKpis() {
     const container = $('dashboard-kpis');
     if (!container || !state.data) return;
@@ -215,7 +241,7 @@
       const classByState = { 2: 'nuevos', 3: 'en-proceso', 5: 'resueltos', 7: 'atrasados' };
       const active = String(id) === String(state.estado);
       const description = kpi.descripcion || `${kpi.estado}: ${kpi.cantidad} tickets.`;
-      const help = state.perfil === 'tecnico' ? `<details class="dashboard-admin-metric-help dashboard-tech-metric-help"><summary aria-label="Descripción del estado ${escape(kpi.estado)}" title="¿Qué significa este estado?"><i class="bi bi-question-circle" aria-hidden="true"></i></summary><div class="dashboard-admin-metric-help-text">${escape(description)}</div></details>` : '';
+      const help = state.perfil === 'tecnico' || state.perfil === 'usuario' ? `<details class="dashboard-admin-metric-help dashboard-tech-metric-help"><summary aria-label="Descripción del estado ${escape(kpi.estado)}" title="¿Qué significa este estado?"><i class="bi bi-question-circle" aria-hidden="true"></i></summary><div class="dashboard-admin-metric-help-text">${escape(description)}</div></details>` : '';
       return `<div class="dashboard-kpi-cell">
         <button class="contenedor-ticket dashboard-kpi ${classByState[id] || ''}${active ? ' is-active' : ''}${state.perfil === 'tecnico' && id === 7 && Number(kpi.cantidad) > 0 ? ' dashboard-kpi-alert' : ''}" type="button" data-kpi-state="${id}" style="--kpi-color:${color}" title="${escape(description)}" aria-pressed="${active ? 'true' : 'false'}">
           <span class="contenedor-ticket-body">
@@ -319,16 +345,17 @@
     const admin = state.perfil === 'administrador' && !!state.data?.admin;
     const tecnico = state.perfil === 'tecnico';
     app.classList.toggle('dashboard--tecnico', tecnico);
+    app.classList.toggle('dashboard--usuario', state.perfil === 'usuario');
     const title = $('dashboard-table-title');
     const desc = $('dashboard-table-description');
-    if (title) title.textContent = tecnico ? 'Mis tickets asignados' : 'Últimos tickets';
-    if (desc) desc.textContent = tecnico ? 'Listado de tickets a mi cargo. Selecciona el número para destacar una fila.' : 'Los casos más recientes disponibles para el perfil activo.';
+    if (title) title.textContent = tecnico ? 'Mis tickets asignados' : state.perfil === 'usuario' ? 'Mis solicitudes' : 'Últimos tickets';
+    if (desc) desc.textContent = tecnico ? 'Listado de tickets a mi cargo. Selecciona el número para destacar una fila.' : state.perfil === 'usuario' ? 'Consulta quién atiende tus solicitudes, su estado y cuánto tiempo falta para la fecha estimada.' : 'Los casos más recientes disponibles para el perfil activo.';
     const headings = document.querySelectorAll('.dashboard-chart-grid .dashboard-panel-header > div:first-child');
-    if (headings[0]) { headings[0].querySelector('h2').textContent = tecnico ? 'Estados de mis tickets' : 'Gráfico de tickets'; headings[0].querySelector('p').textContent = tecnico ? 'Distribución de mi bandeja por estado.' : 'Distribución actual de la bandeja.'; }
-    if (headings[1]) { headings[1].querySelector('h2').textContent = tecnico ? 'Mis tickets por categoría' : 'Estados por categoría'; headings[1].querySelector('p').textContent = tecnico ? 'Cantidad de tickets asignados por tipo de solicitud.' : 'Comparación de carga entre tipos de solicitud.'; }
+    if (headings[0]) { headings[0].querySelector('h2').textContent = tecnico || state.perfil === 'usuario' ? 'Estados de mis tickets' : 'Gráfico de tickets'; headings[0].querySelector('p').textContent = tecnico || state.perfil === 'usuario' ? 'Distribución de mis solicitudes por estado.' : 'Distribución actual de la bandeja.'; }
+    if (headings[1]) { headings[1].querySelector('h2').textContent = tecnico || state.perfil === 'usuario' ? 'Mis tickets por categoría' : 'Estados por categoría'; headings[1].querySelector('p').textContent = tecnico || state.perfil === 'usuario' ? 'Cantidad de solicitudes por tipo.' : 'Comparación de carga entre tipos de solicitud.'; }
     if (panel) panel.hidden = !admin;
     if (charts) charts.hidden = admin;
-    if (insights) insights.hidden = admin || tecnico;
+    if (insights) insights.hidden = admin || tecnico || state.perfil === 'usuario';
     if (kpis) kpis.hidden = admin;
     state.adminCharts.forEach(chart => chart.destroy());
     state.adminCharts = [];
@@ -477,7 +504,7 @@
     if (!canvas) return;
     state.chartEstados?.destroy();
     const rows = state.perfil === 'tecnico' ? state.data.grafico_estados.filter(row => [2,3,5,7].includes(Number(row.id_estado))) : state.data.grafico_estados;
-    const donut = state.perfil === 'tecnico';
+    const donut = state.perfil === 'tecnico' || state.perfil === 'usuario';
     const centerTotalPlugin = { id: 'dashboardTechCenterTotal', afterDraw(chart) { if (!donut) return; const arc = chart.getDatasetMeta(0).data[0]; if (!arc) return; const {ctx} = chart; const total = rows.reduce((sum, row) => sum + Number(row.cantidad || 0), 0); ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#132d50'; ctx.font = 'bold 30px sans-serif'; ctx.fillText(String(total), arc.x, arc.y - 10); ctx.font = '600 12px sans-serif'; ctx.fillText('Tickets', arc.x, arc.y + 18); ctx.restore(); } };
     state.chartEstados = new window.Chart(canvas, {
       type: donut ? 'doughnut' : 'bar',
@@ -525,7 +552,7 @@
       container.innerHTML = '<div class="empty-state"><h3>Sin categorías</h3><p>No existen categorías activas para graficar.</p></div>';
       return;
     }
-    const tecnico = state.perfil === 'tecnico';
+    const tecnico = state.perfil === 'tecnico' || state.perfil === 'usuario';
     const categoryTotals = graph.categorias.map((_, index) => graph.series.reduce((sum, series) => sum + Number(series.data[index] || 0), 0));
     state.chartCategorias = new window.ApexCharts(container, {
       chart: { type: tecnico ? 'bar' : 'area', height: 345, toolbar: { show: false }, animations: { enabled: !window.matchMedia('(prefers-reduced-motion: reduce)').matches } },
@@ -577,8 +604,8 @@
     if (state.perfil !== 'tecnico') columns.push({ key: 'tecnico', label: 'Técnico' });
     columns.push(
       { key: 'estado', label: 'Estado', render: ticket => `<span class="dashboard-ticket-state" style="--state-color:${safeColor(ticket.estado_color)}">${escape(ticket.estado)}</span>` },
-      { key: 'fecha_respuesta', label: state.perfil === 'tecnico' ? 'Plazo' : 'Fecha de respuesta', render: ticket => `<span class="text-nowrap">${state.perfil === 'tecnico' ? (ticket.fecha_estimada ? escape(ticket.fecha_estimada) : 'Sin fecha') : formatDate(ticket.fecha_respuesta)}</span>` },
-      ...(state.perfil === 'tecnico' ? [{ key: 'dias_restantes', label: 'Tiempo restante', render: remainingLabel }] : []),
+      { key: 'fecha_respuesta', label: state.perfil === 'tecnico' || state.perfil === 'usuario' ? 'Fecha estimada' : 'Fecha de respuesta', render: ticket => `<span class="text-nowrap">${state.perfil === 'tecnico' || state.perfil === 'usuario' ? (ticket.fecha_estimada ? escape(ticket.fecha_estimada) : 'Sin fecha') : formatDate(ticket.fecha_respuesta)}</span>` },
+      ...(['tecnico', 'usuario'].includes(state.perfil) ? [{ key: 'dias_restantes', label: 'Tiempo restante', render: remainingLabel }] : []),
       { key: 'categoria', label: 'Categoría', render: ticket => `<span class="badge badge-realizado">${escape(ticket.categoria)}</span>` },
       { key: 'acciones', label: 'Acciones', render: renderActions },
     );
