@@ -10,7 +10,7 @@ $pagina_estilos = ['css/dashboard.css?v=20261111-role-insights'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
-$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-ticket-table-contrast'];
+$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-role-insights'];
 
 $usuarioId = (int) ($_SESSION['id'] ?? 0);
 $perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
