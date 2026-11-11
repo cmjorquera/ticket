@@ -6,11 +6,11 @@ require_once __DIR__ . '/configuracion/_inicio.php';
 require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $con_charts = true;
-$pagina_estilos = ['css/dashboard.css?v=20261111-usuario-dashboard-v1'];
+$pagina_estilos = ['css/dashboard.css?v=20261111-dashboard-export-v1'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
-$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-usuario-dashboard-v1'];
+$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-dashboard-export-v1'];
 
 $usuarioId = (int) ($_SESSION['id'] ?? 0);
 $perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
@@ -82,7 +82,7 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
         <div>
             <article class="card dashboard-panel">
                 <div class="card-header dashboard-panel-header">
-                    <div><h2>Gráfico de tickets</h2><p>Distribución actual de la bandeja.</p></div>
+                    <div><h2 id="dashboard-chart-title">Gráfico de tickets</h2><p>Distribución actual de la bandeja.</p></div><button type="button" class="dashboard-chart-download" data-chart-download="estados" aria-label="Descargar gráfico de estados en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button>
                     <?php if (count($perfiles) > 1): ?>
                         <label class="dashboard-chart-profile-label">Perfil
                             <select class="dashboard-chart-profile" data-chart-profile aria-label="Perfil del gráfico de tickets">
@@ -100,7 +100,7 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
         <div>
             <article class="card dashboard-panel">
                 <div class="card-header dashboard-panel-header">
-                    <div><h2>Estados por categoría</h2><p>Comparación de carga entre tipos de solicitud.</p></div>
+                    <div><h2 id="dashboard-category-title">Estados por categoría</h2><p>Comparación de carga entre tipos de solicitud.</p></div><button type="button" class="dashboard-chart-download" data-chart-download="categorias" aria-label="Descargar gráfico por categoría en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button>
                     <?php if (count($perfiles) > 1): ?>
                         <label class="dashboard-chart-profile-label">Perfil
                             <select class="dashboard-chart-profile" data-chart-profile aria-label="Perfil del gráfico por categoría">
