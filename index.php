@@ -5,10 +5,9 @@
  * Proteccion: bcrypt + bloqueo por intentos fallidos.
  */
 
-// Fix sesiones
-$_sp = '/var/cpanel/php/sessions/ea-php83';
-if (!is_dir($_sp)) { session_save_path(sys_get_temp_dir()); }
-session_start();
+// Usar la misma inicialización de sesión que el resto de la aplicación.
+require_once __DIR__ . '/clases/Session.php';
+Session::iniciar();
 
 require_once __DIR__ . '/clases/Conexion.php';
 
