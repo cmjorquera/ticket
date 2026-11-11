@@ -15,6 +15,9 @@
     chartEstados: null,
     chartCategorias: null,
     controller: null,
+    adminPeriod: '365',
+    adminSchool: 0,
+    adminCharts: [],
   };
 
   const $ = id => document.getElementById(id);
@@ -116,7 +119,7 @@
     clearError();
 
     try {
-      const endpoint = `${config.endpoints.datos}?perfil=${encodeURIComponent(profile)}`;
+      const endpoint = `${config.endpoints.datos}?perfil=${encodeURIComponent(profile)}&periodo=${encodeURIComponent(state.adminPeriod)}&colegio=${encodeURIComponent(state.adminSchool)}`;
       const payload = await requestJson(endpoint, { signal: controller.signal });
       const remaining = MIN_SKELETON_MS - (performance.now() - skeletonStartedAt);
       if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
@@ -271,57 +274,63 @@
   }
 
 
-  // Vista ejecutiva: exclusivamente administrador. No se extrapolan las 100 filas del listado.
+
   function renderAdminOverview() {
     const panel = $('dashboard-admin-overview');
     const charts = document.querySelector('.dashboard-chart-grid');
     const insights = $('dashboard-insights');
-    if (!panel || !state.data) return;
-    const admin = state.perfil === 'administrador';
-    panel.hidden = !admin;
+    const kpis = $('dashboard-kpis')?.closest('section');
+    const admin = state.perfil === 'administrador' && !!state.data?.admin;
+    if (panel) panel.hidden = !admin;
     if (charts) charts.hidden = admin;
     if (insights) insights.hidden = admin;
-    if (!admin) { panel.innerHTML = ''; return; }
-    const tickets = state.data.tickets || [];
-    const counts = state.data.grafico_estados || [];
-    const total = counts.reduce((n, row) => n + Number(row.cantidad || 0), 0);
-    const resolved = counts.filter(row => [5, 6].includes(Number(row.id_estado))).reduce((n, row) => n + Number(row.cantidad || 0), 0);
-    const late = counts.find(row => Number(row.id_estado) === 7)?.cantidad || 0;
-    const pending = total - resolved;
-    const percentage = total ? Math.round(resolved * 100 / total) : 0;
-    const schools = new Map();
-    const techs = new Map();
-    tickets.forEach(t => {
-      const school = t.colegio || 'Sin colegio';
-      schools.set(school, (schools.get(school) || 0) + 1);
-      const tech = t.tecnico || 'Sin asignar';
-      const info = techs.get(tech) || { active: 0, late: 0, resolved: 0, total: 0 };
-      info.total++;
-      if ([5, 6].includes(Number(t.id_estado))) info.resolved++;
-      else info.active++;
-      if (Number(t.id_estado) === 7) info.late++;
-      techs.set(tech, info);
-    });
-    const maxSchool = Math.max(1, ...schools.values());
-    const schoolRows = [...schools.entries()].sort((a,b) => b[1] - a[1]).slice(0, 8);
-    const unassigned = tickets.filter(t => !t.tecnico || /sin asignar/i.test(t.tecnico)).slice(0, 5);
-    const supervision = tickets.filter(t => Number(t.id_estado) === 7).slice(0, 5);
-    const item = t => `<a class="dashboard-admin-case" href="ticket/ticket_detalle.php?id=${Number(t.id_ticket)}&vista=admin"><b>#${Number(t.id_ticket)}</b><span><strong>${escape(t.asunto)}</strong><small>${escape(t.colegio)}</small></span><i class="bi bi-chevron-right"></i></a>`;
-    const empty = '<p class="dashboard-insight-empty">No hay casos en este grupo.</p>';
+    if (kpis) kpis.hidden = admin;
+    state.adminCharts.forEach(chart => chart.destroy());
+    state.adminCharts = [];
+    if (!panel || !admin) { if(panel) panel.innerHTML=''; return; }
+    const data = state.data.admin;
+    const summary = data.resumen || {};
+    const total = Number(summary.total || 0);
+    const resolved = Number(summary.resueltos || 0);
+    const pending = Number(summary.pendientes || 0);
+    const late = Number(summary.atrasados || 0);
+    const percent = total ? Math.round(100*resolved/total) : 0;
+    const schools = data.colegios_conteo || [];
+    const techs = data.tecnicos || [];
+    const cases = data.casos || [];
+    const noTech = cases.filter(t => ![5,6].includes(Number(t.id_estado)) && Number(t.id_estado) !== 7);
+    const delayed = cases.filter(t => Number(t.id_estado) === 7);
+    const row = (t, showAge=false) => `<tr><td><a href="ticket/ticket_detalle.php?id=${Number(t.id_ticket)}&vista=admin">#${Number(t.id_ticket)}</a></td><td><strong>${escape(t.asunto)}</strong></td><td>${escape(showAge?'Demorado':t.colegio)}</td><td>${showAge ? escape(t.estimada || 'Sin fecha') : escape(t.fecha || 'Sin fecha')}</td><td><a class="dashboard-admin-view" href="ticket/ticket_detalle.php?id=${Number(t.id_ticket)}&vista=admin">Ver</a></td></tr>`;
+    const table = (list,age=false) => list.length ? `<div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Ticket</th><th>Caso / Asunto</th><th>${age?'Estado':'Colegio'}</th><th>${age?'Fecha estimada':'Fecha'}</th><th></th></tr></thead><tbody>${list.slice(0,5).map(t=>row(t,age)).join('')}</tbody></table></div>` : '<p class="dashboard-admin-empty">No hay casos en este grupo.</p>';
     panel.innerHTML = `
-      <div class="dashboard-admin-heading"><div><h2>Visión general de la mesa de ayuda</h2><p>Indicadores globales y distribución de la bandeja visible para administración.</p></div><span class="dashboard-admin-scope">Desglose de hasta 100 tickets recientes</span></div>
+      <div class="dashboard-admin-top"><div><h2>Dashboard – Administrador</h2><p>Visión global de la mesa de ayuda, gestión de tickets y carga del equipo de soporte.</p></div><div class="dashboard-admin-filters"><label>Período<select id="dashboard-admin-period"><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Últimos 12 meses</option><option value="all">Todo el historial</option></select></label><label>Colegio<select id="dashboard-admin-school"><option value="0">Todos los colegios</option>${data.colegios.map(s=>`<option value="${Number(s.id)}">${escape(s.nombre)}</option>`).join('')}</select></label><button id="dashboard-admin-refresh" type="button" aria-label="Actualizar indicadores"><i class="bi bi-arrow-clockwise"></i></button></div></div>
       <div class="dashboard-admin-metrics">
-        <div class="dashboard-admin-metric"><span>Tickets totales</span><strong>${total}</strong><small>En el alcance autorizado</small></div>
-        <div class="dashboard-admin-metric"><span>Pendientes</span><strong>${pending}</strong><small>Sin resolver o cerrar</small></div>
-        <div class="dashboard-admin-metric"><span>Atrasados</span><strong>${Number(late)}</strong><small>Estado demorado</small></div>
-        <div class="dashboard-admin-metric"><span>Resueltos</span><strong>${percentage}%</strong><small>${resolved} de ${total} tickets</small></div>
+        <div class="dashboard-admin-metric"><span><i class="bi bi-layers"></i> Tickets totales</span><strong>${total}</strong><small>En el período seleccionado</small></div>
+        <div class="dashboard-admin-metric"><span><i class="bi bi-clock-history"></i> Pendientes</span><strong>${pending}</strong><small>Sin resolver o cerrar</small></div>
+        <div class="dashboard-admin-metric"><span><i class="bi bi-exclamation-triangle"></i> Atrasados</span><strong>${late}</strong><small>En estado demorado</small></div>
+        <div class="dashboard-admin-metric"><span><i class="bi bi-check-circle"></i> Resueltos</span><strong>${percent}%</strong><small>${resolved} de ${total} tickets</small></div>
       </div>
       <div class="dashboard-admin-grid">
-        <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Distribución de los tickets recientes de la tabla.</p><div class="dashboard-admin-schools">${schoolRows.length ? schoolRows.map(([name,n]) => `<div class="dashboard-admin-school"><span>${escape(name)}</span><div class="dashboard-admin-track"><i style="width:${n/maxSchool*100}%"></i></div><b>${n}</b></div>`).join('') : empty}</div></article>
-        <article class="dashboard-admin-card"><h3>Estados de la mesa de ayuda</h3><p>Cantidad global por estado.</p><div class="dashboard-admin-statuses">${counts.map(row => `<div><span class="dashboard-admin-dot" style="background:${safeColor(row.color)}"></span><span>${escape(row.estado)}</span><b>${Number(row.cantidad)}</b></div>`).join('')}</div></article>
-        <article class="dashboard-admin-card"><h3>Carga de trabajo por técnico</h3><p>Tickets recientes, máximo 100 registros.</p><div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Técnico</th><th>Activos</th><th>Atrasados</th><th>Resueltos</th></tr></thead><tbody>${[...techs.entries()].sort((a,b)=>b[1].active-a[1].active).map(([name,v])=>`<tr><td>${escape(name)}</td><td>${v.active}</td><td>${v.late}</td><td>${v.resolved}</td></tr>`).join('')}</tbody></table></div></article>
-        <div class="dashboard-admin-stack"><article class="dashboard-admin-card"><h3>Tickets sin técnico asignado</h3><p>Casos recientes que requieren asignación.</p>${unassigned.length ? unassigned.map(item).join('') : empty}</article><article class="dashboard-admin-card"><h3>Casos que requieren supervisión</h3><p>Tickets en estado demorado.</p>${supervision.length ? supervision.map(item).join('') : empty}</article></div>
+        <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Cantidad de tickets registrados en el período seleccionado.</p><div class="dashboard-admin-graph" id="dashboard-admin-school-chart"></div></article>
+        <article class="dashboard-admin-card"><h3>Evolución mensual de tickets</h3><p>Tickets creados y actualmente resueltos, agrupados por mes de creación.</p><div class="dashboard-admin-graph" id="dashboard-admin-month-chart"></div></article>
+        <article class="dashboard-admin-card"><h3>Carga de trabajo por técnico</h3><p>Distribución de tickets en el período seleccionado.</p><div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Técnico</th><th>Activos</th><th>Atrasados</th><th>Resueltos</th><th>Total</th></tr></thead><tbody>${techs.map(t=>`<tr><td>${escape(t.nombre)}</td><td><span class="dashboard-admin-pill blue">${Number(t.activos)}</span></td><td><span class="dashboard-admin-pill red">${Number(t.atrasados)}</span></td><td><span class="dashboard-admin-pill green">${Number(t.resueltos)}</span></td><td><b>${Number(t.total)}</b></td></tr>`).join('')}</tbody></table></div></article>
+        <div class="dashboard-admin-stack">
+          <article class="dashboard-admin-card"><h3>Tickets sin técnico asignado <span class="dashboard-admin-count">${noTech.length} casos</span></h3><p>Solicitudes que requieren asignación inmediata.</p>${table(noTech)}</article>
+          <article class="dashboard-admin-card"><h3>Casos que requieren supervisión <span class="dashboard-admin-count">${delayed.length} casos</span></h3><p>Tickets demorados que requieren seguimiento.</p>${table(delayed,true)}</article>
+        </div>
       </div>`;
+    $('dashboard-admin-period').value = data.periodo;
+    $('dashboard-admin-school').value = String(data.colegio);
+    $('dashboard-admin-period').addEventListener('change', e => { state.adminPeriod=e.target.value; state.adminSchool=0; loadDashboard('administrador'); });
+    $('dashboard-admin-school').addEventListener('change', e => { state.adminSchool=Number(e.target.value); loadDashboard('administrador'); });
+    $('dashboard-admin-refresh').addEventListener('click', () => loadDashboard('administrador'));
+    if (typeof window.ApexCharts !== 'function') return;
+    const base = {chart:{toolbar:{show:false},fontFamily:'inherit',height:270},dataLabels:{enabled:false},grid:{borderColor:'#e6ebf2'},tooltip:{theme:'light'},noData:{text:'Sin datos'}};
+    const schoolChart = new window.ApexCharts($('dashboard-admin-school-chart'),{...base,chart:{...base.chart,type:'bar'},series:[{name:'Tickets',data:schools.map(s=>Number(s.cantidad))}],xaxis:{categories:schools.map(s=>s.nombre),labels:{rotate:-30,style:{colors:'#213a59'}}},yaxis:{min:0,forceNiceScale:true,labels:{formatter:v=>Math.round(v)}},colors:['#164a86'],plotOptions:{bar:{borderRadius:3,columnWidth:'55%'}},dataLabels:{enabled:true,style:{colors:['#102b4e']},offsetY:-18},});
+    schoolChart.render();state.adminCharts.push(schoolChart);
+    const months=data.meses || [];
+    const monthChart = new window.ApexCharts($('dashboard-admin-month-chart'),{...base,chart:{...base.chart,type:'area'},series:[{name:'Creados',data:months.map(m=>Number(m.creados))},{name:'Resueltos actualmente',data:months.map(m=>Number(m.resueltos))}],colors:['#1684eb','#159654'],stroke:{width:3,curve:'smooth'},fill:{type:'solid',opacity:.12},markers:{size:3},xaxis:{categories:months.map(m=>m.mes),labels:{style:{colors:'#213a59'}}},yaxis:{min:0,forceNiceScale:true,labels:{formatter:v=>Math.round(v)}},legend:{position:'top',horizontalAlign:'right'}});
+    monthChart.render();state.adminCharts.push(monthChart);
   }
 
   function renderStateChart() {
