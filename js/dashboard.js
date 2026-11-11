@@ -163,6 +163,7 @@
     renderStateChart();
     renderCategoryChart();
     renderTickets();
+    renderInsights();
     updateFilterStatus();
   }
 
@@ -198,6 +199,74 @@
         updateFilterStatus();
       });
     });
+  }
+
+
+  // Indicadores calculados exclusivamente sobre los tickets devueltos para el perfil autorizado.
+  // El endpoint limita la bandeja a 100 filas: no presentar estos conteos como totales históricos.
+  function renderInsights() {
+    if (!state.data) return;
+    const tickets = state.data.tickets || [];
+    const profile = state.perfil;
+    const titles = {
+      usuario: ['Estado de mis solicitudes', 'Mis solicitudes pendientes', 'Distribución de los tickets visibles.', 'Tickets abiertos que puedo consultar.'],
+      tecnico: ['Prioridades de mis tickets', 'Mis tickets por atender', 'Distribución por prioridad de mi bandeja.', 'Casos activos ordenados por antigüedad.'],
+      administrador: ['Prioridades de la bandeja', 'Casos que requieren supervisión', 'Distribución por prioridad de los tickets visibles.', 'Casos demorados o pendientes de gestión.']
+    };
+    const copy = titles[profile] || titles.usuario;
+    $('dashboard-insight-chart-title').textContent = copy[0];
+    $('dashboard-insight-list-title').textContent = copy[1];
+    $('dashboard-insight-chart-description').textContent = copy[2];
+    $('dashboard-insight-list-description').textContent = copy[3];
+    const colors = { alta: '#C83B3B', media: '#D18A19', baja: '#2E9460' };
+    const isOpen = ticket => ![5, 6].includes(Number(ticket.id_estado));
+    const priorities = { alta: 0, media: 0, baja: 0 };
+    tickets.forEach(ticket => {
+      if (!isOpen(ticket)) return;
+      const priority = String(ticket.prioridad || '').toLowerCase().trim();
+      if (Object.prototype.hasOwnProperty.call(priorities, priority)) priorities[priority]++;
+    });
+    const countByStatus = new Map();
+    tickets.forEach(ticket => {
+      const id = Number(ticket.id_estado);
+      countByStatus.set(id, (countByStatus.get(id) || 0) + 1);
+    });
+    const chart = $('dashboard-insight-chart');
+    if (profile === 'usuario') {
+      const statuses = state.data.grafico_estados.filter(item => Number(item.cantidad) > 0);
+      const total = statuses.reduce((sum, item) => sum + Number(item.cantidad), 0);
+      chart.innerHTML = total ? statuses.map(item => {
+        const quantity = Number(item.cantidad);
+        const percent = Math.round(quantity * 100 / total);
+        const color = safeColor(item.color);
+        return `<div class="dashboard-insight-bar"><div class="dashboard-insight-bar-label"><strong>${escape(item.estado)}</strong><span>${quantity} · ${percent}%</span></div><div class="dashboard-insight-track"><span style="width:${percent}%;background:${color}"></span></div></div>`;
+      }).join('') : '<p class="dashboard-insight-empty">Todavía no hay solicitudes para mostrar.</p>';
+    } else {
+      const total = Object.values(priorities).reduce((sum, n) => sum + n, 0);
+      chart.innerHTML = total ? Object.entries(priorities).map(([name, quantity]) => {
+        const percent = Math.round(quantity * 100 / total);
+        return `<div class="dashboard-insight-bar"><div class="dashboard-insight-bar-label"><strong>${escape(name[0].toUpperCase() + name.slice(1))}</strong><span>${quantity} · ${percent}%</span></div><div class="dashboard-insight-track"><span style="width:${percent}%;background:${colors[name]}"></span></div></div>`;
+      }).join('') : '<p class="dashboard-insight-empty">No hay tickets activos con prioridad definida en esta bandeja.</p>';
+    }
+    const selected = tickets.filter(ticket => {
+      if (!isOpen(ticket)) return false;
+      return profile !== 'administrador' || Number(ticket.id_estado) === 7 || Number(ticket.id_estado) === 1 || Number(ticket.id_estado) === 2;
+    }).sort((a, b) => {
+      const aLate = Number(a.id_estado) === 7 ? 0 : 1;
+      const bLate = Number(b.id_estado) === 7 ? 0 : 1;
+      return aLate - bLate || String(a.fecha_creacion).localeCompare(String(b.fecha_creacion));
+    }).slice(0, 4);
+    const list = $('dashboard-insight-list');
+    list.innerHTML = selected.length ? selected.map(ticket => {
+      const id = Number(ticket.id_ticket);
+      const target = profile === 'administrador' ? 'ticket/ticket_admin_v2.php' : profile === 'tecnico' ? 'ticket/ticket_asignados.php' : 'ticket/ticket.php';
+      return `<a class="dashboard-insight-item" href="${target}" aria-label="Abrir bandeja para consultar ticket ${id}">
+        <span class="dashboard-insight-id">#${id}</span>
+        <span class="dashboard-insight-item-body"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.categoria)} · ${escape(ticket.colegio)}</small></span>
+        <span class="dashboard-ticket-state" style="--state-color:${safeColor(ticket.estado_color)}">${escape(ticket.estado)}</span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </a>`;
+    }).join('') : '<p class="dashboard-insight-empty">No hay tickets pendientes en esta vista.</p>';
   }
 
   function renderStateChart() {
