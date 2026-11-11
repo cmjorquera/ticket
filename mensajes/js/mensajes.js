@@ -4,7 +4,7 @@
     const CFG = window.MSG_CONFIG || {};
     const URL = 'ajax/mensajes.php';
     const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const aviso = (icon, title, text) => (window.Swal ? Swal.fire({ icon, title, text, confirmButtonColor: '#1e4e8c' }) : alert(title + (text ? '\n' + text : '')));
+    const aviso = (icon, title, text) => (window.Swal ? Swal.fire({ icon, title, text, confirmButtonColor: '#003B6F', customClass: { popup: 'rounded-3', confirmButton: 'btn btn-primary' }, buttonsStyling: false }) : alert(title + (text ? '\n' + text : '')));
     const errorDe = xhr => (xhr && xhr.responseJSON && xhr.responseJSON.mensaje) || 'No fue posible completar la acción.';
     const post = datos => $.ajax({ url: URL, method: 'POST', data: Object.assign({ csrf: CFG.csrf }, datos), dataType: 'json', traditional: true });
 
@@ -50,8 +50,10 @@
     const panel = panelEl ? new bootstrap.Offcanvas(panelEl) : null;
     let conversacionActual = 0;
     let huboCambios = false;
+    let hiloFirma = '';
 
     function pintarHilo(c) {
+        hiloFirma = c.mensajes.map(m => m.id).join(',');
         $('#panelTitulo').text(c.otro);
         $('#panelSub').text(c.mensajes.length + (c.mensajes.length === 1 ? ' mensaje' : ' mensajes') + (c.archivada ? ' · archivada' : ''));
         const html = c.mensajes.map(m => `
@@ -79,7 +81,28 @@
     }
     $tabla.on('click', '.btnAbrir', function () { abrir($(this).data('id')); });
     $tabla.on('dblclick', 'tr.msg-fila', function () { abrir($(this).data('id')); });
-    panelEl && panelEl.addEventListener('hidden.bs.offcanvas', () => { if (huboCambios) { location.reload(); } });
+    panelEl && panelEl.addEventListener('hidden.bs.offcanvas', () => { conversacionActual = 0; hiloFirma = ''; if (huboCambios) { location.reload(); } });
+    // Actualización periódica sin recargar: solo sustituye el hilo si llegaron mensajes nuevos.
+    async function actualizarMensajes() {
+        if (document.hidden) return;
+        if (conversacionActual && panelEl?.classList.contains('show')) {
+            try {
+                const r = await $.getJSON(URL, {accion:'conversacion',id:conversacionActual});
+                const firma = r.data.mensajes.map(m => m.id).join(',');
+                if (firma !== hiloFirma) { pintarHilo(r.data); huboCambios = true; window.Notificaciones?.contar?.(); }
+            } catch (_) { /* Reintentar en próximo ciclo */ }
+        }
+        // Si hay nuevos mensajes, actualizar el listado mediante recarga de datos, sin navegar.
+        try {
+            const r = await $.getJSON(URL, {accion:'resumen'});
+            const total = Number(r.data?.no_leidos ?? r.resumen?.no_leidos ?? -1);
+            if (total >= 0) {
+                const visible = Number($('.msg-stat-link .msg-badge').first().text()) || 0;
+                if (total !== visible) window.Notificaciones?.contar?.();
+            }
+        } catch (_) {}
+    }
+    window.setInterval(actualizarMensajes, 10000);
 
     $('#formResponder').on('submit', function (e) {
         e.preventDefault();
@@ -101,7 +124,7 @@
             .fail(xhr => aviso('error', 'No fue posible', errorDe(xhr)));
         if (accion !== 'eliminar' || !window.Swal) { ejecutar(); return; }
         Swal.fire({ icon: 'warning', title: '¿Eliminar la conversación?', text: 'Desaparece de tu bandeja. La otra persona la sigue viendo.', showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar', confirmButtonColor: '#dc2626' })
+            confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar', confirmButtonColor: '#003B6F', customClass: { popup: 'rounded-3', confirmButton: 'btn btn-danger', cancelButton: 'btn btn-outline-secondary' }, buttonsStyling: false })
             .then(r => { if (r.isConfirmed) { ejecutar(); } });
     });
 
