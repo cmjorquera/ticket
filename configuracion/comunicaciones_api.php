@@ -12,7 +12,9 @@ if ($_SERVER['REQUEST_METHOD']==='GET') {
     if ($accion!=='opciones') salida(['ok'=>false,'mensaje'=>'Acción inválida.'],400);
     try {
         $usuarios=$db->fetchAll("SELECT id, TRIM(CONCAT(COALESCE(nombre,''),' ',COALESCE(apellido_paterno,''))) nombre, email, id_colegio, id_area_trabajo FROM usuarios WHERE LOWER(estado)='activo' AND email IS NOT NULL AND email <> '' ORDER BY nombre");
-        salida(['ok'=>true,'usuarios'=>$usuarios,'csrf'=>$_SESSION['csrf_comunicaciones']]);
+        $colegios=$db->fetchAll('SELECT id_colegio AS id, nom_colegio AS nombre FROM colegio ORDER BY nom_colegio');
+        $areas=$db->fetchAll('SELECT id_area AS id, nombre_area AS nombre FROM area_trabajo ORDER BY nombre_area');
+        salida(['ok'=>true,'usuarios'=>$usuarios,'colegios'=>$colegios,'areas'=>$areas,'csrf'=>$_SESSION['csrf_comunicaciones']]);
     } catch(Throwable $e){error_log('[comunicaciones] '.$e->getMessage());salida(['ok'=>false,'mensaje'=>'No fue posible cargar destinatarios.'],500);}
 }
 if ($_SERVER['REQUEST_METHOD']!=='POST') salida(['ok'=>false,'mensaje'=>'Método no permitido.'],405);
