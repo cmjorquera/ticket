@@ -311,7 +311,7 @@
         <div class="dashboard-admin-metric"><span><i class="bi bi-check-circle"></i> Resueltos</span><strong>${percent}%</strong><small>${resolved} de ${total} tickets</small></div>
       </div>
       <div class="dashboard-admin-grid">
-        <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Cantidad de tickets registrados en el período seleccionado.</p><div class="dashboard-admin-graph" id="dashboard-admin-school-chart"></div></article>
+        <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Distribución por estado de los tickets de cada colegio en el período seleccionado.</p><div class="dashboard-admin-graph" id="dashboard-admin-school-chart"></div></article>
         <article class="dashboard-admin-card"><h3>Evolución mensual de tickets</h3><p>Tickets creados y actualmente resueltos, agrupados por mes de creación.</p><div class="dashboard-admin-graph" id="dashboard-admin-month-chart"></div></article>
         <article class="dashboard-admin-card"><h3>Carga de trabajo por técnico</h3><p>Distribución de tickets en el período seleccionado.</p><div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Técnico</th><th>Activos</th><th>Atrasados</th><th>Resueltos</th><th>Total</th></tr></thead><tbody>${techs.map(t=>`<tr><td>${escape(t.nombre)}</td><td><span class="dashboard-admin-pill blue">${Number(t.activos)}</span></td><td><span class="dashboard-admin-pill red">${Number(t.atrasados)}</span></td><td><span class="dashboard-admin-pill green">${Number(t.resueltos)}</span></td><td><b>${Number(t.total)}</b></td></tr>`).join('')}</tbody></table></div></article>
         <div class="dashboard-admin-stack">
@@ -326,7 +326,29 @@
     $('dashboard-admin-refresh').addEventListener('click', () => loadDashboard('administrador'));
     if (typeof window.ApexCharts !== 'function') return;
     const base = {chart:{toolbar:{show:false},fontFamily:'inherit',height:270},dataLabels:{enabled:false},grid:{borderColor:'#e6ebf2'},tooltip:{theme:'light'},noData:{text:'Sin datos'}};
-    const schoolChart = new window.ApexCharts($('dashboard-admin-school-chart'),{...base,chart:{...base.chart,type:'bar'},series:[{name:'Tickets',data:schools.map(s=>Number(s.cantidad))}],xaxis:{categories:schools.map(s=>s.nombre),labels:{rotate:-30,style:{colors:'#213a59'}}},yaxis:{min:0,forceNiceScale:true,labels:{formatter:v=>Math.round(v)}},colors:['#164a86'],plotOptions:{bar:{borderRadius:3,columnWidth:'55%'}},dataLabels:{enabled:true,style:{colors:['#102b4e']},offsetY:-18},});
+    const schoolStates = [
+      {id:1,name:'Recibido',color:'#5895d0'},
+      {id:2,name:'Asignado',color:'#f0bd45'},
+      {id:3,name:'En proceso',color:'#f38c80'},
+      {id:4,name:'Borrador',color:'#9c8dbb'},
+      {id:5,name:'Terminado',color:'#35b77a'},
+      {id:6,name:'Cerrado',color:'#7b8797'},
+      {id:7,name:'Demorado',color:'#e25b61'}
+    ];
+    const schoolChart = new window.ApexCharts($('dashboard-admin-school-chart'),{
+      ...base,
+      chart:{...base.chart,type:'bar',stacked:true,height:320},
+      series:schoolStates.map(st=>({name:st.name,data:schools.map(s=>Number((s.estados||{})[st.id]||0))})),
+      colors:schoolStates.map(st=>st.color),
+      xaxis:{categories:schools.map(s=>s.nombre),labels:{rotate:-35,trim:false,style:{colors:'#213a59',fontSize:'11px'}}},
+      yaxis:{min:0,forceNiceScale:true,labels:{formatter:v=>Math.round(v)}},
+      plotOptions:{bar:{horizontal:false,columnWidth:'65%',borderRadius:2}},
+      dataLabels:{enabled:false},
+      legend:{show:true,position:'bottom',fontSize:'12px'},
+      tooltip:{shared:true,intersect:false,y:{formatter:v=>Math.round(v)+' tickets'}},
+      fill:{opacity:1},
+      grid:{borderColor:'#e6ebf2'}
+    });
     schoolChart.render();state.adminCharts.push(schoolChart);
     const months=data.meses || [];
     const monthChart = new window.ApexCharts($('dashboard-admin-month-chart'),{...base,chart:{...base.chart,type:'area'},series:[{name:'Creados',data:months.map(m=>Number(m.creados))},{name:'Resueltos actualmente',data:months.map(m=>Number(m.resueltos))}],colors:['#1684eb','#159654'],stroke:{width:3,curve:'smooth'},fill:{type:'solid',opacity:.12},markers:{size:3},xaxis:{categories:months.map(m=>m.mes),labels:{style:{colors:'#213a59'}}},yaxis:{min:0,forceNiceScale:true,labels:{formatter:v=>Math.round(v)}},legend:{position:'top',horizontalAlign:'right'}});
