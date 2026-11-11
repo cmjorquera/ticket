@@ -351,6 +351,11 @@ final class DashboardTickets
         }
         if ($colegio > 0) { $where .= ' AND uc.id_colegio = ?'; $params[] = $colegio; }
         $summary = $this->db->fetchOne("SELECT COUNT(*) total, SUM(t.id_estado IN (5,6)) resueltos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado NOT IN (5,6)) pendientes FROM tickets t LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket {$schoolJoin} WHERE {$where}", $params) ?: [];
+        $stateRows = $this->db->fetchAll("SELECT t.id_estado, COUNT(*) AS cantidad {$base} WHERE {$where} GROUP BY t.id_estado", $params);
+        $stateCounts = [];
+        foreach ($stateRows as $stateRow) {
+            $stateCounts[(int) $stateRow['id_estado']] = (int) $stateRow['cantidad'];
+        }
         $schoolCounts = $this->db->fetchAll(
             "SELECT uc.id_colegio AS id, t.id_estado, COUNT(*) cantidad {$base} WHERE {$where} GROUP BY uc.id_colegio, t.id_estado",
             $params
@@ -374,7 +379,7 @@ final class DashboardTickets
         $byTech = $this->db->fetchAll("SELECT COALESCE(NULLIF(TRIM(CONCAT_WS(' ',u.nombre,u.apellido_paterno)),''),'Sin asignar') nombre, COUNT(*) total, SUM(t.id_estado NOT IN (5,6)) activos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado IN (5,6)) resueltos {$base} LEFT JOIN usuarios u ON u.id=t.id_tecnico WHERE {$where} GROUP BY t.id_tecnico,u.nombre,u.apellido_paterno ORDER BY activos DESC", $params);
         $monthly = $this->db->fetchAll("SELECT DATE_FORMAT(pt.fecha_creacion_inicio,'%Y-%m') mes, COUNT(*) creados, SUM(t.id_estado IN (5,6)) resueltos {$base} WHERE {$where} AND pt.fecha_creacion_inicio IS NOT NULL GROUP BY DATE_FORMAT(pt.fecha_creacion_inicio,'%Y-%m') ORDER BY mes", $params);
         $cases = $this->db->fetchAll("SELECT t.id_ticket,t.asunto,t.id_estado,COALESCE(c.nom_colegio,'Sin colegio') colegio,pt.fecha_creacion_inicio fecha,pt.fecha_estimada_admin estimada {$base} LEFT JOIN colegio c ON c.id_colegio=uc.id_colegio WHERE {$where} AND (t.id_estado=7 OR t.id_tecnico IS NULL OR t.id_tecnico=0) ORDER BY pt.fecha_creacion_inicio DESC LIMIT 50", $params);
-        return ['periodo'=>$periodo,'colegio'=>$colegio,'colegios'=>$schools,'resumen'=>$summary,'colegios_conteo'=>$bySchool,'tecnicos'=>$byTech,'meses'=>$monthly,'casos'=>$cases];
+        return ['periodo'=>$periodo,'colegio'=>$colegio,'colegios'=>$schools,'resumen'=>$summary,'estados_conteo'=>$stateCounts,'colegios_conteo'=>$bySchool,'tecnicos'=>$byTech,'meses'=>$monthly,'casos'=>$cases];
     }
 
     /** @return array<int,array<string,mixed>> */
