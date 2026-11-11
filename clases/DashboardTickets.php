@@ -380,7 +380,27 @@ final class DashboardTickets
                 'estados' => $countsById[$id] ?? [],
             ];
         }
-        $byTech = $this->db->fetchAll("SELECT COALESCE(NULLIF(TRIM(CONCAT_WS(' ',u.nombre,u.apellido_paterno)),''),'Sin asignar') nombre, COUNT(*) total, SUM(t.id_estado NOT IN (5,6)) activos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado IN (5,6)) resueltos {$base} LEFT JOIN usuarios u ON u.id=t.id_tecnico WHERE {$where} GROUP BY t.id_tecnico,u.nombre,u.apellido_paterno ORDER BY activos DESC", $params);
+        $byTech = $this->db->fetchAll("SELECT t.id_tecnico AS id, COALESCE(NULLIF(TRIM(CONCAT_WS(' ',u.nombre,u.apellido_paterno)),''),'Sin asignar') nombre, COUNT(*) total, SUM(t.id_estado NOT IN (5,6)) activos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado IN (5,6)) resueltos {$base} LEFT JOIN usuarios u ON u.id=t.id_tecnico WHERE {$where} GROUP BY t.id_tecnico,u.nombre,u.apellido_paterno ORDER BY activos DESC", $params);
+        // Desglose por técnico/categoría/estado: misma población y filtros del resumen, sin LIMIT.
+        $categoryRows = $this->db->fetchAll("SELECT t.id_tecnico AS tecnico_id, t.id_categoria_ticket AS categoria_id, COALESCE(NULLIF(TRIM(cat.nombre_categoria),''),'Sin categoría') categoria, t.id_estado, COUNT(*) cantidad {$base} LEFT JOIN categoria_de_ticket cat ON cat.id_categoria=t.id_categoria_ticket WHERE {$where} GROUP BY t.id_tecnico,t.id_categoria_ticket,cat.nombre_categoria,t.id_estado", $params);
+        $techCategories = [];
+        foreach ($categoryRows as $item) {
+            $techKey = (string) ($item['tecnico_id'] ?? '0');
+            $categoryKey = (string) ($item['categoria_id'] ?? '0');
+            if (!isset($techCategories[$techKey][$categoryKey])) {
+                $techCategories[$techKey][$categoryKey] = ['id' => (int) ($item['categoria_id'] ?? 0), 'nombre' => (string) $item['categoria'], 'total' => 0, 'estados' => []];
+            }
+            $qty = (int) $item['cantidad'];
+            $techCategories[$techKey][$categoryKey]['total'] += $qty;
+            $techCategories[$techKey][$categoryKey]['estados'][(int) $item['id_estado']] = $qty;
+        }
+        foreach ($byTech as &$tech) {
+            $techKey = (string) ($tech['id'] ?? '0');
+            $categories = array_values($techCategories[$techKey] ?? []);
+            usort($categories, static fn (array $a, array $b): int => ($b['total'] <=> $a['total']) ?: strcmp($a['nombre'], $b['nombre']));
+            $tech['categorias'] = $categories;
+        }
+        unset($tech);
         $monthly = $this->db->fetchAll("SELECT DATE_FORMAT(pt.fecha_creacion_inicio,'%Y-%m') mes, COUNT(*) creados, SUM(t.id_estado IN (5,6)) resueltos {$base} WHERE {$where} AND pt.fecha_creacion_inicio IS NOT NULL GROUP BY DATE_FORMAT(pt.fecha_creacion_inicio,'%Y-%m') ORDER BY mes", $params);
         $cases = $this->db->fetchAll("SELECT t.id_ticket,t.asunto,t.id_estado,COALESCE(c.nom_colegio,'Sin colegio') colegio,pt.fecha_creacion_inicio fecha,pt.fecha_estimada_admin estimada {$base} LEFT JOIN colegio c ON c.id_colegio=uc.id_colegio WHERE {$where} AND (t.id_estado=7 OR t.id_tecnico IS NULL OR t.id_tecnico=0) ORDER BY pt.fecha_creacion_inicio DESC LIMIT 50", $params);
         return ['periodo'=>$periodo,'colegio'=>$colegio,'colegios'=>$schools,'resumen'=>$summary,'estados_conteo'=>$stateCounts,'estados_descripciones'=>$stateDescriptions,'colegios_conteo'=>$bySchool,'tecnicos'=>$byTech,'meses'=>$monthly,'casos'=>$cases];
