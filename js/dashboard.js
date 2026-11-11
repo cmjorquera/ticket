@@ -182,10 +182,11 @@
       const classByState = { 2: 'nuevos', 3: 'en-proceso', 5: 'resueltos', 7: 'atrasados' };
       const active = String(id) === String(state.estado);
       const description = kpi.descripcion || `${kpi.estado}: ${kpi.cantidad} tickets.`;
+      const help = state.perfil === 'tecnico' ? `<span class="dashboard-kpi-help" role="button" tabindex="0" data-kpi-help="${id}" aria-label="Descripción de ${escape(kpi.estado)}" title="Ver descripción"><i class="bi bi-info-circle" aria-hidden="true"></i></span>` : '';
       return `<div class="dashboard-kpi-cell">
         <button class="contenedor-ticket dashboard-kpi ${classByState[id] || ''}${active ? ' is-active' : ''}" type="button" data-kpi-state="${id}" style="--kpi-color:${color}" title="${escape(description)}" aria-pressed="${active ? 'true' : 'false'}">
           <span class="contenedor-ticket-body">
-            <span class="contenedor-ticket-titulo">${escape(kpi.estado)}</span>
+            <span class="contenedor-ticket-titulo">${escape(kpi.estado)} ${help}</span>
             <strong class="contenedor-ticket-numero">${Number(kpi.cantidad)}</strong>
             <small class="contenedor-ticket-porcentaje">${Number(kpi.porcentaje)}% de la bandeja</small>
           </span>
@@ -194,6 +195,11 @@
       </div>`;
     }).join('');
 
+    container.querySelectorAll('[data-kpi-help]').forEach(help => {
+      const show = event => { event.preventDefault(); event.stopPropagation(); const item = state.data.kpis.find(k => Number(k.id_estado) === Number(help.dataset.kpiHelp)); if (item) window.alert(item.descripcion || `Estado ${item.estado}`); };
+      help.addEventListener('click', show);
+      help.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') show(event); });
+    });
     container.querySelectorAll('[data-kpi-state]').forEach(button => {
       button.addEventListener('click', () => {
         const selected = button.dataset.kpiState || '';
@@ -443,8 +449,10 @@
     state.chartEstados?.destroy();
     const rows = state.perfil === 'tecnico' ? state.data.grafico_estados.filter(row => [2,3,5,7].includes(Number(row.id_estado))) : state.data.grafico_estados;
     const donut = state.perfil === 'tecnico';
+    const centerTotalPlugin = { id: 'dashboardTechCenterTotal', afterDraw(chart) { if (!donut) return; const arc = chart.getDatasetMeta(0).data[0]; if (!arc) return; const {ctx} = chart; const total = rows.reduce((sum, row) => sum + Number(row.cantidad || 0), 0); ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#132d50'; ctx.font = 'bold 30px sans-serif'; ctx.fillText(String(total), arc.x, arc.y - 10); ctx.font = '600 12px sans-serif'; ctx.fillText('Tickets', arc.x, arc.y + 18); ctx.restore(); } };
     state.chartEstados = new window.Chart(canvas, {
       type: donut ? 'doughnut' : 'bar',
+      plugins: donut ? [centerTotalPlugin] : [],
       data: {
         labels: rows.map(row => row.estado),
         datasets: [{
@@ -524,6 +532,14 @@
   function renderTickets() {
     if (!state.data || typeof window.crearTabla !== 'function') return;
     const tickets = filteredTickets().map((ticket, index) => ({ ...ticket, _numeroFila: index + 1 }));
+    const remainingLabel = ticket => {
+      if ([5, 6].includes(Number(ticket.id_estado))) return '<span class="dashboard-deadline is-done">Resuelto</span>';
+      if (ticket.dias_restantes === null || ticket.dias_restantes === undefined || ticket.dias_restantes === '') return '<span class="dashboard-deadline is-undefined">Sin fecha definida</span>';
+      const days = Number(ticket.dias_restantes);
+      if (!Number.isFinite(days)) return '<span class="dashboard-deadline is-undefined">Sin fecha definida</span>';
+      const label = days < 0 ? `Vencido hace ${Math.abs(days)} día${Math.abs(days) === 1 ? '' : 's'}` : days === 0 ? 'Vence hoy' : `Faltan ${days} día${days === 1 ? '' : 's'}`;
+      return `<span class="dashboard-deadline ${days < 0 ? 'is-late' : days <= 2 ? 'is-soon' : 'is-ok'}">${label}</span>`;
+    };
     const columns = [
       { key: 'id_ticket', label: 'N° / fecha', render: ticket => `<span class="dashboard-ticket-folio" data-estado="${escape(ticket.estado)}" data-ticket-id="${Number(ticket.id_ticket)}"><button type="button" class="dashboard-ticket-row-number" aria-pressed="false" title="Seleccionar fila ${ticket._numeroFila}">${ticket._numeroFila}</button><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=${({ usuario: 'usuario', tecnico: 'tecnico', administrador: 'admin' }[state.perfil] || 'usuario')}">Ticket #${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
       { key: 'asunto', label: 'Caso', render: ticket => `<span class="dashboard-ticket-main"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.colegio)}</small></span>` },
@@ -532,7 +548,8 @@
     if (state.perfil !== 'tecnico') columns.push({ key: 'tecnico', label: 'Técnico' });
     columns.push(
       { key: 'estado', label: 'Estado', render: ticket => `<span class="dashboard-ticket-state" style="--state-color:${safeColor(ticket.estado_color)}">${escape(ticket.estado)}</span>` },
-      { key: 'fecha_respuesta', label: state.perfil === 'tecnico' ? 'Plazo' : 'Fecha de respuesta', render: ticket => `<span class="text-nowrap">${formatDate(ticket.fecha_respuesta)}</span>` },
+      { key: 'fecha_respuesta', label: state.perfil === 'tecnico' ? 'Plazo' : 'Fecha de respuesta', render: ticket => `<span class="text-nowrap">${state.perfil === 'tecnico' ? (ticket.fecha_estimada ? escape(ticket.fecha_estimada) : 'Sin fecha') : formatDate(ticket.fecha_respuesta)}</span>` },
+      ...(state.perfil === 'tecnico' ? [{ key: 'dias_restantes', label: 'Tiempo restante', render: remainingLabel }] : []),
       { key: 'categoria', label: 'Categoría', render: ticket => `<span class="badge badge-realizado">${escape(ticket.categoria)}</span>` },
       { key: 'acciones', label: 'Acciones', render: renderActions },
     );
