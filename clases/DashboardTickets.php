@@ -438,6 +438,8 @@ final class DashboardTickets
                 'prioridad' => (string) ($ticket['prioridad'] ?? 'Media'),
                 'fecha_creacion' => (string) ($ticket['fecha_creacion'] ?? ''),
                 'fecha_respuesta' => (string) ($ticket['fecha_respuesta'] ?? ''),
+                'fecha_estimada' => (string) ($ticket['fecha_estimada_admin'] ?? ''),
+                'dias_restantes' => isset($ticket['dias_restantes']) ? (int) $ticket['dias_restantes'] : null,
                 'puede_calificar' => $perfil === 'usuario'
                     && (int) ($ticket['id_estado'] ?? 0) === 5
                     && empty($ticket['tiene_calificacion']),
