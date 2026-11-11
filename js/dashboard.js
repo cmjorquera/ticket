@@ -18,6 +18,7 @@
     adminPeriod: '365',
     adminSchool: 0,
     adminCharts: [],
+    selectedTicketId: null,
   };
 
   const $ = id => document.getElementById(id);
@@ -509,7 +510,7 @@
     if (!state.data || typeof window.crearTabla !== 'function') return;
     const tickets = filteredTickets().map((ticket, index) => ({ ...ticket, _numeroFila: index + 1 }));
     const columns = [
-      { key: 'id_ticket', label: 'N° / fecha', render: ticket => `<span class="dashboard-ticket-folio" data-estado="${escape(ticket.estado)}"><strong class="dashboard-ticket-row-number">${ticket._numeroFila}</strong><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=${({ usuario: 'usuario', tecnico: 'tecnico', administrador: 'admin' }[state.perfil] || 'usuario')}">Ticket #${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
+      { key: 'id_ticket', label: 'N° / fecha', render: ticket => `<span class="dashboard-ticket-folio" data-estado="${escape(ticket.estado)}" data-ticket-id="${Number(ticket.id_ticket)}"><button type="button" class="dashboard-ticket-row-number" aria-pressed="false" title="Seleccionar fila ${ticket._numeroFila}">${ticket._numeroFila}</button><a class="ticket-id" href="ticket/ticket_detalle.php?id=${Number(ticket.id_ticket)}&vista=${({ usuario: 'usuario', tecnico: 'tecnico', administrador: 'admin' }[state.perfil] || 'usuario')}">Ticket #${Number(ticket.id_ticket)}</a><small>${formatDate(ticket.fecha_creacion)}</small></span>` },
       { key: 'asunto', label: 'Caso', render: ticket => `<span class="dashboard-ticket-main"><strong>${escape(ticket.asunto)}</strong><small>${escape(ticket.colegio)}</small></span>` },
     ];
     if (state.perfil !== 'usuario') columns.push({ key: 'usuario', label: 'Usuario' });
@@ -532,6 +533,13 @@
     });
     const count = $('dashboard-list-count');
     if (count) count.textContent = `${tickets.length} ticket${tickets.length === 1 ? '' : 's'}`;
+    // Selección por folio, independiente de los enlaces de navegación.
+    const table = $('dashboard-ticket-table');
+    table?.querySelectorAll('.dashboard-ticket-folio[data-ticket-id]').forEach(folio => {
+      const selected = Number(folio.dataset.ticketId) === state.selectedTicketId;
+      folio.closest('tr')?.classList.toggle('dashboard-ticket-selected', selected);
+      folio.querySelector('.dashboard-ticket-row-number')?.setAttribute('aria-pressed', String(selected));
+    });
   }
 
   function renderActions(ticket) {
@@ -594,6 +602,19 @@
   });
   document.querySelectorAll('[data-chart-profile]').forEach(select => {
     select.addEventListener('change', () => changeProfile(select.value));
+  });
+  $('dashboard-ticket-table')?.addEventListener('click', event => {
+    const number = event.target.closest('.dashboard-ticket-row-number');
+    if (!number) return;
+    const folio = number.closest('.dashboard-ticket-folio[data-ticket-id]');
+    if (!folio) return;
+    const id = Number(folio.dataset.ticketId);
+    state.selectedTicketId = state.selectedTicketId === id ? null : id;
+    $('dashboard-ticket-table').querySelectorAll('.dashboard-ticket-folio[data-ticket-id]').forEach(item => {
+      const selected = Number(item.dataset.ticketId) === state.selectedTicketId;
+      item.closest('tr')?.classList.toggle('dashboard-ticket-selected', selected);
+      item.querySelector('.dashboard-ticket-row-number')?.setAttribute('aria-pressed', String(selected));
+    });
   });
   $('dashboard-filter-search')?.addEventListener('input', event => { state.busqueda = event.target.value.trim(); renderTickets(); });
   $('dashboard-filter-state')?.addEventListener('change', event => {
