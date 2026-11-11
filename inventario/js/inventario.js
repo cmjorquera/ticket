@@ -559,17 +559,26 @@
                     .then(function () { if (response.redirect) { window.location.href = response.redirect; } });
             }).fail(function (xhr) {
                 const respuesta = xhr.responseJSON;
-                const mensaje = respuesta && respuesta.mensaje
-                    ? respuesta.mensaje
-                    : (xhr.status === 0
-                        ? 'No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo nuevamente.'
-                        : 'El servidor no devolvió una respuesta válida al guardar el equipo (HTTP ' + xhr.status + '). Revisa la pestaña Red de las herramientas de desarrollador.');
+                const bloqueadoPorModSecurity = xhr.status === 406
+                    && /mod[_ ]?security/i.test(xhr.responseText || '');
+                const mensaje = bloqueadoPorModSecurity
+                    ? 'El firewall ModSecurity del hosting bloqueó esta solicitud (HTTP 406). Los cambios no se guardaron. Solicita al administrador del hosting que revise la regla aplicada a inventario/ajax/actualizar_equipo.php.'
+                    : (respuesta && respuesta.mensaje
+                        ? respuesta.mensaje
+                        : (xhr.status === 0
+                            ? 'No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo nuevamente.'
+                            : 'El servidor no devolvió una respuesta válida al guardar el equipo (HTTP ' + xhr.status + '). Revisa la pestaña Red de las herramientas de desarrollador.'));
                 console.error('[Inventario] Error al guardar equipo', {
                     status: xhr.status,
                     statusText: xhr.statusText,
                     response: xhr.responseText
                 });
-                Swal.fire('Error', mensaje, 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: bloqueadoPorModSecurity ? 'Solicitud bloqueada por el hosting' : 'Error',
+                    text: mensaje,
+                    confirmButtonText: 'Entendido'
+                });
             });
         });
     }
