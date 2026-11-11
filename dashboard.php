@@ -6,11 +6,11 @@ require_once __DIR__ . '/configuracion/_inicio.php';
 require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $con_charts = true;
-$pagina_estilos = ['css/dashboard.css?v=20261111-tecnico-dashboard-v4'];
+$pagina_estilos = ['css/dashboard.css?v=20261111-usuario-dashboard-v1'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
-$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-tecnico-dashboard-v4'];
+$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-usuario-dashboard-v1'];
 
 $usuarioId = (int) ($_SESSION['id'] ?? 0);
 $perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
@@ -125,6 +125,8 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
             </article>
         </div>
     </section>
+
+    <section class="card dashboard-panel dashboard-user-active" id="dashboard-user-active" hidden aria-label="Seguimiento de mi ticket activo"></section>
 
     <section class="dashboard-insights" id="dashboard-insights" aria-label="Información destacada según perfil" aria-live="polite">
         <article class="card dashboard-panel dashboard-insight-panel">
