@@ -5,16 +5,19 @@ require_once __DIR__ . '/../clases/Correo.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 function salida(array $data, int $status=200): never { http_response_code($status); echo json_encode($data,JSON_UNESCAPED_UNICODE); exit; }
-if ((int)Sesion::get('id',0)!==8) salida(['ok'=>false,'mensaje'=>'No autorizado.'],403);
+$adminId=(int)Sesion::get('id',0);
+$esSuperAdmin=(bool)$db->fetchOne('SELECT 1 FROM usuario_perfil WHERE id_usuario = ? AND id_perfil = 3 LIMIT 1',[$adminId]);
+if (!$esSuperAdmin) salida(['ok'=>false,'mensaje'=>'No autorizado.'],403);
 if (empty($_SESSION['csrf_comunicaciones'])) $_SESSION['csrf_comunicaciones']=bin2hex(random_bytes(32));
 $accion=(string)($_POST['accion']??$_GET['accion']??'');
 if ($_SERVER['REQUEST_METHOD']==='GET') {
     if ($accion!=='opciones') salida(['ok'=>false,'mensaje'=>'Acción inválida.'],400);
     try {
-        $usuarios=$db->fetchAll("SELECT id, TRIM(CONCAT(COALESCE(nombre,''),' ',COALESCE(apellido_paterno,''))) nombre, email, id_colegio, id_area_trabajo FROM usuarios WHERE LOWER(estado)='activo' AND email IS NOT NULL AND email <> '' ORDER BY nombre");
+        $usuarios=$db->fetchAll("SELECT u.id, TRIM(CONCAT(COALESCE(u.nombre,''),' ',COALESCE(u.apellido_paterno,''))) nombre, u.email, COALESCE(jd.id_colegio,0) id_colegio, u.id_area_trabajo FROM usuarios u LEFT JOIN (SELECT id_usuario, MIN(id_colegio) id_colegio FROM jefatura_departamento WHERE estado=1 GROUP BY id_usuario) jd ON jd.id_usuario=u.id WHERE LOWER(u.estado)='activo' AND u.email IS NOT NULL AND u.email <> '' ORDER BY u.nombre");
         $colegios=$db->fetchAll('SELECT id_colegio AS id, nom_colegio AS nombre FROM colegio ORDER BY nom_colegio');
         $areas=$db->fetchAll('SELECT id_area AS id, nombre_area AS nombre FROM area_trabajo ORDER BY nombre_area');
-        salida(['ok'=>true,'usuarios'=>$usuarios,'colegios'=>$colegios,'areas'=>$areas,'csrf'=>$_SESSION['csrf_comunicaciones']]);
+        $propio=$db->fetchOne('SELECT nombre,apellido_paterno,email FROM usuarios WHERE id = ? LIMIT 1',[$adminId]);
+        salida(['ok'=>true,'usuarios'=>$usuarios,'colegios'=>$colegios,'areas'=>$areas,'propio'=>['nombre'=>trim((string)($propio['nombre']??'').' '.(string)($propio['apellido_paterno']??'')),'email'=>(string)($propio['email']??'')],'csrf'=>$_SESSION['csrf_comunicaciones']]);
     } catch(Throwable $e){error_log('[comunicaciones] '.$e->getMessage());salida(['ok'=>false,'mensaje'=>'No fue posible cargar destinatarios.'],500);}
 }
 if ($_SERVER['REQUEST_METHOD']!=='POST') salida(['ok'=>false,'mensaje'=>'Método no permitido.'],405);
@@ -37,7 +40,7 @@ try {
         return '<!doctype html><html lang="es"><head><meta charset="UTF-8"></head><body style="margin:0;background:#f4f6f9;font-family:Arial,sans-serif;color:#26364b"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:25px 12px"><table role="presentation" width="600" style="width:100%;max-width:600px;background:#fff" cellspacing="0" cellpadding="0"><tr><td><img src="https://www.siae.cl/email/archivos/1FiVR9m09zWTnZ4IdW1g/header_siae_seduc.png" alt="SEDUC" width="600" style="display:block;width:100%;height:auto"></td></tr><tr><td style="height:4px;background:linear-gradient(to right,#3A913F 50%,#EAAA00 50%,#EAAA00 75%,#005587 75%)"></td></tr><tr><td style="padding:28px 30px"><p style="font-size:12px;letter-spacing:1px;color:#005587;text-align:center">SISTEMA DE CENTRALIZACIÓN</p><h1 style="font-size:26px;text-align:center;color:#003B6F">Nueva versión disponible · v2.0</h1><p>Hola <strong>'.$h($nombre).'</strong>,</p><p style="line-height:1.7;white-space:pre-line">'.nl2br($h($mensaje)).'</p><p style="text-align:center;margin:30px 0"><a href="'.$url.'" style="display:inline-block;padding:15px 26px;border-radius:6px;background:#003B6F;color:white;text-decoration:none;font-weight:bold">Acceder al Sistema de Centralización</a></p><p style="font-size:13px;color:#64748b">Usuario: '.$h($nombre).'. Utiliza tus credenciales habituales. Nunca compartas tu contraseña.</p></td></tr><tr><td><img src="https://www.siae.cl/email/archivos/IuNYrJlxxZN9U0v254lx/Footer_colegios.png" alt="Colegios SEDUC" width="600" style="display:block;width:100%;height:auto"></td></tr></table></td></tr></table></body></html>';
     };
     if($accion==='prueba'){
-        $propio=$db->fetchOne('SELECT nombre,apellido_paterno,email FROM usuarios WHERE id=8 LIMIT 1');
+        $propio=$db->fetchOne('SELECT nombre,apellido_paterno,email FROM usuarios WHERE id=? LIMIT 1',[$adminId]);
         if(!$propio || !filter_var($propio['email'],FILTER_VALIDATE_EMAIL)) salida(['ok'=>false,'mensaje'=>'Tu cuenta no tiene un correo válido.'],422);
         $nombre=trim($propio['nombre'].' '.$propio['apellido_paterno']);
         $r=Correo::enviar([[$propio['email'],$nombre]],'[PRUEBA] '.$asunto,$html($nombre));
@@ -57,7 +60,7 @@ try {
     $ok=0;$fallos=0;
     foreach($destinatarios as $u){
         $r=Correo::enviar([[$u['email'],$u['nombre']]],$asunto,$html($u['nombre']));
-        $db->execute('INSERT INTO comunicaciones_envios (id_administrador,id_destinatario,email,asunto,estado,detalle,firma) VALUES (8,?,?,?,?,?,?)',[(int)$u['id'],$u['email'],$asunto,$r['enviado']?'enviado':'error',mb_substr($r['motivo'],0,255),$firma]);
+        $db->execute('INSERT INTO comunicaciones_envios (id_administrador,id_destinatario,email,asunto,estado,detalle,firma) VALUES (?,?,?,?,?,?,?)',[$adminId,(int)$u['id'],$u['email'],$asunto,$r['enviado']?'enviado':'error',mb_substr($r['motivo'],0,255),$firma]);
         $r['enviado']?$ok++:$fallos++;
     }
     salida(['ok'=>true,'mensaje'=>"Proceso terminado: $ok enviados, $fallos con error.",'enviados'=>$ok,'errores'=>$fallos]);
