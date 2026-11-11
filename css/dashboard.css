@@ -198,3 +198,16 @@
 .dashboard-tech-chart-card h3{margin:0 0 10px;font-size:14px;color:#15385e}
 .dashboard-tech-modal-open{overflow:hidden}
 @media(max-width:760px){.dashboard-tech-content{grid-template-columns:1fr}.dashboard-tech-dialog{padding:14px}.dashboard-tech-modal{padding:8px}}
+
+/* Tablas de tickets: estado solo en la banda lateral, sin teñir la fila completa. */
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado]) td{background:#fff!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:nth-child(even):has(.dashboard-ticket-folio[data-estado]) td{background:#f8fafc!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado]):hover td{background:#eef5fc!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr.dashboard-ticket-selected td,
+.dashboard-page #dashboard-ticket-table .tabla tbody tr.dashboard-ticket-selected:nth-child(even) td,
+.dashboard-page #dashboard-ticket-table .tabla tbody tr.dashboard-ticket-selected:hover td{background:#dceafd!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr.dashboard-ticket-selected{outline:1px solid #8db6e7;outline-offset:-1px}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number{appearance:none;border:0;background:transparent;padding:2px 7px 2px 0;margin:0;cursor:pointer;text-align:left;color:#0f2748;font-size:14px;font-weight:800;border-radius:4px}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number:hover{color:#0759a5;text-decoration:underline}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number:focus-visible{outline:2px solid #1d65ad;outline-offset:2px}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number[aria-pressed="true"]{color:#064b94}
