@@ -439,7 +439,7 @@ final class DashboardTickets
                 'fecha_creacion' => (string) ($ticket['fecha_creacion'] ?? ''),
                 'fecha_respuesta' => (string) ($ticket['fecha_respuesta'] ?? ''),
                 'fecha_estimada' => (string) ($ticket['fecha_estimada_admin'] ?? ''),
-                'dias_restantes' => !empty($ticket['fecha_estimada_admin']) && $ticket['fecha_estimada_admin'] !== '0000-00-00' ? (int) (new \\DateTimeImmutable('today'))->diff(new \\DateTimeImmutable(substr((string) $ticket['fecha_estimada_admin'], 0, 10)))->format('%r%a') : null,
+                'dias_restantes' => !empty($ticket['fecha_estimada_admin']) && $ticket['fecha_estimada_admin'] !== '0000-00-00' ? (int) (new \DateTimeImmutable('today'))->diff(new \DateTimeImmutable(substr((string) $ticket['fecha_estimada_admin'], 0, 10)))->format('%r%a') : null,
                 'puede_calificar' => $perfil === 'usuario'
                     && (int) ($ticket['id_estado'] ?? 0) === 5
                     && empty($ticket['tiene_calificacion']),
