@@ -34,10 +34,6 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
 
 <div class="dashboard-page" id="dashboard-app" aria-busy="true">
     <header class="page-header dashboard-heading">
-        <div>
-            <h1>Dashboard</h1>
-            <!--<p>Estado operativo de tus solicitudes y carga de atención.</p>-->
-        </div>
         <?php if (count($perfiles) > 1): ?>
             <nav class="dashboard-profiles" aria-label="Vista del dashboard" style="--profile-count:<?= count($perfiles) ?>">
                 <span>Ver como</span>
