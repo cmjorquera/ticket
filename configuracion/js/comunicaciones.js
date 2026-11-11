@@ -11,7 +11,7 @@
   // El modal secundario debe quedar por encima del modal principal y sus overlays.
   if(confirmacion.parentElement!==document.body)document.body.appendChild(confirmacion);
   confirmacion.style.zIndex='11050';
-  function cerrarConfirmacion(){if(typeof window.closeModal==='function')window.closeModal('modal-confirmar-prueba');else confirmacion.style.display='none';}
+  function cerrarConfirmacion(){if(typeof window.closeModal==='function')window.closeModal('modal-confirmar-prueba');confirmacion.style.display='none';confirmacion.classList.remove('active','show','visible');}
   const buscar=$('com-buscar'), todosManual=$('com-todos-manual'), manualWrap=$('com-manual-wrap');
   function filtrarManual(){
     const q=buscar.value.trim().toLocaleLowerCase('es');
@@ -54,8 +54,16 @@
   }
   async function api(accion,body){
     const opt=body?{method:'POST',body:new URLSearchParams({accion,csrf,asunto:asunto.value,mensaje:mensaje.value,...body})}:{};
-    const res=await fetch('comunicaciones_api.php'+(body?'':'?accion='+accion),{credentials:'same-origin',cache:'no-store',...opt});
-    const data=await res.json();
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),30000);
+    let res,data;
+    try{
+      res=await fetch('comunicaciones_api.php'+(body?'':'?accion='+accion),{credentials:'same-origin',cache:'no-store',signal:controller.signal,...opt});
+      data=await res.json();
+    }catch(e){
+      if(e.name==='AbortError')throw new Error('La solicitud tardó más de 30 segundos. Revisa si llegó el correo antes de reintentar: el servidor podría haber completado el envío.');
+      throw e;
+    }finally{clearTimeout(timeout);}
     if(!res.ok||!data.ok)throw new Error(data.mensaje||'No fue posible realizar la operación.');
     return data;
   }
