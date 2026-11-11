@@ -126,9 +126,7 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
         </div>
     </section>
 
-    <section class="card dashboard-panel dashboard-user-active" id="dashboard-user-active" hidden aria-label="Seguimiento de mi ticket activo"></section>
-
-    <section class="dashboard-insights" id="dashboard-insights" aria-label="Información destacada según perfil" aria-live="polite">
+<section class="dashboard-insights" id="dashboard-insights" aria-label="Información destacada según perfil" aria-live="polite">
         <article class="card dashboard-panel dashboard-insight-panel">
             <div class="card-header dashboard-panel-header"><div><h2 id="dashboard-insight-chart-title">Resumen de prioridades</h2><p id="dashboard-insight-chart-description">Distribución de los tickets visibles.</p></div></div>
             <div class="card-body"><div id="dashboard-insight-chart" class="dashboard-insight-chart"></div></div>
