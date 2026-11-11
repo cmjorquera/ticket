@@ -306,9 +306,19 @@
       <div class="dashboard-admin-top"><div><h2>Dashboard – Administrador</h2><p>Visión global de la mesa de ayuda, gestión de tickets y carga del equipo de soporte.</p></div><div class="dashboard-admin-filters"><label>Período<select id="dashboard-admin-period"><option value="30">Últimos 30 días</option><option value="90">Últimos 90 días</option><option value="365">Últimos 12 meses</option><option value="all">Todo el historial</option></select></label><label>Colegio<select id="dashboard-admin-school"><option value="0">Todos los colegios</option>${data.colegios.map(s=>`<option value="${Number(s.id)}">${escape(s.nombre)}</option>`).join('')}</select></label><button id="dashboard-admin-refresh" type="button" aria-label="Actualizar indicadores"><i class="bi bi-arrow-clockwise"></i></button></div></div>
       <div class="dashboard-admin-metrics">
         <div class="dashboard-admin-metric"><span><i class="bi bi-layers"></i> Tickets totales</span><strong>${total}</strong><small>En el período seleccionado</small></div>
-        <div class="dashboard-admin-metric"><span><i class="bi bi-clock-history"></i> Pendientes</span><strong>${pending}</strong><small>Sin resolver o cerrar</small></div>
-        <div class="dashboard-admin-metric"><span><i class="bi bi-exclamation-triangle"></i> Atrasados</span><strong>${late}</strong><small>En estado demorado</small></div>
-        <div class="dashboard-admin-metric"><span><i class="bi bi-check-circle"></i> Resueltos</span><strong>${percent}%</strong><small>${resolved} de ${total} tickets</small></div>
+        ${[
+          {id:1,nombre:'Recibido',icono:'bi-inbox',color:'#005B96'},
+          {id:2,nombre:'Asignado',icono:'bi-person-check',color:'#FFBF4C'},
+          {id:3,nombre:'En proceso',icono:'bi-hourglass-split',color:'#FFE0E0'},
+          {id:4,nombre:'Borrador',icono:'bi-file-earmark',color:'#F3E5F5'},
+          {id:5,nombre:'Terminado',icono:'bi-check-circle',color:'#C8F7C5'},
+          {id:6,nombre:'Cerrado',icono:'bi-lock',color:'#E0E0E0'},
+          {id:7,nombre:'Demorado',icono:'bi-exclamation-triangle',color:'#FFD6A5'}
+        ].map(st=>{
+          const count=Number((data.estados_conteo||{})[st.id]||0);
+          const pct=total?Math.round(count*100/total):0;
+          return `<div class="dashboard-admin-metric" style="border-left-color:${st.color}"><span><i class="bi ${st.icono}"></i> ${st.nombre}</span><strong>${count}</strong><small>${pct}% del total de tickets</small></div>`;
+        }).join('')}
       </div>
       <div class="dashboard-admin-grid">
         <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Distribución por estado de los tickets de cada colegio en el período seleccionado.</p><div class="dashboard-admin-graph" id="dashboard-admin-school-chart"></div></article>
