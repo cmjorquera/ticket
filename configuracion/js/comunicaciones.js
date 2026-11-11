@@ -8,8 +8,8 @@
   const asunto=$('com-asunto'), mensaje=$('com-mensaje'), enviar=$('com-enviar'), probar=$('com-prueba');
   let nombrePropio='', correoPropio='';
   const confirmacion=$('modal-confirmar-prueba');
-  const aviso=$('com-aviso-exito');
-  for(const el of [confirmacion,aviso])if(el.parentElement!==document.body)document.body.appendChild(el);
+  const aviso=$('com-aviso-exito'), confirmarEnvio=$('com-confirmar-envio');
+  for(const el of [confirmacion,aviso,confirmarEnvio])if(el.parentElement!==document.body)document.body.appendChild(el);
   const confirmarBtn=$('com-confirmar-prueba');
   function cerrarConfirmacion(){
     confirmacion.classList.remove('com-visible');
@@ -33,6 +33,8 @@
     },2500);
   }
   cerrarConfirmacion();
+  function cerrarEnvio(){confirmarEnvio.classList.remove('com-visible');confirmarEnvio.setAttribute('aria-hidden','true');}
+  cerrarEnvio();
   const buscar=$('com-buscar'), todosManual=$('com-todos-manual'), manualWrap=$('com-manual-wrap');
   function filtrarManual(){
     const q=buscar.value.trim().toLocaleLowerCase('es');
@@ -53,8 +55,8 @@
     return usuarios.filter(u=>String(u[modo.value==='colegio'?'id_colegio':'id_area_trabajo']??'0')===grupo.value);
   }
   function cambiar(){
-    prueba=false;enviar.disabled=true;
-    enviar.title='Primero debes enviar una prueba a tu correo con esta selección y contenido.';
+    prueba=false;
+    enviar.title='Para varios destinatarios se requiere una prueba previa. Para uno solo puedes enviar directamente.';
     grupo.hidden=!['colegio','area'].includes(modo.value);
     grupo.style.display=grupo.hidden?'none':'block';
     manualWrap.hidden=modo.value!=='manual';
@@ -68,10 +70,11 @@
       if(catalogo.some(item=>String(item.id)===actual))grupo.value=actual;
     }
     const elegidos=seleccionado();
+    enviar.disabled=ocupado || elegidos.length===0 || (elegidos.length>1&&!prueba);
     $('com-contador').textContent=elegidos.length+' destinatarios activos con correo válido';
     $('com-preview-mensaje').textContent=mensaje.value;
     $('com-preview-nombre').textContent=nombrePropio;
-    estado.textContent=elegidos.length ? 'Antes de enviar el comunicado, realiza una prueba a tu correo. Si cambias destinatarios o contenido, debes repetirla.' : 'Selecciona al menos un destinatario para continuar.';
+    estado.textContent=!elegidos.length?'Selecciona al menos un destinatario para continuar.':elegidos.length===1?'Puedes enviar directamente a este usuario; confirma su correo antes de enviar.':'Para enviar a varios usuarios, realiza primero una prueba a tu correo.';
     actualizarSeleccionManual();
   }
   async function api(accion,body){
@@ -108,9 +111,7 @@
     const ids=seleccionado().map(u=>Number(u.id));
     if(!ids.length){estado.textContent='Selecciona destinatarios.';return;}
     if(accion==='enviar'){
-      if(!prueba){estado.textContent='Debes enviar primero una prueba a tu correo con los destinatarios y contenido actuales.';return;}
-      const ok=window.confirm('¿Confirmas el envío del comunicado a '+ids.length+' usuarios? Esta acción enviará correos reales.');
-      if(!ok)return;
+      if(ids.length>1&&!prueba){estado.textContent='Para enviar a varios usuarios, primero realiza una prueba con la selección actual.';return;}
     }
     ocupado=true;probar.disabled=true;enviar.disabled=true;estado.textContent=accion==='prueba'?'Enviando prueba…':'Enviando comunicados…';
     try{
@@ -119,8 +120,8 @@
       const r=await api(accion,body);
       estado.textContent=r.mensaje;
       if(accion==='prueba'){prueba=true;enviar.disabled=false;enviar.title='Confirmar envío a los destinatarios seleccionados.';estado.textContent=r.mensaje+' Ya puedes enviar el comunicado a '+ids.length+' destinatario(s).';mostrarExito('Prueba enviada',r.mensaje);}else{prueba=false;enviar.disabled=true;mostrarExito('Envío procesado',r.mensaje);}
-    }catch(e){estado.textContent=e.message;if(accion==='enviar')enviar.disabled=!prueba;}
-    finally{ocupado=false;probar.disabled=false;}
+    }catch(e){estado.textContent=e.message;if(accion==='enviar')enviar.disabled=ids.length>1&&!prueba;}
+    finally{ocupado=false;probar.disabled=false;enviar.disabled=seleccionado().length===0||(seleccionado().length>1&&!prueba);}
   }
   probar.addEventListener('click',()=>{
     if(ocupado)return;
@@ -137,5 +138,19 @@
   });
   confirmacion.addEventListener('click',e=>{if(e.target===confirmacion)cerrarConfirmacion();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&confirmacion.classList.contains('com-visible'))cerrarConfirmacion();});
-  enviar.addEventListener('click',()=>ejecutar('enviar'));
+  function abrirEnvio(){
+    if(ocupado)return;
+    const elegidos=seleccionado();
+    if(!elegidos.length){estado.textContent='Selecciona un destinatario.';return;}
+    if(elegidos.length>1&&!prueba){estado.textContent='Para varios destinatarios debes enviar primero una prueba.';return;}
+    $('com-envio-destinatarios').textContent=elegidos.length===1
+      ? elegidos[0].nombre+' — '+elegidos[0].email
+      : elegidos.length+' destinatarios seleccionados. Esta acción enviará correos reales.';
+    confirmarEnvio.classList.add('com-visible');
+    confirmarEnvio.setAttribute('aria-hidden','false');
+  }
+  enviar.addEventListener('click',abrirEnvio);
+  $('com-cancelar-envio').addEventListener('click',cerrarEnvio);
+  $('com-confirmar-envio-btn').addEventListener('click',()=>{cerrarEnvio();ejecutar('enviar');});
+  confirmarEnvio.addEventListener('click',e=>{if(e.target===confirmarEnvio)cerrarEnvio();});
 })();
