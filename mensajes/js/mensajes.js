@@ -51,6 +51,7 @@
     let conversacionActual = 0;
     let huboCambios = false;
     let hiloFirma = '';
+    let listaFirma = null;
 
     function pintarHilo(c) {
         hiloFirma = c.mensajes.map(m => m.id).join(',');
@@ -92,15 +93,40 @@
                 if (firma !== hiloFirma) { pintarHilo(r.data); huboCambios = true; window.Notificaciones?.contar?.(); }
             } catch (_) { /* Reintentar en próximo ciclo */ }
         }
-        // Si hay nuevos mensajes, actualizar el listado mediante recarga de datos, sin navegar.
+        // Mantener la bandeja visible sincronizada, preservando filtros y paginación.
         try {
-            const r = await $.getJSON(URL, {accion:'resumen'});
-            const total = Number(r.data?.no_leidos ?? r.resumen?.no_leidos ?? -1);
-            if (total >= 0) {
-                const visible = Number($('.msg-stat-link .msg-badge').first().text()) || 0;
-                if (total !== visible) window.Notificaciones?.contar?.();
+            const r = await $.getJSON(URL, {accion:'listar',carpeta:CFG.carpeta});
+            if (!r.ok) return;
+            const actual = JSON.stringify(r.data.map(m => [m.id,m.total,m.no_leidos,m.fecha,m.ultimo]));
+            if (actual !== listaFirma) {
+                listaFirma = actual;
+                const pagina = tabla.page();
+                tabla.clear();
+                r.data.forEach(m => {
+                    const id = Number(m.id), nombre = esc(m.otro), mensaje = esc(m.ultimo), fecha = esc(fechaCorta(m.fecha));
+                    const urgente = m.urgente ? ' · Urgente' : '';
+                    const badge = m.no_leidos ? '<span class="msg-badge" title="Sin leer">'+Number(m.no_leidos)+'</span>' : '';
+                    const accion = CFG.carpeta === 'archivados' ? 'desarchivar' : 'archivar';
+                    const icono = accion === 'archivar' ? 'bi-archive' : 'bi-inbox';
+                    const node = tabla.row.add([
+                        '<div class="msg-persona"><span class="msg-avatar">'+nombre.charAt(0)+'</span><div><strong>'+nombre+'</strong><span class="msg-sub">'+Number(m.total)+' mensajes'+urgente+'</span></div>'+badge+'</div>',
+                        (m.ultimo_mio ? '<span class="msg-sub d-inline">Tú: </span>' : '')+mensaje,
+                        fecha,
+                        '<button type="button" class="module-btn module-btn--primary btnAbrir" data-id="'+id+'"><i class="bi bi-chat-dots"></i>Abrir</button> '+
+                        '<button type="button" class="module-btn module-btn--secondary btnAccion" data-accion="'+accion+'" data-id="'+id+'"><i class="bi '+icono+'"></i></button> '+
+                        '<button type="button" class="module-btn module-btn--secondary btnAccion" data-accion="eliminar" data-id="'+id+'"><i class="bi bi-trash3"></i></button>'
+                    ]).node();
+                    node.className = 'msg-fila'+(m.no_leidos ? ' msg-no-leida' : '');
+                    node.dataset.id = id; node.dataset.noLeida = m.no_leidos ? '1' : '0'; node.dataset.urgente = m.urgente ? '1' : '0';
+                    node.cells[2].setAttribute('data-order',m.fecha);
+                });
+                tabla.draw(false);
+                if (pagina < tabla.page.info().pages) tabla.page(pagina).draw('page');
             }
-        } catch (_) {}
+            const stats = document.querySelectorAll('.msg-stat-link .inv-stat-card strong');
+            ['no_leidos','recibidos','enviados','archivados'].forEach((k,i) => {if(stats[i]) stats[i].textContent = Number(r.resumen[k] || 0).toLocaleString('es-CL');});
+            window.Notificaciones?.contar?.();
+        } catch (_) { /* Reintentar en siguiente ciclo */ }
     }
     window.setInterval(actualizarMensajes, 10000);
 
