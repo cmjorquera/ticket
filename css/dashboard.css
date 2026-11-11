@@ -66,3 +66,17 @@
 .dashboard-page .dashboard-ticket-main small{font-size:11px;color:#64748b}
 .dashboard-page #dashboard-ticket-table td{color:#334155;font-size:12px}
 .dashboard-page #dashboard-ticket-table tbody tr:hover{background:#f7faff}
+
+/* Tabla de últimos tickets: contraste equivalente a Administración de tickets. */
+.dashboard-page #dashboard-ticket-table .tabla{width:100%;border-collapse:collapse;background:#fff}
+.dashboard-page #dashboard-ticket-table .tabla thead th{background:#f8fafc!important;color:#475569!important;font-size:11px!important;font-weight:750!important;letter-spacing:.025em}
+.dashboard-page #dashboard-ticket-table .tabla tbody td{padding:12px 11px!important;color:#243247!important;font-size:12px!important;font-weight:500!important;opacity:1!important;border-bottom:1px solid #e5eaf0!important;vertical-align:middle}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:nth-child(even) td{background:#f8fafc!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:hover td{background:#edf4fb!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number{color:#0f2748!important;font-size:14px!important;font-weight:800!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-folio .ticket-id{color:#315d92!important;font-size:11px!important;font-weight:700!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-folio small{color:#64748b!important;font-size:11px!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-main strong{color:#1b2b43!important;font-size:12px!important;font-weight:750!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-main small{color:#64748b!important;font-size:11px!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-state{font-size:11px!important;font-weight:750!important;padding:5px 9px!important;background:color-mix(in srgb,var(--state-color) 24%,white)!important;color:color-mix(in srgb,var(--state-color) 55%,#101b2c)!important;border:1px solid color-mix(in srgb,var(--state-color) 32%,white)!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-actions a{color:#334155!important;font-weight:650!important;border-color:#dbe2eb!important}
