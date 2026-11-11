@@ -558,7 +558,17 @@
                 Swal.fire({ icon: 'success', title: 'Guardado correctamente', text: response.mensaje })
                     .then(function () { if (response.redirect) { window.location.href = response.redirect; } });
             }).fail(function (xhr) {
-                const mensaje = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible guardar el equipo.';
+                const respuesta = xhr.responseJSON;
+                const mensaje = respuesta && respuesta.mensaje
+                    ? respuesta.mensaje
+                    : (xhr.status === 0
+                        ? 'No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo nuevamente.'
+                        : 'El servidor no devolvió una respuesta válida al guardar el equipo (HTTP ' + xhr.status + '). Revisa la pestaña Red de las herramientas de desarrollador.');
+                console.error('[Inventario] Error al guardar equipo', {
+                    status: xhr.status,
+                    statusText: xhr.statusText,
+                    response: xhr.responseText
+                });
                 Swal.fire('Error', mensaje, 'error');
             });
         });
