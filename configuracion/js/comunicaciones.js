@@ -31,7 +31,9 @@
   function cambiar(){
     prueba=false;enviar.disabled=true;
     grupo.hidden=!['colegio','area'].includes(modo.value);
+    grupo.style.display=grupo.hidden?'none':'block';
     manualWrap.hidden=modo.value!=='manual';
+    manualWrap.style.display=manualWrap.hidden?'none':'block';
     if(!grupo.hidden){
       const campo=modo.value==='colegio'?'id_colegio':'id_area_trabajo';
       const catalogo=modo.value==='colegio'?colegios:areas;
