@@ -11,7 +11,19 @@
   // El modal secundario debe quedar por encima del modal principal y sus overlays.
   if(confirmacion.parentElement!==document.body)document.body.appendChild(confirmacion);
   confirmacion.style.zIndex='11050';
-  function cerrarConfirmacion(){if(typeof window.closeModal==='function')window.closeModal('modal-confirmar-prueba');confirmacion.style.display='none';confirmacion.classList.remove('active','show','visible');}
+  const confirmarBtn=$('com-confirmar-prueba');
+  function cerrarConfirmacion(){
+    confirmacion.style.setProperty('display','none','important');
+    confirmacion.classList.remove('active','show','visible','is-open');
+    confirmacion.setAttribute('aria-hidden','true');
+  }
+  function abrirConfirmacion(){
+    confirmacion.style.setProperty('display','flex','important');
+    confirmacion.style.zIndex='11050';
+    confirmacion.removeAttribute('aria-hidden');
+    confirmarBtn.focus();
+  }
+  cerrarConfirmacion();
   const buscar=$('com-buscar'), todosManual=$('com-todos-manual'), manualWrap=$('com-manual-wrap');
   function filtrarManual(){
     const q=buscar.value.trim().toLocaleLowerCase('es');
@@ -102,11 +114,15 @@
   probar.addEventListener('click',()=>{
     if(!correoPropio){estado.textContent='Tu cuenta no tiene un correo disponible.';return;}
     $('com-correo-propio').textContent=correoPropio;
-    if(typeof window.openModal==='function')window.openModal('modal-confirmar-prueba');else confirmacion.style.display='flex';
-    confirmacion.style.zIndex='11050';
-    confirmacion.style.display='flex';
+    abrirConfirmacion();
   });
   $('com-cancelar-prueba').addEventListener('click',cerrarConfirmacion);
-  $('com-confirmar-prueba').addEventListener('click',()=>{cerrarConfirmacion();ejecutar('prueba');});
+  confirmarBtn.addEventListener('click',()=>{
+    if(ocupado)return;
+    cerrarConfirmacion();
+    ejecutar('prueba');
+  });
+  confirmacion.addEventListener('click',e=>{if(e.target===confirmacion)cerrarConfirmacion();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&confirmacion.getAttribute('aria-hidden')!=='true')cerrarConfirmacion();});
   enviar.addEventListener('click',()=>ejecutar('enviar'));
 })();
