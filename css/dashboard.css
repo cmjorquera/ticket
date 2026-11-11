@@ -168,3 +168,17 @@
 .dashboard-admin-stack .dashboard-admin-card{min-height:0}
 .dashboard-admin-overview *{opacity:1!important;filter:none!important}
 @media(max-width:900px){.dashboard-admin-top{align-items:stretch;flex-direction:column}.dashboard-admin-filters{flex-wrap:wrap}}
+
+/* Dashboard: filas y estados con contraste equivalente a la bandeja Ticket. */
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado="Terminado" i]){--ticket-row-color:#22c55e;--ticket-row-tint:#f6fcf6}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado="En proceso" i]){--ticket-row-color:#ef7777;--ticket-row-tint:#fff8f8}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado="Asignado" i]){--ticket-row-color:#eab308;--ticket-row-tint:#fffdf5}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado="Recibido" i]){--ticket-row-color:#2563a6;--ticket-row-tint:#f5f9ff}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado="Demorado" i]){--ticket-row-color:#fb923c;--ticket-row-tint:#fffaf5}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado="Cerrado" i]){--ticket-row-color:#64748b;--ticket-row-tint:#f8fafc}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado="Borrador" i]){--ticket-row-color:#a78bfa;--ticket-row-tint:#faf8ff}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado]) td{background:var(--ticket-row-tint,#fff)!important}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado]) td:first-child{box-shadow:inset 4px 0 0 var(--ticket-row-color,#dbe2eb)}
+.dashboard-page #dashboard-ticket-table .tabla tbody tr:has(.dashboard-ticket-folio[data-estado]):hover td{background:#edf4fb!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-state{display:inline-flex;align-items:center;gap:5px;border-radius:999px!important;font-size:11px!important;font-weight:800!important;padding:5px 10px!important;color:#172b46!important;background:color-mix(in srgb,var(--state-color) 48%,white)!important;border:1px solid color-mix(in srgb,var(--state-color) 55%,white)!important}
+.dashboard-page #dashboard-ticket-table .dashboard-ticket-state::before{content:"";display:inline-block;flex:none;width:7px;height:7px;border-radius:50%;background:color-mix(in srgb,var(--state-color) 85%,#172b46)}
