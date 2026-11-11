@@ -12,7 +12,7 @@ declare(strict_types=1);
  * porque la columna es NOT NULL). Tabla: sql/mensajes_chat.sql. El remitente siempre es el usuario de la sesión.
  */
 
-require_once __DIR__ . '/_bootstrap.php';
+require_once __DIR__ . '/../../ajax/_bootstrap.php';
 Sesion::requerir();
 
 // true  = cada usuario ve a TODOS los colaboradores activos (directorio).
@@ -47,7 +47,7 @@ function ids_visibles(Conexion $db, int $usuarioId): ?array
     if (COLABORADORES_VER_TODOS) {
         return null;
     }
-    require_once __DIR__ . '/../clases/GestorAccesoModular.php';
+    require_once __DIR__ . '/../../clases/GestorAccesoModular.php';
     $gestor = new GestorAccesoModular($db);
     return array_map(static fn (array $u): int => (int) $u['id'], $gestor->obtenerUsuariosAsociados($usuarioId));
 }

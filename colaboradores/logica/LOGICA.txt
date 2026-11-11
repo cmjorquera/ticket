@@ -1,0 +1,24 @@
+COLABORADORES (rama qa)
+=======================
+
+Antes: colaboradores.php en la raíz, con ajax/colaboradores.php,
+css/colaboradores.css y js/colaboradores.js repartidos en carpetas comunes.
+Ahora: todo en la carpeta colaboradores/. colaboradores.php en la raíz queda
+como redirección para que los enlaces viejos y el menú sigan funcionando.
+
+Archivos
+--------
+- colaboradores/index.php                 Página (directorio, filtros, modal de mensaje)
+- colaboradores/ajax/colaboradores.php    API JSON
+    GET                        → lista de colaboradores activos
+    POST accion=enviar_mensaje → mensaje a uno o varios (usa ajax/_bootstrap.php común)
+- colaboradores/css/colaboradores.css
+- colaboradores/js/colaboradores.js       Llama a ajax/colaboradores.php relativo
+                                          a colaboradores/index.php
+- colaboradores/sql/01_menu_colaboradores.sql  Apunta menu_1 (id 1) a la carpeta
+- colaboradores/sql/99_volver_atras.sql        Deshace lo anterior
+
+Tablas
+------
+- usuarios (+ columna anexo si existe), usuario_colegio si existe
+- mensajes_chat (la misma que usa Mensajes), ver sql/mensajes_chat.sql
