@@ -6,11 +6,11 @@ require_once __DIR__ . '/configuracion/_inicio.php';
 require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $con_charts = true;
-$pagina_estilos = ['css/dashboard.css?v=20261111-ticket-row-select-v1'];
+$pagina_estilos = ['css/dashboard.css?v=20261111-tecnico-dashboard-v2'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
-$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-ticket-row-select-v1'];
+$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-tecnico-dashboard-v2'];
 
 $usuarioId = (int) ($_SESSION['id'] ?? 0);
 $perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
