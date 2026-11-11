@@ -45,6 +45,7 @@
   }
   function cambiar(){
     prueba=false;enviar.disabled=true;
+    enviar.title='Primero debes enviar una prueba a tu correo con esta selección y contenido.';
     grupo.hidden=!['colegio','area'].includes(modo.value);
     grupo.style.display=grupo.hidden?'none':'block';
     manualWrap.hidden=modo.value!=='manual';
@@ -61,7 +62,7 @@
     $('com-contador').textContent=elegidos.length+' destinatarios activos con correo válido';
     $('com-preview-mensaje').textContent=mensaje.value;
     $('com-preview-nombre').textContent=nombrePropio;
-    estado.textContent='';
+    estado.textContent=elegidos.length ? 'Antes de enviar el comunicado, realiza una prueba a tu correo. Si cambias destinatarios o contenido, debes repetirla.' : 'Selecciona al menos un destinatario para continuar.';
     actualizarSeleccionManual();
   }
   async function api(accion,body){
@@ -80,6 +81,7 @@
     return data;
   }
   btn.addEventListener('click',async()=>{
+    prueba=false;enviar.disabled=true;
     if (typeof window.openModal === 'function') window.openModal('modal-comunicaciones'); else { modal.style.display='flex'; }
     try{
       const r=await api('opciones');
@@ -97,7 +99,7 @@
     const ids=seleccionado().map(u=>Number(u.id));
     if(!ids.length){estado.textContent='Selecciona destinatarios.';return;}
     if(accion==='enviar'){
-      if(!prueba)return;
+      if(!prueba){estado.textContent='Debes enviar primero una prueba a tu correo con los destinatarios y contenido actuales.';return;}
       const ok=window.confirm('¿Confirmas el envío del comunicado a '+ids.length+' usuarios? Esta acción enviará correos reales.');
       if(!ok)return;
     }
@@ -107,11 +109,13 @@
       ids.forEach((id,i)=>{body['ids['+i+']']=String(id);});
       const r=await api(accion,body);
       estado.textContent=r.mensaje;
-      if(accion==='prueba'){prueba=true;enviar.disabled=false;}else{prueba=false;}
+      if(accion==='prueba'){prueba=true;enviar.disabled=false;enviar.title='Confirmar envío a los destinatarios seleccionados.';estado.textContent=r.mensaje+' Ya puedes enviar el comunicado a '+ids.length+' destinatario(s).';}else{prueba=false;enviar.disabled=true;}
     }catch(e){estado.textContent=e.message;if(accion==='enviar')enviar.disabled=!prueba;}
     finally{ocupado=false;probar.disabled=false;}
   }
   probar.addEventListener('click',()=>{
+    if(ocupado)return;
+    if(!seleccionado().length){estado.textContent='Selecciona al menos un destinatario antes de realizar la prueba.';return;}
     if(!correoPropio){estado.textContent='Tu cuenta no tiene un correo disponible.';return;}
     $('com-correo-propio').textContent=correoPropio;
     abrirConfirmacion();
