@@ -50,7 +50,8 @@ try {
     }
     if($accion!=='enviar') salida(['ok'=>false,'mensaje'=>'Acción inválida.'],400);
     $prueba=$_SESSION['comunicaciones_prueba']??[];
-    if(($prueba['firma']??'')!==$firma || ($prueba['vence']??0)<time()) salida(['ok'=>false,'mensaje'=>'Debes enviar primero una prueba con exactamente esta selección y contenido.'],409);
+    // Envío individual: confirmación explícita en la interfaz; prueba previa solo obligatoria para múltiples usuarios.
+    if(count($destinatarios)>1 && (($prueba['firma']??'')!==$firma || ($prueba['vence']??0)<time())) salida(['ok'=>false,'mensaje'=>'Para enviar a varios usuarios, primero realiza una prueba con exactamente esta selección y contenido.'],409);
     // No repetir accidentalmente un envío con el mismo contenido.
     if(($_SESSION['comunicaciones_ultimo_envio']??'')===$firma) salida(['ok'=>false,'mensaje'=>'Este comunicado ya fue enviado en esta sesión.'],409);
     // Tabla de auditoría obligatoria: no enviar sin poder registrar resultados.
