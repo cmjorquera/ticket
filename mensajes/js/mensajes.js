@@ -20,6 +20,11 @@
 
     // ---------- Tabla
     const $tabla = $('#tablaMensajes');
+    // DataTables infiere columnas de tipo objeto cuando el HTML inicial tiene
+    // data-order. Las filas AJAX se agregan como arrays: mezclar ambos tipos
+    // provoca Requested unknown parameter '[object Object]' en la fecha.
+    // Homogeneizar el origen de datos antes de inicializar la tabla.
+    $tabla.find('tbody td[data-order]').removeAttr('data-order');
     const tabla = $tabla.DataTable({
         order: [[2, 'desc']],
         pageLength: 20,
@@ -118,7 +123,7 @@
                     ]).node();
                     node.className = 'msg-fila'+(m.no_leidos ? ' msg-no-leida' : '');
                     node.dataset.id = id; node.dataset.noLeida = m.no_leidos ? '1' : '0'; node.dataset.urgente = m.urgente ? '1' : '0';
-                    node.cells[2].setAttribute('data-order',m.fecha);
+                    // No agregar data-order: cambiaría el tipo de datos de esta columna.
                 });
                 tabla.draw(false);
                 if (pagina < tabla.page.info().pages) tabla.page(pagina).draw('page');
