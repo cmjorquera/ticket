@@ -215,24 +215,20 @@
       const classByState = { 2: 'nuevos', 3: 'en-proceso', 5: 'resueltos', 7: 'atrasados' };
       const active = String(id) === String(state.estado);
       const description = kpi.descripcion || `${kpi.estado}: ${kpi.cantidad} tickets.`;
-      const help = state.perfil === 'tecnico' ? `<span class="dashboard-kpi-help" role="button" tabindex="0" data-kpi-help="${id}" aria-label="Descripción de ${escape(kpi.estado)}" title="Ver descripción"><i class="bi bi-info-circle" aria-hidden="true"></i></span>` : '';
+      const help = state.perfil === 'tecnico' ? `<details class="dashboard-admin-metric-help dashboard-tech-metric-help"><summary aria-label="Descripción del estado ${escape(kpi.estado)}" title="¿Qué significa este estado?"><i class="bi bi-question-circle" aria-hidden="true"></i></summary><div class="dashboard-admin-metric-help-text">${escape(description)}</div></details>` : '';
       return `<div class="dashboard-kpi-cell">
         <button class="contenedor-ticket dashboard-kpi ${classByState[id] || ''}${active ? ' is-active' : ''}${state.perfil === 'tecnico' && id === 7 && Number(kpi.cantidad) > 0 ? ' dashboard-kpi-alert' : ''}" type="button" data-kpi-state="${id}" style="--kpi-color:${color}" title="${escape(description)}" aria-pressed="${active ? 'true' : 'false'}">
           <span class="contenedor-ticket-body">
-            <span class="contenedor-ticket-titulo">${escape(kpi.estado)} ${help}</span>
+            <span class="contenedor-ticket-titulo">${escape(kpi.estado)}</span>
             <strong class="contenedor-ticket-numero">${Number(kpi.cantidad)}</strong>
             <small class="contenedor-ticket-porcentaje">${Number(kpi.porcentaje)}% de la bandeja</small>
           </span>
           <span class="contenedor-ticket-icono"><i class="bi ${escape(kpi.icono)}" aria-hidden="true"></i></span>
         </button>
+        ${help}
       </div>`;
     }).join('');
 
-    container.querySelectorAll('[data-kpi-help]').forEach(help => {
-      const show = event => { event.preventDefault(); event.stopPropagation(); const item = state.data.kpis.find(k => Number(k.id_estado) === Number(help.dataset.kpiHelp)); if (item) window.alert(item.descripcion || `Estado ${item.estado}`); };
-      help.addEventListener('click', show);
-      help.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') show(event); });
-    });
     container.querySelectorAll('[data-kpi-state]').forEach(button => {
       button.addEventListener('click', () => {
         const selected = button.dataset.kpiState || '';
