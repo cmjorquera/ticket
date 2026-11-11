@@ -37,7 +37,7 @@
     return data;
   }
   btn.addEventListener('click',async()=>{
-    modal.classList.add('open');modal.style.display='flex';
+    if (typeof window.openModal === 'function') window.openModal('modal-comunicaciones'); else { modal.style.display='flex'; }
     try{
       const r=await api('opciones');
       csrf=r.csrf;
