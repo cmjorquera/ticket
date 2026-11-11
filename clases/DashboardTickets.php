@@ -352,12 +352,14 @@ final class DashboardTickets
         if ($colegio > 0) { $where .= ' AND uc.id_colegio = ?'; $params[] = $colegio; }
         $summary = $this->db->fetchOne("SELECT COUNT(*) total, SUM(t.id_estado IN (5,6)) resueltos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado NOT IN (5,6)) pendientes FROM tickets t LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket {$schoolJoin} WHERE {$where}", $params) ?: [];
         $schoolCounts = $this->db->fetchAll(
-            "SELECT uc.id_colegio AS id, COUNT(*) cantidad {$base} WHERE {$where} GROUP BY uc.id_colegio",
+            "SELECT uc.id_colegio AS id, t.id_estado, COUNT(*) cantidad {$base} WHERE {$where} GROUP BY uc.id_colegio, t.id_estado",
             $params
         );
         $countsById = [];
         foreach ($schoolCounts as $schoolCount) {
-            $countsById[(int) ($schoolCount['id'] ?? 0)] = (int) $schoolCount['cantidad'];
+            $schoolId = (int) ($schoolCount['id'] ?? 0);
+            $estadoId = (int) ($schoolCount['id_estado'] ?? 0);
+            $countsById[$schoolId][$estadoId] = (int) $schoolCount['cantidad'];
         }
         $bySchool = [];
         foreach ($schools as $school) {
@@ -365,7 +367,8 @@ final class DashboardTickets
             $bySchool[] = [
                 'id' => $id,
                 'nombre' => (string) $school['nombre'],
-                'cantidad' => $countsById[$id] ?? 0,
+                'cantidad' => array_sum($countsById[$id] ?? []),
+                'estados' => $countsById[$id] ?? [],
             ];
         }
         $byTech = $this->db->fetchAll("SELECT COALESCE(NULLIF(TRIM(CONCAT_WS(' ',u.nombre,u.apellido_paterno)),''),'Sin asignar') nombre, COUNT(*) total, SUM(t.id_estado NOT IN (5,6)) activos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado IN (5,6)) resueltos {$base} LEFT JOIN usuarios u ON u.id=t.id_tecnico WHERE {$where} GROUP BY t.id_tecnico,u.nombre,u.apellido_paterno ORDER BY activos DESC", $params);
