@@ -29,6 +29,9 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     <p>Administra cuentas, permisos y estado de acceso, organizados por colegio.</p>
   </div>
   <div class="page-header-actions">
+    <?php if ($usuarioActual === 8): ?>
+    <button type="button" class="btn btn-primary" id="btn-comunicaciones"><i class="bi bi-send"></i> Enviar comunicado</button>
+    <?php endif; ?>
     <button type="button" class="btn btn-outline" id="btn-descargar-usuarios" title="Descargar los usuarios que coinciden con los filtros actuales">
       <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
     </button>
@@ -89,6 +92,30 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 </div>
 
 <p id="usuarios-feedback" class="text-sm" role="status" hidden style="margin-top:12px"></p>
+
+<?php if ($usuarioActual === 8): ?>
+<div class="modal-overlay" id="modal-comunicaciones" onclick="closeModalOutside(event,'modal-comunicaciones')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="com-titulo" style="max-width:1050px;width:95vw">
+    <div class="modal-header"><h3 id="com-titulo">Enviar comunicado institucional</h3><p>Personaliza el anuncio del Sistema de Centralización v2.0 y envía primero una prueba.</p></div>
+    <div class="modal-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px;max-height:72vh;overflow:auto">
+      <section>
+        <label class="form-label" for="com-modo">Destinatarios</label>
+        <select class="form-input" id="com-modo"><option value="todos">Todos los usuarios activos</option><option value="colegio">Por colegio</option><option value="area">Por área</option><option value="manual">Selección manual</option></select>
+        <select class="form-input" id="com-grupo" style="margin-top:10px" hidden></select>
+        <div id="com-manual" style="max-height:160px;overflow:auto;margin-top:10px" hidden></div>
+        <p class="text-sm" id="com-contador" style="margin:10px 0">Cargando destinatarios…</p>
+        <label class="form-label" for="com-asunto">Asunto</label>
+        <input class="form-input" id="com-asunto" maxlength="150" value="Nueva versión del Sistema de Centralización – v2.0">
+        <label class="form-label" for="com-mensaje" style="margin-top:12px">Mensaje</label>
+        <textarea class="form-input" id="com-mensaje" rows="7" maxlength="3000">Te informamos que ya se encuentra disponible la versión 2.0 del Sistema de Centralización de SEDUC. Esta plataforma reúne en un mismo lugar la gestión de tickets, inventario de equipos, licenciamientos y otras herramientas institucionales. Ingresa con tus credenciales habituales para conocer las mejoras.</textarea>
+        <p id="com-estado" role="status" class="text-sm"></p>
+      </section>
+      <section><strong>Vista previa del correo</strong><div id="com-preview" style="margin-top:10px;padding:20px;background:#fff;border:1px solid #d9e2ef;border-radius:10px;font-family:Arial,sans-serif;color:#26364b"><img src="https://www.siae.cl/email/archivos/1FiVR9m09zWTnZ4IdW1g/header_siae_seduc.png" alt="SEDUC" style="width:100%;height:auto"><div style="height:4px;background:linear-gradient(90deg,#3A913F 50%,#EAAA00 50%,#EAAA00 75%,#005587 75%)"></div><p style="text-align:center;font-size:12px;color:#005587">SISTEMA DE CENTRALIZACIÓN</p><h3 style="text-align:center;color:#003B6F">Nueva versión disponible · v2.0</h3><p>Hola <strong id="com-preview-nombre">Cristian Jorquera</strong>,</p><p id="com-preview-mensaje" style="white-space:pre-line;line-height:1.6"></p><p style="text-align:center"><span style="background:#003B6F;color:white;padding:12px 16px;border-radius:5px;display:inline-block">Acceder al Sistema de Centralización</span></p><img src="https://www.siae.cl/email/archivos/IuNYrJlxxZN9U0v254lx/Footer_colegios.png" alt="Colegios SEDUC" style="width:100%;height:auto"></div></section>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-comunicaciones')">Cancelar</button><button type="button" class="btn btn-outline" id="com-prueba">Enviar prueba a mi correo</button><button type="button" class="btn btn-primary" id="com-enviar" disabled>Enviar comunicado</button></div>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- Modal para confirmar bloqueo o activación -->
 <div class="modal-overlay" id="modal-estado-usuario" onclick="closeModalOutside(event, 'modal-estado-usuario')">
@@ -282,4 +309,5 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 <script src="<?= $depth ?>configuracion/js/listado_usuarios.js?v=<?= (int) filemtime(__DIR__ . '/js/listado_usuarios.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/permisos_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/permisos_usuario.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/alta_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/alta_usuario.js') ?>"></script>
+<?php if ($usuarioActual === 8): ?><script src="<?= $depth ?>configuracion/js/comunicaciones.js?v=<?= (int) filemtime(__DIR__ . '/js/comunicaciones.js') ?>"></script><?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

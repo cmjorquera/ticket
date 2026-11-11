@@ -1,0 +1,13 @@
+COMUNICACIONES INSTITUCIONALES - SISTEMA DE CENTRALIZACIÓN
+Acceso: configuracion/listado_usuarios.php, solo usuario con id=8.
+Servidor valida id=8 en configuracion/comunicaciones_api.php (no basta ocultar botón).
+Pantalla: botón Enviar comunicado, selección todos / colegio / área / manual, asunto, mensaje, vista previa, prueba y envío.
+Se usa Correo::enviar con SMTP existente (clases/Correo.php). Un destinatario por correo: nunca se revela la lista completa.
+Se envía solo a usuarios activos con email válido. La selección y estado se revalidan en servidor.
+Antes de enviar, la misma selección/asunto/mensaje debe recibir una prueba en el correo del usuario id 8, válida 30 minutos.
+Confirmación adicional en cliente con total de destinatarios; firma en sesión evita repetición accidental.
+SQL MANUAL obligatorio: sql/comunicaciones_envios.sql en base sistema_panel_central. Sin tabla de auditoría no se inicia el envío.
+Cada intento real se registra en comunicaciones_envios con estado y fecha. Fallos de correo no bloquean los siguientes envíos.
+No se transmiten contraseñas. URL de acceso: https://acceso.seduc.cl/
+ATENCIÓN: envío síncrono limitado a 200 destinatarios; si se necesita más, implementar cola de envíos y progreso persistente.
+Pruebas: primero en QA, con correo SMTP de QA verificado; enviar prueba; confirmar filtros, conteo, permisos 403 y registro de auditoría.
