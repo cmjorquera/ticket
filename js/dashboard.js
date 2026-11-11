@@ -316,7 +316,7 @@
           const count=Number((data.estados_conteo||{})[st.id]||0);
           const pct=total?Math.round(count*100/total):0;
           const description=String((data.estados_descripciones||{})[st.id]||st.nombre);
-          return `<div class="dashboard-admin-metric" style="border-left-color:${st.color}" title="${escape(description)}" aria-label="${escape(st.nombre)}: ${escape(description)}"><span><i class="bi ${st.icono}"></i> ${st.nombre}</span><strong>${count}</strong><small>${pct}% del total de tickets</small></div>`;
+          return `<div class="dashboard-admin-metric" style="border-left-color:${st.color}"><div class="dashboard-admin-metric-heading"><span><i class="bi ${st.icono}"></i> ${st.nombre}</span><details class="dashboard-admin-metric-help"><summary aria-label="Descripción del estado ${escape(st.nombre)}" title="¿Qué significa este estado?"><i class="bi bi-question-circle"></i></summary><div class="dashboard-admin-metric-help-text">${escape(description)}</div></details></div><strong>${count}</strong><small>${pct}% del total de tickets</small></div>`;
         }).join('')}
       </div>
       <div class="dashboard-admin-grid">
