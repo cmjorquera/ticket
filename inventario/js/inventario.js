@@ -319,7 +319,7 @@
             paging: true,
             info: true,
             lengthChange: false,
-            pagingType: 'simple_numbers',
+            pagingType: 'full_numbers',
             dom: "<'row align-items-center mb-3'<'col-md-12'i>>" +
                  "rt" +
                  "<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
@@ -399,7 +399,7 @@
             paging: true,
             info: true,
             lengthChange: false,
-            pagingType: 'simple_numbers',
+            pagingType: 'full_numbers',
             dom: "<'row align-items-center mb-3'<'col-md-12'i>>" +
                  "rt" +
                  "<'row align-items-center mt-3'<'col-md-6'i><'col-md-6 text-md-end'p>>",
