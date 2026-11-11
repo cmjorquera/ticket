@@ -114,9 +114,11 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
                             <?php if ((int)($alcanceInventario['id_perfil'] ?? 1) >= 2): ?>
-                            <a href="dashboard.php" class="module-btn module-btn--secondary">
+                            <button type="button" class="module-btn module-btn--secondary"
+                                    data-bs-toggle="offcanvas" data-bs-target="#offcanvasDashboardInventario"
+                                    aria-controls="offcanvasDashboardInventario">
                                 <i class="bi bi-bar-chart-line"></i>Ir al Dashboard
-                            </a>
+                            </button>
                             <?php endif; ?>
                             <a href="carga_masiva.php" class="module-btn module-btn--secondary inv-btn-carga-masiva">
                                 <i class="bi bi-cloud-upload"></i>Carga masiva
@@ -396,6 +398,33 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
         </div>
     </div>
 </div>
+
+<?php if ((int)($alcanceInventario['id_perfil'] ?? 1) >= 2): ?>
+<!-- Dashboard integrado: conserva sus filtros, gráficos y lógica existente. -->
+<div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasDashboardInventario"
+     aria-labelledby="offcanvasDashboardInventarioLabel" style="height: 92vh; max-height: 92vh;">
+    <div class="offcanvas-header border-bottom py-2">
+        <h5 class="offcanvas-title" id="offcanvasDashboardInventarioLabel">
+            <i class="bi bi-bar-chart-line me-2"></i>Dashboard de Inventario
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body p-0 overflow-hidden">
+        <iframe title="Dashboard de Inventario" data-src="dashboard.php" loading="lazy"
+                class="w-100 h-100 border-0" id="iframeDashboardInventario"></iframe>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var panel = document.getElementById('offcanvasDashboardInventario');
+    var iframe = document.getElementById('iframeDashboardInventario');
+    if (!panel || !iframe) return;
+    panel.addEventListener('show.bs.offcanvas', function () {
+        if (!iframe.getAttribute('src')) iframe.setAttribute('src', iframe.dataset.src);
+    });
+});
+</script>
+<?php endif; ?>
 
 <!-- Offcanvas detalle inventario -->
 <div class="offcanvas offcanvas-end inv-detail-offcanvas" tabindex="-1" id="offcanvasDetalleInventario" aria-labelledby="offcanvasDetalleInventarioLabel">
