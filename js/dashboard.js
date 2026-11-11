@@ -162,6 +162,64 @@
     if ($('dashboard-filter-search')) $('dashboard-filter-search').value = state.busqueda;
   }
 
+
+  // Exportación PNG de gráficos: título y subtítulo incluidos en la imagen.
+  async function downloadDashboardChart(button) {
+    const id = button.dataset.chartDownload;
+    const targets = {
+      estados: { chart: state.chartEstados, title: $('dashboard-chart-title')?.textContent || 'Estados de tickets', subtitle: 'Distribución por estado' },
+      categorias: { chart: state.chartCategorias, title: $('dashboard-category-title')?.textContent || 'Tickets por categoría', subtitle: 'Distribución por categoría' },
+      colegios: { chart: state.adminCharts[0], title: 'Tickets por colegio', subtitle: 'Período: ' + (state.data?.admin?.periodo || '') + ' · Colegio: ' + ($('dashboard-admin-school')?.selectedOptions?.[0]?.textContent || 'Todos') },
+      mensual: { chart: state.adminCharts[1], title: 'Evolución mensual de tickets', subtitle: 'Período: ' + (state.data?.admin?.periodo || '') },
+      'tecnico-categorias': { chart: techModalCharts[0], title: $('dashboard-tech-modal-title')?.textContent || 'Categorías del técnico', subtitle: 'Distribución por categoría' },
+      'tecnico-estados': { chart: techModalCharts[1], title: 'Estados por categoría', subtitle: $('dashboard-tech-modal-subtitle')?.textContent || '' }
+    };
+    const item = targets[id];
+    if (!item?.chart) return;
+    button.disabled = true;
+    try {
+      let src;
+      if (id === 'estados') src = item.chart.toBase64Image('image/png', 1);
+      else {
+        const result = await item.chart.dataURI({ scale: 2 });
+        src = result.imgURI;
+      }
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      const width = Math.max(680, img.naturalWidth);
+      const header = 110;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = img.naturalHeight + header + 24;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#15345b';
+      ctx.font = 'bold 26px Arial, sans-serif';
+      ctx.fillText(item.title, 32, 46, width - 64);
+      ctx.fillStyle = '#60718a';
+      ctx.font = '16px Arial, sans-serif';
+      ctx.fillText(item.subtitle, 32, 78, width - 64);
+      ctx.drawImage(img, (width - img.naturalWidth) / 2, header);
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = 'dashboard-' + state.perfil + '-' + id + '-' + new Date().toISOString().slice(0, 10) + '.png';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      showError('No fue posible descargar el gráfico. Intenta nuevamente.');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-chart-download]');
+    if (button) { event.preventDefault(); downloadDashboardChart(button); }
+  });
+
   function renderAll() {
     renderKpis();
     renderTechAttention();
@@ -392,8 +450,8 @@
         }).join('')}
       </div>
       <div class="dashboard-admin-grid">
-        <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Distribución por estado de los tickets de cada colegio en el período seleccionado.</p><div class="dashboard-admin-graph" id="dashboard-admin-school-chart"></div></article>
-        <article class="dashboard-admin-card"><h3>Evolución mensual de tickets</h3><p>Tickets creados y actualmente resueltos, agrupados por mes de creación.</p><div class="dashboard-admin-graph" id="dashboard-admin-month-chart"></div></article>
+        <article class="dashboard-admin-card"><button type="button" class="dashboard-chart-download" data-chart-download="colegios" aria-label="Descargar gráfico por colegio en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button><h3>Tickets por colegio</h3><p>Distribución por estado de los tickets de cada colegio en el período seleccionado.</p><div class="dashboard-admin-graph" id="dashboard-admin-school-chart"></div></article>
+        <article class="dashboard-admin-card"><button type="button" class="dashboard-chart-download" data-chart-download="mensual" aria-label="Descargar gráfico mensual en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button><h3>Evolución mensual de tickets</h3><p>Tickets creados y actualmente resueltos, agrupados por mes de creación.</p><div class="dashboard-admin-graph" id="dashboard-admin-month-chart"></div></article>
         <article class="dashboard-admin-card"><h3>Carga de trabajo por técnico</h3><p>Distribución de tickets en el período seleccionado.</p><div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Técnico</th><th>Activos</th><th>Atrasados</th><th>Resueltos</th><th>Total</th><th>Detalle</th></tr></thead><tbody>${techs.map((t,index)=>`<tr><td>${escape(t.nombre)}</td><td><span class="dashboard-admin-pill blue">${Number(t.activos)}</span></td><td><span class="dashboard-admin-pill red">${Number(t.atrasados)}</span></td><td><span class="dashboard-admin-pill green">${Number(t.resueltos)}</span></td><td><b>${Number(t.total)}</b></td><td><button type="button" class="dashboard-admin-detail-btn" data-tech-index="${index}" aria-label="Ver categorías de ${escape(t.nombre)}" title="Ver categorías"><i class="bi bi-pie-chart"></i> <span>Ver</span></button></td></tr>`).join('')}</tbody></table></div></article>
         <div class="dashboard-admin-stack">
           <article class="dashboard-admin-card"><h3>Tickets sin técnico asignado <span class="dashboard-admin-count">${noTech.length} casos</span></h3><p>Solicitudes que requieren asignación inmediata.</p>${table(noTech)}</article>
@@ -403,7 +461,7 @@
       <div id="dashboard-tech-modal" class="dashboard-tech-modal" hidden role="dialog" aria-modal="true" aria-labelledby="dashboard-tech-modal-title">
         <div class="dashboard-tech-dialog">
           <header class="dashboard-tech-header"><div><h2 id="dashboard-tech-modal-title">Categorías del técnico</h2><p id="dashboard-tech-modal-subtitle"></p></div><button type="button" id="dashboard-tech-close" aria-label="Cerrar detalle"><i class="bi bi-x-lg"></i></button></header>
-          <div class="dashboard-tech-content"><div class="dashboard-tech-chart-card"><h3>Distribución por categoría</h3><div id="dashboard-tech-pie"></div></div><div class="dashboard-tech-chart-card"><h3>Estados por categoría</h3><div id="dashboard-tech-bars"></div></div></div>
+          <div class="dashboard-tech-content"><div class="dashboard-tech-chart-card"><button type="button" class="dashboard-chart-download" data-chart-download="tecnico-categorias" aria-label="Descargar distribución por categoría en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button><h3>Distribución por categoría</h3><div id="dashboard-tech-pie"></div></div><div class="dashboard-tech-chart-card"><button type="button" class="dashboard-chart-download" data-chart-download="tecnico-estados" aria-label="Descargar estados por categoría en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button><h3>Estados por categoría</h3><div id="dashboard-tech-bars"></div></div></div>
           <div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Categoría</th><th>Tickets</th><th>Porcentaje</th><th>Detalle por estado</th></tr></thead><tbody id="dashboard-tech-categories"></tbody></table></div>
         </div>
       </div>`;
