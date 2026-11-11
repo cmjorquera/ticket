@@ -391,6 +391,28 @@ $action            = $modo === 'editar' ? 'actualizar_equipo.php' : 'guardar_equ
 
 <script>
 (function () {
+    /* Validación nativa: expandir el acordeón que contiene el campo inválido.
+       Evita 'invalid form control is not focusable' al guardar fotografías
+       u otros cambios mientras Datos generales está contraído. */
+    var formInventario = document.getElementById('formInventario');
+    if (formInventario) {
+        formInventario.addEventListener('invalid', function (event) {
+            var campo = event.target;
+            var panel = campo.closest('.accordion-collapse');
+            if (!panel || panel.classList.contains('show')) return;
+            var abrirCampo = function () {
+                if (typeof campo.focus === 'function') campo.focus();
+            };
+            panel.addEventListener('shown.bs.collapse', abrirCampo, { once: true });
+            if (window.bootstrap && bootstrap.Collapse) {
+                bootstrap.Collapse.getOrCreateInstance(panel, { toggle: false }).show();
+            } else {
+                panel.classList.add('show');
+                abrirCampo();
+            }
+        }, true);
+    }
+
     /* ---- Checkbox eliminar foto: toggle visual ---- */
     document.querySelectorAll('.inv-chk-eliminar').forEach(function (chk) {
         chk.addEventListener('change', function () {
