@@ -211,3 +211,14 @@
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number:hover{color:#0759a5;text-decoration:underline}
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number:focus-visible{outline:2px solid #1d65ad;outline-offset:2px}
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-row-number[aria-pressed="true"]{color:#064b94}
+
+/* Dashboard técnico: composición aprobada, aislada de administrador/usuario. */
+.dashboard--tecnico .dashboard-chart-body{min-height:310px;padding:1rem!important}
+.dashboard--tecnico .dashboard-chart-body canvas{height:285px!important}
+.dashboard--tecnico .dashboard-chart-body #graficoCategorias{min-height:285px}
+.dashboard--tecnico .dashboard-chart-grid .dashboard-panel-header{min-height:64px}
+.dashboard--tecnico .dashboard-table-panel{order:0}
+.dashboard--tecnico .dashboard-chart-grid{order:0}
+.dashboard--tecnico .dashboard-insights[hidden]{display:none!important}
+.dashboard--tecnico .dashboard-ticket-row-number{cursor:pointer}
+@media(max-width:767.98px){.dashboard--tecnico .dashboard-chart-body canvas{height:265px!important}}
