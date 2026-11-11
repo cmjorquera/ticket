@@ -80,3 +80,24 @@
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-main small{color:#64748b!important;font-size:11px!important}
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-state{font-size:11px!important;font-weight:750!important;padding:5px 9px!important;background:color-mix(in srgb,var(--state-color) 24%,white)!important;color:color-mix(in srgb,var(--state-color) 55%,#101b2c)!important;border:1px solid color-mix(in srgb,var(--state-color) 32%,white)!important}
 .dashboard-page #dashboard-ticket-table .dashboard-ticket-actions a{color:#334155!important;font-weight:650!important;border-color:#dbe2eb!important}
+
+/* Paneles complementarios por perfil; coherentes con el diseño de inventario/tickets. */
+.dashboard-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.dashboard-insight-panel{min-width:0}
+.dashboard-insight-panel .card-body{padding:1.2rem!important}
+.dashboard-insight-chart,.dashboard-insight-list{display:grid;gap:15px;min-height:140px;align-content:start}
+.dashboard-insight-bar-label{display:flex;justify-content:space-between;gap:12px;margin-bottom:7px;color:var(--fg);font-size:.77rem}
+.dashboard-insight-bar-label span{color:var(--muted);font-variant-numeric:tabular-nums}
+.dashboard-insight-track{height:9px;overflow:hidden;border-radius:99px;background:#e9edf2}
+.dashboard-insight-track span{display:block;height:100%;border-radius:inherit}
+.dashboard-insight-item{display:flex;align-items:center;gap:12px;padding:11px 9px;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--fg);background:var(--card)}
+.dashboard-insight-item:hover,.dashboard-insight-item:focus-visible{border-color:var(--blue);background:var(--blue-light)}
+.dashboard-insight-id{color:var(--blue);font-size:.8rem;font-weight:700;white-space:nowrap}
+.dashboard-insight-item-body{display:grid;gap:3px;min-width:0;flex:1}
+.dashboard-insight-item-body strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem}
+.dashboard-insight-item-body small{color:var(--muted);font-size:.66rem}
+.dashboard-insight-item .dashboard-ticket-state{font-size:.62rem}
+.dashboard-insight-item>i{color:var(--muted)}
+.dashboard-insight-empty{margin:0;color:var(--muted);font-size:.8rem}
+@media(max-width:991.98px){.dashboard-insights{grid-template-columns:1fr}}
+@media(max-width:575px){.dashboard-insight-item{flex-wrap:wrap}.dashboard-insight-item .dashboard-ticket-state{margin-left:auto}}
