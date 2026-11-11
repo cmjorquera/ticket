@@ -160,6 +160,7 @@
 
   function renderAll() {
     renderKpis();
+    renderAdminOverview();
     renderStateChart();
     renderCategoryChart();
     renderTickets();
@@ -267,6 +268,60 @@
         <i class="bi bi-chevron-right" aria-hidden="true"></i>
       </a>`;
     }).join('') : '<p class="dashboard-insight-empty">No hay tickets pendientes en esta vista.</p>';
+  }
+
+
+  // Vista ejecutiva: exclusivamente administrador. No se extrapolan las 100 filas del listado.
+  function renderAdminOverview() {
+    const panel = $('dashboard-admin-overview');
+    const charts = document.querySelector('.dashboard-chart-grid');
+    const insights = $('dashboard-insights');
+    if (!panel || !state.data) return;
+    const admin = state.perfil === 'administrador';
+    panel.hidden = !admin;
+    if (charts) charts.hidden = admin;
+    if (insights) insights.hidden = admin;
+    if (!admin) { panel.innerHTML = ''; return; }
+    const tickets = state.data.tickets || [];
+    const counts = state.data.grafico_estados || [];
+    const total = counts.reduce((n, row) => n + Number(row.cantidad || 0), 0);
+    const resolved = counts.filter(row => [5, 6].includes(Number(row.id_estado))).reduce((n, row) => n + Number(row.cantidad || 0), 0);
+    const late = counts.find(row => Number(row.id_estado) === 7)?.cantidad || 0;
+    const pending = total - resolved;
+    const percentage = total ? Math.round(resolved * 100 / total) : 0;
+    const schools = new Map();
+    const techs = new Map();
+    tickets.forEach(t => {
+      const school = t.colegio || 'Sin colegio';
+      schools.set(school, (schools.get(school) || 0) + 1);
+      const tech = t.tecnico || 'Sin asignar';
+      const info = techs.get(tech) || { active: 0, late: 0, resolved: 0, total: 0 };
+      info.total++;
+      if ([5, 6].includes(Number(t.id_estado))) info.resolved++;
+      else info.active++;
+      if (Number(t.id_estado) === 7) info.late++;
+      techs.set(tech, info);
+    });
+    const maxSchool = Math.max(1, ...schools.values());
+    const schoolRows = [...schools.entries()].sort((a,b) => b[1] - a[1]).slice(0, 8);
+    const unassigned = tickets.filter(t => !t.tecnico || /sin asignar/i.test(t.tecnico)).slice(0, 5);
+    const supervision = tickets.filter(t => Number(t.id_estado) === 7).slice(0, 5);
+    const item = t => `<a class="dashboard-admin-case" href="ticket/ticket_detalle.php?id=${Number(t.id_ticket)}&vista=admin"><b>#${Number(t.id_ticket)}</b><span><strong>${escape(t.asunto)}</strong><small>${escape(t.colegio)}</small></span><i class="bi bi-chevron-right"></i></a>`;
+    const empty = '<p class="dashboard-insight-empty">No hay casos en este grupo.</p>';
+    panel.innerHTML = `
+      <div class="dashboard-admin-heading"><div><h2>Visión general de la mesa de ayuda</h2><p>Indicadores globales y distribución de la bandeja visible para administración.</p></div><span class="dashboard-admin-scope">Desglose de hasta 100 tickets recientes</span></div>
+      <div class="dashboard-admin-metrics">
+        <div class="dashboard-admin-metric"><span>Tickets totales</span><strong>${total}</strong><small>En el alcance autorizado</small></div>
+        <div class="dashboard-admin-metric"><span>Pendientes</span><strong>${pending}</strong><small>Sin resolver o cerrar</small></div>
+        <div class="dashboard-admin-metric"><span>Atrasados</span><strong>${Number(late)}</strong><small>Estado demorado</small></div>
+        <div class="dashboard-admin-metric"><span>Resueltos</span><strong>${percentage}%</strong><small>${resolved} de ${total} tickets</small></div>
+      </div>
+      <div class="dashboard-admin-grid">
+        <article class="dashboard-admin-card"><h3>Tickets por colegio</h3><p>Distribución de los tickets recientes de la tabla.</p><div class="dashboard-admin-schools">${schoolRows.length ? schoolRows.map(([name,n]) => `<div class="dashboard-admin-school"><span>${escape(name)}</span><div class="dashboard-admin-track"><i style="width:${n/maxSchool*100}%"></i></div><b>${n}</b></div>`).join('') : empty}</div></article>
+        <article class="dashboard-admin-card"><h3>Estados de la mesa de ayuda</h3><p>Cantidad global por estado.</p><div class="dashboard-admin-statuses">${counts.map(row => `<div><span class="dashboard-admin-dot" style="background:${safeColor(row.color)}"></span><span>${escape(row.estado)}</span><b>${Number(row.cantidad)}</b></div>`).join('')}</div></article>
+        <article class="dashboard-admin-card"><h3>Carga de trabajo por técnico</h3><p>Tickets recientes, máximo 100 registros.</p><div class="dashboard-admin-table-wrap"><table class="dashboard-admin-table"><thead><tr><th>Técnico</th><th>Activos</th><th>Atrasados</th><th>Resueltos</th></tr></thead><tbody>${[...techs.entries()].sort((a,b)=>b[1].active-a[1].active).map(([name,v])=>`<tr><td>${escape(name)}</td><td>${v.active}</td><td>${v.late}</td><td>${v.resolved}</td></tr>`).join('')}</tbody></table></div></article>
+        <div class="dashboard-admin-stack"><article class="dashboard-admin-card"><h3>Tickets sin técnico asignado</h3><p>Casos recientes que requieren asignación.</p>${unassigned.length ? unassigned.map(item).join('') : empty}</article><article class="dashboard-admin-card"><h3>Casos que requieren supervisión</h3><p>Tickets en estado demorado.</p>${supervision.length ? supervision.map(item).join('') : empty}</article></div>
+      </div>`;
   }
 
   function renderStateChart() {
