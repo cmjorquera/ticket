@@ -15,9 +15,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../ajax/_bootstrap.php';
 Sesion::requerir();
 
-// true  = cada usuario ve a TODOS los colaboradores activos (directorio).
-// false = se aplican las reglas de GestorAccesoModular (área / colegio / depto).
-const COLABORADORES_VER_TODOS = true;
+// Quién ve a quién: super_admin ve a todos; el resto, a las personas de sus
+// colegios + los super_admin (RolesUsuario::condicionColaboradores).
+require_once __DIR__ . '/../../clases/RolesUsuario.php';
 const COLABORADORES_MAX_DESTINATARIOS = 200;
 const COLABORADORES_MAX_MENSAJE = 1000;
 
@@ -41,16 +41,7 @@ function tabla_existe(Conexion $db, string $tabla): bool
     );
 }
 
-/** IDs que el usuario actual puede ver, o null si puede ver a todos. */
-function ids_visibles(Conexion $db, int $usuarioId): ?array
-{
-    if (COLABORADORES_VER_TODOS) {
-        return null;
-    }
-    require_once __DIR__ . '/../../clases/GestorAccesoModular.php';
-    $gestor = new GestorAccesoModular($db);
-    return array_map(static fn (array $u): int => (int) $u['id'], $gestor->obtenerUsuariosAsociados($usuarioId));
-}
+[$condVisibles, $paramVisibles] = (new RolesUsuario($db))->condicionColaboradores($usuarioId, 'u');
 
 try {
     // ----------------------------------------------------------------- LISTA
@@ -76,18 +67,12 @@ try {
           LEFT JOIN jefatura_departamento jd ON jd.id_usuario = u.id AND jd.estado = 1
           LEFT JOIN colegio c1 ON c1.id_colegio = jd.id_colegio
                {$joinUc}
-              WHERE u.id <> ? AND LOWER(u.estado) = 'activo'
+              WHERE u.id <> ? AND LOWER(u.estado) = 'activo' AND {$condVisibles}
            GROUP BY u.id, u.nombre, u.apellido_paterno, u.apellido_materno, u.email,
                     u.cargo, u.telefono, anexo, u.id_area_trabajo, at.nombre_area
            ORDER BY u.nombre ASC, u.apellido_paterno ASC",
-            [$usuarioId]
+            array_merge([$usuarioId], $paramVisibles)
         );
-
-        $visibles = ids_visibles($db, $usuarioId);
-        if ($visibles !== null) {
-            $permitidos = array_flip($visibles);
-            $filas = array_values(array_filter($filas, static fn (array $f): bool => isset($permitidos[(int) $f['id']])));
-        }
 
         $datos = array_map(static fn (array $f): array => [
             'id'        => (int) $f['id'],
@@ -138,13 +123,9 @@ try {
     // Solo destinatarios activos y visibles para quien envía
     $marcas = implode(',', array_fill(0, count($destinos), '?'));
     $validos = array_map('intval', array_column($db->fetchAll(
-        "SELECT id FROM usuarios WHERE id IN ($marcas) AND LOWER(estado) = 'activo'",
-        $destinos
+        "SELECT u.id FROM usuarios u WHERE u.id IN ($marcas) AND LOWER(u.estado) = 'activo' AND {$condVisibles}",
+        array_merge($destinos, $paramVisibles)
     ), 'id'));
-    $visibles = ids_visibles($db, $usuarioId);
-    if ($visibles !== null) {
-        $validos = array_values(array_intersect($validos, $visibles));
-    }
     if (count($validos) !== count($destinos)) {
         responder_json(['ok' => false, 'mensaje' => 'Uno o más destinatarios no están disponibles.'], 422);
     }
