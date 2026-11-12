@@ -228,30 +228,42 @@
     // CARGA DE DATOS
     // =========================================================================
 
+    // Recarga de tablas sin pantalla de carga a pantalla completa (evita el
+    // "pestañeo" con el logo): solo se atenúa la tabla mientras llegan los datos.
+    // Si llegan respuestas desordenadas (clics o teclas seguidas) se usa la última.
+    let peticionInventario = 0;
+    let peticionMonitores = 0;
+
+    function marcarCargando(tablaSelector, cargando) {
+        $(tablaSelector).closest('.dataTables_wrapper, .table-responsive').toggleClass('inv-cargando', cargando);
+    }
+
     function loadInventario() {
         if (!window.INVENTARIO_CONFIG || !window.INVENTARIO_CONFIG.endpoints) { return; }
-        mostrarPantallaCarga('Cargando equipos...');
+        const id = ++peticionInventario;
+        marcarCargando('#tablaInventario', true);
         $.getJSON(window.INVENTARIO_CONFIG.endpoints.listar, collectFilters())
             .done(function (response) {
-                if (!response.ok) { return; }
+                if (id !== peticionInventario || !response.ok) { return; }
                 $('#contenedorResumen').html(response.resumen_html);
                 if (tablaInventario) { tablaInventario.clear().rows.add(response.data || []).draw(); }
             })
-            .fail(function () { Swal.fire('Error', 'No fue posible cargar el inventario.', 'error'); })
-            .always(function () { ocultarPantallaCarga(); });
+            .fail(function () { if (id === peticionInventario) { Swal.fire('Error', 'No fue posible cargar el inventario.', 'error'); } })
+            .always(function () { if (id === peticionInventario) { marcarCargando('#tablaInventario', false); } });
     }
 
     function loadMonitores() {
         if (!window.INVENTARIO_CONFIG || !window.INVENTARIO_CONFIG.endpoints) { return; }
-        mostrarPantallaCarga('Cargando monitores...');
+        const id = ++peticionMonitores;
+        marcarCargando('#tablaMonitores', true);
         $.getJSON(window.INVENTARIO_CONFIG.endpoints.listarMonitores, collectMonitorFilters())
             .done(function (response) {
-                if (!response.ok) { return; }
+                if (id !== peticionMonitores || !response.ok) { return; }
                 $('#contenedorResumenMonitores').html(response.resumen_html);
                 if (tablaMonitores) { tablaMonitores.clear().rows.add(response.data || []).draw(); }
             })
-            .fail(function () { Swal.fire('Error', 'No fue posible cargar los monitores.', 'error'); })
-            .always(function () { ocultarPantallaCarga(); });
+            .fail(function () { if (id === peticionMonitores) { Swal.fire('Error', 'No fue posible cargar los monitores.', 'error'); } })
+            .always(function () { if (id === peticionMonitores) { marcarCargando('#tablaMonitores', false); } });
     }
 
     // =========================================================================

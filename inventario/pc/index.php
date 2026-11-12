@@ -93,7 +93,8 @@ $idPagActual = '9';
 require __DIR__ . '/componentes/layout_top.php';
 
 // Pantalla de carga fullscreen (overlay). Se muestra/oculta desde inventario.js
-// en filtros, AJAX de tabla, descarga de PDF y detalle de equipo.
+// solo en acciones puntuales (ej: descarga de PDF). Las recargas de tabla
+// (filtros, indicadores, búsqueda) solo atenúan la tabla, sin pantalla completa.
 $textoCarga = 'Cargando inventario...';
 $loaderVisibleInicialmente = false; // la pagina ya viene renderizada por PHP, no se muestra al cargar
 $loaderFallbackMs = 8000; // seguridad: se oculta solo si algo no llama a ocultarPantallaCarga()

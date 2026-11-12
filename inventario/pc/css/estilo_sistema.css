@@ -187,3 +187,6 @@
 .inventario-body .inv-kpis .inv-stat-icon{width:34px!important;height:34px!important;font-size:16px!important;margin-left:8px}
 .inventario-body .tab-pane > .inv-panel{margin-top:0}
 .inventario-body .inv-toolbar{padding:12px 14px}
+
+/* Recarga de tabla: atenuada y sin pantalla de carga completa */
+.inventario-body .inv-cargando{opacity:.55;pointer-events:none;transition:opacity .15s ease}
