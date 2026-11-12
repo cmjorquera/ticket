@@ -175,8 +175,12 @@
     // FILTROS
     // =========================================================================
 
+    // Indicador (KPI) seleccionado: filtra la tabla. '' = sin filtro.
+    let kpiActivo = '';
+
     function collectFilters() {
         return {
+            kpi:                 kpiActivo,
             id_colegio:          $('#filtroColegio').val()    || '',
             id_estado:           $('#filtroEstado').val()     || '',
             tipo_pc:             '',
@@ -530,6 +534,19 @@
             loadInventario();
         });
         $('#filtroEstado, #filtroUbicacion, #filtroUsuario').on('change', loadInventario);
+
+        // Clic en un indicador: filtra la tabla. Otro clic en el mismo, o en
+        // "Total equipos", quita el filtro. El resumen se vuelve a dibujar
+        // desde el servidor con el indicador marcado.
+        $('#contenedorResumen').on('click', '.inv-stat-btn', function () {
+            const kpi = String($(this).data('kpi') || '');
+            kpiActivo = (kpi === '' || kpi === kpiActivo) ? '' : kpi;
+            $('#contenedorResumen .inv-stat-btn').each(function () {
+                const activo = kpiActivo !== '' && String($(this).data('kpi') || '') === kpiActivo;
+                $(this).toggleClass('is-active', activo).attr('aria-pressed', activo ? 'true' : 'false');
+            });
+            loadInventario();
+        });
         $('#filtroBusqueda').on('keyup', debounce(loadInventario, 350));
     }
 

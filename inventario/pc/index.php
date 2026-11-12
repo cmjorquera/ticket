@@ -126,6 +126,9 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
                             <a href="carga_masiva_monitores.php" class="module-btn module-btn--secondary inv-btn-carga-masiva-mon d-none">
                                 <i class="bi bi-cloud-upload"></i>Carga masiva monitores
                             </a>
+                            <button type="button" class="module-btn module-btn--secondary inv-btn-pdf-equipos" id="btnImprimirQrEquipos" title="Imprime los QR de los equipos que muestra el listado">
+                                <i class="bi bi-qr-code"></i>Imprimir códigos QR
+                            </button>
                             <button type="button" class="module-btn module-btn--secondary inv-btn-pdf-equipos" id="btnDescargarPdfInventario">
                                 <i class="bi bi-file-earmark-pdf"></i>Descargar PDF
                             </button>
@@ -183,15 +186,6 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
 
                         <div class="card shadow-sm border-0 inv-panel">
                             <div class="card-body">
-                                <div class="inv-card-head d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-                                    <div>
-                                        <h5 class="mb-1">Equipos inventariados</h5>
-                                        <p class="text-muted mb-0 small">Listado operativo segun filtros y permisos actuales.</p>
-                                    </div>
-                                    <button type="button" class="module-btn module-btn--secondary" id="btnImprimirQrEquipos">
-                                        <i class="bi bi-qr-code"></i>Imprimir todos los códigos
-                                    </button>
-                                </div>
                                 <div class="inv-toolbar row g-3 align-items-end">
                                     <?php if ($mostrarFiltroColegio): ?>
                                     <div class="col-md-3">

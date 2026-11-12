@@ -85,6 +85,7 @@ try {
         'id_ubicacion'        => (int)($_GET['id_ubicacion'] ?? 0),
         'id_usuario_asignado' => (int)($_GET['id_usuario_asignado'] ?? 0),
         'busqueda'            => trim((string)($_GET['busqueda'] ?? '')),
+        'kpi'                 => Inventario::normalizarKpi($_GET['kpi'] ?? ''),
     ];
     $filtros = $inventario->normalizarFiltrosPorAlcance($filtros, $alcanceInventario);
     $equipos = $inventario->listarEquipos($filtros);

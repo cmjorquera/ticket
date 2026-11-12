@@ -1,89 +1,40 @@
 <?php
+/**
+ * Indicadores del listado de PC. Cada uno es un botón: al hacer clic filtra
+ * la tabla (js/inventario.js → parámetro "kpi"); otro clic, o "Total equipos",
+ * quita el filtro. $kpiActivo marca el indicador seleccionado.
+ */
 $resumen = $resumen ?? [];
+$kpiActivo = (string)($kpiActivo ?? '');
+$indicadores = [
+    ['kpi' => '',                'clase' => 'inv-stat-primary', 'icono' => 'bi-hdd-stack',     'label' => 'Total equipos',     'valor' => (int)($resumen['total_equipos'] ?? 0),     'nota' => 'Inventario visible con filtros'],
+    ['kpi' => 'notebooks',       'clase' => 'inv-stat-success', 'icono' => 'bi-laptop',        'label' => 'Notebooks',         'valor' => (int)($resumen['total_notebooks'] ?? 0),   'nota' => 'Equipos portables'],
+    ['kpi' => 'desktop',         'clase' => 'inv-stat-info',    'icono' => 'bi-pc-display',    'label' => 'Desktop',           'valor' => (int)($resumen['total_desktop'] ?? 0),     'nota' => 'Puestos fijos'],
+    ['kpi' => 'sin_asignar',     'clase' => 'inv-stat-warning', 'icono' => 'bi-person-dash',   'label' => 'Sin asignar',       'valor' => (int)($resumen['total_sin_asignar'] ?? 0), 'nota' => 'Sin responsable directo'],
+    ['kpi' => 'activos',         'clase' => 'inv-stat-teal',    'icono' => 'bi-check2-circle', 'label' => 'Activos',           'valor' => (int)($resumen['total_activos'] ?? 0),     'nota' => 'Operativos hoy'],
+    ['kpi' => 'reparacion_baja', 'clase' => 'inv-stat-danger',  'icono' => 'bi-tools',         'label' => 'Reparación / baja', 'valor' => (int)($resumen['total_reparacion'] ?? 0) . ' / ' . (int)($resumen['total_baja'] ?? 0), 'nota' => 'Seguimiento de estado'],
+];
 ?>
-<div class="row g-3 mb-4">
-    <div class="col-12 col-md-6 col-xl-2">
-        <div class="inv-stat-card inv-stat-primary">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="inv-stat-label">Total equipos</span>
-                    <strong><?= (int)($resumen['total_equipos'] ?? 0) ?></strong>
-                    <small>Inventario visible con filtros</small>
-                </div>
-                <div class="inv-stat-icon">
-                    <i class="bi bi-hdd-stack"></i>
-                </div>
-            </div>
-        </div>
+<div class="row g-3 mb-3 inv-kpis">
+    <?php foreach ($indicadores as $ind):
+        $activo = $ind['kpi'] !== '' && $ind['kpi'] === $kpiActivo;
+        $titulo = $ind['kpi'] === '' ? 'Ver todos los equipos' : ($activo ? 'Quitar filtro' : 'Ver solo: ' . $ind['label']);
+    ?>
+    <div class="col-6 col-md-4 col-xl-2">
+        <button type="button"
+                class="inv-stat-card inv-stat-btn <?= $ind['clase'] ?><?= $activo ? ' is-active' : '' ?>"
+                data-kpi="<?= inventario_h($ind['kpi']) ?>"
+                aria-pressed="<?= $activo ? 'true' : 'false' ?>"
+                title="<?= inventario_h($titulo) ?>">
+            <span class="d-flex justify-content-between align-items-start">
+                <span>
+                    <span class="inv-stat-label"><?= inventario_h($ind['label']) ?></span>
+                    <strong><?= inventario_h($ind['valor']) ?></strong>
+                    <small><?= $activo ? '<i class="bi bi-funnel-fill"></i> Filtrando · clic para quitar' : inventario_h($ind['nota']) ?></small>
+                </span>
+                <span class="inv-stat-icon"><i class="bi <?= $ind['icono'] ?>"></i></span>
+            </span>
+        </button>
     </div>
-    <div class="col-12 col-md-6 col-xl-2">
-        <div class="inv-stat-card inv-stat-success">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="inv-stat-label">Notebooks</span>
-                    <strong><?= (int)($resumen['total_notebooks'] ?? 0) ?></strong>
-                    <small>Equipos portables</small>
-                </div>
-                <div class="inv-stat-icon">
-                    <i class="bi bi-laptop"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-2">
-        <div class="inv-stat-card inv-stat-info">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="inv-stat-label">Desktop</span>
-                    <strong><?= (int)($resumen['total_desktop'] ?? 0) ?></strong>
-                    <small>Puestos fijos</small>
-                </div>
-                <div class="inv-stat-icon">
-                    <i class="bi bi-pc-display"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-2">
-        <div class="inv-stat-card inv-stat-warning">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="inv-stat-label">Sin asignar</span>
-                    <strong><?= (int)($resumen['total_sin_asignar'] ?? 0) ?></strong>
-                    <small>Sin responsable directo</small>
-                </div>
-                <div class="inv-stat-icon">
-                    <i class="bi bi-person-dash"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-2">
-        <div class="inv-stat-card inv-stat-teal">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="inv-stat-label">Activos</span>
-                    <strong><?= (int)($resumen['total_activos'] ?? 0) ?></strong>
-                    <small>Operativos hoy</small>
-                </div>
-                <div class="inv-stat-icon">
-                    <i class="bi bi-check2-circle"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-2">
-        <div class="inv-stat-card inv-stat-danger">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="inv-stat-label">Reparacion / baja</span>
-                    <strong><?= (int)($resumen['total_reparacion'] ?? 0) ?> / <?= (int)($resumen['total_baja'] ?? 0) ?></strong>
-                    <small>Seguimiento de estado</small>
-                </div>
-                <div class="inv-stat-icon">
-                    <i class="bi bi-tools"></i>
-                </div>  
-            </div>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>

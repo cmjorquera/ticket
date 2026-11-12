@@ -15,11 +15,14 @@ try {
     ];
     $filtros = $inventario->normalizarFiltrosPorAlcance($filtros, $alcanceInventario);
 
-    $equipos = $inventario->listarEquipos($filtros);
+    // El indicador seleccionado filtra la tabla, pero los indicadores se
+    // calculan sin él para que sigan mostrando sus propios totales.
+    $kpiActivo = Inventario::normalizarKpi($_GET['kpi'] ?? '');
+    $equipos = $inventario->listarEquipos($filtros + ['kpi' => $kpiActivo]);
     $resumen = $inventario->obtenerResumen($filtros);
 
     ob_start();
-    require dirname(__DIR__) . '/componentes/resumen.php';
+    require dirname(__DIR__) . '/componentes/resumen.php';   // usa $kpiActivo
     $htmlResumen = ob_get_clean();
 
     echo json_encode([

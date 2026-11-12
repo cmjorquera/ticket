@@ -1645,6 +1645,13 @@ CREATE TABLE IF NOT EXISTS equipo_fotos (
 SQL;
     }
 
+    /** Valores aceptados para el filtro por indicador (KPI) del listado de PC. */
+    public static function normalizarKpi($valor): string
+    {
+        $valor = (string)$valor;
+        return in_array($valor, ['notebooks', 'desktop', 'sin_asignar', 'activos', 'reparacion_baja'], true) ? $valor : '';
+    }
+
     private function construirWhere($filtros)
     {
         $condiciones = [];
@@ -1688,6 +1695,24 @@ SQL;
             $condiciones[] = 'e.id_ubicacion = ?';
             $types .= 'i';
             $params[] = (int)$filtros['id_ubicacion'];
+        }
+        // Filtro rápido al hacer clic en un indicador (KPI). Mismas reglas que obtenerResumen().
+        switch ((string)($filtros['kpi'] ?? '')) {
+            case 'notebooks':
+                $condiciones[] = "LOWER(e.tipo_pc) LIKE '%notebook%'";
+                break;
+            case 'desktop':
+                $condiciones[] = "LOWER(e.tipo_pc) LIKE '%desktop%'";
+                break;
+            case 'sin_asignar':
+                $condiciones[] = '(e.id_usuario_asignado IS NULL OR e.id_usuario_asignado = 0)';
+                break;
+            case 'activos':
+                $condiciones[] = 'e.id_estado = 1';
+                break;
+            case 'reparacion_baja':
+                $condiciones[] = 'e.id_estado IN (3, 4)';
+                break;
         }
         if (!empty($filtros['busqueda'])) {
             $busqueda = '%' . trim((string)$filtros['busqueda']) . '%';
