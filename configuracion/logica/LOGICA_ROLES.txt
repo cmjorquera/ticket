@@ -48,9 +48,12 @@ b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
 
 4. COMPATIBILIDAD (mientras se adapta el código)
 ------------------------------------------------
-- usuario_colegio.id_perfil se mantiene con el valor anterior (hoy 3 para
-  todos), porque Inventario lo usa para decidir qué colegios mostrar. Cuando
-  Inventario pase a leer el rol, esa columna deja de usarse.
+- usuario_colegio.id_perfil quedó con el valor anterior (3 para casi todos).
+  Desde 12-11-2026 Inventario (y Estadística → Inventario) ya NO la usan:
+    todos los colegios  → usuario_perfil 3 (super_admin)
+    sus colegios + dashboard → usuario_perfil 2 (técnico) o rol admin_colegio
+    solo su colegio     → el resto
+  Revisar / alinear la columna: inventario/sql/03_perfiles_inventario.sql
 - jefatura_departamento queda como respaldo; lo nuevo se lee de usuario_colegio.
 - La migración guarda una copia de usuario_colegio en usuario_colegio_respaldo
   antes de reemplazar su contenido.

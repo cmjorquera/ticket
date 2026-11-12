@@ -3,7 +3,7 @@
  * Datos del Dashboard de Inventario PC (equipos y monitores).
  * Portado del sistema antiguo: ahora usa PDO (clases/Conexion.php) con
  * consultas preparadas y el mismo alcance por colegio que el módulo
- * Inventario (perfil 3 en usuario_colegio = todos los colegios).
+ * Inventario (solo super_admin en usuario_perfil = todos los colegios).
  */
 
 if (!function_exists('di_h')) {
@@ -83,6 +83,19 @@ if (!function_exists('di_context')) {
         $perfil = 1;
         foreach ($filas as $f) {
             $perfil = max($perfil, (int)$f['id_perfil']);
+        }
+        // Con el modelo de roles, solo super_admin (usuario_perfil 3) ve todos los
+        // colegios; usuario_colegio.id_perfil quedó en 3 para casi todos al migrar.
+        try {
+            $hayRoles = (bool) $db->fetchOne(
+                "SELECT 1 FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuario_colegio' AND COLUMN_NAME = 'rol'"
+            );
+            if ($hayRoles) {
+                $perfil = $db->fetchOne('SELECT 1 FROM usuario_perfil WHERE id_usuario = ? AND id_perfil = 3 LIMIT 1', [$idUsuario]) ? 3 : 1;
+            }
+        } catch (Throwable $e) {
+            // sin modelo de roles: se mantiene el criterio anterior
         }
         if ($perfil >= 3) {
             return [true, $db->fetchAll('SELECT id_colegio, nom_colegio FROM colegio WHERE estado = 1 ORDER BY nom_colegio')];

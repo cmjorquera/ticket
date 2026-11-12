@@ -73,6 +73,39 @@ class Inventario
         return $datos;
     }
 
+    /**
+     * Nivel de acceso a Inventario según el modelo de roles:
+     *   3 = ve TODOS los colegios  → solo super_admin (usuario_perfil.id_perfil = 3)
+     *   2 = elige entre SUS colegios y ve el dashboard → técnico (usuario_perfil 2)
+     *       o administrador de colegio (usuario_colegio.rol = 'admin_colegio')
+     *   1 = solo su colegio → el resto
+     * Devuelve null si el modelo de roles aún no está instalado (se usa el antiguo).
+     */
+    private function perfilInventarioSegunRoles(int $idUsuario): ?int
+    {
+        if (!$this->tablaExiste('usuario_perfil') || !$this->columnaExiste('usuario_colegio', 'rol')) {
+            return null;
+        }
+        $stmt = mysqli_prepare($this->cn, "
+            SELECT
+                EXISTS(SELECT 1 FROM usuario_perfil WHERE id_usuario = ? AND id_perfil = 3) AS es_super,
+                EXISTS(SELECT 1 FROM usuario_perfil WHERE id_usuario = ? AND id_perfil = 2) AS es_tecnico,
+                EXISTS(SELECT 1 FROM usuario_colegio WHERE id_usuario = ? AND estado = 1 AND rol = 'admin_colegio') AS es_admin_colegio
+        ");
+        mysqli_stmt_bind_param($stmt, 'iii', $idUsuario, $idUsuario, $idUsuario);
+        mysqli_stmt_execute($stmt);
+        $r = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
+        mysqli_stmt_close($stmt);
+
+        if (!empty($r['es_super'])) {
+            return 3;
+        }
+        if (!empty($r['es_tecnico']) || !empty($r['es_admin_colegio'])) {
+            return 2;
+        }
+        return 1;
+    }
+
     public function obtenerAlcanceInventario(int $idUsuario): array
     {
         if ($idUsuario <= 0 || !$this->tablaExiste('usuario_colegio')) {
@@ -107,12 +140,17 @@ class Inventario
         $rs = mysqli_stmt_get_result($stmt);
 
         $filas = [];
-        $perfil = 1;
+        $perfilAntiguo = 1;
         while ($fila = mysqli_fetch_assoc($rs)) {
             $filas[] = $fila;
-            $perfil = max($perfil, (int)($fila['id_perfil'] ?? 1));
+            $perfilAntiguo = max($perfilAntiguo, (int)($fila['id_perfil'] ?? 1));
         }
         mysqli_stmt_close($stmt);
+
+        // Alcance según el modelo de roles (configuracion/logica/LOGICA_ROLES.txt).
+        // usuario_colegio.id_perfil es solo compatibilidad y quedó en 3 para casi
+        // todos al migrar, por eso ya no decide nada si existe el modelo nuevo.
+        $perfil = $this->perfilInventarioSegunRoles($idUsuario) ?? $perfilAntiguo;
 
         if ($perfil >= 3) {
             $colegios = $this->obtenerColegios();
@@ -151,8 +189,9 @@ class Inventario
             'colegios' => $colegios,
             'ids_colegio' => array_map(static fn($c) => (int)$c['id_colegio'], $colegios),
             'id_colegio_predeterminado' => (int)($colegios[0]['id_colegio'] ?? 0),
-            'mostrar_filtro_colegio' => $perfil >= 2,
-            'mostrar_columna_colegio' => $perfil >= 2,
+            // Con un solo colegio no tiene sentido el filtro ni la columna "Colegio"
+            'mostrar_filtro_colegio' => $perfil >= 2 && count($colegios) > 1,
+            'mostrar_columna_colegio' => $perfil >= 2 && count($colegios) > 1,
         ];
     }
 
