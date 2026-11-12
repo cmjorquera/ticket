@@ -99,10 +99,9 @@ final class MiCuenta
             // Antes de configuracion/sql/01_roles_estructura.sql no existe la columna rol
         }
         return $this->db->fetchAll(
-            "SELECT c.id_colegio, c.nom_colegio, p.nombre_perfil, uc.fecha_asignacion
+            "SELECT c.id_colegio, c.nom_colegio, '' AS nombre_perfil, uc.fecha_asignacion
                FROM usuario_colegio uc
                JOIN colegio c       ON c.id_colegio = uc.id_colegio
-          LEFT JOIN perfiles p      ON p.id_perfil = uc.id_perfil
               WHERE uc.id_usuario = ? AND uc.estado = 1
            ORDER BY c.nom_colegio",
             [$id]

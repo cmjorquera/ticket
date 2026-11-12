@@ -118,13 +118,10 @@ final class AltaUsuario
                 $this->db->execute('INSERT INTO usuario_perfil (id_usuario, id_perfil) VALUES (?, ?)', [$id, $p]);
             }
 
-            // id_perfil: solo compatibilidad (Inventario ya decide con usuario_perfil y rol).
-            // Misma regla: 3 super_admin, 2 técnico o admin de colegio, 1 el resto.
-            $perfilCompat = $super ? 3 : (($tecnico || $rol === 'admin_colegio') ? 2 : 1);
             $this->db->execute(
-                'INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, id_perfil, estado, creado_por, fecha_asignacion)
-                 VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
-                [$id, $idColegio, $idDep, $rol, $perfilCompat, $actor, $ahora]
+                'INSERT INTO usuario_colegio (id_usuario, id_colegio, id_departamento_colegio, rol, estado, creado_por, fecha_asignacion)
+                 VALUES (?, ?, ?, ?, 1, ?, ?)',
+                [$id, $idColegio, $idDep, $rol, $actor, $ahora]
             );
             // Compatibilidad con pantallas que aún leen jefatura_departamento
             if ($rol !== 'trabajador') {

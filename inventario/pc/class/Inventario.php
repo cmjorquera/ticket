@@ -79,12 +79,11 @@ class Inventario
      *   2 = elige entre SUS colegios y ve el dashboard → técnico (usuario_perfil 2)
      *       o administrador de colegio (usuario_colegio.rol = 'admin_colegio')
      *   1 = solo su colegio → el resto
-     * Devuelve null si el modelo de roles aún no está instalado (se usa el antiguo).
      */
-    private function perfilInventarioSegunRoles(int $idUsuario): ?int
+    private function perfilInventarioSegunRoles(int $idUsuario): int
     {
         if (!$this->tablaExiste('usuario_perfil') || !$this->columnaExiste('usuario_colegio', 'rol')) {
-            return null;
+            return 1;
         }
         $stmt = mysqli_prepare($this->cn, "
             SELECT
@@ -127,30 +126,26 @@ class Inventario
         }
 
         $stmt = mysqli_prepare($this->cn, "
-            SELECT uc.id_colegio, uc.id_perfil, c.nom_colegio
+            SELECT uc.id_colegio, c.nom_colegio
             FROM usuario_colegio uc
             INNER JOIN colegio c ON c.id_colegio = uc.id_colegio
             WHERE uc.id_usuario = ?
               AND uc.estado = 1
               {$condicionColegioActivo}
-            ORDER BY uc.id_perfil DESC, c.nom_colegio ASC
+            ORDER BY c.nom_colegio ASC
         ");
         mysqli_stmt_bind_param($stmt, 'i', $idUsuario);
         mysqli_stmt_execute($stmt);
         $rs = mysqli_stmt_get_result($stmt);
 
         $filas = [];
-        $perfilAntiguo = 1;
         while ($fila = mysqli_fetch_assoc($rs)) {
             $filas[] = $fila;
-            $perfilAntiguo = max($perfilAntiguo, (int)($fila['id_perfil'] ?? 1));
         }
         mysqli_stmt_close($stmt);
 
         // Alcance según el modelo de roles (configuracion/logica/LOGICA_ROLES.txt).
-        // usuario_colegio.id_perfil es solo compatibilidad y quedó en 3 para casi
-        // todos al migrar, por eso ya no decide nada si existe el modelo nuevo.
-        $perfil = $this->perfilInventarioSegunRoles($idUsuario) ?? $perfilAntiguo;
+        $perfil = $this->perfilInventarioSegunRoles($idUsuario);
 
         if ($perfil >= 3) {
             $colegios = $this->obtenerColegios();

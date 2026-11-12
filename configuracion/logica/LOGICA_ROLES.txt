@@ -48,12 +48,15 @@ b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
 
 4. COMPATIBILIDAD (mientras se adapta el código)
 ------------------------------------------------
-- usuario_colegio.id_perfil quedó con el valor anterior (3 para casi todos).
-  Desde 12-11-2026 Inventario (y Estadística → Inventario) ya NO la usan:
-    todos los colegios  → usuario_perfil 3 (super_admin)
+- usuario_colegio.id_perfil SE ELIMINA (12-11-2026): quedó en 3 para casi
+  todos al migrar y se confundía con perfiles.id_perfil = 3 (super_admin).
+  Ningún código la usa. Pasos: configuracion/sql/04_quitar_id_perfil_paso1.sql
+  (ya) → subir código → 05_quitar_id_perfil_paso2.sql (DROP COLUMN).
+  Inventario y Estadística → Inventario deciden así:
+    todos los colegios       → usuario_perfil 3 (super_admin)
     sus colegios + dashboard → usuario_perfil 2 (técnico) o rol admin_colegio
-    solo su colegio     → el resto
-  Revisar / alinear la columna: inventario/sql/03_perfiles_inventario.sql
+    solo su colegio          → el resto
+  Revisión: inventario/sql/03_perfiles_inventario.sql
 - jefatura_departamento queda como respaldo; lo nuevo se lee de usuario_colegio.
 - La migración guarda una copia de usuario_colegio en usuario_colegio_respaldo
   antes de reemplazar su contenido.
