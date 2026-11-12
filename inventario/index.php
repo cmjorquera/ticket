@@ -188,8 +188,8 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
                                         <h5 class="mb-1">Equipos inventariados</h5>
                                         <p class="text-muted mb-0 small">Listado operativo segun filtros y permisos actuales.</p>
                                     </div>
-                                    <button type="button" class="btn btn-outline-primary" id="btnImprimirQrEquipos">
-                                        <i class="bi bi-qr-code me-1"></i>Imprimir todos los códigos
+                                    <button type="button" class="module-btn module-btn--secondary" id="btnImprimirQrEquipos">
+                                        <i class="bi bi-qr-code"></i>Imprimir todos los códigos
                                     </button>
                                 </div>
                                 <div class="inv-toolbar row g-3 align-items-end">
