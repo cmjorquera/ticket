@@ -1,0 +1,254 @@
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: "DejaVu Sans, Arial"
+    primaryColor: "#eef3fa"
+    primaryBorderColor: "#16365c"
+    lineColor: "#5b6b7f"
+    tertiaryColor: "#ffffff"
+  er:
+    layoutDirection: LR
+    entityPadding: 12
+---
+erDiagram
+    %% Fuente del diagrama ER de Inventario PC. Regenerar: mmdc -i diagrama_tablas_inventario.mmd -o diagrama_tablas_inventario.svg -b white -w 4000
+    %% Esquema real: sql/inventario_instalacion.sql. Línea continua = FK en la BD; punteada = relación por id sin FK.
+    %% ===== Sistema (compartidas) =====
+    colegio {
+        int id_colegio PK
+        varchar nom_colegio
+        int estado
+    }
+    usuarios {
+        int id PK
+        varchar nombre
+        varchar apellido_paterno
+        varchar email
+    }
+    usuario_colegio {
+        int id PK
+        int id_usuario FK
+        int id_colegio FK
+        int id_perfil "alcance en inventario"
+        tinyint estado
+        datetime fecha_asignacion
+    }
+
+    %% ===== Catálogos =====
+    estado_equipo {
+        int id_estado PK
+        varchar nombre_estado "Activo, Bodega, Reparación, Baja, Prestado"
+        varchar color_badge
+        tinyint estado
+    }
+    tipo_pc_catalogo {
+        int id_tipo_pc PK
+        varchar nombre_tipo "Notebook, Desktop, AIO, Otro"
+        tinyint activo
+    }
+    equipo_ubicacion {
+        int id_ubicacion PK
+        int id_colegio FK
+        varchar nombre_ubicacion "ej: Informática, Sala 1"
+        varchar tipo_ubicacion "ej: Departamento, Sala"
+        varchar descripcion
+        tinyint estado
+    }
+
+    %% ===== PC =====
+    equipos {
+        int id_equipo PK
+        int id_colegio FK
+        int id_ubicacion FK
+        int id_usuario_asignado FK
+        int id_usuario_registra FK
+        int id_estado FK
+        varchar nombre_equipo "PC-SERIE"
+        varchar nombre_personalizado
+        varchar fabricante
+        varchar producto
+        varchar numero_serie UK
+        varchar tipo_pc "texto validado contra tipo_pc_catalogo"
+        varchar qr_code
+        tinyint eliminado "borrado lógico"
+        datetime fecha_eliminado
+        int id_usuario_elimina FK
+    }
+    equipos_compra {
+        int id_equipo PK, FK
+        int valor_equipo
+        varchar proveedor
+        varchar numero_factura
+        date fecha_compra
+        text observacion
+    }
+    equipo_procesador {
+        int id_equipo PK, FK
+        varchar equipo_fabricante
+        varchar equipo_modelo
+        varchar equipo_velocidad
+    }
+    equipo_almacenamiento {
+        int id_equipo PK, FK
+        varchar equipo_modelo
+        varchar equipo_capacidad
+        varchar equipo_tamano
+    }
+    equipo_software {
+        int id_equipo PK, FK
+        varchar windows
+        varchar office
+        varchar antivirus
+    }
+    equipo_memoria {
+        int id_memoria PK
+        int id_equipo FK
+        varchar designacion_memoria
+        varchar formato_memoria
+        varchar tipo_memoria
+        varchar tamano_memoria
+        varchar frecuencia_memoria
+        varchar marca_memoria
+        int orden_memoria
+    }
+    equipo_monitor {
+        int id_monitor PK
+        int id_equipo FK
+        varchar modelo_monitor
+        varchar codigo_monitor
+        varchar serie_monitor
+        varchar tamano_monitor
+        varchar resolucion_monitor
+        int orden_monitor
+    }
+    equipo_fotos {
+        int id_foto PK
+        int id_equipo FK
+        varchar ruta_foto "/uploads/equipos/ID/..."
+        varchar tipo_foto
+        tinyint principal
+        int orden_foto
+        datetime fecha_subida
+    }
+    equipo_movimiento {
+        int id_movimiento PK
+        int id_equipo FK
+        int id_ubicacion_origen FK
+        int id_ubicacion_destino FK
+        int id_usuario_movimiento FK
+        datetime fecha_movimiento
+        varchar motivo
+        text observacion
+    }
+    equipo_asignacion_historial {
+        int id_asignacion PK
+        int id_equipo FK
+        int id_usuario_anterior FK
+        int id_usuario_nuevo FK
+        int id_usuario_accion FK
+        datetime fecha_accion
+        varchar motivo
+        text observacion
+    }
+    equipo_estado_historial {
+        int id_historial PK
+        int id_equipo FK
+        int id_estado_anterior FK
+        int id_estado_nuevo FK
+        int id_usuario_accion FK
+        datetime fecha_accion
+        text observacion
+    }
+
+    %% ===== Monitores independientes =====
+    monitores {
+        int id_monitor PK
+        int id_monitor_legacy UK
+        int id_colegio FK
+        int id_ubicacion FK
+        int id_usuario_asignado FK
+        int id_usuario_registra FK
+        int id_estado FK
+        varchar nombre_monitor
+        varchar marca
+        varchar modelo
+        varchar numero_serie
+        varchar codigo_interno
+        varchar tamano_monitor
+        varchar resolucion_monitor
+        varchar tipo_panel
+        varchar tipo_conexion
+        text observacion
+        tinyint eliminado
+        datetime fecha_registro
+    }
+    monitor_compra {
+        int id_monitor PK, FK
+        int valor_monitor
+        varchar proveedor
+        varchar numero_factura
+        date fecha_compra
+        text observacion
+    }
+    monitor_fotos {
+        int id_foto PK
+        int id_monitor FK
+        varchar ruta_foto "inventario/uploads/monitores/ID/..."
+        varchar tipo_foto
+        tinyint principal
+        int orden_foto
+        datetime fecha_subida
+    }
+    monitor_movimiento {
+        int id_movimiento PK
+        int id_monitor FK
+        int id_ubicacion_origen FK
+        int id_ubicacion_destino FK
+        int id_usuario_movimiento FK
+        datetime fecha_movimiento
+        varchar motivo
+        text observacion
+    }
+    monitor_asignacion_historial {
+        int id_asignacion PK
+        int id_monitor FK
+        int id_usuario_anterior FK
+        int id_usuario_nuevo FK
+        int id_usuario_accion FK
+        datetime fecha_accion
+        varchar motivo
+        text observacion
+    }
+
+    %% FK reales en la BD (línea continua)
+    equipos ||--o| equipos_compra : "compra (FK cascade)"
+    equipos ||--o{ equipo_memoria : "RAM (FK cascade)"
+    equipos ||--o{ equipo_monitor : "monitores del PC (FK cascade)"
+
+    %% Relaciones lógicas por id, sin FK (línea punteada)
+    equipos ||..o| equipo_procesador : "CPU"
+    equipos ||..o| equipo_almacenamiento : "disco"
+    equipos ||..o| equipo_software : "software"
+    equipos ||..o{ equipo_fotos : "fotos"
+    equipos ||..o{ equipo_movimiento : "movimientos"
+    equipos ||..o{ equipo_asignacion_historial : "asignaciones"
+    equipos ||..o{ equipo_estado_historial : "cambios de estado"
+
+    colegio ||..o{ equipos : "tiene"
+    colegio ||..o{ equipo_ubicacion : "salas / deptos"
+    colegio ||..o{ monitores : "tiene"
+    colegio ||..o{ usuario_colegio : ""
+    usuarios ||..o{ usuario_colegio : "acceso por colegio"
+    usuarios |o..o{ equipos : "asignado"
+    usuarios |o..o{ monitores : "asignado"
+    equipo_ubicacion |o..o{ equipos : "ubicado en"
+    equipo_ubicacion |o..o{ monitores : "ubicado en"
+    estado_equipo ||..o{ equipos : "estado"
+    estado_equipo ||..o{ monitores : "estado"
+    tipo_pc_catalogo |o..o{ equipos : "tipo_pc (texto)"
+
+    monitores ||..o| monitor_compra : "compra"
+    monitores ||..o{ monitor_fotos : "fotos"
+    monitores ||..o{ monitor_movimiento : "movimientos"
+    monitores ||..o{ monitor_asignacion_historial : "asignaciones"
