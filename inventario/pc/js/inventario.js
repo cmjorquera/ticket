@@ -234,8 +234,18 @@
     let peticionInventario = 0;
     let peticionMonitores = 0;
 
+    // Atenúa la tabla mientras carga. Al terminar se limpia en todos sus
+    // contenedores y, por seguridad, también a los 10 s aunque algo falle.
+    const temporizadoresCarga = {};
     function marcarCargando(tablaSelector, cargando) {
-        $(tablaSelector).closest('.dataTables_wrapper, .table-responsive').toggleClass('inv-cargando', cargando);
+        const $tabla = $(tablaSelector);
+        clearTimeout(temporizadoresCarga[tablaSelector]);
+        if (cargando) {
+            $tabla.closest('.dataTables_wrapper, .table-responsive').addClass('inv-cargando');
+            temporizadoresCarga[tablaSelector] = setTimeout(function () { marcarCargando(tablaSelector, false); }, 10000);
+        } else {
+            $tabla.parents('.inv-cargando').removeClass('inv-cargando');
+        }
     }
 
     function loadInventario() {
@@ -245,8 +255,13 @@
         $.getJSON(window.INVENTARIO_CONFIG.endpoints.listar, collectFilters())
             .done(function (response) {
                 if (id !== peticionInventario || !response.ok) { return; }
-                $('#contenedorResumen').html(response.resumen_html);
-                if (tablaInventario) { tablaInventario.clear().rows.add(response.data || []).draw(); }
+                try {
+                    $('#contenedorResumen').html(response.resumen_html);
+                    if (tablaInventario) { tablaInventario.clear().rows.add(response.data || []).draw(); }
+                } catch (e) {
+                    // Un error al dibujar no debe dejar la tabla atenuada
+                    console.error('[inventario] al dibujar el listado de PC:', e);
+                }
             })
             .fail(function () { if (id === peticionInventario) { Swal.fire('Error', 'No fue posible cargar el inventario.', 'error'); } })
             .always(function () { if (id === peticionInventario) { marcarCargando('#tablaInventario', false); } });
@@ -259,8 +274,12 @@
         $.getJSON(window.INVENTARIO_CONFIG.endpoints.listarMonitores, collectMonitorFilters())
             .done(function (response) {
                 if (id !== peticionMonitores || !response.ok) { return; }
-                $('#contenedorResumenMonitores').html(response.resumen_html);
-                if (tablaMonitores) { tablaMonitores.clear().rows.add(response.data || []).draw(); }
+                try {
+                    $('#contenedorResumenMonitores').html(response.resumen_html);
+                    if (tablaMonitores) { tablaMonitores.clear().rows.add(response.data || []).draw(); }
+                } catch (e) {
+                    console.error('[inventario] al dibujar el listado de monitores:', e);
+                }
             })
             .fail(function () { if (id === peticionMonitores) { Swal.fire('Error', 'No fue posible cargar los monitores.', 'error'); } })
             .always(function () { if (id === peticionMonitores) { marcarCargando('#tablaMonitores', false); } });
