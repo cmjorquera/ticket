@@ -1076,7 +1076,7 @@ class Inventario
         $where = $this->construirWhereColegioDashboardFuente($filtros, $fuente);
         if (empty($fuente['disponible'])) {
             $sql = "SELECT c.id_colegio, c.nom_colegio, 0 AS total_equipos, 0 AS activos, 0 AS sin_ubicacion,
-                           0 AS sin_responsable, 0 AS en_reparacion, 0 AS dados_baja, 0 AS valor_total
+                           0 AS sin_responsable, 0 AS en_reparacion, 0 AS dados_baja, 0 AS valor_total, 0 AS con_valor
                     FROM colegio c
                     {$where['sql']}
                     ORDER BY c.nom_colegio ASC";
@@ -1091,7 +1091,8 @@ class Inventario
                     COUNT(DISTINCT CASE WHEN {$fuente['usuario']} IS NULL OR {$fuente['usuario']} = 0 THEN {$fuente['id']} END) AS sin_responsable,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%repar%' THEN {$fuente['id']} END) AS en_reparacion,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%baja%' THEN {$fuente['id']} END) AS dados_baja,
-                    COALESCE(SUM(CASE WHEN {$fuente['valor']} > 0 THEN {$fuente['valor']} ELSE 0 END), 0) AS valor_total
+                    COALESCE(SUM(CASE WHEN {$fuente['valor']} > 0 THEN {$fuente['valor']} ELSE 0 END), 0) AS valor_total,
+                    COUNT(DISTINCT CASE WHEN {$fuente['valor']} > 0 THEN {$fuente['id']} END) AS con_valor
                 FROM colegio c
                 LEFT JOIN {$fuente['tabla']} {$fuente['alias']} ON {$fuente['colegio']} = c.id_colegio{$where['join_equipos']}
                 LEFT JOIN estado_equipo ee ON ee.id_estado = {$fuente['estado']}

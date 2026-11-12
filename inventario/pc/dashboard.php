@@ -301,6 +301,10 @@ if ($idColegioFiltro > 0 && !empty($resumenSistema)) {
     }
 }
 
+// Vista general ("Todos los colegios") para quien ve más de un colegio:
+// componentes/dashboard_general.php. Con un colegio elegido, la vista detallada.
+$vistaGeneral = $idColegioFiltro === 0 && count($colegios) > 1 && !$tipoEnPreparacion;
+
 $cssExtraInventario = ['css/dashboard.css', 'css/graficos.css', 'css/cards.css'];
 $jsExtraInventario = ['js/dashboard.js'];
 $idPagActual = '9';
@@ -379,6 +383,10 @@ require __DIR__ . '/componentes/layout_top.php';
 
                 <div class="row g-4">
                     <div class="col-12">
+
+                <?php if ($vistaGeneral): ?>
+                    <?php require __DIR__ . '/componentes/dashboard_general.php'; ?>
+                <?php else: ?>
 
                 <div class="inv-dashboard-grid inv-dashboard-grid--kpis mb-4">
                     <?php
@@ -483,49 +491,7 @@ require __DIR__ . '/componentes/layout_top.php';
                 </div>
 
                 <div class="row g-4 mb-4">
-                    <div class="col-12 col-xl-7">
-                        <section class="inv-dashboard-section h-100">
-                            <div class="inv-dashboard-section__head">
-                                <div class="inv-section-title">
-                                    <h2>Valor del inventario <?= inventario_h($tipoSeleccionado['plural']) ?> por colegio</h2>
-                                    <span>Valores de compra registrados</span>
-                                </div>
-                                <?= inv_dash_section_menu() ?>
-                            </div>
-                            <div class="inv-value-bars">
-                                <?php if ($tipoEnPreparacion): ?>
-                                    <div class="inv-empty-state">Módulo en preparación. Sin información disponible para el dashboard.</div>
-                                <?php endif; ?>
-                                <?php if (empty($valorPorColegio)): ?>
-                                    <div class="inv-empty-state">No hay equipos para los filtros seleccionados.</div>
-                                <?php elseif ($valorTotalVisible <= 0): ?>
-                                    <div class="inv-empty-state">No hay valores de compra registrados para los filtros seleccionados.</div>
-                                <?php endif; ?>
-                                <?php foreach ($valorPorColegio as $fila): ?>
-                                    <?php
-                                    $porcentaje = ((int)$fila['valor_total'] / $maxValorColegio) * 100;
-                                    $idColegioBarra = (int)($fila['id_colegio'] ?? 0);
-                                    // Color propio del colegio de ESTA barra (mismo helper que usa
-                                    // el scatter) -- antes estaba fijo en verde via CSS (.inv-value-bar__fill).
-                                    $coloresBarra = inv_dash_colores_colegio($inventario, $idColegioBarra);
-                                    ?>
-                                    <a class="inv-value-bar<?= $idColegioBarra === $idColegioFiltro && $idColegioFiltro > 0 ? ' is-active' : '' ?>"
-                                       href="dashboard.php?id_colegio=<?= $idColegioBarra ?>&amp;tipo_equipo=<?= inventario_h($tipoEquipoFiltro) ?>"
-                                       title="Filtrar por <?= inventario_h($fila['nom_colegio']) ?>">
-                                        <div class="inv-value-bar__label">
-                                            <span><?= inventario_h($fila['nom_colegio']) ?></span>
-                                            <strong><?= inv_dash_money($fila['valor_total']) ?></strong>
-                                        </div>
-                                        <div class="inv-value-bar__track">
-                                            <div class="inv-value-bar__fill"
-                                                 style="width: <?= max(3, (int)$porcentaje) ?>%; background: <?= inventario_h($coloresBarra['principal']) ?>;"></div>
-                                        </div>
-                                    </a>
-                                <?php endforeach; ?>
-                            </div>
-                        </section>
-                    </div>
-                    <div class="col-12 col-xl-5">
+                    <div class="col-12">
                         <section class="inv-dashboard-section h-100">
                             <div class="inv-dashboard-section__head">
                                 <div class="inv-section-title">
@@ -757,51 +723,6 @@ require __DIR__ . '/componentes/layout_top.php';
                     </div>
                 </div>
 
-                <div class="row g-4 mb-4">
-                    <div class="col-12 col-xl-4">
-                        <section class="inv-dashboard-section h-100">
-                            <div class="inv-dashboard-section__head">
-                                <div class="inv-section-title">
-                                    <h2>Distribución de RAM</h2>
-                                    <span><?= inv_dash_int($hardware['ram_baja'] ?? 0) ?> con menos de 8 GB</span>
-                                </div>
-                                <?= inv_dash_section_menu() ?>
-                            </div>
-                            <div class="inv-chart-box inv-chart-box--sm">
-                                <canvas id="chartRam"></canvas>
-                            </div>
-                        </section>
-                    </div>
-                    <div class="col-12 col-xl-4">
-                        <section class="inv-dashboard-section h-100">
-                            <div class="inv-dashboard-section__head">
-                                <div class="inv-section-title">
-                                    <h2>Sistemas operativos</h2>
-                                    <span>Versiones detectadas</span>
-                                </div>
-                                <?= inv_dash_section_menu() ?>
-                            </div>
-                            <div class="inv-chart-box inv-chart-box--sm">
-                                <canvas id="chartSistemas"></canvas>
-                            </div>
-                        </section>
-                    </div>
-                    <div class="col-12 col-xl-4">
-                        <section class="inv-dashboard-section h-100">
-                            <div class="inv-dashboard-section__head">
-                                <h2>Detalle de valor</h2>
-                            </div>
-                            <div class="inv-detail-value">
-                                <span><?= inventario_h($colegioSeleccionado) ?></span>
-                                <strong><?= inv_dash_int($totalGeneral['total_equipos']) ?> <?= inventario_h($tipoSeleccionado['plural']) ?></strong>
-                                <strong><?= inv_dash_money($valor['valor_total'] ?? 0) ?></strong>
-                                <small>Promedio: <?= inv_dash_money($valor['valor_promedio'] ?? 0) ?></small>
-                                <small>Sin valor: <?= inv_dash_int($valor['sin_valor'] ?? 0) ?></small>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-
                 <section class="inv-dashboard-section">
                     <div class="inv-dashboard-section__head">
                         <h2><?= inventario_h($tipoSeleccionado['plural']) ?> valorizados</h2>
@@ -837,6 +758,8 @@ require __DIR__ . '/componentes/layout_top.php';
                         </table>
                     </div>
                 </section>
+
+                <?php endif; /* vista general / detallada */ ?>
 
                     </div><!-- /.col-lg-9 -->
                 </div><!-- /.row (sidebar colegio + contenido) -->
