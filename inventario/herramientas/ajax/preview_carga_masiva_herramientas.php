@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__DIR__) . '/componentes/boot.php';
 // Lectura de Excel con PHPExcel, la librería incluida en el sistema (clases/excel).
-require_once dirname(__DIR__, 2) . '/clases/excel/Classes/PHPExcel.php';
+require_once dirname(__DIR__, 3) . '/clases/excel/Classes/PHPExcel.php';
 
 header('Content-Type: application/json; charset=utf-8');
 

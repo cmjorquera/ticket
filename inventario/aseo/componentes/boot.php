@@ -10,7 +10,7 @@
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
-require_once dirname(__DIR__, 2) . '/clases/Session.php';
+require_once dirname(__DIR__, 3) . '/clases/Session.php';
 Session::iniciar();
 
 register_shutdown_function(function () {
@@ -23,7 +23,7 @@ register_shutdown_function(function () {
 function inventario_es_ajax(): bool
 {
     $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-    if (strpos($script, '/inventario_aseo/ajax/') !== false) {
+    if (strpos($script, '/inventario/aseo/ajax/') !== false) {
         return true;
     }
     // Los endpoints de guardado responden JSON aunque no estén en ajax/
@@ -40,7 +40,7 @@ function inventario_responder_error($mensaje, $codigo = 500)
     }
     echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Inventario de aseo</title>';
     echo '<style>body{font-family:Arial,sans-serif;background:#f4f7fb;color:#17324d;padding:32px}.box{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.08)}h1{margin-top:0}a{color:#1d4675}</style>';
-    echo '</head><body><div class="box"><h1>Inventario de aseo no pudo cargar</h1><p>' . htmlspecialchars((string)$mensaje, ENT_QUOTES, 'UTF-8') . '</p><p><a href="../principal.php">Volver al inicio</a></p></div></body></html>';
+    echo '</head><body><div class="box"><h1>Inventario de aseo no pudo cargar</h1><p>' . htmlspecialchars((string)$mensaje, ENT_QUOTES, 'UTF-8') . '</p><p><a href="../../principal.php">Volver al inicio</a></p></div></body></html>';
     exit;
 }
 
@@ -69,7 +69,7 @@ if ($idUsuarioSession <= 0) {
     if (inventario_es_ajax()) {
         inventario_responder_error('Sesión expirada. Vuelve a iniciar sesión.', 401);
     }
-    header('Location: ../index.php');
+    header('Location: ../../index.php');
     exit;
 }
 
@@ -90,11 +90,11 @@ if (!$instalacionAseo['instalado']) {
 function inventario_url($ruta = '')
 {
     $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-    $base = '/inventario_aseo';
+    $base = '/inventario/aseo';
 
-    $pos = strpos($scriptName, '/inventario_aseo');
+    $pos = strpos($scriptName, '/inventario/aseo/');
     if ($pos !== false) {
-        $base = substr($scriptName, 0, $pos) . '/inventario_aseo';
+        $base = substr($scriptName, 0, $pos) . '/inventario/aseo';
     }
 
     return $ruta === '' ? $base : $base . '/' . ltrim($ruta, '/');
@@ -102,7 +102,7 @@ function inventario_url($ruta = '')
 
 function inventario_sistema_url($ruta = '')
 {
-    return '../' . ltrim((string)$ruta, '/');
+    return '../../' . ltrim((string)$ruta, '/');
 }
 
 /** Formatea cantidades de stock: sin decimales si es entero, hasta 2 si no (formato chileno). */

@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__DIR__, 2) . '/inventario/comun/InventarioConexion.php';
+require_once dirname(__DIR__, 2) . '/comun/InventarioConexion.php';
 
 class Inventario
 {
@@ -631,9 +631,12 @@ SQL;
             mysqli_stmt_bind_param($stmtDelete, 'ii', $idFoto, $idHerramienta);
             mysqli_stmt_execute($stmtDelete);
             if (!empty($foto['ruta_foto'])) {
-                $rutaFisica = dirname(__DIR__) . '/' . ltrim($foto['ruta_foto'], '/');
                 if (strpos($foto['ruta_foto'], '..') !== false || strpos(ltrim($foto['ruta_foto'], '/'), 'uploads/herramientas/') !== 0) { continue; }
-                if (is_file($rutaFisica)) { @unlink($rutaFisica); }
+                // Carpeta actual (inventario/uploads/) y la antigua (inventario_herramintas/uploads/)
+                foreach ([dirname(__DIR__, 2), dirname(__DIR__, 3) . '/inventario_herramintas'] as $raizFotos) {
+                    $rutaFisica = $raizFotos . '/' . ltrim($foto['ruta_foto'], '/');
+                    if (is_file($rutaFisica)) { @unlink($rutaFisica); }
+                }
             }
         }
         mysqli_stmt_close($stmt);
@@ -643,7 +646,7 @@ SQL;
     private function guardarFotos($idHerramienta, $files)
     {
         if (!$this->tablaExiste('herramienta_fotos')) { return; }
-        $baseDir = dirname(__DIR__) . '/uploads/herramientas/' . $idHerramienta;
+        $baseDir = dirname(__DIR__, 2) . '/uploads/herramientas/' . $idHerramienta;
         if (!is_dir($baseDir)) { mkdir($baseDir, 0775, true); }
         if (isset($files['fotos_herramienta'])) { $this->guardarMultiplesArchivos($idHerramienta, $files['fotos_herramienta'], $baseDir); }
     }

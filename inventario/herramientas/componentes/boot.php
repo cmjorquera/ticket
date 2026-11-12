@@ -10,7 +10,7 @@
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
-require_once dirname(__DIR__, 2) . '/clases/Session.php';
+require_once dirname(__DIR__, 3) . '/clases/Session.php';
 Session::iniciar();
 
 register_shutdown_function(function () {
@@ -23,7 +23,7 @@ register_shutdown_function(function () {
 function inventario_es_ajax(): bool
 {
     $script = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-    if (strpos($script, '/inventario_herramintas/ajax/') !== false) {
+    if (strpos($script, '/inventario/herramientas/ajax/') !== false) {
         return true;
     }
     // Los endpoints de guardado responden JSON aunque no estén en ajax/
@@ -40,7 +40,7 @@ function inventario_responder_error($mensaje, $codigo = 500)
     }
     echo '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Inventario de herramientas</title>';
     echo '<style>body{font-family:Arial,sans-serif;background:#f4f7fb;color:#17324d;padding:32px}.box{max-width:900px;margin:0 auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.08)}h1{margin-top:0}a{color:#1d4675}</style>';
-    echo '</head><body><div class="box"><h1>Inventario de herramientas no pudo cargar</h1><p>' . htmlspecialchars((string)$mensaje, ENT_QUOTES, 'UTF-8') . '</p><p><a href="../principal.php">Volver al inicio</a></p></div></body></html>';
+    echo '</head><body><div class="box"><h1>Inventario de herramientas no pudo cargar</h1><p>' . htmlspecialchars((string)$mensaje, ENT_QUOTES, 'UTF-8') . '</p><p><a href="../../principal.php">Volver al inicio</a></p></div></body></html>';
     exit;
 }
 
@@ -65,7 +65,7 @@ if ($idUsuarioSession <= 0) {
     if (inventario_es_ajax()) {
         inventario_responder_error('Sesión expirada. Vuelve a iniciar sesión.', 401);
     }
-    header('Location: ../index.php');
+    header('Location: ../../index.php');
     exit;
 }
 
@@ -86,19 +86,35 @@ if (!$instalacionHerramientas['instalado']) {
 function inventario_url($ruta = '')
 {
     $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-    $base = '/inventario_herramintas';
+    $base = '/inventario/herramientas';
 
-    $pos = strpos($scriptName, '/inventario_herramintas');
+    $pos = strpos($scriptName, '/inventario/herramientas/');
     if ($pos !== false) {
-        $base = substr($scriptName, 0, $pos) . '/inventario_herramintas';
+        $base = substr($scriptName, 0, $pos) . '/inventario/herramientas';
     }
 
     return $ruta === '' ? $base : $base . '/' . ltrim($ruta, '/');
 }
 
+/**
+ * URL de una foto de herramienta ("/uploads/herramientas/ID/foto.jpg" en la BD).
+ * Las fotos viven en inventario/uploads/herramientas/. Si aún no se movieron
+ * desde la carpeta antigua inventario_herramintas/uploads/, se usan desde ahí.
+ */
+function inventario_foto_url($ruta = '')
+{
+    $ruta = ltrim((string)$ruta, '/');
+    $base = substr(inventario_url(), 0, -strlen('/herramientas'));   // ".../inventario"
+    $raizSitio = dirname(__DIR__, 3);
+    if (!is_file(dirname(__DIR__, 2) . '/' . $ruta) && is_file($raizSitio . '/inventario_herramintas/' . $ruta)) {
+        return substr($base, 0, -strlen('/inventario')) . '/inventario_herramintas/' . $ruta;
+    }
+    return $base . '/' . $ruta;
+}
+
 function inventario_sistema_url($ruta = '')
 {
-    return '../' . ltrim((string)$ruta, '/');
+    return '../../' . ltrim((string)$ruta, '/');
 }
 
 function inventario_h($valor)

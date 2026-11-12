@@ -9,10 +9,10 @@ $pagina_bootstrap_js = true;
 $pagina_sin_componentes = true;
 $pagina_estilos = [
     'https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css',
-    'inventario_herramintas/css/inventario.css?v=' . inventario_asset_version('css/inventario.css'),
-    'inventario_herramintas/css/estilo_sistema.css?v=' . inventario_asset_version('css/estilo_sistema.css'),
+    'inventario/herramientas/css/inventario.css?v=' . inventario_asset_version('css/inventario.css'),
+    'inventario/herramientas/css/estilo_sistema.css?v=' . inventario_asset_version('css/estilo_sistema.css'),
 ];
-require dirname(__DIR__, 2) . '/includes/header.php';
+require dirname(__DIR__, 3) . '/includes/header.php';
 ?>
 <input type="hidden" id="idUsuario" value="<?= (int)$idUsuarioSession ?>">
 <div class="inventario-body">

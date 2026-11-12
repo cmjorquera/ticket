@@ -100,8 +100,7 @@ Options -Indexes
 # Evitar ejecucion de PHP dentro de carpetas de subida (si existiera una)
 # Ajustar el nombre de carpeta segun corresponda (ej: uploads/, archivos/)
 <IfModule mod_rewrite.c>
-    RewriteCond %{REQUEST_URI} ^/inventario/(uploads|archivos)/ [NC]
-    RewriteRule \.(php|phtml|php3|php4|php5|php7|pht)$ - [F,L]
+    RewriteRule ^(uploads|archivos)/.*\.(php|phtml|php[3-8]|pht|phar)$ - [F,L,NC]
 </IfModule>
 
 

@@ -64,7 +64,7 @@ $action = $modo === 'editar' ? 'actualizar_herramienta.php' : 'guardar_herramien
                 <label class="form-label">Fotos de la herramienta</label>
                 <input type="file" name="fotos_herramienta[]" id="fotos_equipo" class="form-control" accept="image/*" multiple>
                 <div id="previewFotos" class="inv-preview-grid mt-3"></div>
-                <?php if (!empty($fotos)): ?><div class="inv-existing-gallery mt-3"><?php foreach ($fotos as $foto): ?><label class="inv-photo-check"><img src="<?= inventario_h(inventario_url(ltrim($foto['ruta_foto'], '/'))) ?>" alt="Foto herramienta"><span><input type="checkbox" name="fotos_eliminar[]" value="<?= (int)$foto['id_foto'] ?>"> Eliminar</span></label><?php endforeach; ?></div><?php endif; ?>
+                <?php if (!empty($fotos)): ?><div class="inv-existing-gallery mt-3"><?php foreach ($fotos as $foto): ?><label class="inv-photo-check"><img src="<?= inventario_h(inventario_foto_url($foto['ruta_foto'])) ?>" alt="Foto herramienta"><span><input type="checkbox" name="fotos_eliminar[]" value="<?= (int)$foto['id_foto'] ?>"> Eliminar</span></label><?php endforeach; ?></div><?php endif; ?>
             </div></div>
         </div>
     </div>

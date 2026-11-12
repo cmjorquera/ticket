@@ -3,13 +3,15 @@ INVENTARIO / COMUN
 
 Código compartido por los inventarios:
   inventario/pc/            Inventario PC (equipos y monitores)
-  inventario/herramientas/  (pendiente: hoy inventario_herramintas/)
-  inventario/aseo/          (pendiente: hoy inventario_aseo/)
+  inventario/herramientas/  Inventario de herramientas (antes inventario_herramintas/)
+  inventario/aseo/          Inventario de aseo (antes inventario_aseo/)
+
+Fotos: inventario/uploads/ (equipos/, monitores/, herramientas/).
 
 Archivos
 --------
 - InventarioConexion.php  Conexión mysqli con credenciales de config_privada.
-  La usan: inventario/pc, inventario_herramintas, inventario_aseo y
+  La usan: inventario/pc, inventario/herramientas, inventario/aseo y
   licenciamiento (class/InventarioSoftware.php).
 
 Reglas
