@@ -7,7 +7,7 @@
 --  EJECUTAR SOLO DESPUÉS de subir ese código a QA y producción: el código
 --  antiguo todavía usa estos perfiles para dar permisos de administrador.
 -- =====================================================================
-USE `crist668_sistema_panel_central`;
+-- Se ejecuta en la base seleccionada en phpMyAdmin (QA: crist668_sistema_panel_central · producción: acceso_sistema_panel)
 
 -- 0) Revisar: quién tiene perfil 4 o 5 y si su cargo en usuario_colegio coincide
 SELECT u.id, u.email, p.nombre_perfil AS perfil_antiguo,

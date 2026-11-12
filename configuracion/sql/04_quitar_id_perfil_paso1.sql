@@ -5,7 +5,7 @@
 --  escribe, pueda crear usuarios. El código antiguo sigue funcionando.
 --  Luego: subir el código de la rama qa y ejecutar 05_quitar_id_perfil_paso2.sql
 -- =====================================================================
-USE `crist668_sistema_panel_central`;
+-- Se ejecuta en la base seleccionada en phpMyAdmin (QA: crist668_sistema_panel_central · producción: acceso_sistema_panel)
 
 -- Respaldo de la columna (id de fila + valor), por si hay que volver atrás
 CREATE TABLE IF NOT EXISTS usuario_colegio_id_perfil_respaldo AS

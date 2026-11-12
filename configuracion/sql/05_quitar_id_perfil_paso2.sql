@@ -4,7 +4,7 @@
 --  esta base (QA y producción). El código antiguo todavía lee esta columna.
 --  El respaldo quedó en usuario_colegio_id_perfil_respaldo (paso 1).
 -- =====================================================================
-USE `crist668_sistema_panel_central`;
+-- Se ejecuta en la base seleccionada en phpMyAdmin (QA: crist668_sistema_panel_central · producción: acceso_sistema_panel)
 
 ALTER TABLE usuario_colegio DROP COLUMN id_perfil;
 
