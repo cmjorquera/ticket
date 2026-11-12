@@ -10,12 +10,15 @@ require_once __DIR__ . '/clases/Session.php';
 Session::iniciar();
 
 require_once __DIR__ . '/clases/Conexion.php';
+require_once __DIR__ . '/clases/PaginaInicio.php';
 
 const MAX_INTENTOS = 3;
 $error = '';
 
 if (!empty($_SESSION['id'])) {
-    header('Location: contenedores.php');
+    // Página de inicio personalizada (usuarios.pagina_inicio) o la de siempre
+    $inicio = PaginaInicio::deSesion(Conexion::getInstance('sistema_panel_central'));
+    header('Location: ' . ($inicio ?? 'contenedores.php'));
     exit;
 }
 
@@ -91,7 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     header('Location: mi_cuenta/perfil.php?cambiar_clave=1');
                     exit;
                 }
-                header('Location: contenedores.php');
+                $_SESSION['pagina_inicio'] = PaginaInicio::de($db, (int)$usuario['id']) ?? '';
+                header('Location: ' . ($_SESSION['pagina_inicio'] !== '' ? $_SESSION['pagina_inicio'] : 'contenedores.php'));
                 exit;
             }
         } catch (\Throwable $e) {

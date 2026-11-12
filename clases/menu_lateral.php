@@ -13,6 +13,9 @@
  */
 function menu_lateral($id_usuario, $db, $pagina_actual = null)
 {
+    require_once __DIR__ . '/PaginaInicio.php';
+    $pagina_inicio_usuario = $db instanceof Conexion ? PaginaInicio::deSesion($db) : null;
+
     $secciones_por_menu = [
         8  => 'PRINCIPAL',
         1  => 'PRINCIPAL',
@@ -108,6 +111,10 @@ function menu_lateral($id_usuario, $db, $pagina_actual = null)
                 <?php foreach ($menus_agrupados[$seccion] as $menu): ?>
                     <?php
                     $archivo = (string) ($menu['archivo'] ?? '');
+                    // "INICIO" lleva a la página de inicio personalizada, si la persona tiene una
+                    if ((int) $menu['id_menu'] === 8 && $pagina_inicio_usuario !== null) {
+                        $archivo = $pagina_inicio_usuario;
+                    }
                     $ruta_archivo = (string) (parse_url($archivo, PHP_URL_PATH) ?: $archivo);
                     $archivo_normalizado = basename($ruta_archivo, '.php');
                     $activo = $es_activo($archivo);

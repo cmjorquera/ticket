@@ -83,6 +83,20 @@ final class Almuerzos
         return $idUsuario > 0 && $idUsuario === (int) $this->config('id_usuario_encargado');
     }
 
+    /**
+     * ¿Puede ver y descargar los pedidos de todos (PDF para cocina)?
+     * El encargado, y las personas de almuerzo_configuracion 'ids_ver_pedidos'
+     * (lista de usuarios.id separados por coma, ej: secretaría). Ver agenda/sql/01_pagina_inicio.sql
+     */
+    public function puedeVerPedidos(int $idUsuario): bool
+    {
+        if ($this->esEncargado($idUsuario)) {
+            return true;
+        }
+        $ids = array_map('intval', array_filter(array_map('trim', explode(',', $this->config('ids_ver_pedidos')))));
+        return $idUsuario > 0 && in_array($idUsuario, $ids, true);
+    }
+
     public function ahora(): DateTimeImmutable
     {
         return new DateTimeImmutable('now', $this->zona);
