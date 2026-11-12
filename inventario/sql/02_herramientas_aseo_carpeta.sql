@@ -1,7 +1,6 @@
 -- Herramientas y Aseo pasan a inventario/herramientas/ e inventario/aseo/.
--- Las carpetas antiguas quedan como redirección, así que el sistema funciona
--- aunque esto no se ejecute; esto solo hace que el menú apunte directo a las
--- páginas nuevas y las marque como activas.
+-- OBLIGATORIO: las carpetas antiguas (inventario_aseo/, inventario_herramintas/)
+-- se eliminaron, así que sin esto el menú apunta a páginas que no existen.
 -- Revisar antes en producción que 8 = Aseo y 9 = Herramientas.
 SELECT id_submenu, nombre, archivo FROM menu_1_sub WHERE id_submenu IN (8, 9);
 

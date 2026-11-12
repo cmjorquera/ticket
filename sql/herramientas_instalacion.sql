@@ -1,6 +1,6 @@
 -- =====================================================================
 --  Inventario de Herramientas – instalación (solo estructura + catálogos)
---  Módulo: inventario_herramintas/
+--  Módulo: inventario/herramientas/ (antes inventario_herramintas/)
 --
 --  * Compatible con MySQL 5.7/8 (QA) y MariaDB.
 --  * Se puede ejecutar más de una vez: CREATE TABLE IF NOT EXISTS e
