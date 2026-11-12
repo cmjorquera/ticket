@@ -314,7 +314,8 @@ require __DIR__ . '/componentes/layout_top.php';
         <div class="card shadow mb-4 px-0 border-0 inv-panel">
             <div class="card-body p-4 p-lg-5">
 
-                <div class="inv-hero mb-4<?= $_heroBranded ? ' inv-hero--branded' : '' ?>"<?= $_heroStyle ?>>
+                <?php /* Dentro del panel de inventario/pc/index.php el título ya está en la cabecera del panel: oculto-embebido */ ?>
+                <div class="inv-hero mb-4 oculto-embebido<?= $_heroBranded ? ' inv-hero--branded' : '' ?>"<?= $_heroStyle ?>>
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
                         <div>
                             <span class="inv-kicker">Módulo Inventario</span>
@@ -329,6 +330,7 @@ require __DIR__ . '/componentes/layout_top.php';
                     </div>
                 </div>
 
+                <?php if (count($colegios) > 1): /* con un solo colegio no hay nada que elegir */ ?>
                 <div class="inv-dashboard-filters mb-4">
                     <div class="row g-3 align-items-end">
                         <div class="col-12 col-md-6 col-xl-5">
@@ -344,6 +346,7 @@ require __DIR__ . '/componentes/layout_top.php';
                         </div>
                     </div>
                 </div>
+                <?php endif; ?>
 
                 <?php
                 // Pestañas de tipo de equipo: reemplazan el <select> anterior.
