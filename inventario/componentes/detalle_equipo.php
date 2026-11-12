@@ -30,7 +30,9 @@ foreach (($equipo['fotos'] ?? []) as $foto) {
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a href="editar_equipo.php?id_equipo=<?= (int)$equipo['id_equipo'] ?>" class="btn btn-outline-primary">Editar</a>
+        <a href="editar_equipo.php?id_equipo=<?= (int)$equipo['id_equipo'] ?>" class="module-btn module-btn--secondary">
+            <i class="bi bi-pencil"></i>Editar
+        </a>
         <?php if (!$detalleOffcanvas): ?>
             <a href="index.php" class="btn btn-light border">Volver</a>
         <?php endif; ?>
@@ -233,8 +235,8 @@ foreach (($equipo['fotos'] ?? []) as $foto) {
                 <h5 class="mb-3">QR del equipo</h5>
                 <div<?= $detalleOffcanvas ? '' : ' id="qrEquipo"' ?> class="d-flex justify-content-center js-qr-equipo" data-qr-text="<?= inventario_h($qrFichaUrl) ?>"></div>
                 <div class="text-center mt-3">
-                    <a href="<?= inventario_h($qrFichaUrl) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-box-arrow-up-right me-1"></i>Abrir ficha QR
+                    <a href="<?= inventario_h($qrFichaUrl) ?>" target="_blank" rel="noopener" class="module-btn module-btn--secondary">
+                        <i class="bi bi-box-arrow-up-right"></i>Abrir ficha QR
                     </a>
                 </div>
             </div>

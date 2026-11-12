@@ -54,6 +54,17 @@ $breadcrumb_label = $pagina_titulo ?? 'Inicio';
     <?php foreach (($pagina_estilos ?? []) as $estilo): ?>
     <link rel="stylesheet" href="<?= (preg_match('#^(https?:)?//#', (string) $estilo) ? '' : $depth) . htmlspecialchars((string) $estilo, ENT_QUOTES, 'UTF-8') ?>">
     <?php endforeach; ?>
+    <?php if (!empty($pagina_embebible)): /* página que también se muestra dentro de un iframe (ej: dashboard de inventario en el offcanvas) */ ?>
+    <script>if (window.self !== window.top) { document.documentElement.classList.add('pagina-embebida'); }</script>
+    <style>
+        html.pagina-embebida #sidebar,
+        html.pagina-embebida #topbar,
+        html.pagina-embebida #mobile-overlay,
+        html.pagina-embebida #chatFlotante,
+        html.pagina-embebida .oculto-embebido { display: none !important; }
+        html.pagina-embebida #main { margin-left: 0 !important; min-height: 0; }
+    </style>
+    <?php endif; ?>
     <?php foreach (($pagina_scripts_head ?? []) as $scriptHead): ?>
     <script src="<?= htmlspecialchars((string) $scriptHead, ENT_QUOTES, 'UTF-8') ?>" defer></script>
     <?php endforeach; ?>

@@ -99,6 +99,7 @@
         }).join('');
         return '<select class="form-select form-select-sm inv-estado-select"' +
                ' data-id="' + idEquipo + '"' +
+               ' data-prev="' + idEstado + '"' +
                ' onchange="InventarioFunciones.cambiarEstadoEquipo(this)">' +
                options + '</select>';
     }
@@ -425,15 +426,19 @@
     // OFFCANVAS DETALLE
     // =========================================================================
 
+    // Prepara el offcanvas de detalle. No muestra spinner ni lo abre todavía:
+    // se abre con show() recién cuando el detalle ya llegó (o falló).
     function setDetalleOffcanvasLoading(title) {
         const $offcanvas = $('#offcanvasDetalleInventario');
         const $title     = $('#offcanvasDetalleInventarioLabel');
         const $body      = $('#offcanvasDetalleInventarioBody');
         if (!$offcanvas.length || !$body.length) { return null; }
         $title.text(title || 'Detalle');
-        $body.html('<div class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Cargando detalle...</div>');
-        showDetalleOffcanvas($offcanvas[0]);
-        return { $title: $title, $body: $body };
+        return {
+            $title: $title,
+            $body: $body,
+            show: function () { showDetalleOffcanvas($offcanvas[0]); }
+        };
     }
 
     function showDetalleOffcanvas(offcanvasEl) {
@@ -779,7 +784,6 @@
             const href = 'ver_equipo.php?id_equipo=' + idEquipo;
             const ui = setDetalleOffcanvasLoading('Detalle del equipo');
             if (!ui || !idEquipo) { window.location.href = href; return; }
-            mostrarPantallaCarga('Cargando detalle del equipo...');
             $.getJSON(window.INVENTARIO_CONFIG.endpoints.detalle, { id_equipo: idEquipo })
                 .done(function (response) {
                     if (!response.ok) {
@@ -794,7 +798,7 @@
                     const msg = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible cargar el detalle.';
                     ui.$body.html('<div class="alert alert-danger mb-3">' + escapeHtml(msg) + '</div><a href="' + escapeHtml(href) + '" class="btn btn-outline-primary">Abrir ficha completa</a>');
                 })
-                .always(function () { ocultarPantallaCarga(); });
+                .always(function () { ui.show(); });
         }
 
         // --- VER QR EQUIPO ---
@@ -859,18 +863,58 @@
                 .fail(function (xhr) {
                     const msg = xhr.responseJSON && xhr.responseJSON.mensaje ? xhr.responseJSON.mensaje : 'No fue posible cargar el detalle.';
                     ui.$body.html('<div class="alert alert-danger mb-3">' + escapeHtml(msg) + '</div><a href="' + escapeHtml(href) + '" class="btn btn-outline-primary">Abrir ficha completa</a>');
-                });
+                })
+                .always(function () { ui.show(); });
         }
 
         // --- CAMBIAR ESTADO EQUIPO (select inline) ---
         static cambiarEstadoEquipo(selectEl) {
             const idEquipo = parseInt(selectEl.getAttribute('data-id'), 10);
             const idEstado = parseInt(selectEl.value, 10);
+            const estadoAnterior = selectEl.getAttribute('data-prev') || '';
+            const nombreNuevo = selectEl.options[selectEl.selectedIndex] ? selectEl.options[selectEl.selectedIndex].text.trim() : '';
+            const opcionAnterior = Array.prototype.find.call(selectEl.options, function (o) { return o.value === estadoAnterior; });
+            const nombreAnterior = opcionAnterior ? opcionAnterior.text.trim() : '';
+            const fila = obtenerFilaEquipo(idEquipo) || {};
+            const nombreEquipo = fila.nombre_equipo || ('Equipo #' + idEquipo);
 
+            Swal.fire({
+                title: '¿Cambiar estado?',
+                html: 'El equipo <strong>' + escapeHtml(nombreEquipo) + '</strong> pasará de ' +
+                      '<strong>' + escapeHtml(nombreAnterior || '—') + '</strong> a <strong>' + escapeHtml(nombreNuevo) + '</strong>.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cambiar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                buttonsStyling: false,
+                customClass: {
+                    popup: 'inv-swal-popup',
+                    icon: 'inv-swal-icon',
+                    title: 'inv-swal-title',
+                    htmlContainer: 'inv-swal-text',
+                    actions: 'inv-swal-actions',
+                    confirmButton: 'btn btn-primary inv-swal-confirm',
+                    cancelButton: 'btn btn-light border inv-swal-cancel'
+                }
+            }).then(function (result) {
+                if (!result.isConfirmed) {
+                    // Cancelado: el select vuelve al estado que tenía
+                    if (estadoAnterior !== '') { selectEl.value = estadoAnterior; }
+                    return;
+                }
+                InventarioFunciones.guardarEstadoEquipo(selectEl, idEquipo, idEstado);
+            });
+        }
+
+        static guardarEstadoEquipo(selectEl, idEquipo, idEstado) {
             selectEl.disabled = true;
             $.post(window.INVENTARIO_CONFIG.endpoints.cambiarEstado, { id_equipo: idEquipo, id_estado: idEstado }, null, 'json')
                 .done(function (response) {
                     selectEl.disabled = false;
+                    if (response.ok) {
+                        selectEl.setAttribute('data-prev', String(idEstado));
+                    }
                     if (!response.ok) {
                         Swal.fire('Error', response.mensaje || 'No fue posible actualizar el estado.', 'error');
                         loadInventario();

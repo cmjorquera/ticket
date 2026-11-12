@@ -304,6 +304,9 @@ if ($idColegioFiltro > 0 && !empty($resumenSistema)) {
 $cssExtraInventario = ['css/dashboard.css', 'css/graficos.css', 'css/cards.css'];
 $jsExtraInventario = ['js/dashboard.js'];
 $idPagActual = '9';
+// Se abre también dentro del offcanvas de inventario/index.php (iframe):
+// ahí se oculta el menú lateral y la cabecera para no duplicarlos.
+$pagina_embebible = true;
 require __DIR__ . '/componentes/layout_top.php';
 ?>
 <div class="row mx-1 mx-md-3">
@@ -319,7 +322,7 @@ require __DIR__ . '/componentes/layout_top.php';
                             <p class="inv-subtitle mb-0">Resumen general, distribución, valor y estado del equipamiento tecnológico.</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
-                            <a href="index.php" class="btn btn-outline-primary">
+                            <a href="index.php" class="btn btn-outline-primary oculto-embebido">
                                 <i class="bi bi-arrow-left me-1"></i>Volver al Inventario
                             </a>
                         </div>

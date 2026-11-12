@@ -26,8 +26,8 @@ foreach (($monitor['fotos'] ?? []) as $foto) {
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a href="editar_monitor.php?id_monitor=<?= (int)$monitor['id_monitor'] ?>" class="btn btn-outline-primary">
-            <i class="bi bi-pencil me-1"></i>Editar
+        <a href="editar_monitor.php?id_monitor=<?= (int)$monitor['id_monitor'] ?>" class="module-btn module-btn--secondary">
+            <i class="bi bi-pencil"></i>Editar
         </a>
         <?php if (!$detalleOffcanvas): ?>
             <a href="index.php?tab=monitores" class="btn btn-light border">
