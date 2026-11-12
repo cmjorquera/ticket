@@ -47,16 +47,16 @@ function es_administrador_global(int $usuarioId, Conexion $db): bool
 
 function es_admin_colegio(int $usuarioId, ?int $colegioId, Conexion $db): bool
 {
+    // Administrador de colegio o jefe de departamento según usuario_colegio.rol
+    // (configuracion/logica/LOGICA_ROLES.txt). Ya no se usan los perfiles 4 y 5.
     $sql = "SELECT 1
-              FROM jefatura_departamento j
-              JOIN usuario_perfil up ON up.id_usuario = j.id_usuario
-              JOIN perfiles p ON p.id_perfil = up.id_perfil AND p.estado = 1
-             WHERE j.id_usuario = ?
-               AND j.estado = 1
-               AND LOWER(REPLACE(p.nombre_perfil, ' ', '_')) IN ('admin_colegio', 'admin_area', 'administrador_colegio')";
+              FROM usuario_colegio uc
+             WHERE uc.id_usuario = ?
+               AND uc.estado = 1
+               AND uc.rol IN ('admin_colegio', 'jefe_departamento')";
     $params = [$usuarioId];
     if ($colegioId !== null && $colegioId > 0) {
-        $sql .= ' AND j.id_colegio = ?';
+        $sql .= ' AND uc.id_colegio = ?';
         $params[] = $colegioId;
     }
     return (bool) $db->fetchOne($sql . ' LIMIT 1', $params);
@@ -296,16 +296,16 @@ function puede_crear_ticket_para(int $actorId, int $solicitanteId, Conexion $db)
 
     return (bool) $db->fetchOne(
         "SELECT 1
-           FROM jefatura_departamento administrador
-           JOIN jefatura_departamento solicitante
+           FROM usuario_colegio administrador
+           JOIN usuario_colegio solicitante
              ON solicitante.id_colegio = administrador.id_colegio
             AND solicitante.id_usuario = ?
             AND solicitante.estado = 1
-           JOIN usuario_perfil up ON up.id_usuario = administrador.id_usuario
-           JOIN perfiles p ON p.id_perfil = up.id_perfil AND p.estado = 1
+            AND (administrador.rol = 'admin_colegio'
+                 OR solicitante.id_departamento_colegio = administrador.id_departamento_colegio)
           WHERE administrador.id_usuario = ?
             AND administrador.estado = 1
-            AND LOWER(REPLACE(p.nombre_perfil, ' ', '_')) IN ('admin_colegio','admin_area','administrador_colegio')
+            AND administrador.rol IN ('admin_colegio', 'jefe_departamento')
           LIMIT 1",
         [$solicitanteId, $actorId]
     );

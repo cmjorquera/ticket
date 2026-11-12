@@ -54,6 +54,11 @@ final class DashboardTickets
             ];
         }
 
+        // Administrador de colegio / jefe de departamento (usuario_colegio.rol)
+        if (!isset($perfiles['administrador']) && es_admin_colegio($this->usuarioId, null, $this->db)) {
+            $perfiles['administrador'] = ['clave' => 'administrador', 'nombre' => self::nombrePerfil('administrador')];
+        }
+
         if ($perfiles === []) {
             $perfiles['usuario'] = ['clave' => 'usuario', 'nombre' => 'Usuario'];
         }
@@ -200,11 +205,12 @@ final class DashboardTickets
         }
 
         $filas = $this->db->fetchAll(
-            "SELECT DISTINCT j.id_colegio
-               FROM jefatura_departamento j
-              WHERE j.id_usuario = ?
-                AND j.estado = 1
-                AND j.id_colegio > 0",
+            "SELECT DISTINCT uc.id_colegio
+               FROM usuario_colegio uc
+              WHERE uc.id_usuario = ?
+                AND uc.estado = 1
+                AND uc.rol IN ('admin_colegio', 'jefe_departamento')
+                AND uc.id_colegio > 0",
             [$this->usuarioId]
         );
         return $this->colegiosAdministrados = array_values(array_filter(array_map(

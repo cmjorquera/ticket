@@ -27,6 +27,10 @@ a) QUÉ PUEDE HACER  → usuario_perfil (global, se pueden tener varios)
      3 super_admin  Cristian: todo, en todos los colegios
    Los perfiles 4 (admin_colegio) y 5 (admin_area) quedan SIN USO: esa
    información ahora está en la capa b), con su colegio y departamento.
+   Desde 12-11-2026 Tickets (helpers/tickets.php, formulario de ticket) y el
+   Dashboard de tickets leen el cargo desde usuario_colegio.rol. Limpieza de
+   usuario_perfil y desactivación en el catálogo:
+   configuracion/sql/06_quitar_perfiles_admin_colegio_area.sql
 
 b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
      rol = admin_colegio       un colegio entero (id_departamento_colegio NULL)
