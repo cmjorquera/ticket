@@ -60,8 +60,14 @@ try {
         exit;
     }
 
+    // Con un solo colegio visible no hay "todos los colegios": se usa ese colegio.
+    $colegiosAlcance = $alcanceInventario['colegios'] ?? [];
+    $idColegioPedido = (int)($_GET['id_colegio'] ?? 0);
+    if ($idColegioPedido <= 0 && count($colegiosAlcance) === 1) {
+        $idColegioPedido = (int)$colegiosAlcance[0]['id_colegio'];
+    }
     $filtrosDashboard = $inventario->normalizarFiltrosDashboard([
-        'id_colegio' => (int)($_GET['id_colegio'] ?? 0),
+        'id_colegio' => $idColegioPedido,
         'tipo_equipo' => trim((string)($_GET['tipo_equipo'] ?? 'pc')),
     ], $alcanceInventario);
 
@@ -304,6 +310,20 @@ if ($idColegioFiltro > 0 && !empty($resumenSistema)) {
 // Vista general ("Todos los colegios") para quien ve más de un colegio:
 // componentes/dashboard_general.php. Con un colegio elegido, la vista detallada.
 $vistaGeneral = $idColegioFiltro === 0 && count($colegios) > 1 && !$tipoEnPreparacion;
+// Vista de un colegio: componentes/dashboard_colegio.php (colores del colegio en la cabecera)
+$vistaColegio = $idColegioFiltro > 0 && !$tipoEnPreparacion;
+if ($vistaColegio) {
+    try {
+        $alertasSistema = $inventario->obtenerAlertasDashboard($filtrosSistema);
+        $ubicacionesColegio = $inventario->obtenerUbicacionesDashboard($filtrosDashboard);
+        $movimientosColegio = $inventario->obtenerMovimientosDashboard($filtrosDashboard);
+    } catch (Throwable $e) {
+        error_log('[inventario] dashboard por colegio: ' . $e->getMessage());
+        $alertasSistema = [];
+        $ubicacionesColegio = [];
+        $movimientosColegio = [];
+    }
+}
 
 $cssExtraInventario = ['css/dashboard.css', 'css/graficos.css', 'css/cards.css'];
 $jsExtraInventario = ['js/dashboard.js'];
@@ -386,6 +406,8 @@ require __DIR__ . '/componentes/layout_top.php';
 
                 <?php if ($vistaGeneral): ?>
                     <?php require __DIR__ . '/componentes/dashboard_general.php'; ?>
+                <?php elseif ($vistaColegio): ?>
+                    <?php require __DIR__ . '/componentes/dashboard_colegio.php'; ?>
                 <?php else: ?>
 
                 <div class="inv-dashboard-grid inv-dashboard-grid--kpis mb-4">

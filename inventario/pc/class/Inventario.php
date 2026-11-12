@@ -782,7 +782,7 @@ class Inventario
                     COUNT(*) AS total_equipos,
                     SUM(CASE WHEN LOWER(e.tipo_pc) LIKE '%notebook%' THEN 1 ELSE 0 END) AS total_notebooks,
                     SUM(CASE WHEN LOWER(e.tipo_pc) LIKE '%desktop%' THEN 1 ELSE 0 END) AS total_desktop,
-                    SUM(CASE WHEN e.id_usuario_asignado IS NULL OR e.id_usuario_asignado = 0 THEN 1 ELSE 0 END) AS total_sin_asignar,
+                    SUM(CASE WHEN " . $this->condicionSinResponsable('e.id_usuario_asignado') . " THEN 1 ELSE 0 END) AS total_sin_asignar,
                     SUM(CASE WHEN e.id_estado = 1 THEN 1 ELSE 0 END) AS total_activos,
                     SUM(CASE WHEN e.id_estado = 3 THEN 1 ELSE 0 END) AS total_reparacion,
                     SUM(CASE WHEN e.id_estado = 4 THEN 1 ELSE 0 END) AS total_baja
@@ -829,6 +829,122 @@ class Inventario
         ];
     }
 
+    /**
+     * Condición SQL "no tiene responsable": sin usuario asignado o asignado a un
+     * id que ya no existe en usuarios (el listado muestra esos como "Sin asignar").
+     */
+    private function condicionSinResponsable(string $columna): string
+    {
+        if ($columna === 'NULL') {
+            return '1=1';
+        }
+        return "({$columna} IS NULL OR {$columna} = 0 OR NOT EXISTS (SELECT 1 FROM usuarios usr_resp WHERE usr_resp.id = {$columna}))";
+    }
+
+    /** Equipos de UN colegio agrupados por ubicación (dashboard por colegio). */
+    public function obtenerUbicacionesDashboard(array $filtros): array
+    {
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        $idColegio = (int)($filtros['id_colegio'] ?? 0);
+        if (empty($fuente['disponible']) || $idColegio <= 0 || $fuente['ubicacion'] === 'NULL' || !$this->tablaExiste('equipo_ubicacion')) {
+            return [];
+        }
+        [$cond, $types, $params] = $this->condicionEquiposDeColegio($fuente, $idColegio);
+        $sql = "SELECT u.nombre_ubicacion, COUNT(DISTINCT {$fuente['id']}) AS total
+                FROM {$fuente['tabla']} {$fuente['alias']}
+                LEFT JOIN equipo_ubicacion u ON u.id_ubicacion = {$fuente['ubicacion']}
+                WHERE {$cond}
+                GROUP BY u.id_ubicacion, u.nombre_ubicacion
+                ORDER BY (u.id_ubicacion IS NULL) ASC, total DESC, u.nombre_ubicacion ASC";
+        return array_map(static fn(array $f): array => [
+            'nombre' => $f['nombre_ubicacion'] === null ? null : (string)$f['nombre_ubicacion'],
+            'total' => (int)$f['total'],
+        ], $this->obtenerFilasPreparadas($sql, $types, $params));
+    }
+
+    /**
+     * Últimos movimientos de los equipos de UN colegio: cambios de ubicación,
+     * de estado y de responsable. Consultas separadas (evita mezclar
+     * collations en un UNION) y se ordenan aquí.
+     */
+    public function obtenerMovimientosDashboard(array $filtros, int $limite = 8): array
+    {
+        $fuente = $this->obtenerFuenteDashboard($filtros);
+        $idColegio = (int)($filtros['id_colegio'] ?? 0);
+        if (empty($fuente['disponible']) || $idColegio <= 0) {
+            return [];
+        }
+        $esMonitor = $fuente['tipo'] === 'monitor';
+        $tabMov = $esMonitor ? 'monitor_movimiento' : 'equipo_movimiento';
+        $tabAsig = $esMonitor ? 'monitor_asignacion_historial' : 'equipo_asignacion_historial';
+        $tabEst = $esMonitor ? null : 'equipo_estado_historial';
+        $colId = $esMonitor ? 'id_monitor' : 'id_equipo';
+        [$cond, $types, $params] = $this->condicionEquiposDeColegio($fuente, $idColegio);
+        $quien = "TRIM(CONCAT_WS(' ', ux.nombre, ux.apellido_paterno))";
+        $consultas = [];
+        if ($this->tablaExiste($tabMov) && $this->tablaExiste('equipo_ubicacion')) {
+            $consultas[] = ['ubicacion', "SELECT h.fecha_movimiento AS fecha, {$fuente['nombre']} AS equipo,
+                        uo.nombre_ubicacion AS desde, ud.nombre_ubicacion AS hacia, {$quien} AS quien
+                    FROM {$tabMov} h
+                    JOIN {$fuente['tabla']} {$fuente['alias']} ON {$fuente['id']} = h.{$colId}
+                    LEFT JOIN equipo_ubicacion uo ON uo.id_ubicacion = h.id_ubicacion_origen
+                    LEFT JOIN equipo_ubicacion ud ON ud.id_ubicacion = h.id_ubicacion_destino
+                    LEFT JOIN usuarios ux ON ux.id = h.id_usuario_movimiento
+                    WHERE {$cond} ORDER BY h.fecha_movimiento DESC LIMIT {$limite}"];
+        }
+        if ($tabEst && $this->tablaExiste($tabEst)) {
+            $consultas[] = ['estado', "SELECT h.fecha_accion AS fecha, {$fuente['nombre']} AS equipo,
+                        ea.nombre_estado AS desde, en.nombre_estado AS hacia, {$quien} AS quien
+                    FROM {$tabEst} h
+                    JOIN {$fuente['tabla']} {$fuente['alias']} ON {$fuente['id']} = h.{$colId}
+                    LEFT JOIN estado_equipo ea ON ea.id_estado = h.id_estado_anterior
+                    LEFT JOIN estado_equipo en ON en.id_estado = h.id_estado_nuevo
+                    LEFT JOIN usuarios ux ON ux.id = h.id_usuario_accion
+                    WHERE {$cond} ORDER BY h.fecha_accion DESC LIMIT {$limite}"];
+        }
+        if ($this->tablaExiste($tabAsig)) {
+            $consultas[] = ['responsable', "SELECT h.fecha_accion AS fecha, {$fuente['nombre']} AS equipo,
+                        TRIM(CONCAT_WS(' ', ua.nombre, ua.apellido_paterno)) AS desde,
+                        TRIM(CONCAT_WS(' ', un.nombre, un.apellido_paterno)) AS hacia, {$quien} AS quien
+                    FROM {$tabAsig} h
+                    JOIN {$fuente['tabla']} {$fuente['alias']} ON {$fuente['id']} = h.{$colId}
+                    LEFT JOIN usuarios ua ON ua.id = h.id_usuario_anterior
+                    LEFT JOIN usuarios un ON un.id = h.id_usuario_nuevo
+                    LEFT JOIN usuarios ux ON ux.id = h.id_usuario_accion
+                    WHERE {$cond} ORDER BY h.fecha_accion DESC LIMIT {$limite}"];
+        }
+        $filas = [];
+        foreach ($consultas as [$tipo, $sql]) {
+            try {
+                foreach ($this->obtenerFilasPreparadas($sql, $types, $params) as $f) {
+                    $f['tipo'] = $tipo;
+                    $filas[] = $f;
+                }
+            } catch (Throwable $e) {
+                error_log('[inventario] movimientos ' . $tipo . ': ' . $e->getMessage());
+            }
+        }
+        usort($filas, static fn($a, $b) => strcmp((string)$b['fecha'], (string)$a['fecha']));
+        return array_slice($filas, 0, $limite);
+    }
+
+    /** WHERE de los equipos (no eliminados) de un colegio, para la fuente del dashboard. */
+    private function condicionEquiposDeColegio(array $fuente, int $idColegio): array
+    {
+        $cond = ["{$fuente['colegio']} = ?"];
+        $types = 'i';
+        $params = [$idColegio];
+        if (!empty($fuente['eliminado'])) {
+            $cond[] = "{$fuente['eliminado']} = 0";
+        }
+        if (!empty($fuente['extra_sql'])) {
+            $cond[] = $fuente['extra_sql'];
+            $types .= $fuente['extra_types'];
+            array_push($params, ...$fuente['extra_params']);
+        }
+        return [implode(' AND ', $cond), $types, $params];
+    }
+
     private function obtenerFuenteDashboard(array $filtros): array
     {
         $tipo = strtolower(trim((string)($filtros['tipo_equipo'] ?? 'pc')));
@@ -853,6 +969,7 @@ class Inventario
                 'estado' => 'm.id_estado',
                 'ubicacion' => $this->columnaExiste('monitores', 'id_ubicacion') ? 'm.id_ubicacion' : 'NULL',
                 'usuario' => $this->columnaExiste('monitores', 'id_usuario_asignado') ? 'm.id_usuario_asignado' : 'NULL',
+                'sin_usuario' => $this->condicionSinResponsable($this->columnaExiste('monitores', 'id_usuario_asignado') ? 'm.id_usuario_asignado' : 'NULL'),
                 'serie' => $this->columnaExiste('monitores', 'numero_serie') ? 'm.numero_serie' : "''",
                 'nombre' => $this->columnaExiste('monitores', 'nombre_monitor') ? 'm.nombre_monitor' : "CONCAT('Monitor ', m.id_monitor)",
                 'tipo_label' => "'Monitor'",
@@ -890,6 +1007,7 @@ class Inventario
             'estado' => 'e.id_estado',
             'ubicacion' => $this->columnaExiste('equipos', 'id_ubicacion') ? 'e.id_ubicacion' : 'NULL',
             'usuario' => $this->columnaExiste('equipos', 'id_usuario_asignado') ? 'e.id_usuario_asignado' : 'NULL',
+            'sin_usuario' => $this->condicionSinResponsable($this->columnaExiste('equipos', 'id_usuario_asignado') ? 'e.id_usuario_asignado' : 'NULL'),
             'serie' => 'e.numero_serie',
             'nombre' => $this->columnaExiste('equipos', 'nombre_personalizado')
                 ? "COALESCE(NULLIF(e.nombre_personalizado, ''), e.nombre_equipo)"
@@ -1010,7 +1128,7 @@ class Inventario
                     COUNT(DISTINCT {$fuente['id']}) AS total_pcs,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%activo%' THEN {$fuente['id']} END) AS activos,
                     COUNT(DISTINCT CASE WHEN {$fuente['ubicacion']} IS NULL OR {$fuente['ubicacion']} = 0 THEN {$fuente['id']} END) AS sin_ubicacion,
-                    COUNT(DISTINCT CASE WHEN {$fuente['usuario']} IS NULL OR {$fuente['usuario']} = 0 THEN {$fuente['id']} END) AS sin_responsable,
+                    COUNT(DISTINCT CASE WHEN {$fuente['sin_usuario']} THEN {$fuente['id']} END) AS sin_responsable,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%repar%' THEN {$fuente['id']} END) AS en_reparacion,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%baja%' THEN {$fuente['id']} END) AS dados_baja
                 FROM {$fuente['tabla']} {$fuente['alias']}
@@ -1088,7 +1206,7 @@ class Inventario
                     COUNT(DISTINCT {$fuente['id']}) AS total_equipos,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%activo%' THEN {$fuente['id']} END) AS activos,
                     COUNT(DISTINCT CASE WHEN {$fuente['ubicacion']} IS NULL OR {$fuente['ubicacion']} = 0 THEN {$fuente['id']} END) AS sin_ubicacion,
-                    COUNT(DISTINCT CASE WHEN {$fuente['usuario']} IS NULL OR {$fuente['usuario']} = 0 THEN {$fuente['id']} END) AS sin_responsable,
+                    COUNT(DISTINCT CASE WHEN {$fuente['sin_usuario']} THEN {$fuente['id']} END) AS sin_responsable,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%repar%' THEN {$fuente['id']} END) AS en_reparacion,
                     COUNT(DISTINCT CASE WHEN LOWER(COALESCE(ee.nombre_estado, '')) LIKE '%baja%' THEN {$fuente['id']} END) AS dados_baja,
                     COALESCE(SUM(CASE WHEN {$fuente['valor']} > 0 THEN {$fuente['valor']} ELSE 0 END), 0) AS valor_total,
@@ -1152,7 +1270,7 @@ class Inventario
             : ($this->tablaExiste('equipo_fotos') ? "COUNT(DISTINCT CASE WHEN NOT EXISTS (SELECT 1 FROM equipo_fotos ef WHERE ef.id_equipo = {$fuente['id']}) THEN {$fuente['id']} END)" : '0');
         $sql = "SELECT
                     COUNT(DISTINCT CASE WHEN {$fuente['ubicacion']} IS NULL OR {$fuente['ubicacion']} = 0 THEN {$fuente['id']} END) AS sin_ubicacion,
-                    COUNT(DISTINCT CASE WHEN {$fuente['usuario']} IS NULL OR {$fuente['usuario']} = 0 THEN {$fuente['id']} END) AS sin_responsable,
+                    COUNT(DISTINCT CASE WHEN {$fuente['sin_usuario']} THEN {$fuente['id']} END) AS sin_responsable,
                     {$sinQr} AS sin_qr,
                     {$sinFoto} AS sin_fotografia,
                     COUNT(DISTINCT CASE WHEN {$fuente['valor']} IS NULL OR {$fuente['valor']} <= 0 THEN {$fuente['id']} END) AS sin_valor,
@@ -1748,7 +1866,7 @@ SQL;
                 $condiciones[] = "LOWER(e.tipo_pc) LIKE '%desktop%'";
                 break;
             case 'sin_asignar':
-                $condiciones[] = '(e.id_usuario_asignado IS NULL OR e.id_usuario_asignado = 0)';
+                $condiciones[] = $this->condicionSinResponsable('e.id_usuario_asignado');
                 break;
             case 'activos':
                 $condiciones[] = 'e.id_estado = 1';
@@ -3510,7 +3628,7 @@ SQL;
 
         $sql = "SELECT
                     COUNT(*) AS total_monitores,
-                    SUM(CASE WHEN m.id_usuario_asignado IS NULL OR m.id_usuario_asignado = 0 THEN 1 ELSE 0 END) AS total_sin_asignar,
+                    SUM(CASE WHEN " . $this->condicionSinResponsable('m.id_usuario_asignado') . " THEN 1 ELSE 0 END) AS total_sin_asignar,
                     SUM(CASE WHEN m.id_estado = 1 THEN 1 ELSE 0 END) AS total_activos,
                     SUM(CASE WHEN m.id_estado = 2 THEN 1 ELSE 0 END) AS total_bodega,
                     SUM(CASE WHEN m.id_estado = 3 THEN 1 ELSE 0 END) AS total_reparacion,
