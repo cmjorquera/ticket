@@ -55,7 +55,7 @@ try {
     $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
     $perfilInventario = (int)($alcanceInventario['id_perfil'] ?? 1);
 
-    if ($perfilInventario < 2) {
+    if (empty($alcanceInventario['ver_dashboard'])) {   // solo super_admin y admin de colegio
         header('Location: index.php');
         exit;
     }

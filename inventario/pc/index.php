@@ -114,7 +114,7 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
                             <p class="inv-subtitle mb-0">Registra, organiza y da seguimiento al equipamiento tecnológico por colegio desde una sola vista operativa.</p>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
-                            <?php if ((int)($alcanceInventario['id_perfil'] ?? 1) >= 2): ?>
+                            <?php if (!empty($alcanceInventario['ver_dashboard'])): /* solo super_admin y admin de colegio */ ?>
                             <button type="button" class="module-btn module-btn--secondary"
                                     data-bs-toggle="offcanvas" data-bs-target="#offcanvasDashboardInventario"
                                     aria-controls="offcanvasDashboardInventario">
@@ -394,7 +394,7 @@ require __DIR__ . '/componentes/pantalla_cargando.php';
     </div>
 </div>
 
-<?php if ((int)($alcanceInventario['id_perfil'] ?? 1) >= 2): ?>
+<?php if (!empty($alcanceInventario['ver_dashboard'])): /* solo super_admin y admin de colegio */ ?>
 <!-- Dashboard integrado: conserva sus filtros, gráficos y lógica existente. -->
 <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasDashboardInventario"
      aria-labelledby="offcanvasDashboardInventarioLabel" style="height: 92vh; max-height: 92vh;">

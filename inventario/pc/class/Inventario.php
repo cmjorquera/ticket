@@ -76,9 +76,10 @@ class Inventario
     /**
      * Nivel de acceso a Inventario según el modelo de roles:
      *   3 = ve TODOS los colegios  → solo super_admin (usuario_perfil.id_perfil = 3)
-     *   2 = elige entre SUS colegios y ve el dashboard → técnico (usuario_perfil 2)
+     *   2 = elige entre SUS colegios → técnico (usuario_perfil 2)
      *       o administrador de colegio (usuario_colegio.rol = 'admin_colegio')
      *   1 = solo su colegio → el resto
+     * El Dashboard de inventario lo ven solo super_admin y administradores de colegio.
      */
     private function perfilInventarioSegunRoles(int $idUsuario): int
     {
@@ -96,6 +97,7 @@ class Inventario
         $r = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt)) ?: [];
         mysqli_stmt_close($stmt);
 
+        $this->verDashboardInventario = !empty($r['es_super']) || !empty($r['es_admin_colegio']);
         if (!empty($r['es_super'])) {
             return 3;
         }
@@ -105,11 +107,15 @@ class Inventario
         return 1;
     }
 
+    /** Lo calcula perfilInventarioSegunRoles(): solo super_admin y administrador de colegio. */
+    private bool $verDashboardInventario = false;
+
     public function obtenerAlcanceInventario(int $idUsuario): array
     {
         if ($idUsuario <= 0 || !$this->tablaExiste('usuario_colegio')) {
             return [
                 'id_perfil' => 1,
+                'ver_dashboard' => false,
                 'colegios' => [],
                 'ids_colegio' => [],
                 'id_colegio_predeterminado' => 0,
@@ -151,6 +157,7 @@ class Inventario
             $colegios = $this->obtenerColegios();
             return [
                 'id_perfil' => 3,
+                'ver_dashboard' => true,
                 'colegios' => $colegios,
                 'ids_colegio' => array_map(static fn($c) => (int)$c['id_colegio'], $colegios),
                 'id_colegio_predeterminado' => 0,
@@ -181,6 +188,7 @@ class Inventario
 
         return [
             'id_perfil' => $perfil >= 2 ? 2 : 1,
+            'ver_dashboard' => $this->verDashboardInventario,
             'colegios' => $colegios,
             'ids_colegio' => array_map(static fn($c) => (int)$c['id_colegio'], $colegios),
             'id_colegio_predeterminado' => (int)($colegios[0]['id_colegio'] ?? 0),

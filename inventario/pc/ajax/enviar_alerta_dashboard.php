@@ -100,7 +100,7 @@ try {
     $alcanceInventario = $inventario->obtenerAlcanceInventario($idUsuarioSession);
     $perfilInventario = (int)($alcanceInventario['id_perfil'] ?? 1);
 
-    if ($perfilInventario < 2) {
+    if (empty($alcanceInventario['ver_dashboard'])) {   // solo super_admin y admin de colegio
         inv_dash_alerta_responder(['ok' => false, 'mensaje' => 'No tienes permiso para usar el dashboard de inventario.'], 403);
     }
 
