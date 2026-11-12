@@ -1,5 +1,5 @@
 # ============================================================
-# .htaccess - Modulo Inventario | SEDUC SPA
+# .htaccess - Modulo Inventario (pc/, comun/, uploads/) | SEDUC SPA
 # Hosting compartido (cPanel) - PHP 8.1
 # ============================================================
 # Ajusta limites de PHP para permitir carga masiva de archivos
@@ -87,11 +87,14 @@ Options -Indexes
     RewriteRule \.(php)$ - [L]
 </IfModule>
 
-# Bloquear acceso web directo a documentación interna, clases, componentes
-# y al agente (el agente se descarga solo por ajax/descargar_agente.php).
+# Bloquear acceso web directo a documentación interna, clases, componentes,
+# código compartido y al agente (el agente se descarga solo por
+# pc/ajax/descargar_agente.php). Vale para inventario/ y para cada
+# submódulo (pc/, herramientas/, aseo/): ej. pc/class/, comun/.
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(logica|class|componentes|agente)(/|$) - [F,L]
+    RewriteRule ^(comun|sql)(/|$) - [F,L]
+    RewriteRule ^([^/]+/)?(logica|class|componentes|agente)(/|$) - [F,L]
 </IfModule>
 
 # Evitar ejecucion de PHP dentro de carpetas de subida (si existiera una)

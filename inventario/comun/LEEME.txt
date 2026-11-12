@@ -1,0 +1,19 @@
+INVENTARIO / COMUN
+==================
+
+Código compartido por los inventarios:
+  inventario/pc/            Inventario PC (equipos y monitores)
+  inventario/herramientas/  (pendiente: hoy inventario_herramintas/)
+  inventario/aseo/          (pendiente: hoy inventario_aseo/)
+
+Archivos
+--------
+- InventarioConexion.php  Conexión mysqli con credenciales de config_privada.
+  La usan: inventario/pc, inventario_herramintas, inventario_aseo y
+  licenciamiento (class/InventarioSoftware.php).
+
+Reglas
+------
+- Aquí va solo lo que usan dos o más inventarios (conexión, colegios,
+  ubicaciones, QR, layout). Lo propio de cada uno queda en su carpeta.
+- No es accesible desde el navegador (inventario/.htaccess bloquea comun/).

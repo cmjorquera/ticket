@@ -3,7 +3,7 @@
  * Arranque del módulo Licenciamiento (software y sitios web) dentro del sistema nuevo.
  * - Usa la sesión del sistema (clases/Session.php) y exige sesión iniciada.
  * - Conexión con credenciales de config_privada, reutilizando
- *   inventario/class/InventarioConexion.php (sin contraseñas en el código).
+ *   inventario/comun/InventarioConexion.php (sin contraseñas en el código).
  * - Si faltan las tablas, muestra un aviso (503) en vez de un error 500.
  */
 

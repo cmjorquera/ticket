@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__DIR__, 2) . '/inventario/class/InventarioConexion.php';
+require_once dirname(__DIR__, 2) . '/inventario/comun/InventarioConexion.php';
 
 class InventarioSoftware
 {
