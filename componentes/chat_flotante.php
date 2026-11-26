@@ -11,11 +11,9 @@ if (empty($_SESSION['id'])) {
 
 /* Chat de Webnia Bot (empresa "central-seduc"), solo para Super Admin:
    es_admin_global = 1 o perfil "super_admin" (se consulta en la BD en cada carga).
-   Por ahora apunta al Webnia Bot que corre en el PC de Cristian (Docker + npm run dev
-   en localhost:5173): en otro equipo, o con Webnia apagado, la burbuja no carga.
-   Cuando Webnia esté en su servidor se cambia por https://chatbot.webnia.cl/widget.js.
+   Webnia corre en su servidor (VPS) en https://chatbot.webnia.cl.
    El resto de los usuarios sigue viendo la burbuja "Asistente SEDUC" de abajo. */
-$chatWebniaSrc    = 'http://localhost:5173/widget.js';
+$chatWebniaSrc    = 'https://chatbot.webnia.cl/widget.js';
 $chatWebniaTenant = 'central-seduc';
 $chatEsSuperAdmin = false;
 try {
