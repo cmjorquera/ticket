@@ -1,0 +1,42 @@
+LOGICA DEL MÓDULO MENSAJES — SISTEMA TICKET / PANEL CENTRAL
+Actualizado: 2026-11-11
+Rama de implementación: feat/mensajes-vivos-bandeja
+
+1. OBJETIVO
+Mensajería interna entre usuarios del MISMO entorno y base de datos. QA y producción no sincronizan mensajes entre sí.
+
+2. TABLAS (BD lógica sistema_panel_central)
+usuarios: id (PK); nombre, apellido_paterno, apellido_materno, estado; se usan para identificar remitente y destinatario.
+mensajes_chat: id (PK), id_padre, id_conversacion, mensaje, de, para, fecha_hora, leido, urgente, eliminado, prioridad.
+  de -> usuarios.id (remitente, relación lógica)
+  para -> usuarios.id (destinatario, relación lógica)
+  id_conversacion -> mensajes_chat.id del mensaje raíz (relación lógica).
+  El mensaje raíz tiene id_conversacion = id.
+mensajes_chat_carpeta: PK compuesta (id_usuario, id_conversacion), carpeta (archivado/eliminado), actualizado_en.
+  id_usuario -> usuarios.id (relación lógica)
+  id_conversacion -> mensajes_chat.id de la raíz (relación lógica).
+NOTA: relaciones lógicas descritas por código; no se asume que existan FOREIGN KEY físicas.
+
+3. FLUJO
+- Enviar: POST mensajes/ajax/mensajes.php accion=nuevo con CSRF. MensajesChat::nuevo valida destinatarios activos y registra un mensaje raíz por destinatario.
+- Responder: POST accion=responder. Se inserta en el mismo id_conversacion y se devuelve a bandeja.
+- Leer: GET accion=conversacion comprueba participación y marca como leídos solo mensajes dirigidos al usuario.
+- Archivar/eliminar: tabla mensajes_chat_carpeta por usuario; no elimina los mensajes de la otra persona.
+- Contador global: ajax/notificaciones.php accion=contar -> Notificaciones::contadores, mensajes no leídos; js/notificaciones.js refresca cada 30 segundos.
+- Bandeja rápida: clic en sobre -> ajax/notificaciones.php accion=mensajes_recientes; lista conversaciones recibidas, enlace directo mensajes/index.php?abrir=ID. No marca como leído al desplegar.
+- Vista Mensajes: mensajes/js/mensajes.js consulta cada 10 segundos accion=listar para actualizar DataTables y accion=conversacion cuando el panel está abierto. Sin recargar página.
+- La actualización es polling; hasta 10 s de demora en bandeja y hasta 30 s para el contador global. No hay WebSockets.
+- No se envían mensajes entre QA y producción salvo que ambos usuarios trabajen en el mismo entorno.
+
+4. ARCHIVOS
+mensajes/class/MensajesChat.php: reglas de negocio y SQL.
+mensajes/ajax/mensajes.php: endpoints JSON y validación CSRF.
+mensajes/componentes/bandeja.php: vista.
+mensajes/js/mensajes.js: bandeja, hilo, polling y confirmaciones.
+componentes/campanita.php: sobre y desplegable global.
+js/notificaciones.js, ajax/notificaciones.php: polling de contador y vista previa.
+css/notificaciones.css, mensajes/css/mensajes.css: estilos.
+
+5. SEGURIDAD Y DESPLIEGUE
+Autenticación obligatoria. Conversaciones verifican participación. Las respuestas de texto se insertan en DOM como texto seguro; consultas parametrizadas en clase Conexion. Sin SQL ni migraciones para estas mejoras.
+Probar primero en QA con dos usuarios en sesiones/navegadores separados. Confirmar contador, lectura, respuesta, archivado, y que no se duplica contenido tras polling.

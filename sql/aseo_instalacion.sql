@@ -1,6 +1,6 @@
 -- =====================================================================
 --  Inventario de Aseo – instalación (solo estructura + catálogos)
---  Módulo: inventario_aseo/
+--  Módulo: inventario/aseo/ (antes inventario_aseo/)
 --
 --  * Compatible con MySQL 5.7/8 (QA) y MariaDB.
 --  * Se puede ejecutar más de una vez: CREATE TABLE IF NOT EXISTS e

@@ -29,6 +29,9 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
     <p>Administra cuentas, permisos y estado de acceso, organizados por colegio.</p>
   </div>
   <div class="page-header-actions">
+    <?php if ($esSuperAdmin): ?>
+    <button type="button" class="btn btn-primary" id="btn-comunicaciones"><i class="bi bi-send"></i> Enviar comunicado</button>
+    <?php endif; ?>
     <button type="button" class="btn btn-outline" id="btn-descargar-usuarios" title="Descargar los usuarios que coinciden con los filtros actuales">
       <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
     </button>
@@ -89,6 +92,34 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 </div>
 
 <p id="usuarios-feedback" class="text-sm" role="status" hidden style="margin-top:12px"></p>
+
+<?php if ($esSuperAdmin): ?>
+<style>#modal-confirmar-prueba:not(.com-visible){display:none!important}#modal-confirmar-prueba.com-visible{display:flex!important;z-index:11050!important}#com-aviso-exito:not(.com-visible){display:none!important}#com-aviso-exito.com-visible{display:flex!important;z-index:11060!important}#com-confirmar-envio:not(.com-visible){display:none!important}#com-confirmar-envio.com-visible{display:flex!important;z-index:11055!important}</style>
+<div class="modal-overlay" id="modal-confirmar-prueba" aria-hidden="true"><div class="modal" style="max-width:440px" role="dialog" aria-modal="true" aria-labelledby="com-confirmar-titulo"><div class="modal-header"><h3 id="com-confirmar-titulo">Confirmar correo de prueba</h3><p>Se enviará una prueba únicamente a tu correo institucional.</p></div><div class="modal-body"><p>Destinatario: <strong id="com-correo-propio"></strong></p></div><div class="modal-footer"><button type="button" class="btn btn-outline" id="com-cancelar-prueba">Cancelar</button><button type="button" class="btn btn-primary" id="com-confirmar-prueba">Enviar prueba</button></div></div></div>
+<div class="modal-overlay" id="com-confirmar-envio" aria-hidden="true"><div class="modal" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="com-envio-titulo"><div class="modal-header"><h3 id="com-envio-titulo">Confirmar envío de comunicado</h3><p>Se enviará un correo real a los destinatarios indicados.</p></div><div class="modal-body"><p id="com-envio-destinatarios"></p></div><div class="modal-footer"><button type="button" class="btn btn-outline" id="com-cancelar-envio">Cancelar</button><button type="button" class="btn btn-primary" id="com-confirmar-envio-btn">Enviar comunicado</button></div></div></div>
+<div class="modal-overlay" id="com-aviso-exito" role="status" aria-live="polite" aria-hidden="true"><div class="modal" style="max-width:420px;text-align:center;padding:26px"><div style="font-size:36px;color:#16804a;margin-bottom:8px">✓</div><h3 id="com-aviso-titulo">Correo enviado</h3><p id="com-aviso-texto"></p><p style="font-size:12px;color:#64748b">Esta ventana se cerrará automáticamente.</p></div></div>
+<div class="modal-overlay" id="modal-comunicaciones" onclick="closeModalOutside(event,'modal-comunicaciones')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="com-titulo" style="max-width:1050px;width:95vw">
+    <div class="modal-header"><h3 id="com-titulo">Enviar comunicado institucional</h3><p>Personaliza el anuncio del Sistema de Centralización v2.0 y envía primero una prueba.</p></div>
+    <div class="modal-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px;max-height:72vh;overflow:auto">
+      <section>
+        <label class="form-label" for="com-modo">Destinatarios</label>
+        <select class="form-input" id="com-modo"><option value="todos">Todos los usuarios activos</option><option value="colegio">Por colegio</option><option value="area">Por área</option><option value="manual">Selección manual</option></select>
+        <select class="form-input" id="com-grupo" style="margin-top:10px" hidden></select>
+        <div id="com-manual-wrap" hidden style="margin-top:10px"><input type="search" class="form-input" id="com-buscar" placeholder="Buscar usuario o correo"><label style="display:block;margin:10px 0"><input type="checkbox" id="com-todos-manual"> Seleccionar todos los usuarios visibles</label><div id="com-manual" style="max-height:190px;overflow:auto;border:1px solid #d9e2ef;border-radius:8px;padding:8px"></div></div>
+        <p class="text-sm" id="com-contador" style="margin:10px 0">Cargando destinatarios…</p>
+        <label class="form-label" for="com-asunto">Asunto</label>
+        <input class="form-input" id="com-asunto" maxlength="150" value="Nueva versión del Sistema de Centralización – v2.0">
+        <label class="form-label" for="com-mensaje" style="margin-top:12px">Mensaje</label>
+        <textarea class="form-input" id="com-mensaje" rows="7" maxlength="3000">Te informamos que ya se encuentra disponible la versión 2.0 del Sistema de Centralización de SEDUC. Esta plataforma reúne en un mismo lugar la gestión de tickets, inventario de equipos, licenciamientos y otras herramientas institucionales. Ingresa con tus credenciales habituales para conocer las mejoras.</textarea>
+        <p id="com-estado" role="status" class="text-sm"></p>
+      </section>
+      <section><strong>Vista previa del correo</strong><div id="com-preview" style="margin-top:10px;padding:20px;background:#fff;border:1px solid #d9e2ef;border-radius:10px;font-family:Arial,sans-serif;color:#26364b"><img src="https://www.siae.cl/email/archivos/1FiVR9m09zWTnZ4IdW1g/header_siae_seduc.png" alt="SEDUC" style="width:100%;height:auto"><div style="height:4px;background:linear-gradient(90deg,#3A913F 50%,#EAAA00 50%,#EAAA00 75%,#005587 75%)"></div><p style="text-align:center;font-size:12px;color:#005587">SISTEMA DE CENTRALIZACIÓN</p><h3 style="text-align:center;color:#003B6F">Nueva versión disponible · v2.0</h3><p>Hola <strong id="com-preview-nombre">Cristian Jorquera</strong>,</p><p id="com-preview-mensaje" style="white-space:pre-line;line-height:1.6"></p><p style="text-align:center"><span style="background:#003B6F;color:white;padding:12px 16px;border-radius:5px;display:inline-block">Acceder al Sistema de Centralización</span></p><img src="https://www.siae.cl/email/archivos/IuNYrJlxxZN9U0v254lx/Footer_colegios.png" alt="Colegios SEDUC" style="width:100%;height:auto"></div></section>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-comunicaciones')">Cancelar</button><button type="button" class="btn btn-outline" id="com-prueba">Enviar prueba a mi correo</button><button type="button" class="btn btn-primary" id="com-enviar" disabled>Enviar comunicado</button></div>
+  </div>
+</div>
+<?php endif; ?>
 
 <!-- Modal para confirmar bloqueo o activación -->
 <div class="modal-overlay" id="modal-estado-usuario" onclick="closeModalOutside(event, 'modal-estado-usuario')">
@@ -282,4 +313,5 @@ iniciar_layout_configuracion('Listado de usuarios', 'Usuarios', 'listado_usuario
 <script src="<?= $depth ?>configuracion/js/listado_usuarios.js?v=<?= (int) filemtime(__DIR__ . '/js/listado_usuarios.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/permisos_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/permisos_usuario.js') ?>"></script>
 <script src="<?= $depth ?>configuracion/js/alta_usuario.js?v=<?= (int) filemtime(__DIR__ . '/js/alta_usuario.js') ?>"></script>
+<?php if ($esSuperAdmin): ?><script src="<?= $depth ?>configuracion/js/comunicaciones.js?v=<?= (int) filemtime(__DIR__ . '/js/comunicaciones.js') ?>"></script><?php endif; ?>
 <?php finalizar_layout_configuracion(); ?>

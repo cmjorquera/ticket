@@ -265,4 +265,26 @@ final class RolesUsuario
         return ["({$alias}.id = ? OR {$alias}.id IN (SELECT v.id_usuario FROM usuario_colegio v WHERE v.estado = 1 AND (" . implode(' OR ', $cond) . ')))',
                 array_merge([$actor], $p)];
     }
+
+    /**
+     * Condición SQL (sobre el alias de usuarios) con las personas que $actor puede
+     * ver como COLABORADORES (directorio, mensajes):
+     *   super_admin → todas;
+     *   el resto    → las personas de sus colegios (asignación activa en
+     *                 usuario_colegio) + los super_admin, que están en todos.
+     * @return array{0:string,1:array} [condición, parámetros]
+     */
+    public function condicionColaboradores(int $actor, string $alias = 'u'): array
+    {
+        $alias = preg_replace('/\W/', '', $alias) ?: 'u';
+        if ($this->esSuperAdmin($actor)) {
+            return ['1 = 1', []];
+        }
+        return ["({$alias}.id IN (SELECT cv.id_usuario FROM usuario_colegio cv
+                                    WHERE cv.estado = 1
+                                      AND cv.id_colegio IN (SELECT ca.id_colegio FROM usuario_colegio ca
+                                                             WHERE ca.id_usuario = ? AND ca.estado = 1))
+                 OR {$alias}.id IN (SELECT sa.id_usuario FROM usuario_perfil sa WHERE sa.id_perfil = " . self::PERFIL_SUPER . "))",
+                [$actor]];
+    }
 }

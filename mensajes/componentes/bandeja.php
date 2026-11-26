@@ -49,7 +49,7 @@ require dirname(__DIR__, 2) . '/includes/header.php';
             <p class="inv-subtitle mb-0"><?= msg_h($descripcionCarpeta) ?> Archivar o eliminar solo afecta tu bandeja.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <a href="../colaboradores.php" class="module-btn module-btn--secondary"><i class="bi bi-people"></i>Colaboradores</a>
+            <a href="../colaboradores/index.php" class="module-btn module-btn--secondary"><i class="bi bi-people"></i>Colaboradores</a>
             <button type="button" class="module-btn module-btn--primary" id="btnNuevoMensaje"<?= $mensajeriaInstalada ? '' : ' disabled' ?>><i class="bi bi-pencil-square"></i>Nuevo mensaje</button>
         </div>
     </div>

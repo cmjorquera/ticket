@@ -32,6 +32,12 @@ try {
         }
         responder_json(['ok' => true, 'sin_leer' => $n->contar($usuarioId)]);
     }
+    if (($_GET['accion'] ?? '') === 'mensajes_recientes') {
+        require_once __DIR__ . '/../mensajes/class/MensajesChat.php';
+        $chat = new MensajesChat(Conexion::getInstance('sistema_panel_central'), $usuarioId);
+        $conversaciones = array_slice($chat->listar('recibidos'), 0, 10);
+        responder_json(['ok' => true, 'mensajes' => $conversaciones]);
+    }
     if (($_GET['accion'] ?? 'contar') === 'listar') {
         responder_json(['ok' => true, 'instalada' => $n->instalada(), 'sin_leer' => $n->contar($usuarioId), 'avisos' => $n->listar($usuarioId)]);
     }

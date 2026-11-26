@@ -54,6 +54,11 @@ final class DashboardTickets
             ];
         }
 
+        // Administrador de colegio / jefe de departamento (usuario_colegio.rol)
+        if (!isset($perfiles['administrador']) && es_admin_colegio($this->usuarioId, null, $this->db)) {
+            $perfiles['administrador'] = ['clave' => 'administrador', 'nombre' => self::nombrePerfil('administrador')];
+        }
+
         if ($perfiles === []) {
             $perfiles['usuario'] = ['clave' => 'usuario', 'nombre' => 'Usuario'];
         }
@@ -107,6 +112,9 @@ final class DashboardTickets
             'grafico_estados' => array_values($estados),
             'grafico_categorias' => $this->estadosPorCategoria($perfil, $estados),
             'tickets' => $this->tickets($perfil),
+            'admin' => $perfil === 'administrador' ? $this->datosEjecutivos(
+                (string) ($_GET['periodo'] ?? '365'), (int) ($_GET['colegio'] ?? 0)
+            ) : null,
         ];
     }
 
@@ -197,11 +205,12 @@ final class DashboardTickets
         }
 
         $filas = $this->db->fetchAll(
-            "SELECT DISTINCT j.id_colegio
-               FROM jefatura_departamento j
-              WHERE j.id_usuario = ?
-                AND j.estado = 1
-                AND j.id_colegio > 0",
+            "SELECT DISTINCT uc.id_colegio
+               FROM usuario_colegio uc
+              WHERE uc.id_usuario = ?
+                AND uc.estado = 1
+                AND uc.rol IN ('admin_colegio', 'jefe_departamento')
+                AND uc.id_colegio > 0",
             [$this->usuarioId]
         );
         return $this->colegiosAdministrados = array_values(array_filter(array_map(
@@ -315,6 +324,94 @@ final class DashboardTickets
         ];
     }
 
+
+    /** Agregados reales, sin el límite de 100 filas de la bandeja. */
+    private function datosEjecutivos(string $periodo, int $colegio): array
+    {
+        if (!in_array($periodo, ['30', '90', '365', 'all'], true)) $periodo = '365';
+        [$scope, $params] = $this->alcance('administrador');
+        $where = "t.estado = 1 AND {$scope}";
+        if ($periodo !== 'all') {
+            $where .= ' AND pt.fecha_creacion_inicio >= DATE_SUB(CURDATE(), INTERVAL ' . (int) $periodo . ' DAY)';
+        }
+        $schoolJoin = " LEFT JOIN (SELECT id_usuario, MIN(id_colegio) AS id_colegio FROM jefatura_departamento WHERE estado = 1 GROUP BY id_usuario) uc ON uc.id_usuario = t.id_usuario";
+        $base = " FROM tickets t LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket" . $schoolJoin;
+        // El catálogo de colegios no depende de que existan tickets en el período.
+        $colegiosPermitidos = $this->obtenerColegiosAdministrados();
+        if ($colegiosPermitidos === null) {
+            $schools = $this->db->fetchAll(
+                "SELECT c.id_colegio AS id, c.nom_colegio AS nombre FROM colegio c WHERE c.estado = 1 ORDER BY c.nom_colegio"
+            );
+        } elseif ($colegiosPermitidos === []) {
+            $schools = [];
+        } else {
+            $marcadores = implode(',', array_fill(0, count($colegiosPermitidos), '?'));
+            $schools = $this->db->fetchAll(
+                "SELECT c.id_colegio AS id, c.nom_colegio AS nombre FROM colegio c WHERE c.estado = 1 AND c.id_colegio IN ({$marcadores}) ORDER BY c.nom_colegio",
+                $colegiosPermitidos
+            );
+        }
+        if ($colegio > 0) {
+            $valid = in_array($colegio, array_map(static fn ($s) => (int) $s['id'], $schools), true);
+            if (!$valid) $colegio = 0;
+        }
+        if ($colegio > 0) { $where .= ' AND uc.id_colegio = ?'; $params[] = $colegio; }
+        $summary = $this->db->fetchOne("SELECT COUNT(*) total, SUM(t.id_estado IN (5,6)) resueltos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado NOT IN (5,6)) pendientes FROM tickets t LEFT JOIN proceso_tickets pt ON pt.id_ticket = t.id_ticket {$schoolJoin} WHERE {$where}", $params) ?: [];
+        $stateRows = $this->db->fetchAll("SELECT t.id_estado, COUNT(*) AS cantidad {$base} WHERE {$where} GROUP BY t.id_estado", $params);
+        $stateCounts = [];
+        foreach ($stateRows as $stateRow) {
+            $stateCounts[(int) $stateRow['id_estado']] = (int) $stateRow['cantidad'];
+        }
+        $stateDescriptions = [];
+        foreach ($this->db->fetchAll("SELECT id, descripcion_estado FROM estados_ticket WHERE id IN (1,2,3,5,7)") as $stateMeta) {
+            $stateDescriptions[(int) $stateMeta['id']] = (string) ($stateMeta['descripcion_estado'] ?? '');
+        }
+        $schoolCounts = $this->db->fetchAll(
+            "SELECT uc.id_colegio AS id, t.id_estado, COUNT(*) cantidad {$base} WHERE {$where} GROUP BY uc.id_colegio, t.id_estado",
+            $params
+        );
+        $countsById = [];
+        foreach ($schoolCounts as $schoolCount) {
+            $schoolId = (int) ($schoolCount['id'] ?? 0);
+            $estadoId = (int) ($schoolCount['id_estado'] ?? 0);
+            $countsById[$schoolId][$estadoId] = (int) $schoolCount['cantidad'];
+        }
+        $bySchool = [];
+        foreach ($schools as $school) {
+            $id = (int) $school['id'];
+            $bySchool[] = [
+                'id' => $id,
+                'nombre' => (string) $school['nombre'],
+                'cantidad' => array_sum($countsById[$id] ?? []),
+                'estados' => $countsById[$id] ?? [],
+            ];
+        }
+        $byTech = $this->db->fetchAll("SELECT t.id_tecnico AS id, COALESCE(NULLIF(TRIM(CONCAT_WS(' ',u.nombre,u.apellido_paterno)),''),'Sin asignar') nombre, COUNT(*) total, SUM(t.id_estado NOT IN (5,6)) activos, SUM(t.id_estado = 7) atrasados, SUM(t.id_estado IN (5,6)) resueltos {$base} LEFT JOIN usuarios u ON u.id=t.id_tecnico WHERE {$where} GROUP BY t.id_tecnico,u.nombre,u.apellido_paterno ORDER BY activos DESC", $params);
+        // Desglose por técnico/categoría/estado: misma población y filtros del resumen, sin LIMIT.
+        $categoryRows = $this->db->fetchAll("SELECT t.id_tecnico AS tecnico_id, t.id_categoria_ticket AS categoria_id, COALESCE(NULLIF(TRIM(cat.nombre_categoria),''),'Sin categoría') categoria, t.id_estado, COUNT(*) cantidad {$base} LEFT JOIN categoria_de_ticket cat ON cat.id_categoria=t.id_categoria_ticket WHERE {$where} GROUP BY t.id_tecnico,t.id_categoria_ticket,cat.nombre_categoria,t.id_estado", $params);
+        $techCategories = [];
+        foreach ($categoryRows as $item) {
+            $techKey = (string) ($item['tecnico_id'] ?? '0');
+            $categoryKey = (string) ($item['categoria_id'] ?? '0');
+            if (!isset($techCategories[$techKey][$categoryKey])) {
+                $techCategories[$techKey][$categoryKey] = ['id' => (int) ($item['categoria_id'] ?? 0), 'nombre' => (string) $item['categoria'], 'total' => 0, 'estados' => []];
+            }
+            $qty = (int) $item['cantidad'];
+            $techCategories[$techKey][$categoryKey]['total'] += $qty;
+            $techCategories[$techKey][$categoryKey]['estados'][(int) $item['id_estado']] = $qty;
+        }
+        foreach ($byTech as &$tech) {
+            $techKey = (string) ($tech['id'] ?? '0');
+            $categories = array_values($techCategories[$techKey] ?? []);
+            usort($categories, static fn (array $a, array $b): int => ($b['total'] <=> $a['total']) ?: strcmp($a['nombre'], $b['nombre']));
+            $tech['categorias'] = $categories;
+        }
+        unset($tech);
+        $monthly = $this->db->fetchAll("SELECT DATE_FORMAT(pt.fecha_creacion_inicio,'%Y-%m') mes, COUNT(*) creados, SUM(t.id_estado IN (5,6)) resueltos {$base} WHERE {$where} AND pt.fecha_creacion_inicio IS NOT NULL GROUP BY DATE_FORMAT(pt.fecha_creacion_inicio,'%Y-%m') ORDER BY mes", $params);
+        $cases = $this->db->fetchAll("SELECT t.id_ticket,t.asunto,t.id_estado,COALESCE(c.nom_colegio,'Sin colegio') colegio,pt.fecha_creacion_inicio fecha,pt.fecha_estimada_admin estimada {$base} LEFT JOIN colegio c ON c.id_colegio=uc.id_colegio WHERE {$where} AND (t.id_estado=7 OR t.id_tecnico IS NULL OR t.id_tecnico=0) ORDER BY pt.fecha_creacion_inicio DESC LIMIT 50", $params);
+        return ['periodo'=>$periodo,'colegio'=>$colegio,'colegios'=>$schools,'resumen'=>$summary,'estados_conteo'=>$stateCounts,'estados_descripciones'=>$stateDescriptions,'colegios_conteo'=>$bySchool,'tecnicos'=>$byTech,'meses'=>$monthly,'casos'=>$cases];
+    }
+
     /** @return array<int,array<string,mixed>> */
     private function tickets(string $perfil): array
     {
@@ -347,6 +444,8 @@ final class DashboardTickets
                 'prioridad' => (string) ($ticket['prioridad'] ?? 'Media'),
                 'fecha_creacion' => (string) ($ticket['fecha_creacion'] ?? ''),
                 'fecha_respuesta' => (string) ($ticket['fecha_respuesta'] ?? ''),
+                'fecha_estimada' => (string) ($ticket['fecha_estimada_admin'] ?? ''),
+                'dias_restantes' => !empty($ticket['fecha_estimada_admin']) && $ticket['fecha_estimada_admin'] !== '0000-00-00' ? (int) (new \DateTimeImmutable('today'))->diff(new \DateTimeImmutable(substr((string) $ticket['fecha_estimada_admin'], 0, 10)))->format('%r%a') : null,
                 'puede_calificar' => $perfil === 'usuario'
                     && (int) ($ticket['id_estado'] ?? 0) === 5
                     && empty($ticket['tiene_calificacion']),

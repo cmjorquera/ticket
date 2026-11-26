@@ -6,11 +6,11 @@ require_once __DIR__ . '/configuracion/_inicio.php';
 require_once __DIR__ . '/clases/DashboardTickets.php';
 
 $con_charts = true;
-$pagina_estilos = ['css/dashboard.css?v=20261110-skeleton1'];
+$pagina_estilos = ['css/dashboard.css?v=20261111-dashboard-export-v1'];
 $pagina_scripts_head = [
     'https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js',
 ];
-$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261110-skeleton1'];
+$pagina_scripts = ['js/datatables.js', 'js/funciones.js', 'js/dashboard.js?v=20261111-dashboard-export-v1'];
 
 $usuarioId = (int) ($_SESSION['id'] ?? 0);
 $perfiles = [['clave' => 'usuario', 'nombre' => 'Usuario']];
@@ -34,10 +34,6 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
 
 <div class="dashboard-page" id="dashboard-app" aria-busy="true">
     <header class="page-header dashboard-heading">
-        <div>
-            <h1>Dashboard</h1>
-            <!--<p>Estado operativo de tus solicitudes y carga de atención.</p>-->
-        </div>
         <?php if (count($perfiles) > 1): ?>
             <nav class="dashboard-profiles" aria-label="Vista del dashboard" style="--profile-count:<?= count($perfiles) ?>">
                 <span>Ver como</span>
@@ -76,11 +72,13 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
         </div>
     </section>
 
+    <section class="dashboard-admin-overview" id="dashboard-admin-overview" hidden aria-label="Resumen de administración"></section>
+
     <section class="chart-grid dashboard-chart-grid" aria-label="Gráficos de tickets">
         <div>
             <article class="card dashboard-panel">
                 <div class="card-header dashboard-panel-header">
-                    <div><h2>Gráfico de tickets</h2><p>Distribución actual de la bandeja.</p></div>
+                    <div><h2 id="dashboard-chart-title">Gráfico de tickets</h2><p>Distribución actual de la bandeja.</p></div><button type="button" class="dashboard-chart-download" data-chart-download="estados" aria-label="Descargar gráfico de estados en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button>
                     <?php if (count($perfiles) > 1): ?>
                         <label class="dashboard-chart-profile-label">Perfil
                             <select class="dashboard-chart-profile" data-chart-profile aria-label="Perfil del gráfico de tickets">
@@ -98,7 +96,7 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
         <div>
             <article class="card dashboard-panel">
                 <div class="card-header dashboard-panel-header">
-                    <div><h2>Estados por categoría</h2><p>Comparación de carga entre tipos de solicitud.</p></div>
+                    <div><h2 id="dashboard-category-title">Estados por categoría</h2><p>Comparación de carga entre tipos de solicitud.</p></div><button type="button" class="dashboard-chart-download" data-chart-download="categorias" aria-label="Descargar gráfico por categoría en PNG" title="Descargar PNG"><i class="bi bi-download"></i></button>
                     <?php if (count($perfiles) > 1): ?>
                         <label class="dashboard-chart-profile-label">Perfil
                             <select class="dashboard-chart-profile" data-chart-profile aria-label="Perfil del gráfico por categoría">
@@ -113,6 +111,26 @@ iniciar_layout_configuracion('Dashboard', 'Dashboard', 'dashboard');
                 </div>
             </article>
         </div>
+        <div class="dashboard-tech-attention" id="dashboard-tech-attention" hidden>
+            <article class="card dashboard-panel">
+                <div class="card-header dashboard-panel-header">
+                    <div><h2><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Tickets que requieren atención</h2><p>Demorados, próximos a vencer y en proceso.</p></div>
+                    <span class="dashboard-attention-count" data-attention-count></span>
+                </div>
+                <div class="dashboard-attention-list" data-attention-list></div>
+            </article>
+        </div>
+    </section>
+
+<section class="dashboard-insights" id="dashboard-insights" aria-label="Información destacada según perfil" aria-live="polite">
+        <article class="card dashboard-panel dashboard-insight-panel">
+            <div class="card-header dashboard-panel-header"><div><h2 id="dashboard-insight-chart-title">Resumen de prioridades</h2><p id="dashboard-insight-chart-description">Distribución de los tickets visibles.</p></div></div>
+            <div class="card-body"><div id="dashboard-insight-chart" class="dashboard-insight-chart"></div></div>
+        </article>
+        <article class="card dashboard-panel dashboard-insight-panel">
+            <div class="card-header dashboard-panel-header"><div><h2 id="dashboard-insight-list-title">Tickets que requieren atención</h2><p id="dashboard-insight-list-description">Casos destacados de tu bandeja.</p></div></div>
+            <div class="card-body"><div id="dashboard-insight-list" class="dashboard-insight-list"></div></div>
+        </article>
     </section>
 
     <section class="card dashboard-panel dashboard-table-panel" aria-labelledby="dashboard-table-title">

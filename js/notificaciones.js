@@ -38,6 +38,37 @@
   /* Sobre de mensajes (barra superior) y números en el menú lateral. */
   const sobre = document.getElementById('notif-sobre');
   const sobreBadge = document.getElementById('notif-sobre-badge');
+  const miniPanel = document.getElementById('mensajes-panel');
+  const miniLista = document.getElementById('mensajes-panel-lista');
+  let miniAbierto = false;
+  async function cargarMini() {
+    if (!miniLista) return;
+    try {
+      const r = await fetch(`${api}?accion=mensajes_recientes`, {credentials:'same-origin',cache:'no-store'});
+      const d = await r.json();
+      if (!d.ok) throw new Error();
+      miniLista.replaceChildren();
+      if (!d.mensajes.length) { miniLista.append(el('li','notif-vacio','No tienes conversaciones recibidas.')); return; }
+      d.mensajes.forEach(m => {
+        const li = el('li');
+        const a = el('a', 'msg-mini-link' + (Number(m.no_leidos) ? ' is-nueva' : ''));
+        a.href = `${base}mensajes/index.php?abrir=${encodeURIComponent(m.id)}`;
+        a.append(el('strong','',m.otro + (Number(m.no_leidos) ? ' · ' + m.no_leidos + ' sin leer' : '')));
+        a.append(el('small','',m.ultimo));
+        li.append(a); miniLista.append(li);
+      });
+    } catch (_) { miniLista.replaceChildren(el('li','notif-vacio','No se pudieron cargar los mensajes.')); }
+  }
+  if (sobre && miniPanel) {
+    sobre.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      miniAbierto = !miniAbierto; miniPanel.hidden = !miniAbierto;
+      sobre.setAttribute('aria-expanded', String(miniAbierto));
+      if (miniAbierto) { cerrar(); cargarMini(); }
+    });
+    document.addEventListener('click', e => { if (miniAbierto && !miniPanel.contains(e.target) && !sobre.contains(e.target)) { miniAbierto=false; miniPanel.hidden=true; sobre.setAttribute('aria-expanded','false'); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && miniAbierto) { miniAbierto=false; miniPanel.hidden=true; sobre.setAttribute('aria-expanded','false'); sobre.focus(); } });
+  }
   const txt = (n) => (n > 99 ? '99+' : String(n));
 
   function marca(enlace, n, titulo) {
@@ -101,6 +132,7 @@
       if (d.ok) {
         pintar(Number(d.sin_leer) || 0);
         if (d.contadores) contadores(d.contadores);
+        if (miniAbierto) cargarMini();
       }
     } catch (_) { /* sin red: se reintenta */ }
   }
@@ -153,6 +185,7 @@
   }
 
   async function abrir() {
+    if (miniAbierto && miniPanel) { miniAbierto=false; miniPanel.hidden=true; sobre.setAttribute('aria-expanded','false'); }
     panel.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
     lista.innerHTML = '<li class="notif-vacio"><span>Cargando…</span></li>';

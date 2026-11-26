@@ -766,19 +766,13 @@
     width: 100% !important;
 }
 
-#tablaSoftware thead th,
-#tablaSitios thead th {
-    background: #212529 !important;
-    color: #fff !important;
-    border-color: #2c3136 !important;
-    text-transform: uppercase;
-}
+/* Encabezado de tabla: estilo del sistema (estilo_sistema.css), igual que Tickets */
 
 #tablaSoftware td,
 #tablaSoftware th,
 #tablaSitios td,
 #tablaSitios th {
-    vertical-align: top;
+    vertical-align: middle;
 }
 
 #tablaSitios td:nth-child(2) {

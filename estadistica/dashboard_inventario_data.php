@@ -3,7 +3,7 @@
  * Datos del Dashboard de Inventario PC (equipos y monitores).
  * Portado del sistema antiguo: ahora usa PDO (clases/Conexion.php) con
  * consultas preparadas y el mismo alcance por colegio que el módulo
- * Inventario (perfil 3 en usuario_colegio = todos los colegios).
+ * Inventario (solo super_admin en usuario_perfil = todos los colegios).
  */
 
 if (!function_exists('di_h')) {
@@ -72,26 +72,20 @@ if (!function_exists('di_context')) {
     /** Colegios que el usuario puede ver (mismo criterio que el módulo Inventario). */
     function di_colegios_usuario(Conexion $db, int $idUsuario): array
     {
-        $filas = $db->fetchAll(
-            'SELECT uc.id_colegio, uc.id_perfil, c.nom_colegio
+        // Solo super_admin (usuario_perfil 3) ve todos los colegios; el resto, los
+        // colegios donde tiene una asignación activa (LOGICA_ROLES.txt).
+        if ($db->fetchOne('SELECT 1 FROM usuario_perfil WHERE id_usuario = ? AND id_perfil = 3 LIMIT 1', [$idUsuario])) {
+            return [true, $db->fetchAll('SELECT id_colegio, nom_colegio FROM colegio WHERE estado = 1 ORDER BY nom_colegio')];
+        }
+        $colegios = $db->fetchAll(
+            'SELECT DISTINCT c.id_colegio, c.nom_colegio
                FROM usuario_colegio uc
                JOIN colegio c ON c.id_colegio = uc.id_colegio
               WHERE uc.id_usuario = ? AND uc.estado = 1 AND c.estado = 1
            ORDER BY c.nom_colegio',
             [$idUsuario]
         );
-        $perfil = 1;
-        foreach ($filas as $f) {
-            $perfil = max($perfil, (int)$f['id_perfil']);
-        }
-        if ($perfil >= 3) {
-            return [true, $db->fetchAll('SELECT id_colegio, nom_colegio FROM colegio WHERE estado = 1 ORDER BY nom_colegio')];
-        }
-        $colegios = [];
-        foreach ($filas as $f) {
-            $colegios[(int)$f['id_colegio']] = ['id_colegio' => (int)$f['id_colegio'], 'nom_colegio' => $f['nom_colegio']];
-        }
-        return [false, array_values($colegios)];
+        return [false, array_map(static fn($c) => ['id_colegio' => (int)$c['id_colegio'], 'nom_colegio' => $c['nom_colegio']], $colegios)];
     }
 
     function di_context(Conexion $db, int $idUsuario, array $filters): array

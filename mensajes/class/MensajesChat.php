@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/clases/Conexion.php';
+require_once dirname(__DIR__, 2) . '/clases/RolesUsuario.php';
 
 /**
  * Mensajería interna sobre la tabla mensajes_chat (misma que usa Colaboradores).
@@ -228,7 +229,8 @@ final class MensajesChat
             throw new RuntimeException('Máximo ' . self::MAX_DESTINATARIOS . ' destinatarios por envío.');
         }
         $marcas = implode(',', array_fill(0, count($ids), '?'));
-        $validos = $this->db->fetchAll("SELECT id FROM usuarios WHERE id IN ($marcas) AND LOWER(estado) = 'activo'", $ids);
+        [$cond, $p] = (new RolesUsuario($this->db))->condicionColaboradores($this->usuario, 'u');
+        $validos = $this->db->fetchAll("SELECT u.id FROM usuarios u WHERE u.id IN ($marcas) AND LOWER(u.estado) = 'activo' AND {$cond}", array_merge($ids, $p));
         if (count($validos) !== count($ids)) {
             throw new RuntimeException('Uno o más destinatarios no están disponibles.');
         }
@@ -279,16 +281,18 @@ final class MensajesChat
     }
 
     /** Colaboradores activos para elegir destinatario. */
+    /** Personas a las que puede escribir: las de sus colegios + super_admin (o todas si es super_admin). */
     public function destinatarios(): array
     {
+        [$cond, $p] = (new RolesUsuario($this->db))->condicionColaboradores($this->usuario, 'u');
         return array_map(static fn (array $f): array => [
             'id' => (int) $f['id'],
             'nombre' => trim((string) $f['nombre']),
             'cargo' => trim((string) ($f['cargo'] ?? '')),
         ], $this->db->fetchAll(
-            "SELECT id, TRIM(CONCAT(COALESCE(nombre,''), ' ', COALESCE(apellido_paterno,''), ' ', COALESCE(apellido_materno,''))) AS nombre, cargo
-               FROM usuarios WHERE LOWER(estado) = 'activo' AND id <> ? ORDER BY nombre",
-            [$this->usuario]
+            "SELECT u.id, TRIM(CONCAT(COALESCE(u.nombre,''), ' ', COALESCE(u.apellido_paterno,''), ' ', COALESCE(u.apellido_materno,''))) AS nombre, u.cargo
+               FROM usuarios u WHERE LOWER(u.estado) = 'activo' AND u.id <> ? AND {$cond} ORDER BY nombre",
+            array_merge([$this->usuario], $p)
         ));
     }
 

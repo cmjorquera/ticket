@@ -1,0 +1,632 @@
+.inv-dashboard-filters,
+.inv-dashboard-section,
+.inv-kpi-card {
+    border: 1px solid #dfe5ec;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.10);
+}
+
+.inv-dashboard-filters {
+    padding: 18px;
+}
+
+.inv-dashboard-note {
+    color: #6b7c93;
+    font-size: 0.82rem;
+    align-self: center;
+}
+
+.inv-dashboard-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.inv-dashboard-grid--kpis {
+    grid-template-columns: repeat(6, minmax(150px, 1fr));
+}
+
+.inv-dashboard-grid--value {
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+}
+
+.inv-kpi-card {
+    min-height: 132px;
+    padding: 18px 18px 16px;
+    position: relative;
+}
+
+.inv-kpi-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.inv-kpi-card span {
+    display: block;
+    color: #66809e;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    line-height: 1.25;
+}
+
+.inv-kpi-card strong {
+    display: block;
+    color: #0b243f;
+    font-size: 2.05rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-top: 12px;
+}
+
+.inv-kpi-card small {
+    display: block;
+    color: #5f7288;
+    font-size: 0.78rem;
+    margin-top: 8px;
+}
+
+.inv-kpi-card--money strong {
+    font-size: 1.38rem;
+}
+
+/* Tarjeta KPI con degradado del colegio filtrado (dashboard.php, $_kpiBranded).
+   Mismo criterio que .inv-hero--branded en inventario.css: texto blanco,
+   controles adaptados a fondo oscuro/saturado. El fondo en si es inline
+   (color dinamico por colegio), esta clase solo resuelve el contraste. */
+.inv-kpi-card--branded {
+    border-color: transparent;
+}
+
+.inv-kpi-card--branded span,
+.inv-kpi-card--branded strong,
+.inv-kpi-card--branded small {
+    color: #fff;
+}
+
+.inv-kpi-card--branded span {
+    opacity: .92;
+}
+
+.inv-kpi-card--branded small {
+    opacity: .85;
+}
+
+.inv-kpi-card--branded .inv-kpi-menu-btn {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.inv-kpi-card--branded .inv-kpi-menu-btn:hover,
+.inv-kpi-card--branded .inv-kpi-menu-btn:focus,
+.inv-kpi-card--branded .dropdown.show .inv-kpi-menu-btn {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.30);
+}
+
+/* Logo dinamico de la barra lateral (dashboard.php): logo SEDUC animado
+   para "Todos los colegios", o el logo circular del colegio filtrado
+   (borde = color_principal). Como cada cambio de filtro recarga la pagina
+   completa (ver seccion 17/18 de logica), no hay swap client-side: esta
+   transicion es solo un fade suave en el primer render de cada carga. */
+.inv-sidebar-logo {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: chart-fade-in .35s ease both;
+}
+
+.inv-sidebar-logo__img {
+    max-width: 140px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border: 3px solid transparent;
+    box-sizing: border-box;
+    transition: border-color .3s ease;
+}
+
+#colegioNombre {
+    transition: color .3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inv-sidebar-logo {
+        animation: none;
+    }
+    .inv-sidebar-logo__img,
+    #colegioNombre {
+        transition: none;
+    }
+}
+
+.inv-kpi-menu-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    color: #64748b;
+    background: #f8fafc;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none !important;
+    flex: 0 0 auto;
+}
+
+.inv-kpi-menu-btn:hover,
+.inv-kpi-menu-btn:focus,
+.dropdown.show .inv-kpi-menu-btn {
+    color: #0b243f;
+    background: #eef5fb;
+}
+
+.inv-kpi-menu-btn:disabled {
+    opacity: .45;
+}
+
+.inv-kpi-menu {
+    min-width: 230px;
+    border: 1px solid #dbe5f0;
+    border-radius: 10px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+    padding: .45rem;
+}
+
+.inv-kpi-menu .dropdown-item,
+.inv-kpi-menu .dropdown-item-text {
+    border-radius: 8px;
+    white-space: normal;
+}
+
+.inv-section-menu-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #dbe5f0;
+    border-radius: 9px;
+    color: #64748b;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none !important;
+}
+
+.inv-section-menu-btn:hover,
+.inv-section-menu-btn:focus,
+.dropdown.show .inv-section-menu-btn {
+    color: #0b243f;
+    background: #f8fafc;
+}
+
+.inv-kpi-menu .dropdown-item.active {
+    color: #0b243f;
+    background: #eaf4ff;
+    font-weight: 700;
+}
+
+.inv-dashboard-mail-modal {
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 22px 60px rgba(15, 23, 42, 0.20);
+}
+
+.inv-mail-recipients {
+    border: 1px solid #dbe5f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 12px;
+}
+
+.inv-mail-select-all {
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+}
+
+.inv-mail-recipients-list {
+    display: grid;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.inv-mail-recipient-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+    padding: 9px 10px;
+    margin: 0;
+}
+
+.inv-mail-recipient-item .form-check-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.inv-mail-recipient-item strong {
+    color: #172b43;
+    font-size: .9rem;
+}
+
+.inv-mail-recipient-item small {
+    color: #64748b;
+}
+
+.inv-dashboard-section {
+    padding: 0;
+    overflow: hidden;
+}
+
+.inv-dashboard-section__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 86px;
+    margin: 0;
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid #dfe5ec;
+}
+
+.inv-dashboard-section__head h2 {
+    color: #1f2937;
+    font-size: 1.02rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.25;
+}
+
+.inv-dashboard-section__head span {
+    color: #536174;
+    font-size: 0.9rem;
+}
+
+.inv-section-title {
+    display: grid;
+    gap: 4px;
+}
+
+.inv-chart-box {
+    height: 286px;
+    padding: 24px 24px 18px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.inv-chart-empty {
+    position: absolute;
+    inset: 24px;
+    display: grid;
+    place-items: center;
+    border: 1px dashed #cdd9e5;
+    border-radius: 8px;
+    color: #6b7c93;
+    text-align: center;
+    background: #fbfdff;
+    font-size: .9rem;
+}
+
+.inv-chart-box--sm {
+    height: 246px;
+}
+
+.inv-value-bars {
+    display: grid;
+    gap: 14px;
+    padding: 24px;
+}
+
+/* .inv-value-bar es un <a> clickeable (filtra por ese colegio) desde esta
+   iteracion -- antes era un <div> puramente informativo. */
+.inv-value-bar {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 4px;
+    margin: -4px;
+    transition: background .2s ease;
+}
+
+.inv-value-bar:hover,
+.inv-value-bar:focus {
+    background: #f8fafc;
+    color: inherit;
+}
+
+.inv-value-bar.is-active {
+    background: #eaf4ff;
+}
+
+.inv-value-bar__label {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.inv-value-bar__label span {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.inv-value-bar__label strong {
+    color: #0b243f;
+    white-space: nowrap;
+}
+
+.inv-value-bar__track {
+    height: 12px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #eef2f7;
+}
+
+.inv-value-bar__fill {
+    height: 100%;
+    border-radius: inherit;
+    /* background ya NO se fija aca: viene inline por colegio desde
+       dashboard.php (inv_dash_colores_colegio). #3a9131 queda solo como
+       respaldo por si algun caller no manda el inline style. */
+    background: #3a9131;
+    transition: width .3s ease, background-color .3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inv-value-bar,
+    .inv-value-bar__fill {
+        transition: none;
+    }
+}
+
+.inv-dashboard-table {
+    margin-bottom: 0;
+    min-width: 760px;
+}
+
+.inv-dashboard-table thead th {
+    border-bottom: 1px solid #dbe5f0;
+    color: #496582;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.inv-dashboard-table tbody td,
+.inv-dashboard-table tfoot th {
+    color: #172b43;
+    font-size: 0.86rem;
+    vertical-align: middle;
+}
+
+.inv-dashboard-table tfoot th {
+    border-top: 2px solid #dbe5f0;
+}
+
+.inv-alert-list {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+}
+
+.inv-alert-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #f2d6a2;
+    border-radius: 8px;
+    background: #fff8eb;
+    padding: 12px;
+}
+
+.inv-alert-item__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    color: #b46b00;
+    background: #ffe9bf;
+    flex: 0 0 auto;
+}
+
+.inv-alert-item strong {
+    display: block;
+    color: #0b243f;
+    font-size: 1.05rem;
+}
+
+.inv-alert-item span:last-child {
+    color: #5f7288;
+    font-size: 0.86rem;
+}
+
+.inv-detail-value {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+}
+
+.inv-detail-value span {
+    color: #66809e;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.inv-detail-value strong {
+    color: #0b243f;
+    font-size: 1.35rem;
+    line-height: 1.15;
+}
+
+.inv-detail-value small {
+    color: #5f7288;
+}
+
+.inv-empty-state {
+    border: 1px dashed #cdd9e5;
+    border-radius: 8px;
+    color: #6b7c93;
+    padding: 18px;
+    text-align: center;
+}
+
+.inv-dashboard-section > .table-responsive {
+    padding: 18px;
+}
+
+@media (max-width: 1399px) {
+    .inv-dashboard-grid--kpis {
+        grid-template-columns: repeat(3, minmax(170px, 1fr));
+    }
+}
+
+@media (max-width: 991px) {
+    .inv-dashboard-grid--kpis,
+    .inv-dashboard-grid--value {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+    }
+}
+
+@media (max-width: 575px) {
+    .inv-dashboard-grid--kpis,
+    .inv-dashboard-grid--value {
+        grid-template-columns: 1fr;
+    }
+
+    .inv-dashboard-filters,
+    .inv-dashboard-section,
+    .inv-kpi-card {
+        padding: 14px;
+    }
+
+    .inv-chart-box {
+        height: 240px;
+    }
+}
+
+/* =====================================================================
+   VISTA GENERAL ("Todos los colegios") · componentes/dashboard_general.php
+   ===================================================================== */
+.inv-gen{--g-ok:#1f8a4c;--g-mid:#b7791f;--g-bad:#c0392b;--g-line:#e5e7eb;--g-muted:#6b7280;color:#1f2937}
+.inv-gen-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.inv-gen-kpi{background:#fff;border:1px solid var(--g-line);border-left:4px solid #16365c;border-radius:10px;padding:13px 15px;min-width:0}
+.inv-gen-kpi.is-ok{border-left-color:var(--g-ok)}.inv-gen-kpi.is-bad{border-left-color:var(--g-bad)}.inv-gen-kpi.is-mid{border-left-color:var(--g-mid)}
+.inv-gen-kpi__l{display:block;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g-muted)}
+.inv-gen-kpi strong{display:block;font:700 26px/1.15 'DM Mono',monospace;margin-top:6px}
+.inv-gen-kpi strong em{font:600 13px 'DM Sans',sans-serif;font-style:normal;color:var(--g-muted);margin-left:6px}
+.inv-gen-kpi small{display:block;font-size:11px;color:var(--g-muted);margin-top:4px}
+.inv-gen-row{display:grid;gap:14px;margin-bottom:14px;align-items:start}
+.inv-gen-row--21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.inv-gen-row--32{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+.inv-gen-card{background:#fff;border:1px solid var(--g-line);border-radius:10px;min-width:0}
+.inv-gen-card>header{padding:14px 18px;border-bottom:1px solid var(--g-line)}
+.inv-gen-card>header h2{margin:0;font-size:14px;font-weight:700}
+.inv-gen-card>header span{display:block;color:var(--g-muted);font-size:12px;margin-top:2px}
+.inv-gen-body{padding:14px 18px}
+.inv-gen-bar{display:grid;grid-template-columns:minmax(150px,230px) 1fr 100px;align-items:center;gap:12px;padding:5px 6px;margin:0 -6px;border-radius:8px;color:inherit;text-decoration:none}
+.inv-gen-bar:hover{background:#f7f8fa;color:inherit}
+.inv-gen-bar__name{display:flex;align-items:center;gap:9px;font-weight:600;font-size:13px;min-width:0}
+.inv-gen-bar__track{height:20px;background:#f1f3f6;border-radius:6px;overflow:hidden;display:flex}
+.inv-gen-bar__track span{height:100%}
+.inv-gen-bar__track .is-fuera,.inv-gen-legend .is-fuera{background:repeating-linear-gradient(45deg,var(--g-bad) 0 4px,#e8877c 4px 7px)}
+.inv-gen-bar__num{text-align:right;line-height:1.15}
+.inv-gen-bar__num strong{font:700 15px 'DM Mono',monospace}
+.inv-gen-bar__num small{display:block;font-size:11px;color:var(--g-muted)}
+.inv-gen-dot{width:24px;height:24px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-size:10px;font-weight:700;flex:0 0 auto;margin-right:2px}
+.inv-gen-dot.is-sm{width:11px;height:11px;margin-right:7px;vertical-align:-1px}
+.inv-gen-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11px;color:var(--g-muted);margin-top:10px}
+.inv-gen-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.inv-gen-legend i.is-col{background:#5b6b7f}
+.inv-gen-sin{margin-top:12px;padding-top:12px;border-top:1px dashed var(--g-line);font-size:12px;color:var(--g-muted)}
+.inv-gen-chip{display:inline-flex;align-items:center;border:1px solid var(--g-line);border-radius:999px;padding:3px 10px 3px 8px;margin:5px 5px 0 0;color:#1f2937;background:#fafafa}
+.inv-gen-donut{width:180px;height:180px;border-radius:50%;margin:4px auto 0;position:relative}
+.inv-gen-donut::after{content:"";position:absolute;inset:32px;background:#fff;border-radius:50%}
+.inv-gen-donut b{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font:700 24px 'DM Mono',monospace}
+.inv-gen-donut b small{font:500 11px 'DM Sans',sans-serif;color:var(--g-muted)}
+.inv-gen-estados{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;margin-top:14px;font-size:13px}
+.inv-gen-estados div{display:flex;justify-content:space-between;border-bottom:1px solid #f1f3f6;padding:4px 0}
+.inv-gen-estados i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.inv-gen-sub{font-size:13px;font-weight:700;margin:16px 0 6px}
+.inv-gen-stack{display:flex;height:22px;border-radius:6px;overflow:hidden;background:#f1f3f6}
+.inv-gen-table{margin:0;font-size:13px}
+.inv-gen-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--g-muted);background:#fafafa;padding:9px 14px}
+.inv-gen-table td{padding:9px 14px}
+.inv-gen-table td a{color:inherit;text-decoration:none;font-weight:600}
+.inv-gen-table tfoot td{font-weight:700;background:#fafafa}
+.inv-gen-pill{display:inline-block;min-width:58px;text-align:center;border-radius:6px;padding:3px 6px;font-weight:700;font-size:12px}
+.inv-gen-pill.is-ok{background:#e3f4ea;color:#17683a}.inv-gen-pill.is-mid{background:#fdf1dc;color:#8a5a12}.inv-gen-pill.is-bad{background:#fbe4e1;color:#a32d22}
+.inv-gen-alert{display:flex;gap:12px;align-items:center;border:1px solid #f1e3c4;background:#fffaf0;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:13px}
+.inv-gen-alert.is-bad{border-color:#f3d2cd;background:#fff6f5}
+.inv-gen-alert b{font:700 17px 'DM Mono',monospace;min-width:46px}
+.inv-gen-alert small{display:block;color:var(--g-muted);font-size:11px}
+@media (max-width:1199.98px){
+  .inv-gen-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .inv-gen-row--21,.inv-gen-row--32{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:575.98px){
+  .inv-gen-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .inv-gen-bar{grid-template-columns:1fr 70px}.inv-gen-bar__track{grid-column:1 / -1;grid-row:2}
+}
+
+/* =====================================================================
+   VISTA DE UN COLEGIO · componentes/dashboard_colegio.php
+   --col-1 / --col-2 = color_principal / color_secundario (tabla colegio)
+   ===================================================================== */
+.inv-col-hero{display:flex;align-items:center;gap:18px;border-radius:12px;padding:18px 22px;margin-bottom:14px;color:#fff;
+  background:linear-gradient(120deg,var(--col-1) 0%,var(--col-1) 45%,var(--col-2) 100%)}
+.inv-col-hero__logo{width:60px;height:60px;border-radius:50%;background:#fff;color:var(--col-1);display:grid;place-items:center;
+  font-weight:800;font-size:18px;border:3px solid var(--col-2);flex:0 0 auto;overflow:hidden}
+.inv-col-hero__logo img{width:100%;height:100%;object-fit:contain;padding:6px}
+.inv-col-hero__txt{min-width:0}
+.inv-col-hero__txt h2{margin:0;font-size:22px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.inv-col-hero__txt p{margin:3px 0 0;font-size:13px;opacity:.9}
+.inv-col-hero__pills{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+.inv-col-hero__pills div{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:8px 12px;text-align:right;backdrop-filter:blur(2px)}
+.inv-col-hero__pills b{display:block;font:700 18px 'DM Mono',monospace}
+.inv-col-hero__pills span{font-size:11px;opacity:.9}
+.inv-col .inv-col-kpi{border-left-color:var(--col-1)}
+.inv-col .inv-gen-kpi small .is-good{color:#1f8a4c;font-weight:700}
+.inv-col .inv-gen-kpi small .is-bad{color:#c0392b;font-weight:700}
+.inv-col .inv-gen-kpi small .is-eq{color:#6b7280;font-weight:700}
+.inv-col-row3{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr)}
+.inv-col-ub{display:grid;grid-template-columns:minmax(110px,170px) 1fr 40px;gap:10px;align-items:center;margin:8px 0;font-size:13px}
+.inv-col-ub__t{height:16px;border-radius:5px;background:#f1f3f6;overflow:hidden}
+.inv-col-ub__t i{display:block;height:100%;background:var(--col-1)}
+.inv-col-ub b{text-align:right;font-family:'DM Mono',monospace}
+.inv-col-ub.is-pend span:first-child{color:#c0392b;font-weight:700}
+.inv-col-ub.is-pend i{background:repeating-linear-gradient(45deg,#c0392b 0 4px,#e8877c 4px 7px)}
+.inv-col-estado{display:flex;gap:16px;align-items:center}
+.inv-gen-donut.is-sm{width:120px;height:120px;margin:0;flex:0 0 auto}
+.inv-gen-donut.is-sm::after{inset:22px}
+.inv-gen-donut.is-sm b{font-size:19px}
+.inv-col-lista{flex:1;font-size:13px}
+.inv-col-lista div{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f1f3f6}
+.inv-col-lista i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.inv-col-stack{margin-top:16px}
+.inv-col-cmp{display:grid;grid-template-columns:minmax(100px,140px) 1fr 44px;gap:10px;align-items:center;margin:11px 0;font-size:13px}
+.inv-col-cmp__t{position:relative;height:10px;background:#f1f3f6;border-radius:5px}
+.inv-col-cmp__t i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+.inv-col-cmp__t.is-ok i{background:#1f8a4c}.inv-col-cmp__t.is-mid i{background:#d9a12a}.inv-col-cmp__t.is-bad i{background:#c0392b}
+.inv-col-cmp__t u{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:#111827;text-decoration:none}
+.inv-col-cmp b{text-align:right}
+.inv-col-tag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;margin-right:4px}
+.inv-col-tag.is-blue{background:#e6eefb;color:#1d4675}.inv-col-tag.is-red{background:#fbe4e1;color:#a32d22}.inv-col-tag.is-green{background:#e3f4ea;color:#17683a}
+.inv-gen-alert>div{flex:1}
+.inv-col-avisar{border:0;background:none;color:var(--col-1);font-weight:700;font-size:12px;white-space:nowrap;padding:2px 4px;cursor:pointer}
+.inv-col-avisar:hover{text-decoration:underline}
+.inv-col-nota{display:block;color:#6b7280;font-size:11px;margin-top:4px}
+@media (max-width:1199.98px){.inv-col-row3{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:767.98px){.inv-col-hero{flex-wrap:wrap}.inv-col-hero__pills{margin-left:0;width:100%}}

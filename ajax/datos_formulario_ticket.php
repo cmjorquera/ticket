@@ -44,12 +44,13 @@ try {
             $usuarios = $db->fetchAll(
                 "SELECT DISTINCT u.id, CONCAT_WS(' ', u.nombre, u.apellido_paterno) AS nombre
                    FROM usuario_colegio administrador
-              LEFT JOIN perfiles p ON p.id_perfil = administrador.id_perfil
                    JOIN usuario_colegio uc
                      ON uc.id_colegio = administrador.id_colegio AND uc.estado = 1
+                    AND (administrador.rol = 'admin_colegio'
+                         OR uc.id_departamento_colegio = administrador.id_departamento_colegio)
                    JOIN usuarios u ON u.id = uc.id_usuario AND LOWER(u.estado) = 'activo'
                   WHERE administrador.id_usuario = ? AND administrador.estado = 1
-                    AND (administrador.es_admin_colegio = 1 OR LOWER(p.nombre_perfil) IN ('admin colegio','admin_colegio','administrador colegio'))
+                    AND administrador.rol IN ('admin_colegio', 'jefe_departamento')
                ORDER BY nombre",
                 [$actorId]
             );

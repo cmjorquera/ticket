@@ -76,8 +76,8 @@ function guardarColegioInicial($db, $idUsuario, $idColegio)
     }
 
     $fechaAsignacion = date('Y-m-d H:i:s');
-    $sqlColegio = "INSERT INTO usuario_colegio (id_usuario, id_colegio, id_perfil, estado, fecha_asignacion)
-                   VALUES ('$idUsuario', '$idColegio', '1', '1', '$fechaAsignacion')";
+    $sqlColegio = "INSERT INTO usuario_colegio (id_usuario, id_colegio, estado, fecha_asignacion)
+                   VALUES ('$idUsuario', '$idColegio', '1', '$fechaAsignacion')";
     $db->consulta($sqlColegio);
 }
 
@@ -101,8 +101,8 @@ function actualizarColegioUsuario($db, $idUsuario, $idColegio)
         return (bool)$db->consulta("UPDATE usuario_colegio SET estado = 1, fecha_asignacion = '$fechaAsignacion' WHERE id = '$idRelacion'");
     }
 
-    $sqlInsert = "INSERT INTO usuario_colegio (id_usuario, id_colegio, id_perfil, estado, fecha_asignacion)
-                  VALUES ('$idUsuario', '$idColegio', '1', '1', '$fechaAsignacion')";
+    $sqlInsert = "INSERT INTO usuario_colegio (id_usuario, id_colegio, estado, fecha_asignacion)
+                  VALUES ('$idUsuario', '$idColegio', '1', '$fechaAsignacion')";
 
     return (bool)$db->consulta($sqlInsert);
 }

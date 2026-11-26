@@ -1,0 +1,20 @@
+ALMUERZOS — TABLAS Y MIGRACION A PRODUCCION (2026-11-10)
+Fuente: almuerzos/logica/LOGICA.txt (rama qa).
+
+TABLAS DOCUMENTADAS
+- almuerzo_configuracion: horarios, encargado y colegio.
+- almuerzo_mes: mes de planificacion.
+- almuerzo_dia: dias de menu.
+- almuerzo_menu: opciones, platos y fotos.
+- almuerzo_eleccion: elecciones de usuarios (id_menu NULL = no almuerza).
+- usuarios: referencia compartida, verificar origen.
+
+SQL DE REFERENCIA: almuerzos/sql/03_modelo_almuerzos.sql y almuerzos/sql/LEEME.txt.
+
+MIGRACION
+- Importar datos en orden de dependencias y preservar relaciones mes/dia/menu/eleccion.
+- Evitar duplicar elecciones de un usuario en una fecha.
+- No activar simulacion de horario en produccion.
+- Respaldar imagenes fisicas de menu y comprobar rutas.
+
+PENDIENTE: inventariar tablas auxiliares exactas y comparar dumps reales.

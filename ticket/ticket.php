@@ -288,6 +288,38 @@ document.getElementById('form-calificar-ticket')?.addEventListener('submit', asy
 </script>
 
 <?php $vistaChat = 'usuario'; require __DIR__ . '/componentes/chat_ticket_panel.php'; ?>
+
+<style>
+/* Selección visual unificada: la banda lateral conserva el color del estado. */
+.ticket-row--state td{background:#fff!important}
+.ticket-row--state:nth-child(even) td{background:#f8fafc!important}
+.ticket-row--state:hover td{background:#eef5fc!important}
+.ticket-row--state.ticket-row-selected td,
+.ticket-row--state.ticket-row-selected:hover td{background:#dceafd!important}
+.ticket-row-selected{outline:1px solid #8db6e7;outline-offset:-1px}
+.ticket-row-select{appearance:none;background:transparent;border:0;padding:2px 5px 2px 0;font:inherit;font-weight:800;color:#0f2748;cursor:pointer;border-radius:3px}
+.ticket-row-select:hover{color:#0759a5;text-decoration:underline}
+.ticket-row-select:focus-visible{outline:2px solid #1d65ad;outline-offset:2px}
+.ticket-row-select[aria-pressed="true"]{color:#064b94}
+</style>
+<script>
+document.addEventListener('click', function(event) {
+  const number = event.target.closest('.ticket-row-select');
+  if (!number) return;
+  const row = number.closest('tr');
+  const table = number.closest('table');
+  if (!row || !table) return;
+  const selected = row.classList.contains('ticket-row-selected');
+  table.querySelectorAll('tr.ticket-row-selected').forEach(function(other) {
+    other.classList.remove('ticket-row-selected');
+    other.querySelector('.ticket-row-select')?.setAttribute('aria-pressed', 'false');
+  });
+  if (!selected) {
+    row.classList.add('ticket-row-selected');
+    number.setAttribute('aria-pressed', 'true');
+  }
+});
+</script>
 <?php require __DIR__ . '/componentes/panel_detalle.php'; ?>
 <script src="js/galeria_modal.js?v=20261110-centro2"></script>
 <?php finalizar_layout_configuracion(); ?>

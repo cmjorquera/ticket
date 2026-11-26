@@ -27,6 +27,10 @@ a) QUÉ PUEDE HACER  → usuario_perfil (global, se pueden tener varios)
      3 super_admin  Cristian: todo, en todos los colegios
    Los perfiles 4 (admin_colegio) y 5 (admin_area) quedan SIN USO: esa
    información ahora está en la capa b), con su colegio y departamento.
+   Desde 12-11-2026 Tickets (helpers/tickets.php, formulario de ticket) y el
+   Dashboard de tickets leen el cargo desde usuario_colegio.rol. Limpieza de
+   usuario_perfil y desactivación en el catálogo:
+   configuracion/sql/06_quitar_perfiles_admin_colegio_area.sql
 
 b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
      rol = admin_colegio       un colegio entero (id_departamento_colegio NULL)
@@ -48,9 +52,15 @@ b) DÓNDE ESTÁ Y CON QUÉ CARGO → usuario_colegio (una fila por asignación)
 
 4. COMPATIBILIDAD (mientras se adapta el código)
 ------------------------------------------------
-- usuario_colegio.id_perfil se mantiene con el valor anterior (hoy 3 para
-  todos), porque Inventario lo usa para decidir qué colegios mostrar. Cuando
-  Inventario pase a leer el rol, esa columna deja de usarse.
+- usuario_colegio.id_perfil SE ELIMINA (12-11-2026): quedó en 3 para casi
+  todos al migrar y se confundía con perfiles.id_perfil = 3 (super_admin).
+  Ningún código la usa. Pasos: configuracion/sql/04_quitar_id_perfil_paso1.sql
+  (ya) → subir código → 05_quitar_id_perfil_paso2.sql (DROP COLUMN).
+  Inventario y Estadística → Inventario deciden así:
+    todos los colegios       → usuario_perfil 3 (super_admin)
+    sus colegios + dashboard → usuario_perfil 2 (técnico) o rol admin_colegio
+    solo su colegio          → el resto
+  Revisión: inventario/sql/03_perfiles_inventario.sql
 - jefatura_departamento queda como respaldo; lo nuevo se lee de usuario_colegio.
 - La migración guarda una copia de usuario_colegio en usuario_colegio_respaldo
   antes de reemplazar su contenido.

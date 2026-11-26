@@ -6,10 +6,18 @@ class Session
     {
         if (session_status() === PHP_SESSION_NONE) {
             $savePath = '/var/cpanel/php/sessions/ea-php83';
-            if (!is_dir($savePath)) {
-                session_save_path(sys_get_temp_dir());
+            if (!is_dir($savePath) || !is_writable($savePath)) {
+                $fallback = sys_get_temp_dir();
+                if (is_dir($fallback) && is_writable($fallback)) {
+                    session_save_path($fallback);
+                } else {
+                    error_log('[session] No se encontró un directorio de sesiones escribible.');
+                }
             }
-            session_start();
+            if (!session_start()) {
+                error_log('[session] No fue posible iniciar la sesión PHP.');
+                throw new RuntimeException('No fue posible iniciar la sesión.');
+            }
         }
     }
 
@@ -37,7 +45,7 @@ class Session
     public static function verificar(): bool
     {
         self::iniciar();
-        return isset($_SESSION['usuario_id']) && !empty($_SESSION['usuario_id']);
+        return (int) ($_SESSION['id'] ?? $_SESSION['usuario_id'] ?? 0) > 0;
     }
 
     public static function set(string $key, mixed $value): void

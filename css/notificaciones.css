@@ -37,3 +37,12 @@
 .nav-item .nav-contador{overflow:visible}
 #sidebar.collapsed .nav-item .nav-contador{opacity:1;width:auto;position:absolute;top:1px;right:6px;min-width:15px;height:15px;line-height:15px;padding:0 4px;font-size:9px;margin:0}
 .nav-item-parent:has(.nav-contador--grupo) .chevron{margin-left:0}
+
+/* Bandeja rápida del sobre: anclada a la barra superior */
+.mensajes-panel{right:48px;top:calc(100% + 8px)}
+.mensajes-panel .notif-panel__cab a{font-size:12px;color:var(--blue,#1d4675);text-decoration:none}
+.mensajes-panel .msg-mini-link{display:block;padding:10px 12px;color:var(--fg,#111827);text-decoration:none;border-radius:8px}
+.mensajes-panel .msg-mini-link:hover{background:var(--bg,#f3f5f8)}
+.mensajes-panel .msg-mini-link strong{display:block;font-size:13px}
+.mensajes-panel .msg-mini-link small{display:block;color:var(--muted,#6b7280);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mensajes-panel .msg-mini-link.is-nueva{background:var(--blue-light,#eaf1f8)}

@@ -45,7 +45,7 @@ require __DIR__ . '/componentes/layout_top.inc';
             <p class="inv-subtitle mb-0">PC y monitores por colegio, estado, valor, antigüedad y movimientos · <?= di_h($ctx['colegio_label']) ?> · <?= di_h(date('d-m-Y', strtotime($filters['desde']))) ?> al <?= di_h(date('d-m-Y', strtotime($filters['hasta']))) ?></p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <a href="../inventario/index.php" class="module-btn module-btn--secondary"><i class="bi bi-pc-display-horizontal"></i>Ir a Inventario PC</a>
+            <a href="../inventario/pc/index.php" class="module-btn module-btn--secondary"><i class="bi bi-pc-display-horizontal"></i>Ir a Inventario PC</a>
             <a href="descargar_dashboard_inventario_pdf.php?<?= di_h($pdfParams) ?>" class="module-btn module-btn--primary" target="_blank" rel="noopener"><i class="bi bi-file-earmark-pdf"></i>Descargar PDF</a>
         </div>
     </div>

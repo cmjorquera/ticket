@@ -25,6 +25,6 @@ error_log
 inventario/uploads/**
 !inventario/uploads/**/
 !inventario/uploads/**/.gitkeep
-inventario_herramintas/uploads/**
-!inventario_herramintas/uploads/**/
-!inventario_herramintas/uploads/**/.gitkeep
+# (inventario/uploads/ guarda las de PC, monitores y herramientas.
+#  inventario_herramintas/uploads/ es la ubicación antigua: solo en el servidor)
+inventario_herramintas/uploads/
