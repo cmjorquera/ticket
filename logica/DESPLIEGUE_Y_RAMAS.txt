@@ -1,0 +1,132 @@
+DESPLIEGUE Y RAMAS – cómo subir cambios a QA
+=============================================
+Actualizado: 2026-11-26
+
+Resumen
+-------
+Todo cambio va a la rama "qa" en GitHub y después se publica en el servidor QA
+con deploy_qa.sh. Hacer push NO publica nada por sí solo.
+
+
+1. Datos clave
+--------------
+Repositorio ............ github.com/cmjorquera/ticket
+Rama de trabajo ........ qa
+Carpeta en el PC ....... C:\Users\cmjor\Documents\SISTEMA_CENTRAL_SEDUC
+Servidor QA ............ https://sistemabase.webnia.cl
+                         (carpeta /home3/crist668/sistemabase.webnia.cl)
+Producción ............. https://acceso.seduc.cl  -> sistema NUEVO (SEDUC Panel Central)
+Entrar al servidor QA .. ssh ticket-qa   (pide la clave de la llave SSH "webnia_qa")
+
+Dónde está cada sistema:
+
+  Sistema NUEVO (Panel Central)
+    - rama qa  (se trabaja aquí)
+    - corre en QA (sistemabase.webnia.cl) y en producción (acceso.seduc.cl)
+
+  Sistema ANTIGUO (ya no corre; solo guardado para rescatar funciones)
+    - rama backup/qa-produccion-20261106  (lo que estaba en producción)
+    - rama respaldo-local-antiguo         (lo que tenía la carpeta SISTEMA_TICKET)
+    - rama backup/qa-local-20261106       (mismo commit que respaldo-local-antiguo)
+
+La carpeta SISTEMA_TICKET del PC es el sistema antiguo: NO se trabaja ahí.
+Se puede renombrar a _ARCHIVADO_SISTEMA_TICKET (todo está en GitHub).
+
+Para rescatar algo del sistema antiguo: pedirle a Claude que lo traiga desde
+la rama respaldo-local-antiguo a qa (ej.: se hizo con licenciamiento/logica.r).
+
+
+2. Camino A: Claude hace el cambio
+----------------------------------
+Claude hace el cambio y el push directo a qa en GitHub.
+
+  1) Pedir el cambio indicando: "rama qa de github.com/cmjorquera/ticket".
+  2) Claude responde con el número de commit (ej. 389c00a).
+  3) En VS Code de SISTEMA_CENTRAL_SEDUC, bajar el cambio:
+
+       git switch qa
+       git pull
+       git log --oneline -1      # debe mostrar el commit que dio Claude
+
+  4) Publicar en QA (punto 4).
+
+  Si hay cambios propios sin subir antes del git pull, subirlos primero
+  con el Camino B; si no, el pull puede fallar.
+
+
+3. Camino B: yo hago el cambio y hago push
+------------------------------------------
+  1) Bajar lo último (por si Claude hizo cambios):
+
+       cd C:\Users\cmjor\Documents\SISTEMA_CENTRAL_SEDUC
+       git switch qa
+       git pull
+
+  2) Hacer los cambios en VS Code y guardarlos.
+  3) Revisar qué cambió:
+
+       git status
+       git diff
+
+  4) Guardar en git y subir:
+
+       git add .
+       git commit -m "describe aquí el cambio"
+       git push
+
+  5) Publicar en QA (punto 4).
+
+  No subir .zip ni respaldos: si git status los muestra, sacarlos antes del git add.
+
+
+4. Publicar en el servidor QA
+-----------------------------
+  1) En la terminal de VS Code (línea "PS C:\..."):
+
+       ssh ticket-qa
+
+  2) Cuando la línea diga  crist668@webnia.cl [~]#  ya se está en el servidor.
+     Simular (no modifica nada):
+
+       ~/repositories/ticket/scripts/deploy_qa.sh --dry-run
+
+  3) Revisar el resumen: commit, archivos que se reemplazan y nuevos.
+  4) Publicar de verdad (escribir "si" cuando lo pida):
+
+       ~/repositories/ticket/scripts/deploy_qa.sh --ejecutar
+
+  5) Abrir https://sistemabase.webnia.cl y recargar con Ctrl+F5.
+  6) Salir del servidor:  exit
+
+  El script respalda antes de publicar, nunca borra archivos y no toca
+  uploads, imágenes, QR, logs ni la base de datos.
+  Si el cambio trae un .sql, se ejecuta aparte en phpMyAdmin (QA y luego producción).
+
+
+5. Deshacer (rollback)
+----------------------
+  ~/repositories/ticket/scripts/rollback_qa.sh                  # lista los respaldos
+  ~/repositories/ticket/scripts/rollback_qa.sh <ID> --ejecutar   # deshace ese despliegue
+
+  El ID lo muestra el deploy al terminar (ej. 20261126_061540).
+
+
+6. Problemas comunes
+--------------------
+  "deploy_qa.sh no se reconoce como cmdlet"
+      -> se escribió en el PC (PS C:\...). Primero ssh ticket-qa.
+  "Your local changes ... would be overwritten"
+      -> hay cambios sin guardar. git status; subirlos (Camino B) o
+         descartarlos con: git restore <archivo>
+  git push rechazado
+      -> hay cambios nuevos en GitHub: git pull y luego git push.
+  El sitio no muestra el cambio
+      -> Ctrl+F5; revisar que se corrió --ejecutar.
+  Rename-Item "being used by another process"
+      -> VS Code tiene la carpeta abierta: cerrarlo o reiniciar el PC.
+
+
+7. Pendiente
+------------
+  - Producción (acceso.seduc.cl): deploy_qa.sh solo publica en QA.
+    Falta definir/documentar cómo se publica en producción.
