@@ -8,6 +8,35 @@
 if (empty($_SESSION['id'])) {
     return;
 }
+
+/* Chat de Webnia Bot (empresa "central-seduc"), solo para Super Admin:
+   es_admin_global = 1 o perfil "super_admin" (se consulta en la BD en cada carga).
+   Por ahora apunta al Webnia Bot que corre en el PC de Cristian (Docker + npm run dev
+   en localhost:5173): en otro equipo, o con Webnia apagado, la burbuja no carga.
+   Cuando Webnia esté en su servidor se cambia por https://chatbot.webnia.cl/widget.js.
+   El resto de los usuarios sigue viendo la burbuja "Asistente SEDUC" de abajo. */
+$chatWebniaSrc    = 'http://localhost:5173/widget.js';
+$chatWebniaTenant = 'central-seduc';
+$chatEsSuperAdmin = false;
+try {
+    require_once dirname(__DIR__) . '/clases/Conexion.php';
+    require_once dirname(__DIR__) . '/helpers/tickets.php';
+    $chatDb  = Conexion::getInstance('sistema_panel_central');
+    $chatUid = (int) $_SESSION['id'];
+    $chatFila = $chatDb->fetchOne('SELECT es_admin_global FROM usuarios WHERE id = ? LIMIT 1', [$chatUid]);
+    $chatEsSuperAdmin = (int) ($chatFila['es_admin_global'] ?? 0) === 1
+        || tiene_perfil($chatUid, 'super_admin', $chatDb);
+} catch (\Throwable $e) {
+    $chatEsSuperAdmin = false; // ante cualquier error, queda la burbuja de siempre
+}
+if ($chatEsSuperAdmin) { ?>
+<script src="<?= htmlspecialchars($chatWebniaSrc, ENT_QUOTES, 'UTF-8') ?>"
+        data-tenant="<?= htmlspecialchars($chatWebniaTenant, ENT_QUOTES, 'UTF-8') ?>"
+        data-color="#06274E" async></script>
+<?php
+    return;
+}
+
 $chatDepth = $depth ?? '';
 $chatNombre = trim((string) ($_SESSION['nombre'] ?? ''));
 $chatVersion = static function (string $ruta) {
