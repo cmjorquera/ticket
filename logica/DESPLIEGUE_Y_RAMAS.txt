@@ -4,8 +4,11 @@ Actualizado: 2026-11-26
 
 Resumen
 -------
-Todo cambio va a la rama "qa" en GitHub y después se publica en el servidor QA
-con deploy_qa.sh. Hacer push NO publica nada por sí solo.
+  rama qa   --deploy_qa.sh-->   QA          https://sistemabase.webnia.cl   (probar)
+  rama main --deploy_prod.sh--> PRODUCCIÓN  https://acceso.seduc.cl         (usuarios reales)
+
+Todo cambio va primero a "qa" y se prueba en QA. Cuando funciona, se une qa en
+main y se publica en producción. Hacer push NO publica nada por sí solo.
 
 
 1. Datos clave
@@ -16,12 +19,17 @@ Carpeta en el PC ....... C:\Users\cmjor\Documents\SISTEMA_CENTRAL_SEDUC
 Servidor QA ............ https://sistemabase.webnia.cl
                          (carpeta /home3/crist668/sistemabase.webnia.cl)
 Producción ............. https://acceso.seduc.cl  -> sistema NUEVO (SEDUC Panel Central)
-Entrar al servidor QA .. ssh ticket-qa   (pide la clave de la llave SSH "webnia_qa")
+Entrar al servidor QA .. ssh ticket-qa   (llave "webnia_qa"; pronto se llamará seduc-qa)
+Entrar a PRODUCCIÓN .... ssh seduc-prod  (llave "ticket_produccion", usuario acceso,
+                         IP 200.6.101.177; shell activado desde WHM -> Manage Shell Access)
+Repo en producción ..... ~/repositories/sistema-central-seduc  (rama main)
+Sitio en producción .... /home/acceso/public_html
 
 Dónde está cada sistema:
 
   Sistema NUEVO (Panel Central)
-    - rama qa  (se trabaja aquí)
+    - rama qa   (se trabaja aquí; se publica en QA)
+    - rama main (copia de qa ya probada; se publica en producción)
     - corre en QA (sistemabase.webnia.cl) y en producción (acceso.seduc.cl)
 
   Sistema ANTIGUO (ya no corre; solo guardado para rescatar funciones)
@@ -126,7 +134,35 @@ Claude hace el cambio y el push directo a qa en GitHub.
       -> VS Code tiene la carpeta abierta: cerrarlo o reiniciar el PC.
 
 
-7. Pendiente
+7. Pasar a PRODUCCIÓN (acceso.seduc.cl)
+---------------------------------------
+Solo cuando el cambio ya funciona en QA.
+
+  1) Unir qa en main. Pedírselo a Claude ("pasa qa a main"), o en el PC:
+
+       git switch main
+       git pull
+       git merge qa
+       git push
+       git switch qa          # volver a trabajar en qa
+
+  2) Publicar (en la terminal de VS Code):
+
+       ssh seduc-prod
+       ~/repositories/sistema-central-seduc/scripts/deploy_prod.sh --dry-run
+       ~/repositories/sistema-central-seduc/scripts/deploy_prod.sh --ejecutar
+
+  3) Revisar https://acceso.seduc.cl con Ctrl+F5.
+
+  Deshacer:
+       ~/repositories/sistema-central-seduc/scripts/rollback_prod.sh
+       ~/repositories/sistema-central-seduc/scripts/rollback_prod.sh <ID> --ejecutar
+
+  Si el cambio trae un .sql: ejecutarlo en phpMyAdmin de producción
+  ANTES de --ejecutar (salvo que el código funcione sin él).
+
+
+8. Pendiente
 ------------
-  - Producción (acceso.seduc.cl): deploy_qa.sh solo publica en QA.
-    Falta definir/documentar cómo se publica en producción.
+  - Renombrar "ticket" a "sistema-central-seduc": repositorio en GitHub,
+    acceso ticket-qa -> seduc-qa, carpeta ~/repositories/ticket en QA.

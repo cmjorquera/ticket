@@ -339,7 +339,7 @@ $email_valor = htmlspecialchars((string)($_POST['email'] ?? ''), ENT_QUOTES);
         </section>
 
         <section class="tarjeta-login">
-            <h2>Inicio sesión prueba</h2>
+            <h2>Iniciar sesión</h2>
             <p class="sub">Acceso restringido a personal autorizado.</p>
 
             <?php if ($error !== ''): ?>
