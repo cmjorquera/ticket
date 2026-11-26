@@ -73,7 +73,7 @@ validar_entorno() {
   done
 
   local url; url=$(git -C "$REPO_DIR" remote get-url origin)
-  [[ "$url" =~ github\.com[:/]cmjorquera/ticket(\.git)?$ ]] || error "El remoto origin ($url) no es cmjorquera/ticket."
+  [[ "$url" =~ github\.com[:/]cmjorquera/(ticket|sistema-central-seduc)(\.git)?$ ]] || error "El remoto origin ($url) no es cmjorquera/sistema-central-seduc."
 
   # La carpeta del repositorio no debe tener cambios hechos a mano.
   if [[ -n "$(git -C "$REPO_DIR" status --porcelain --untracked-files=no)" ]]; then
